@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import datetime, time
 import tensorflow as tf  
 
-from igm.utils import *
+from igm.modules.utils import *
  
 def params_plot_sp(parser):
     

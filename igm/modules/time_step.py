@@ -9,11 +9,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime, time
 import tensorflow as tf 
- 
-from igm.utils import *
 
 def params_time_step(parser):
     
+    parser.add_argument(
+        "--tstart", 
+        type=float, 
+        default=2000.0, 
+        help="Start modelling time (default 2000)"
+    )
+    parser.add_argument(
+        "--tend", 
+        type=float, 
+        default=2100.0, 
+        help="End modelling time (default: 2100)"
+    )
     parser.add_argument(
         "--tsave", 
         type=float, 
@@ -39,6 +49,9 @@ def params_time_step(parser):
 def init_time_step(params,self):
     
     self.tcomp["time_step"] = [] 
+
+    # Initialize the time with starting time
+    self.t = tf.Variable(float(params.tstart))
     
     self.it        = 0
 

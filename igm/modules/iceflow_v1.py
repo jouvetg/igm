@@ -12,7 +12,7 @@ import datetime, time
 import math
 import tensorflow as tf
 
-from igm.utils import *
+from igm.modules.utils import *
 
 def params_iceflow_v1(parser):
     

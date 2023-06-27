@@ -8,7 +8,7 @@ Published under the GNU GPL (Version 3), check at the LICENSE file
 import datetime, time 
 import tensorflow as tf 
  
-from igm.utils import compute_divflux
+from igm.modules.utils import compute_divflux
 
 def params_thk(self):
     pass

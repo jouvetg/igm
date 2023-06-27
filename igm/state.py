@@ -5,8 +5,7 @@ Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
 Published under the GNU GPL (Version 3), check at the LICENSE file
 """
 
-import logging, os
-import tensorflow as tf
+import logging, os 
  
 class State:
 
@@ -39,9 +38,6 @@ class State:
 
         # Create a logger
         self.logger = logging.getLogger('my_logger')
-        
-        # Initialize the time with starting time
-        self.t = tf.Variable(float(params.tstart))
                 
         os.system('rm clean.sh')
         os.system('echo rm clean.sh >> clean.sh')

@@ -6,25 +6,26 @@ Published under the GNU GPL (Version 3), check at the LICENSE file
 """
 
 from igm.state                import *
-
-from igm.utils                import * 
 from igm.params_core          import *
 
+from igm.modules.utils           import * 
 
-from igm.submodels.load_tif_data   import *
-from igm.submodels.prepare_data    import *
+from igm.modules.synthetic       import *
+from igm.modules.load_tif_data   import *
+from igm.modules.prepare_data    import *
+from igm.modules.load_ncdf_data  import *
+from igm.modules.iceflow_v1      import *
+from igm.modules.ncdf_ex         import *
+from igm.modules.ncdf_ts         import *
+from igm.modules.plot_vs         import *
+from igm.modules.plot_sp         import *
+from igm.modules.print_info      import *
+from igm.modules.smb_simple      import *
+from igm.modules.thk             import *
+from igm.modules.tif_ex          import *
+from igm.modules.time_step       import *
 
-from igm.submodels.load_ncdf_data  import *
-from igm.submodels.iceflow_v1      import *
-from igm.submodels.ncdf_ex         import *
-from igm.submodels.ncdf_ts         import *
-from igm.submodels.plot_vs         import *
-from igm.submodels.plot_sp         import *
-from igm.submodels.print_info      import *
-from igm.submodels.smb_simple      import *
-from igm.submodels.thk             import *
-from igm.submodels.tif_ex          import *
-from igm.submodels.time_step       import *
+
 
 
 

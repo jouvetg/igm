@@ -9,9 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os, glob
 from netCDF4 import Dataset
-  
-def str2bool(v):
-    return v.lower() in ("true", "1")
+from igm.modules.utils import str2bool
     
 def params_prepare_data(parser):
  
@@ -70,7 +68,7 @@ def params_prepare_data(parser):
     #     help="Name of the geology file"
     # )
  
-def init_prepare_data(params,state):
+def init_prepare_data(params,self):
     """
     This script uses OGGM utilities and GlaThiDa dataset to prepare data \
     for the IGM model for a specific glacier given the RGI ID. \
@@ -97,8 +95,8 @@ def init_prepare_data(params,state):
     import json
     
     gdirs, paths_ncdf = _oggm_util([params.RGI], params)
-    
-    print("read ncdf ----------------------------------")
+     
+    self.logger.info("Prepare data using oggm and glathida")
     
     nc = Dataset(paths_ncdf[0], "r+")
     
@@ -189,7 +187,7 @@ def init_prepare_data(params,state):
 
     nc.close()
      
-    state.logger.setLevel(params.logging_level)
+    self.logger.setLevel(params.logging_level)
  
 #########################################################################
 
@@ -269,7 +267,7 @@ def _oggm_util(RGIs, params):
     
         # We also have some diagnostics if you want
         df = compile_millan_statistics(gdirs)
-        print(df.T)
+#        print(df.T)
 
     path_ncdf = []
     for gdir in gdirs:
@@ -301,7 +299,7 @@ def _read_glathida(x, y, usurf, proj, path_glathida):
 
     transformer = Transformer.from_crs("epsg:4326", proj, always_xy=True)
 
-    print(x.shape, y.shape, usurf.shape)
+#    print(x.shape, y.shape, usurf.shape)
 
     fsurf = RectBivariateSpline(x, y, np.transpose(usurf))
 

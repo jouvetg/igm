@@ -9,7 +9,7 @@ import numpy as np
 import os, sys, shutil
 import time
 import tensorflow as tf
-from igm.utils import interp1d_tf
+from igm.modules.utils import interp1d_tf
 
 def params_smb_simple(parser):
 

@@ -12,6 +12,8 @@ import tensorflow as tf
 from netCDF4 import Dataset
 from scipy.interpolate import RectBivariateSpline
 
+from igm.modules.utils import complete_data
+
 def params_load_ncdf_data(parser):
 
     parser.add_argument(
@@ -67,34 +69,5 @@ def init_load_ncdf_data(params,self):
 
     nc.close()
     
-    _complete_data(self)
+    complete_data(self)
 
-def _complete_data(self):
-    """
-    This function add a postriori import fields such as X, Y, x, dx, ....
-    """
-
-    # define grids, i.e. self.X and self.Y has same shape as self.thk    
-    if not hasattr(self, "X"):  
-        self.X, self.Y = tf.meshgrid(self.x, self.y)
-
-    # define cell spacing
-    if not hasattr(self, "dx"):
-        self.dx = self.x[1] - self.x[0]
-
-    # define dX
-    if not hasattr(self, "dx"):
-        self.dX = tf.ones_like(self.X) * self.dx
-
-    # if thickness is not defined in the netcdf, then it is set to zero
-    if not hasattr(self, "thk"):
-        self.thk = tf.Variable(tf.zeros((self.y.shape[0], self.x.shape[0])))
-
-    # at this point, we should have defined at least topg or usurf
-    assert hasattr(self, "topg") | hasattr(self, "usurf")
-
-    # define usurf (or topg) from topg (or usurf) and thk
-    if hasattr(self, "usurf"):
-        self.topg  = tf.Variable(self.usurf - self.thk)
-    else:
-        self.usurf = tf.Variable(self.topg + self.thk)

@@ -15,18 +15,6 @@ def params_core():
     parser = argparse.ArgumentParser(description="IGM")
     
     parser.add_argument(
-        "--tstart", 
-        type=float, 
-        default=2000.0, 
-        help="Start modelling time (default 2000)"
-    )
-    parser.add_argument(
-        "--tend", 
-        type=float, 
-        default=2100.0, 
-        help="End modelling time (default: 2100)"
-    )
-    parser.add_argument(
         "--working_dir", 
         type=str, default="", 
         help="Working directory (default empty string)"

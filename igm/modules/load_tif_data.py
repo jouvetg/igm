@@ -9,7 +9,9 @@ import numpy as np
 import os
 import tensorflow as tf
 
-def load_tif_data(self,variables):
+from igm.modules.utils import complete_data
+
+def init_load_tif_data(params,self):
     """
     Load the input files from tiff file (alternative to load_ncdf_data)
     Select available fields in variables
@@ -19,9 +21,11 @@ def load_tif_data(self,variables):
     """
     
     import rasterio
+
+    files = glob.glob(os.path.join(self.config.working_dir,'*.tif'))
     
-    for var in variables:
-        file = os.path.join(self.config.working_dir,var+'.tif')
+    for file in files:
+        var = os.path.split(file)[-1].split('.')[0]
         if os.path.exists(file):
             self.profile_tif_file = rasterio.open(file, 'r').profile
             with rasterio.open(file) as src:    
@@ -37,3 +41,5 @@ def load_tif_data(self,variables):
  
     self.x = tf.constant(x.astype("float32"))
     self.y = tf.constant(y.astype("float32"))
+
+    complete_data(self)

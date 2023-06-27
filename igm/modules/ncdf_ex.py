@@ -13,7 +13,7 @@ import tensorflow as tf
 import argparse
 from netCDF4 import Dataset
 
-from igm.utils import getmag
+from igm.modules.utils import getmag
 
 def params_ncdf_ex(parser):
 

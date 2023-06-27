@@ -1,0 +1,20 @@
+                        tstart : 100.0
+                          tend : 200.0
+                   working_dir : 
+                 logging_level : CRITICAL
+                  logging_file : igm.log
+                  geology_file : geology.nc
+                      resample : 1
+              init_strflowctrl : 78
+                init_slidingco : 0
+                init_arrhenius : 78
+        iceflow_model_lib_path : ../../model-lib/f15_cfsflow_GJ_22_a
+          multiple_window_size : 0
+              force_max_velbar : 0
+                         tsave : 10
+                           cfl : 0.3
+                         dtmax : 10.0
+                  vars_to_save : ['topg', 'usurf', 'thk', 'smb', 'velbar_mag', 'velsurf_mag']
+                     plot_live : True
+                       varplot : velbar_mag
+                   varplot_max : 250

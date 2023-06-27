@@ -13,13 +13,13 @@ import igm
 steps = [
 #          'prepare_data',
           'load_ncdf_data',
-          'smb',
+          'smb_simple',
           'iceflow_v1',
           'time_step',
           'thk',
           'ncdf_ex',
           'ncdf_ts',
-          'plot_sp',
+          'plot_vs',
           'print_info'
          ]
 

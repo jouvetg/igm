@@ -1,6 +1,0 @@
-             iceflow  |  mean time per it :   0.0058  |  total :   2.6812  |  number it :      465
-           time_step  |  mean time per it :   0.0005  |  total :   0.2496  |  number it :      465
-                 thk  |  mean time per it :   0.0004  |  total :   0.1914  |  number it :      465
-             ncdf_ex  |  mean time per it :   0.0056  |  total :   0.0556  |  number it :       10
-             plot_vs  |  mean time per it :   0.1841  |  total :   1.8414  |  number it :       10
-                 all  |  mean time per it :   5.0192  |  total :   5.0192  |  number it :        1

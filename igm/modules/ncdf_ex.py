@@ -15,33 +15,40 @@ from netCDF4 import Dataset
 
 from igm.modules.utils import getmag
 
-def params_ncdf_ex(parser):
 
+def params_ncdf_ex(parser):
     parser.add_argument(
         "--vars_to_save",
         type=list,
-        default=["topg", "usurf", "thk", "smb", "velbar_mag", "velsurf_mag",],
+        default=[
+            "topg",
+            "usurf",
+            "thk",
+            "smb",
+            "velbar_mag",
+            "velsurf_mag",
+        ],
         help="List of variables to be recorded in the ncdf file",
     )
-    
-    # params = self.parser.parse_args()
-    
-def init_ncdf_ex(params,self):
 
-    self.tcomp["ncdf_ex"] = [] 
-    
-    os.system('echo rm '+ os.path.join(params.working_dir, "ex.nc") + ' >> clean.sh')
-     
+    # params = self.parser.parse_args()
+
+
+def init_ncdf_ex(params, self):
+    self.tcomp["ncdf_ex"] = []
+
+    os.system("echo rm " + os.path.join(params.working_dir, "ex.nc") + " >> clean.sh")
+
     _def_var_info(self)
-    
-def update_ncdf_ex(params,self):
+
+
+def update_ncdf_ex(params, self):
     """
-    This function write 2D field variables defined in the list config.vars_to_save 
+    This function write 2D field variables defined in the list config.vars_to_save
     into the ncdf output file ex.nc
     """
- 
-    if self.saveresult:
 
+    if self.saveresult:
         self.tcomp["ncdf_ex"].append(time.time())
 
         if "velbar_mag" in params.vars_to_save:
@@ -58,12 +65,11 @@ def update_ncdf_ex(params,self):
 
         if "meantemp" in params.vars_to_save:
             self.meantemp = tf.math.reduce_mean(self.air_temp, axis=0)
- 
+
         if not hasattr(self, "already_called_update_ncdf_ex"):
-            
             self.already_called_update_ncdf_ex = True
- 
-            self.logger.info("Initialize NCDF ex output Files" )
+
+            self.logger.info("Initialize NCDF ex output Files")
 
             nc = Dataset(
                 os.path.join(params.working_dir, "ex.nc"),
@@ -93,10 +99,7 @@ def update_ncdf_ex(params,self):
             E[:] = self.x.numpy()
 
             for var in params.vars_to_save:
-
-                E = nc.createVariable(
-                    var, np.dtype("float32").char, ("time", "y", "x")
-                )
+                E = nc.createVariable(var, np.dtype("float32").char, ("time", "y", "x"))
                 E.long_name = self.var_info[var][0]
                 E.units = self.var_info[var][1]
                 E[0, :, :] = vars(self)[var].numpy()
@@ -104,8 +107,7 @@ def update_ncdf_ex(params,self):
             nc.close()
 
         else:
-            
-            self.logger.info("Write NCDF ex file at time : "+ str(self.t.numpy()))
+            self.logger.info("Write NCDF ex file at time : " + str(self.t.numpy()))
 
             nc = Dataset(
                 os.path.join(params.working_dir, "ex.nc"),
@@ -124,34 +126,34 @@ def update_ncdf_ex(params,self):
         self.tcomp["ncdf_ex"][-1] -= time.time()
         self.tcomp["ncdf_ex"][-1] *= -1
 
-def _def_var_info(self):
 
+def _def_var_info(self):
     # give information on variables for output ncdf, TODO: IMPROVE
     self.var_info = {}
-    self.var_info["topg"]       = ["Basal Topography", "m"]
-    self.var_info["usurf"]      = ["Surface Topography", "m"]
-    self.var_info["thk"]        = ["Ice Thickness", "m"]
-    self.var_info["icemask"]    = ["Ice mask", "NO UNIT"]
-    self.var_info["smb"]        = ["Surface Mass Balance", "m/y"]
-    self.var_info["ubar"]       = ["x depth-average velocity of ice", "m/y"]
-    self.var_info["vbar"]       = ["y depth-average velocity of ice", "m/y"]
+    self.var_info["topg"] = ["Basal Topography", "m"]
+    self.var_info["usurf"] = ["Surface Topography", "m"]
+    self.var_info["thk"] = ["Ice Thickness", "m"]
+    self.var_info["icemask"] = ["Ice mask", "NO UNIT"]
+    self.var_info["smb"] = ["Surface Mass Balance", "m/y"]
+    self.var_info["ubar"] = ["x depth-average velocity of ice", "m/y"]
+    self.var_info["vbar"] = ["y depth-average velocity of ice", "m/y"]
     self.var_info["velbar_mag"] = ["Depth-average velocity magnitude of ice", "m/y"]
-    self.var_info["uvelsurf"]   = ["x surface velocity of ice", "m/y"]
-    self.var_info["vvelsurf"]   = ["y surface velocity of ice", "m/y"]
-    self.var_info["wvelsurf"]   = ["z surface velocity of ice", "m/y"]
+    self.var_info["uvelsurf"] = ["x surface velocity of ice", "m/y"]
+    self.var_info["vvelsurf"] = ["y surface velocity of ice", "m/y"]
+    self.var_info["wvelsurf"] = ["z surface velocity of ice", "m/y"]
     self.var_info["velsurf_mag"] = ["Surface velocity magnitude of ice", "m/y"]
-    self.var_info["uvelbase"]   = ["x basal velocity of ice", "m/y"]
-    self.var_info["vvelbase"]   = ["y basal velocity of ice", "m/y"]
-    self.var_info["wvelbase"]   = ["z basal velocity of ice", "m/y"]
+    self.var_info["uvelbase"] = ["x basal velocity of ice", "m/y"]
+    self.var_info["vvelbase"] = ["y basal velocity of ice", "m/y"]
+    self.var_info["wvelbase"] = ["z basal velocity of ice", "m/y"]
     self.var_info["velbase_mag"] = ["Basal velocity magnitude of ice", "m/y"]
-    self.var_info["divflux"]    = ["Divergence of the ice flux", "m/y"]
-    self.var_info["strflowctrl"] = ["arrhenius+1.0*slidingco","MPa$^{-3}$ a$^{-1}$"]
-    self.var_info["dtopgdt"]    = ["Erosion rate", "m/y"]
-    self.var_info["arrhenius"]  = ["Arrhenius factor", "MPa$^{-3}$ a$^{-1}$"]
-    self.var_info["slidingco"]  = ["Sliding Coefficient", "km MPa$^{-3}$ a$^{-1}$"]
-    self.var_info["meantemp"]   = ["Mean anual surface temperatures", "°C"]
-    self.var_info["meanprec"]   = ["Mean anual precipitation", "m/y"]
-    self.var_info["vol"]        = ["Ice volume", "km^3"]
-    self.var_info["area"]       = ["Glaciated area", "km^2"]
-    self.var_info["velsurfobs_mag"] = ["Obs. surf. speed of ice","m/y"]
-    self.var_info["weight_particles"] = ["weight_particles","no"]
+    self.var_info["divflux"] = ["Divergence of the ice flux", "m/y"]
+    self.var_info["strflowctrl"] = ["arrhenius+1.0*slidingco", "MPa$^{-3}$ a$^{-1}$"]
+    self.var_info["dtopgdt"] = ["Erosion rate", "m/y"]
+    self.var_info["arrhenius"] = ["Arrhenius factor", "MPa$^{-3}$ a$^{-1}$"]
+    self.var_info["slidingco"] = ["Sliding Coefficient", "km MPa$^{-3}$ a$^{-1}$"]
+    self.var_info["meantemp"] = ["Mean anual surface temperatures", "°C"]
+    self.var_info["meanprec"] = ["Mean anual precipitation", "m/y"]
+    self.var_info["vol"] = ["Ice volume", "km^3"]
+    self.var_info["area"] = ["Glaciated area", "km^2"]
+    self.var_info["velsurfobs_mag"] = ["Obs. surf. speed of ice", "m/y"]
+    self.var_info["weight_particles"] = ["weight_particles", "no"]

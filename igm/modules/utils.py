@@ -8,13 +8,15 @@ Published under the GNU GPL (Version 3), check at the LICENSE file
 import numpy as np
 import os, sys, shutil
 import matplotlib.pyplot as plt
-import tensorflow as tf  
- 
+import tensorflow as tf
+
+
 def str2bool(v):
-    return v.lower() in ("true", "1") 
+    return v.lower() in ("true", "1")
+
 
 @tf.function()
-def getmag( u, v):
+def getmag(u, v):
     """
     return the norm of a 2D vector, e.g. to compute velbase_mag
     """
@@ -23,8 +25,9 @@ def getmag( u, v):
         axis=2,
     )
 
+
 @tf.function()
-def compute_gradient_tf( s, dx, dy):
+def compute_gradient_tf(s, dx, dy):
     """
     compute spatial 2D gradient of a given field
     """
@@ -34,17 +37,32 @@ def compute_gradient_tf( s, dx, dy):
 
     # EY = tf.concat([s[0:1, :], 0.5 * (s[:-1, :] + s[1:, :]), s[-1:, :]], 0)
     # diffy = (EY[1:, :] - EY[:-1, :]) / dy
-    
-    EX = tf.concat([ 1.5*s[:,0:1] - 0.5*s[:,1:2], 0.5*s[:,:-1] + 0.5*s[:,1:], 1.5*s[:,-1:] - 0.5*s[:,-2:-1] ], 1)
+
+    EX = tf.concat(
+        [
+            1.5 * s[:, 0:1] - 0.5 * s[:, 1:2],
+            0.5 * s[:, :-1] + 0.5 * s[:, 1:],
+            1.5 * s[:, -1:] - 0.5 * s[:, -2:-1],
+        ],
+        1,
+    )
     diffx = (EX[:, 1:] - EX[:, :-1]) / dx
 
-    EY = tf.concat([ 1.5*s[0:1,:] - 0.5*s[1:2,:], 0.5*s[:-1,:] + 0.5*s[1:,:], 1.5*s[-1:,:] - 0.5*s[-2:-1,:] ], 0)
+    EY = tf.concat(
+        [
+            1.5 * s[0:1, :] - 0.5 * s[1:2, :],
+            0.5 * s[:-1, :] + 0.5 * s[1:, :],
+            1.5 * s[-1:, :] - 0.5 * s[-2:-1, :],
+        ],
+        0,
+    )
     diffy = (EY[1:, :] - EY[:-1, :]) / dy
 
     return diffx, diffy
 
+
 @tf.function()
-def compute_divflux( u, v, h, dx, dy):
+def compute_divflux(u, v, h, dx, dy):
     """
     #   upwind computation of the divergence of the flux : d(u h)/dx + d(v h)/dy
     #   First, u and v are computed on the staggered grid (i.e. cell edges)
@@ -71,16 +89,16 @@ def compute_divflux( u, v, h, dx, dy):
 
     ## Computation of the divergence, final shape is (ny,nx)
     return (Qx[:, 1:] - Qx[:, :-1]) / dx + (Qy[1:, :] - Qy[:-1, :]) / dy
-  
+
+
 @tf.function()
-def interp1d_tf(xs,ys,x):
-     
-    x = tf.clip_by_value(x,tf.reduce_min(xs),tf.reduce_max(xs))
-    
+def interp1d_tf(xs, ys, x):
+    x = tf.clip_by_value(x, tf.reduce_min(xs), tf.reduce_max(xs))
+
     # determine the output data type
     ys = tf.convert_to_tensor(ys)
     dtype = ys.dtype
-    
+
     # normalize data types
     ys = tf.cast(ys, tf.float64)
     xs = tf.cast(xs, tf.float64)
@@ -95,7 +113,7 @@ def interp1d_tf(xs,ys,x):
     ms = tf.pad(ms[:-1], [(1, 1)])
 
     # solve for intercepts
-    bs = ys - ms*xs
+    bs = ys - ms * xs
 
     # search for the line parameters at each input data point
     # create a grid of the inputs and piece breakpoints for thresholding
@@ -106,16 +124,17 @@ def interp1d_tf(xs,ys,x):
     b = tf.gather(bs, i, axis=-1)
 
     # apply the linear mapping at each input data point
-    y = m*x + b
+    y = m * x + b
     return tf.cast(tf.reshape(y, tf.shape(x)), dtype)
+
 
 def complete_data(self):
     """
     This function add a postriori import fields such as X, Y, x, dx, ....
     """
 
-    # define grids, i.e. self.X and self.Y has same shape as self.thk    
-    if not hasattr(self, "X"):  
+    # define grids, i.e. self.X and self.Y has same shape as self.thk
+    if not hasattr(self, "X"):
         self.X, self.Y = tf.meshgrid(self.x, self.y)
 
     # define cell spacing
@@ -135,7 +154,6 @@ def complete_data(self):
 
     # define usurf (or topg) from topg (or usurf) and thk
     if hasattr(self, "usurf"):
-        self.topg  = tf.Variable(self.usurf - self.thk)
+        self.topg = tf.Variable(self.usurf - self.thk)
     else:
         self.usurf = tf.Variable(self.topg + self.thk)
-

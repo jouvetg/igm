@@ -11,7 +11,7 @@ import tensorflow as tf
 import igm
 
 # Define in order the model components step to be updated
-steps = [
+modules = [
     #          'prepare_data',
     "load_ncdf_data",
     "smb_simple",
@@ -35,7 +35,7 @@ steps = [
 
 # Collect and parse all the parameters of all model components
 parser = igm.params_core()
-for step in [s for s in steps if hasattr(igm, "params_" + s)]:
+for module in [m for m in modules if hasattr(igm, "params_" + s)]:
     getattr(igm, "params_" + step)(parser)
 params = parser.parse_args()
 
@@ -55,13 +55,13 @@ state = igm.State(params)
 # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
 with tf.device("/GPU:0"):
     # Initialize all the model components in turn
-    for step in [s for s in steps if hasattr(igm, "init_" + s)]:
+    for module in [m for m in modules if hasattr(igm, "init_" + s)]:
         getattr(igm, "init_" + step)(params, state)
 
     # Time loop, perform the simulation until reaching the defined end time
     while state.t < params.tend:
         # Update in turn each model components
-        for step in [s for s in steps if hasattr(igm, "update_" + s)]:
+        for for module in [m for m in modules if hasattr(igm, "update_" + s)]:
             getattr(igm, "update_" + step)(params, state)
 
 # Provide computational statistic of the run

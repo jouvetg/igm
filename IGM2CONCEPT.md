@@ -2,16 +2,8 @@
 [![CI badge](https://github.com/AdrienWehrle/earthspy/workflows/CI/badge.svg)](https://github.com/AdrienWehrle/igm/actions)
 ### <h1 align="center" id="title">IGM 2.0 </h1>
 
-# Rational
- 
-- Increasing demand for “good” glacier models (future projection & paleo)
-- Well established / tradi. models have little room for subs. improvements (unless being completely rewritten in GPU-compatible code)
-- Community codes have proven their worth (OGGM, PISM, Elmer,….)
-- IGM has potential to overcome computational bottleneck in some applications, but it remains in an experimental state
-- ~ 10-15 users to date, the community (mostly paleo) is interested!
-
 # Goal:
-- Release of an improved version (IGM 2.0) that meets standard of collaborative codes, together with a technical GMD paper. A first release of IGM2 ready on July 12 for IUGG conference.
+- Release of an improved version (IGM 2.0) that meets standard of collaborative codes.
 
 # Requirements:
 - Keeping IGM simple to use! 

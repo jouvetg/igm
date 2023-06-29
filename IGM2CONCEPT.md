@@ -1,15 +1,14 @@
 [![License badge](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![CI badge](https://github.com/AdrienWehrle/earthspy/workflows/CI/badge.svg)](https://github.com/AdrienWehrle/igm/actions)
-### <h1 align="center" id="title">IGM 2.0 </h1>
+### <h1 align="center" id="title">IGM 2.0 -- concept </h1>
 
 # Goal:
 - Release of an improved version (IGM 2.0) that meets standard of collaborative codes, keeping it simple.
  
 # Major change:
 - Get rid of the all-in-one igm class, split into multiple indendent modules/files (functions) that may work independly
-- igm is a python module that contains functions and utilities
-- Make a proper independent parameter managers
-- Keep the igm-run.py controlled by user.
+- igm is now a python module that contains functions and utilities
+- Proper and independent parameter managing
 
 # New concepts
 
@@ -43,7 +42,11 @@
 │   └── f15_cfsflow_GJ_22_a
 ```
 
-- In igm-run.py one first define a suite of modules that will be called iteratively 
+- Each file XXX of folder 'module' contains a suite of functions. The most important are
+params_XXX(parser), init_XXX(params,state) and update_XXX(params,state), which provide
+the parameters, initialize and update the quantity XXX within the time iteration.
+
+- In igm-run.py, one first defines a suite of modules that will be called iteratively later on
 ```python
 modules = [
     "load_ncdf_data",  # this will read ncdf inpout data file
@@ -54,8 +57,12 @@ modules = [
     "ncdf_ex",         # outptut ncdf file on a regular basis
 ]
 ```
+In the above list, the user is free to add any other existing or own-made modules
+(e.g. to compute particle trajectories, to compute ice temeprature, ploting, reading
+different format like tif, printing live informations, ect..)
 
-- params is a argparse set of parameters, parsing is done at the begining:
+- Then, params is a argparse set of parameters, parsing is done at the begining
+(only the parameters of the module list are called):
 ```python
 parser = igm.params_core()
 for module in modules:

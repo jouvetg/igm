@@ -56,3 +56,4 @@ with tf.device("/GPU:0"):
 
 # Provide computational statistic of the run
 igm.update_print_all_comp_info(params, state)
+

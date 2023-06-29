@@ -61,6 +61,14 @@ the parameters, initialize and update the quantity XXX within the time iteration
 'smb_simple.py' contains functions params_smb_simple(parser), init_smb_simple(params,state)
 and update_smb_simple(params,state).
 
+- First one needs to load basic libraries including igm:
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+import igm
+```
+
 - In igm-run.py, one first defines a suite of modules that will be called iteratively later on
 ```python
 modules = [
@@ -121,3 +129,43 @@ with tf.device("/GPU:0"):
         update_time_step(params, state)
         update_thk(params, state)
 ```
+
+# Usage -- different levels
+
+- This **simplest usage** of IGM is to take over the default file igm-run.py, 
+and simpling changing parameters in comand line :
+
+	python igm-run.py --tstart 1980 --tend 2100 
+
+or parameters may also be changes *harldy* in igm-run-py shortly after parsing.
+
+- In a second step, the user may adjust the module list to the user wishes, and 
+possibly create its own function:
+
+```python
+modules = ["load_ncdf_data", "mysmb", "iceflow_v1", "time_step", "thk", "ncdf_ex"] 
+
+def params_mysmb(parser):
+    parser.add_argument(
+        "--ela", type=float, default=3000, help="GIVE YOUR ELA",
+    )
+
+def init_mysmb(params,state):
+    # nothing to initialize, you may use it to read a parameter file once for all at the beg.
+    pass 
+
+def update_mysmb(params,state):
+    state.smb  = state.usurf - params.ela
+    state.smb *= tf.where(tf.less(state.smb, 0), 0.006, 0.009)
+    state.smb  = tf.clip_by_value(state.smb, -100, 2)
+
+# make sure to make these function new attributes of the igm module
+igm.params_mysmb = update_mysmb  
+igm.init_mysmb   = init_mysmb
+igm.update_mysmb = update_mysmb
+```
+
+- Utltimatly, everyone is free to make its module embedded to the igm module.
+This can be a new model component (e.g. calving related, climate related), 
+a new way to read or write input file (tif, ncdf), a postprocessing (particle traj.),
+a plotting routine (2d,3d).

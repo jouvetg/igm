@@ -13,6 +13,36 @@
 
 # New concepts
 
+- igm is a python module located in igm folder:
+
+`
+├── examples
+│   └── aletsch-basic
+├── igm
+│   ├── __init__.py
+│   ├── modules
+│   │   ├── iceflow_v1.py
+│   │   ├── load_ncdf_data.py
+│   │   ├── load_tif_data.py
+│   │   ├── ncdf_ex.py
+│   │   ├── ncdf_ts.py
+│   │   ├── plot_sp.py
+│   │   ├── plot_vs.py
+│   │   ├── prepare_data.py
+│   │   ├── print_info.py
+│   │   ├── smb_simple.py
+│   │   ├── synthetic.py
+│   │   ├── thk.py
+│   │   ├── tif_ex.py
+│   │   ├── time_step.py
+│   │   └── utils.py
+│   ├── params_core.py
+│   └── state.py
+├── LICENSE
+├── model-lib
+│   └── f15_cfsflow_GJ_22_a
+`
+
 - In igm-run.py one first define a suite of modules that will be called iteratively 
 ```python
 modules = [

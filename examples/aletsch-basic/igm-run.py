@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
-
-sys.path.append("/home/gjouvet/IGM/igm2-public/")
+# import sys
+# sys.path.append("/home/gjouvet/IGM/igm2-public/")
 
 # Import the most important libraries
 import numpy as np
@@ -23,15 +22,6 @@ modules = [
     "plot_vs",
     "print_info",
 ]
-
-# def update_smb(params,state):
-#     state.smb  = state.usurf - 2000
-#     state.smb *= tf.where(tf.less(state.smb, 0), 0.006, 0.009)
-#     state.smb  = tf.clip_by_value(state.smb, -100, 2)
-#     if hasattr(state, "icemask"):
-#         state.smb = tf.where(state.icemask > 0.5, state.smb, -10)
-
-# igm.update_smb = update_smb
 
 # Collect and parse all the parameters of all model components
 parser = igm.params_core()

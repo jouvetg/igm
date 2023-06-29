@@ -15,7 +15,7 @@
 
 - igm is a python module located in igm folder:
 
-`
+```
 ├── examples
 │   └── aletsch-basic
 ├── igm
@@ -41,7 +41,7 @@
 ├── LICENSE
 ├── model-lib
 │   └── f15_cfsflow_GJ_22_a
-`
+```
 
 - In igm-run.py one first define a suite of modules that will be called iteratively 
 ```python

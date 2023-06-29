@@ -53,8 +53,6 @@ def params_iceflow_v1(parser):
         help="This permits to artif. upper-bound velocities, active if > 0 (default: 0)",
     )
 
-    # params = self.parser.parse_args()
-
 
 def init_iceflow_v1(params, self):
     """
@@ -122,10 +120,7 @@ def update_iceflow_v1(params, self):
     At the time of writing, I recommend using *f15_cfsflow_GJ_22_a*, which
     takes ice thickness, top surface slopes, the sliding coefficient c
     ('slidingco'), and Arrhenuis factor A ('arrhenius'), and return basal,
-    vertical-average and surface x- and y- velocity components as depicted
-    on the following graph:
-
-    ![](https://github.com/jouvetg/igm/blob/main/fig/mapping-f15.png)
+    vertical-average and surface x- and y- velocity components.
 
     I have trained *f15_cfsflow_GJ_22_a* using a large dataset of modeled
     glaciers (based on a Stokes-based CfsFlow ice flow solver) and varying

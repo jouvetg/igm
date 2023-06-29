@@ -26,8 +26,6 @@ def params_smb_simple(parser):
         help="Name of the imput file for the simple mass balance model",
     )
 
-    # params = self.parser.parse_args()
-
 
 def init_smb_simple(params, self):
     """

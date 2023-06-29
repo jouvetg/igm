@@ -14,6 +14,9 @@ from igm.modules.utils import complete_data
 
 
 def init_synthetic(params, self):
+    """
+    Make a synthetic glacier bedrock
+    """
     x = np.arange(0, 100) * 100  # make x-axis, lenght 10 km, resolution 100 m
     y = np.arange(0, 200) * 100  # make y-axis, lenght 20 km, resolution 100 m
 

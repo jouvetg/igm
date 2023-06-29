@@ -9,8 +9,19 @@ import numpy as np
 import os
 import tensorflow as tf
 
+def params_tif_ex(parser):
+    parser.add_argument(
+        "--vars_to_save",
+        type=list,
+        default=[
+            "usurf",
+            "thk",
+        ],
+        help="List of variables to be recorded in the ncdf file",
+    )
 
-def update_tif_ex(params, self, variables):
+
+def update_tif_ex(params, self):
     """
     Save variables in tiff file (alternative to update_ncdf_ex)
     Select available fields in variables, e.g. topg, usurf, ...
@@ -21,7 +32,7 @@ def update_tif_ex(params, self, variables):
     import rasterio
 
     if self.saveresult:
-        for var in variables:
+        for var in params.vars_to_save:
             file = os.path.join(
                 params.working_dir, var + "-" + str(int(self.t)).zfill(6) + ".tif"
             )

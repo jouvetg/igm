@@ -38,8 +38,6 @@ def params_time_step(parser):
         help="Maximum time step allowed, used only with slow ice (default: 10.0)",
     )
 
-    # params = self.parser.parse_args()
-
 
 def init_time_step(params, self):
     self.tcomp["time_step"] = []

@@ -93,6 +93,9 @@ def compute_divflux(u, v, h, dx, dy):
 
 @tf.function()
 def interp1d_tf(xs, ys, x):
+    """
+    This is a 1D interpolation tensorflow implementation
+    """
     x = tf.clip_by_value(x, tf.reduce_min(xs), tf.reduce_max(xs))
 
     # determine the output data type

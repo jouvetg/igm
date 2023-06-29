@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-# import sys
-# sys.path.append("/home/gjouvet/IGM/igm2-public/")
+import sys
+sys.path.append("/home/gjouvet/IGM/igm2-public/")
 
 # Import the most important libraries
 import numpy as np
@@ -25,8 +25,8 @@ modules = [
 
 # Collect and parse all the parameters of all model components
 parser = igm.params_core()
-for module in [m for m in modules if hasattr(igm, "params_" + s)]:
-    getattr(igm, "params_" + step)(parser)
+for module in [m for m in modules if hasattr(igm, "params_" + m)]:
+    getattr(igm, "params_" + module)(parser)
 params = parser.parse_args()
 
 # Override parameters
@@ -45,14 +45,14 @@ state = igm.State(params)
 # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
 with tf.device("/GPU:0"):
     # Initialize all the model components in turn
-    for module in [m for m in modules if hasattr(igm, "init_" + s)]:
-        getattr(igm, "init_" + step)(params, state)
+    for module in [m for m in modules if hasattr(igm, "init_" + m)]:
+        getattr(igm, "init_" + module)(params, state)
 
     # Time loop, perform the simulation until reaching the defined end time
     while state.t < params.tend:
         # Update in turn each model components
-        for for module in [m for m in modules if hasattr(igm, "update_" + s)]:
-            getattr(igm, "update_" + step)(params, state)
+        for module in [m for m in modules if hasattr(igm, "update_" + m)]:
+            getattr(igm, "update_" + module)(params, state)
 
 # Provide computational statistic of the run
 igm.update_print_all_comp_info(params, state)

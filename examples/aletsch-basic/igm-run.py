@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import igm
-
+ 
 # Define in order the model components step to be updated
 modules = [
     #          'prepare_data',
@@ -19,7 +19,7 @@ modules = [
     "thk",
     "ncdf_ex",
     "ncdf_ts",
-    "plot_vs",
+#    "plot_vs",
     "print_info",
 ]
 
@@ -57,3 +57,7 @@ with tf.device("/GPU:0"):
 # Provide computational statistic of the run
 igm.update_print_all_comp_info(params, state)
 
+#############################################
+
+from igm.modules.utils import anim3d_from_netcdf
+igm.anim3d_from_netcdf()

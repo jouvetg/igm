@@ -160,3 +160,80 @@ def complete_data(self):
         self.topg = tf.Variable(self.usurf - self.thk)
     else:
         self.usurf = tf.Variable(self.topg + self.thk)
+
+
+def anim3d_from_netcdf(working_dir=''):
+    """
+    3d Plot using mayavi library
+    """
+    from mayavi import mlab
+    import xarray as xr
+    import numpy as np
+
+    working_dir=''
+
+    ds = xr.open_dataset(os.path.join(working_dir,"ex.nc"), engine="netcdf4")
+    
+    X,Y = np.meshgrid(ds.x,ds.y)
+
+    TIME = np.array(ds.time)
+
+    # mlab.figure(bgcolor=(0.16, 0.28, 0.46))
+
+    XX=np.where(ds.thk[0]<1,np.nan,X)
+    YY=np.where(ds.thk[0]<1,np.nan,Y)
+    ZZ=np.where(ds.thk[0]<1,np.nan,ds.usurf[0])
+    CC=np.where(ds.thk[0]<1,np.nan,ds.velsurf_mag[0])
+
+    base = mlab.mesh(X,Y,ds.topg[0],  colormap='terrain',opacity=0.75)
+    surf = mlab.mesh(XX,YY,ZZ, scalars=CC, colormap='jet')
+    mlab.title('time '+str(TIME[0]), size=0.5) 
+    
+    @mlab.animate
+    def anim():
+        for i in range(0,ds.thk.shape[0]): 
+            surf.mlab_source.z       = np.where(ds.thk[i]<1,np.nan,ds.usurf[i]) 
+            surf.mlab_source.scalars = np.where(ds.thk[i]<1,np.nan,ds.velsurf_mag[i]) 
+            mlab.title('time '+str(TIME[i]), size=0.5) 
+            yield
+
+    anim() 
+    mlab.show()
+ 
+def anim_from_netcdf(working_dir=''):
+
+    import xarray as xr
+    from matplotlib import animation
+
+    ds = xr.open_dataset(os.path.join(working_dir,"ex.nc"), engine="netcdf4")
+
+    tas = ds.thk
+
+    # Get a handle on the figure and the axes
+    fig, ax = plt.subplots(figsize=(8, 10))
+
+    # Plot the initial frame.
+    cax = tas[0, :, :].plot(
+        add_colorbar=True,
+        cmap="coolwarm",
+        vmin=0,
+        vmax=800,
+        cbar_kwargs={"extend": "neither"},
+    )
+
+    ax.axis("off")
+
+    # Next we need to create a function that updates the values for the colormesh, as well as the title.
+    def animate(frame):
+        cax.set_array(tas[frame, :, :].values.flatten())
+        ax.set_title("Time = " + str(tas.coords["time"].values[frame])[:13])
+
+    # Finally, we use the animation module to create the animation.
+    ani = animation.FuncAnimation(
+        fig,  # figure
+        animate,  # name of the function above
+        frames=tas.shape[0],  # Could also be iterable or list
+        interval=500,  # ms between frames
+    )
+
+    ani.save(os.path.join(working_dir,"animation.mp4"))

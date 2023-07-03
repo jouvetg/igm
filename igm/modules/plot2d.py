@@ -1,12 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jun 27 18:26:21 2023
-
-@author: gjouvet
-"""
-
-#!/usr/bin/env python3
 
 """
 Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
@@ -23,7 +15,13 @@ import tensorflow as tf
 from igm.modules.utils import *
 
 
-def params_plot_sp(parser):
+def params_plot2d(parser):
+    parser.add_argument(
+        "--editor",
+        type=str,
+        default="vs",
+        help="optimized for VS code (vs) or spyder (sp) for live plot",
+    )
     parser.add_argument(
         "--plot_live",
         type=str2bool,
@@ -44,7 +42,7 @@ def params_plot_sp(parser):
     )
 
 
-def init_plot_sp(params, self):
+def init_plot2d(params, self):
     self.extent = [np.min(self.x), np.max(self.x), np.min(self.y), np.max(self.y)]
 
     os.system(
@@ -54,13 +52,15 @@ def init_plot_sp(params, self):
     )
 
 
-def update_plot_sp(params, self):
+def update_plot2d(params, self):
     """
     Plot some variables (e.g. thickness, velocity, mass balance) over time
     """
 
+    from IPython.display import display, clear_output
+
     if self.saveresult:
-        from IPython.display import display, clear_output
+
 
         if params.varplot == "velbar_mag":
             self.velbar_mag = getmag(self.ubar, self.vbar)
@@ -74,6 +74,10 @@ def update_plot_sp(params, self):
         self.tcomp["plot_vs"].append(time.time())
 
         if firstime:
+            if params.editor=='vs':
+                # enable interactive mode
+                plt.ion()
+
             self.fig = plt.figure(dpi=200)
             self.ax = self.fig.add_subplot(1, 1, 1)
             self.ax.axis("off")
@@ -121,8 +125,14 @@ def update_plot_sp(params, self):
             self.ax.set_title("YEAR : " + str(self.t.numpy()), size=15)
 
         if params.plot_live:
-            clear_output(wait=True)
-            display(self.fig)
+            if params.editor=='vs':
+                # re-drawing the figure
+                self.fig.canvas.draw()
+                # to flush the GUI events
+                self.fig.canvas.flush_events()
+            else:
+                clear_output(wait=True)
+                display(self.fig)
 
         else:
             plt.savefig(

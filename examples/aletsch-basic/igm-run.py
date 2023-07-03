@@ -18,7 +18,7 @@ modules = [
     "thk",
     "ncdf_ex",
     "ncdf_ts",
-    "plot_vs",
+    "plot2d",
     "print_info",
 ]
 
@@ -37,7 +37,7 @@ params.iceflow_model_lib_path = "../../emulators/f21_pinnbp_GJ_23_a"
 params.plot_live = True
 params.varplot_max = 250
 # params.logging_file      = ''
-params.logging_level     = 'INFO'
+# params.logging_level     = 'INFO'
 
 # Define a state class/dictionnary that contains all the data
 state = igm.State(params)

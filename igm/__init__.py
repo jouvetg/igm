@@ -18,8 +18,7 @@ from igm.modules.iceflow_v1 import *
 from igm.modules.iceflow_v2 import *
 from igm.modules.ncdf_ex import *
 from igm.modules.ncdf_ts import *
-from igm.modules.plot_vs import *
-from igm.modules.plot_sp import *
+from igm.modules.plot2d  import *
 from igm.modules.print_info import *
 from igm.modules.smb_simple import *
 from igm.modules.thk import *

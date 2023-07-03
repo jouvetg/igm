@@ -15,6 +15,7 @@ from igm.modules.load_tif_data import *
 from igm.modules.prepare_data import *
 from igm.modules.load_ncdf_data import *
 from igm.modules.iceflow_v1 import *
+from igm.modules.iceflow_v2 import *
 from igm.modules.ncdf_ex import *
 from igm.modules.ncdf_ts import *
 from igm.modules.plot_vs import *

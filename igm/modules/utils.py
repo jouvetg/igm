@@ -145,7 +145,7 @@ def complete_data(self):
         self.dx = self.x[1] - self.x[0]
 
     # define dX
-    if not hasattr(self, "dx"):
+    if not hasattr(self, "dX"):
         self.dX = tf.ones_like(self.X) * self.dx
 
     # if thickness is not defined in the netcdf, then it is set to zero
@@ -169,8 +169,7 @@ def anim3d_from_netcdf(working_dir=''):
     from mayavi import mlab
     import xarray as xr
     import numpy as np
-
-    working_dir=''
+    import os
 
     ds = xr.open_dataset(os.path.join(working_dir,"ex.nc"), engine="netcdf4")
     
@@ -178,23 +177,34 @@ def anim3d_from_netcdf(working_dir=''):
 
     TIME = np.array(ds.time)
 
+    vmin = np.min(ds.velsurf_mag)
+    vmax = np.max(ds.velsurf_mag)
+
     # mlab.figure(bgcolor=(0.16, 0.28, 0.46))
 
-    XX=np.where(ds.thk[0]<1,np.nan,X)
-    YY=np.where(ds.thk[0]<1,np.nan,Y)
-    ZZ=np.where(ds.thk[0]<1,np.nan,ds.usurf[0])
-    CC=np.where(ds.thk[0]<1,np.nan,ds.velsurf_mag[0])
+    XX=np.where(ds.thk[0]==0,np.nan,X)
+    YY=np.where(ds.thk[0]==0,np.nan,Y)
+    ZZ=np.where(ds.thk[0]==0,np.nan,ds.usurf[0])
+    CC=np.array(ds.velsurf_mag[0])
 
     base = mlab.mesh(X,Y,ds.topg[0],  colormap='terrain',opacity=0.75)
-    surf = mlab.mesh(XX,YY,ZZ, scalars=CC, colormap='jet')
-    mlab.title('time '+str(TIME[0]), size=0.5) 
+    surf = mlab.mesh(XX,YY,ZZ, scalars=CC, colormap='jet',vmin=vmin,vmax=vmax)
+    mlab.colorbar(surf,orientation='vertical',title='Ice speed (m/y)')
+    mlab.title(str(TIME[0])+' y', size=0.5) 
+
+    # mlab.quiver3d(tf.expand_dims(state.X,axis=0),
+    #               tf.expand_dims(state.Y,axis=0),
+    #               tf.expand_dims(state.usurf,axis=0),
+    #               state.U[0,-1:],
+    #               state.U[1,-1:],
+    #               state.W[-1:])                  
     
-    @mlab.animate
+    @mlab.animate(ui=True)
     def anim():
         for i in range(0,ds.thk.shape[0]): 
-            surf.mlab_source.z       = np.where(ds.thk[i]<1,np.nan,ds.usurf[i]) 
-            surf.mlab_source.scalars = np.where(ds.thk[i]<1,np.nan,ds.velsurf_mag[i]) 
-            mlab.title('time '+str(TIME[i]), size=0.5) 
+            surf.mlab_source.z       = np.where(ds.thk[i]==0,np.nan,ds.usurf[i]) 
+            surf.mlab_source.scalars = np.array(ds.velsurf_mag[i])
+            mlab.title('Time '+str(int(TIME[i])), size=0.5) 
             yield
 
     anim() 

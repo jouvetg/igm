@@ -71,3 +71,7 @@ def init_load_ncdf_data(params, self):
     nc.close()
 
     complete_data(self)
+
+
+def update_load_ncdf_data(params, self):
+    pass

@@ -9,6 +9,7 @@ import numpy as np
 import os
 import tensorflow as tf
 
+
 def params_tif_ex(parser):
     parser.add_argument(
         "--vars_to_save",
@@ -20,6 +21,8 @@ def params_tif_ex(parser):
         help="List of variables to be recorded in the ncdf file",
     )
 
+def init_tif_ex(params, self):
+    pass
 
 def update_tif_ex(params, self):
     """

@@ -14,17 +14,20 @@ modules = [
     "load_ncdf_data",
     "smb_simple",
     "iceflow_v2",
+#    "particles_v2",
     "time_step",
     "thk",
-    "ncdf_ex",
-    "ncdf_ts",
-    "plot2d",
+    "topg_glacial_erosion",
+    "write_ncdf_ex",
+    "write_ncdf_ts",
+    "write_plot2d",
+#    "write_particles",
     "print_info",
 ]
 
 # Collect and parse all the parameters of all model components
 parser = igm.params_core()
-for module in [m for m in modules if hasattr(igm, "params_" + m)]:
+for module in modules:
     getattr(igm, "params_" + module)(parser)
 params = parser.parse_args()
 
@@ -32,8 +35,10 @@ params = parser.parse_args()
 params.tstart = 100.0
 params.tend = 200.0
 params.tsave = 10
-#params.iceflow_model_lib_path = "../../emulators/f15_cfsflow_GJ_22_a"
-params.iceflow_model_lib_path = "../../emulators/f21_pinnbp_GJ_23_a"
+if "iceflow_v1" in modules:
+    params.iceflow_model_lib_path = "../../emulators/f15_cfsflow_GJ_22_a"
+else:
+    params.iceflow_model_lib_path = "../../emulators/f21_pinnbp_GJ_23_a"
 params.plot_live = True
 params.varplot_max = 250
 # params.logging_file      = ''
@@ -45,13 +50,13 @@ state = igm.State(params)
 # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
 with tf.device("/GPU:0"):
     # Initialize all the model components in turn
-    for module in [m for m in modules if hasattr(igm, "init_" + m)]:
+    for module in modules:
         getattr(igm, "init_" + module)(params, state)
 
     # Time loop, perform the simulation until reaching the defined end time
     while state.t < params.tend:
-        # Update in turn each model components
-        for module in [m for m in modules if hasattr(igm, "update_" + m)]:
+        # Update each model components in turn
+        for module in modules:
             getattr(igm, "update_" + module)(params, state)
 
 # Provide computational statistic of the run

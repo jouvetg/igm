@@ -12,8 +12,11 @@ import tensorflow as tf
 
 from igm.modules.utils import complete_data
 
+def params_make_synthetic(parser):
+    pass
 
-def init_synthetic(params, self):
+
+def init_make_synthetic(params, self):
     """
     Make a synthetic glacier bedrock
     """
@@ -32,3 +35,7 @@ def init_synthetic(params, self):
     self.thk = tf.Variable(thk.astype("float32"))
 
     complete_data(self)
+
+
+def update_make_synthetic(params, self):
+    pass

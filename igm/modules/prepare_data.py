@@ -192,6 +192,9 @@ def init_prepare_data(params, self):
     self.logger.setLevel(params.logging_level)
 
 
+def update_prepare_data(params, self):
+    pass
+
 #########################################################################
 
 

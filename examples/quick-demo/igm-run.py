@@ -12,21 +12,24 @@ import math
  
 # Define in order the model components step to be updated
 modules = [
-    # "prepare_data",
+    "prepare_data",
     "load_ncdf_data",
     "mysmb",
     "iceflow_v1",
     "time_step",
     "thk",
-    "ncdf_ex",
-    "ncdf_ts",
-#    "plot_vs",
+    "write_ncdf_ex",
+    "write_ncdf_ts",
+#    "write_plot2d",
     "print_info",
 ]
 
 ## add custumized smb function
 def params_mysmb(parser):  
     parser.add_argument("--meanela", type=float, default=3000 )
+
+def init_mysmb(params,state):
+    pass
 
 def update_mysmb(params,state):
     # perturabe the ELA with sinusional signal 
@@ -41,11 +44,12 @@ def update_mysmb(params,state):
 
 # make sure to make these function new attributes of the igm module
 igm.params_mysmb = params_mysmb  
+igm.init_mysmb   = init_mysmb  
 igm.update_mysmb = update_mysmb
 
 # Collect and parse all the parameters of all model components
 parser = igm.params_core()
-for module in [m for m in modules if hasattr(igm, "params_" + m)]:
+for module in modules:
     getattr(igm, "params_" + module)(parser)
 params = parser.parse_args()
 
@@ -53,8 +57,10 @@ params = parser.parse_args()
 params.tstart = 2000.0
 params.tend   = 2100.0
 params.tsave  = 5
-params.iceflow_model_lib_path = "../../emulators/f15_cfsflow_GJ_22_a"
-#params.iceflow_model_lib_path = "../../emulators/f21_pinnbp_GJ_23_a"
+if "iceflow_v1" in modules:
+    params.iceflow_model_lib_path = "../../emulators/f15_cfsflow_GJ_22_a"
+else:
+    params.iceflow_model_lib_path = "../../emulators/f21_pinnbp_GJ_23_a"
 params.plot_live = True
 params.varplot_max = 250
 params.RGI = 'RGI60-01.00709'
@@ -67,7 +73,7 @@ state = igm.State(params)
 # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
 with tf.device("/GPU:0"):
     # Initialize all the model components in turn
-    for module in [m for m in modules if hasattr(igm, "init_" + m)]:
+    for module in modules:
         getattr(igm, "init_" + module)(params, state)
 
     # give a mean ela that is suitable for this glacier
@@ -76,7 +82,7 @@ with tf.device("/GPU:0"):
     # Time loop, perform the simulation until reaching the defined end time
     while state.t < params.tend:
         # Update in turn each model components
-        for module in [m for m in modules if hasattr(igm, "update_" + m)]:
+        for module in modules:
             getattr(igm, "update_" + module)(params, state)
 
 # Provide computational statistic of the run

@@ -16,7 +16,7 @@ from netCDF4 import Dataset
 from igm.modules.utils import getmag
 
 
-def params_ncdf_ex(parser):
+def params_write_ncdf_ex(parser):
     parser.add_argument(
         "--vars_to_save",
         type=list,
@@ -34,22 +34,22 @@ def params_ncdf_ex(parser):
     # params = self.parser.parse_args()
 
 
-def init_ncdf_ex(params, self):
-    self.tcomp["ncdf_ex"] = []
+def init_write_ncdf_ex(params, self):
+    self.tcomp["write_ncdf_ex"] = []
 
     os.system("echo rm " + os.path.join(params.working_dir, "ex.nc") + " >> clean.sh")
 
     _def_var_info(self)
 
 
-def update_ncdf_ex(params, self):
+def update_write_ncdf_ex(params, self):
     """
     This function write 2D field variables defined in the list config.vars_to_save
     into the ncdf output file ex.nc
     """
 
     if self.saveresult:
-        self.tcomp["ncdf_ex"].append(time.time())
+        self.tcomp["write_ncdf_ex"].append(time.time())
 
         if "velbar_mag" in params.vars_to_save:
             self.velbar_mag = getmag(self.ubar, self.vbar)
@@ -66,8 +66,8 @@ def update_ncdf_ex(params, self):
         if "meantemp" in params.vars_to_save:
             self.meantemp = tf.math.reduce_mean(self.air_temp, axis=0)
 
-        if not hasattr(self, "already_called_update_ncdf_ex"):
-            self.already_called_update_ncdf_ex = True
+        if not hasattr(self, "already_called_update_write_ncdf_ex"):
+            self.already_called_update_write_ncdf_ex = True
 
             self.logger.info("Initialize NCDF ex output Files")
 
@@ -123,8 +123,8 @@ def update_ncdf_ex(params, self):
 
             nc.close()
 
-        self.tcomp["ncdf_ex"][-1] -= time.time()
-        self.tcomp["ncdf_ex"][-1] *= -1
+        self.tcomp["write_ncdf_ex"][-1] -= time.time()
+        self.tcomp["write_ncdf_ex"][-1] *= -1
 
 
 def _def_var_info(self):

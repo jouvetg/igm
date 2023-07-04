@@ -12,15 +12,15 @@ import tensorflow as tf
 from netCDF4 import Dataset
 
 
-def params_ncdf_ts(self):
+def params_write_ncdf_ts(self):
     pass
 
 
-def init_ncdf_ts(params, self):
+def init_write_ncdf_ts(params, self):
     os.system("echo rm " + os.path.join(params.working_dir, "ts.nc") + " >> clean.sh")
 
 
-def update_ncdf_ts(params, self):
+def update_write_ncdf_ts(params, self):
     """
     This function write time serie variables (ice glaziated area and volume)
     into the ncdf output file ts.nc
@@ -30,8 +30,8 @@ def update_ncdf_ts(params, self):
         vol = np.sum(self.thk) * (self.dx**2) / 10**9
         area = np.sum(self.thk > 1) * (self.dx**2) / 10**6
 
-        if not hasattr(self, "already_called_update_ncdf_ts"):
-            self.already_called_update_ncdf_ts = True
+        if not hasattr(self, "already_called_update_write_ncdf_ts"):
+            self.already_called_update_write_ncdf_ts = True
 
             self.logger.info("Initialize NCDF ts output Files")
 

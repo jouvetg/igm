@@ -102,7 +102,7 @@ def params_iceflow_v2(parser):
         type=str2bool,
         default=True,
         help="stop_if_no_decrease for the solver",
-    ) 
+    )
 
     # emualtion parameters
     parser.add_argument(
@@ -900,17 +900,16 @@ def update_iceflow_diagnostic(params, self):
     update_iceflow_emulated(params, self)
 
     if self.it % 10 == 0:
-
         UT, Cost_Glen = solve_iceflow(params, self, self.UT)
         self.UT.assign(UT)
         COST_Glen = Cost_Glen[-1].numpy()
 
         print("nb solve iterations :", len(Cost_Glen))
- 
+
         l1, l2 = computemisfit(self, self.thk, self.U - self.UT)
- 
+
         ERR = [self.t.numpy(), COST_Glen, COST_Emulator, l1, l2]
-        
+
         print(ERR)
 
         with open(os.path.join(params.working_dir, "errors.txt"), "ab") as f:

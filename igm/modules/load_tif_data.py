@@ -11,6 +11,8 @@ import tensorflow as tf
 
 from igm.modules.utils import complete_data
 
+def params_load_tif_data(parser):
+    pass
 
 def init_load_tif_data(params, self):
     """
@@ -44,3 +46,6 @@ def init_load_tif_data(params, self):
     self.y = tf.constant(y.astype("float32"))
 
     complete_data(self)
+
+def update_load_tif_data(params, self):
+    pass

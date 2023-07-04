@@ -13,7 +13,7 @@ import igm
 modules = [
 #    "prepare_data",
     "load_ncdf_data",
-#    "optimize_v2",
+    "optimize_v2",
     "smb_simple",
     "iceflow_v2",
 #    "particles_v2",
@@ -60,7 +60,7 @@ with tf.device("/GPU:0"):
 
     # Time loop, perform the simulation until reaching the defined end time
     while state.t < params.tend:
-
+        
         # Update each model components in turn
         for module in modules:
             getattr(igm, "update_" + module)(params, state)

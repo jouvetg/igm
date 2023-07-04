@@ -14,6 +14,9 @@ import tensorflow as tf
 
 from igm.modules.utils import *
 
+from igm import emulators
+import importlib_resources
+
 def params_iceflow_v1(parser):
     parser.add_argument(
         "--init_strflowctrl",
@@ -25,7 +28,7 @@ def params_iceflow_v1(parser):
     parser.add_argument(
         "--emulator",
         type=str,
-        default="../../emulators/f15_cfsflow_GJ_22_a",
+        default="f15_cfsflow_GJ_22_a",
         help="Directory path of the deep-learning ice flow model, \
               create a new if empty string",
     )
@@ -72,15 +75,10 @@ def init_iceflow_v1(params, self):
     if not hasattr(self, "slidingco"):
         self.slidingco = tf.Variable(tf.ones_like(self.thk) * params.init_slidingco)
         
-    # from igm import emulators
-    # from importlib.resources import files
-
-    # if os.path.exists(files(emulators).joinpath(params.emulator)):
-    #      dirpath = files(emulators).joinpath(params.emulator)
-    # else:
-    #      dirpath = params.emulator
-         
-    dirpath = params.emulator
+    if os.path.exists(importlib_resources.files(emulators).joinpath(params.emulator)):
+        dirpath = importlib_resources.files(emulators).joinpath(params.emulator)
+    else:
+        dirpath = params.emulator
 
     dirpath = os.path.join(dirpath, str(int(self.dx)))
 

@@ -38,11 +38,7 @@ params = parser.parse_args()
 # params.observation = True
 params.tstart = 100.0
 params.tend = 200.0
-params.tsave = 10
-if "iceflow_v1" in modules:
-    params.emulator = "../../emulators/f15_cfsflow_GJ_22_a"
-else:
-    params.emulator = "../../emulators/f21_pinnbp_GJ_23_a"
+params.tsave = 10 
 params.plot_live = True
 # params.logging_level     = 'INFO'
 

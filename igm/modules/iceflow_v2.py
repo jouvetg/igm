@@ -14,6 +14,9 @@ import tensorflow as tf
 
 from igm.modules.utils import *
 
+from igm import emulators
+import importlib_resources
+
 ############################################
 
 def params_iceflow_v2(parser):
@@ -28,7 +31,7 @@ def params_iceflow_v2(parser):
     parser.add_argument(
         "--emulator",
         type=str,
-        default="../../emulators/f21_pinnbp_GJ_23_a",
+        default="f21_pinnbp_GJ_23_a",
         help="Directory path of the deep-learning ice flow model, \
               create a new if empty string",
     )
@@ -252,16 +255,12 @@ def init_iceflow_v2(params, self):
 
         # otherwise we load it
         else:
-            
-#            from igm import emulators
-#            from importlib.resources import files             
-#            if os.path.exists(files(emulators).joinpath(params.emulator)):
-#                 dirpath = files(emulators).joinpath(params.emulator)
-#            else:
-#                 dirpath = params.emulator
-
-            dirpath = params.emulator
-
+                        
+            if os.path.exists(importlib_resources.files(emulators).joinpath(params.emulator)):
+                dirpath = importlib_resources.files(emulators).joinpath(params.emulator)
+            else:
+                dirpath = params.emulator
+ 
             self.fieldin = []
             fid = open(os.path.join(dirpath, "fieldin.dat"), "r")
             for fileline in fid:

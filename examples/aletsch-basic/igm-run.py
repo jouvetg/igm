@@ -11,13 +11,15 @@ import igm
  
 # Define in order the model components step to be updated
 modules = [
+#    "prepare_data",
     "load_ncdf_data",
+    "optimize_v2",
     "smb_simple",
     "iceflow_v2",
 #    "particles_v2",
     "time_step",
     "thk",
-    "topg_glacial_erosion",
+#    "topg_glacial_erosion",
     "write_ncdf_ex",
     "write_ncdf_ts",
     "write_plot2d",
@@ -32,6 +34,8 @@ for module in modules:
 params = parser.parse_args()
 
 # Override parameters
+# params.RGI = 'RGI60-11.01450'
+# params.observation = True
 params.tstart = 100.0
 params.tend = 200.0
 params.tsave = 10

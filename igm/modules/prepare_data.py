@@ -9,8 +9,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os, glob
 from netCDF4 import Dataset
+import tensorflow as tf
 from igm.modules.utils import str2bool
 
+from igm.modules.utils import complete_data
 
 def params_prepare_data(parser):
     # aletsch  RGI60-11.01450
@@ -52,6 +54,12 @@ def params_prepare_data(parser):
         default="/home/gjouvet/",
         help="Path where the Glathida Folder is store, so that you don't need \
               to redownload it at any use of the script",
+    )
+    parser.add_argument(
+        "--output_geology",
+        type=str2bool,
+        default=True,
+        help="Write prepared data into a geology file",
     )
     # parser.add_argument(
     #     "--geology_file",
@@ -149,47 +157,59 @@ def init_prepare_data(params, self):
 
     ########################################################
 
-    var_info = {}
-    var_info["thk"] = ["Ice Thickness", "m"]
-    var_info["usurf"] = ["Surface Topography", "m"]
-    var_info["icemaskobs"] = ["Accumulation Mask", "bool"]
-    var_info["usurfobs"] = ["Surface Topography", "m"]
-    var_info["thkobs"] = ["Ice Thickness", "m"]
-    var_info["thkinit"] = ["Ice Thickness", "m"]
-    var_info["uvelsurfobs"] = ["x surface velocity of ice", "m/y"]
-    var_info["vvelsurfobs"] = ["y surface velocity of ice", "m/y"]
-    var_info["icemask"] = ["Ice mask", "no unit"]
+    # transform from numpy to tensorflow
+  
+    for var in ['x','y']:
+        vars(self)[var] = tf.constant(vars()[var].astype("float32"))
 
-    #######################################################
+    for var in vars_to_save:
+        vars(self)[var] = tf.Variable(vars()[var].astype("float32"))
 
-    nc = Dataset(os.path.join(params.working_dir, "geology.nc"), "w", format="NETCDF4")
+    complete_data(self)
 
-    nc.createDimension("y", len(y))
-    yn = nc.createVariable("y", np.dtype("float32").char, ("y",))
-    yn.units = "m"
-    yn.long_name = "y"
-    yn.standard_name = "y"
-    yn.axis = "Y"
-    yn[:] = y
+    ########################################################
 
-    nc.createDimension("x", len(x))
-    xn = nc.createVariable("x", np.dtype("float32").char, ("x",))
-    xn.units = "m"
-    xn.long_name = "x"
-    xn.standard_name = "x"
-    xn.axis = "X"
-    xn[:] = x
+    if params.output_geology:
 
-    for v in vars_to_save:
-        E = nc.createVariable(v, np.dtype("float32").char, ("y", "x"))
-        E.long_name = var_info[v][0]
-        E.units = var_info[v][1]
-        E.standard_name = v
-        E[:] = vars()[v]
+        var_info = {}
+        var_info["thk"] = ["Ice Thickness", "m"]
+        var_info["usurf"] = ["Surface Topography", "m"]
+        var_info["icemaskobs"] = ["Accumulation Mask", "bool"]
+        var_info["usurfobs"] = ["Surface Topography", "m"]
+        var_info["thkobs"] = ["Ice Thickness", "m"]
+        var_info["thkinit"] = ["Ice Thickness", "m"]
+        var_info["uvelsurfobs"] = ["x surface velocity of ice", "m/y"]
+        var_info["vvelsurfobs"] = ["y surface velocity of ice", "m/y"]
+        var_info["icemask"] = ["Ice mask", "no unit"]
 
-    nc.close()
+        nc = Dataset(os.path.join(params.working_dir, "geology.nc"), "w", format="NETCDF4")
 
-    self.logger.setLevel(params.logging_level)
+        nc.createDimension("y", len(y))
+        yn = nc.createVariable("y", np.dtype("float32").char, ("y",))
+        yn.units = "m"
+        yn.long_name = "y"
+        yn.standard_name = "y"
+        yn.axis = "Y"
+        yn[:] = y
+
+        nc.createDimension("x", len(x))
+        xn = nc.createVariable("x", np.dtype("float32").char, ("x",))
+        xn.units = "m"
+        xn.long_name = "x"
+        xn.standard_name = "x"
+        xn.axis = "X"
+        xn[:] = x
+
+        for v in vars_to_save:
+            E = nc.createVariable(v, np.dtype("float32").char, ("y", "x"))
+            E.long_name = var_info[v][0]
+            E.units = var_info[v][1]
+            E.standard_name = v
+            E[:] = vars()[v]
+
+        nc.close()
+
+        self.logger.setLevel(params.logging_level)
 
 
 def update_prepare_data(params, self):

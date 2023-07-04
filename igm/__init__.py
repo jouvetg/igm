@@ -15,6 +15,9 @@ from igm.modules.make_synthetic import *
 from igm.modules.load_ncdf_data import *
 from igm.modules.load_tif_data import *
 
+from igm.modules.optimize_v1 import *
+from igm.modules.optimize_v2 import *
+
 from igm.modules.iceflow_v1 import *
 from igm.modules.iceflow_v2 import *
 from igm.modules.smb_simple import *

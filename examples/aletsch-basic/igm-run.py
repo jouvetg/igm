@@ -13,7 +13,7 @@ import igm
 modules = [
 #    "prepare_data",
     "load_ncdf_data",
-    "optimize_v2",
+#    "optimize_v2",
     "smb_simple",
     "iceflow_v2",
 #    "particles_v2",
@@ -22,7 +22,7 @@ modules = [
 #    "topg_glacial_erosion",
     "write_ncdf_ex",
     "write_ncdf_ts",
-    "write_plot2d",
+#    "write_plot2d",
 #    "write_particles",
     "print_info",
 ]
@@ -40,12 +40,10 @@ params.tstart = 100.0
 params.tend = 200.0
 params.tsave = 10
 if "iceflow_v1" in modules:
-    params.iceflow_model_lib_path = "../../emulators/f15_cfsflow_GJ_22_a"
+    params.emulator = "../../emulators/f15_cfsflow_GJ_22_a"
 else:
-    params.iceflow_model_lib_path = "../../emulators/f21_pinnbp_GJ_23_a"
+    params.emulator = "../../emulators/f21_pinnbp_GJ_23_a"
 params.plot_live = True
-params.varplot_max = 250
-# params.logging_file      = ''
 # params.logging_level     = 'INFO'
 
 # Define a state class/dictionnary that contains all the data

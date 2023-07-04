@@ -14,6 +14,7 @@ import tensorflow as tf
 
 from igm.modules.utils import *
 
+############################################
 
 def params_iceflow_v2(parser):
     # type of ice flow computations
@@ -24,9 +25,20 @@ def params_iceflow_v2(parser):
         help="emulated, solved, diagnostic",
     )
 
+    parser.add_argument(
+        "--emulator",
+        type=str,
+        default="../../emulators/f21_pinnbp_GJ_23_a",
+        help="Directory path of the deep-learning ice flow model, \
+              create a new if empty string",
+    )
+
     # type of ice flow model
     parser.add_argument(
-        "--iceflow_physics", type=int, default=2, help="2 for blatter, 4 for stokes"
+        "--iceflow_physics", 
+        type=int, 
+        default=2,
+        help="2 for blatter, 4 for stokes, this is also the number of DOF"
     )
 
     # physical parameters
@@ -111,13 +123,7 @@ def params_iceflow_v2(parser):
         default=["thk", "usurf", "arrhenius", "slidingco", "dX"],
         help="Input parameter of the iceflow emulator",
     )
-    parser.add_argument(
-        "--iceflow_model_lib_path",
-        type=str,
-        default="../../model-lib/f15_cfsflow_GJ_22_a",
-        help="Directory path of the deep-learning ice flow model, \
-              create a new if empty string",
-    )
+
     parser.add_argument(
         "--retrain_iceflow_emulator_freq",
         type=int,
@@ -238,7 +244,7 @@ def init_iceflow_v2(params, self):
             )
 
         # if empty string, we create a deel learning emaultor from scratch
-        if params.iceflow_model_lib_path == "":
+        if params.emulator == "":
             self.fieldin = params.fieldin
             nb_inputs = len(self.fieldin)
             nb_outputs = params.iceflow_physics * params.Nz
@@ -246,7 +252,15 @@ def init_iceflow_v2(params, self):
 
         # otherwise we load it
         else:
-            dirpath = params.iceflow_model_lib_path
+            
+#            from igm import emulators
+#            from importlib.resources import files             
+#            if os.path.exists(files(emulators).joinpath(params.emulator)):
+#                 dirpath = files(emulators).joinpath(params.emulator)
+#            else:
+#                 dirpath = params.emulator
+
+            dirpath = params.emulator
 
             self.fieldin = []
             fid = open(os.path.join(dirpath, "fieldin.dat"), "r")

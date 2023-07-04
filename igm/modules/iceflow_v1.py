@@ -14,13 +14,20 @@ import tensorflow as tf
 
 from igm.modules.utils import *
 
-
 def params_iceflow_v1(parser):
     parser.add_argument(
         "--init_strflowctrl",
         type=float,
         default=78,
         help="Initial strflowctrl (default 78)",
+    )
+
+    parser.add_argument(
+        "--emulator",
+        type=str,
+        default="../../emulators/f15_cfsflow_GJ_22_a",
+        help="Directory path of the deep-learning ice flow model, \
+              create a new if empty string",
     )
     parser.add_argument(
         "--init_slidingco",
@@ -33,12 +40,6 @@ def params_iceflow_v1(parser):
         type=float,
         default=78,
         help="Initial arrhenius factor arrhenuis (default: 78)",
-    )
-    parser.add_argument(
-        "--iceflow_model_lib_path",
-        type=str,
-        default="../../model-lib/f15_cfsflow_GJ_22_a",
-        help="Directory path of the deep-learning ice flow model",
     )
     parser.add_argument(
         "--multiple_window_size",
@@ -70,11 +71,18 @@ def init_iceflow_v1(params, self):
 
     if not hasattr(self, "slidingco"):
         self.slidingco = tf.Variable(tf.ones_like(self.thk) * params.init_slidingco)
+        
+    # from igm import emulators
+    # from importlib.resources import files
 
-    dirpath = os.path.join(params.iceflow_model_lib_path, str(int(self.dx)))
+    # if os.path.exists(files(emulators).joinpath(params.emulator)):
+    #      dirpath = files(emulators).joinpath(params.emulator)
+    # else:
+    #      dirpath = params.emulator
+         
+    dirpath = params.emulator
 
-    if not os.path.isdir(dirpath):
-        dirpath = params.iceflow_model_lib_path
+    dirpath = os.path.join(dirpath, str(int(self.dx)))
 
     # fieldin, fieldout, fieldbounds contains name of I/O variables, and bounds for scaling
     fieldin, fieldout, fieldbounds = _read_fields_and_bounds(self, dirpath)

@@ -57,10 +57,6 @@ params = parser.parse_args()
 params.tstart = 2000.0
 params.tend   = 2100.0
 params.tsave  = 5
-if "iceflow_v1" in modules:
-    params.iceflow_model_lib_path = "../../emulators/f15_cfsflow_GJ_22_a"
-else:
-    params.iceflow_model_lib_path = "../../emulators/f21_pinnbp_GJ_23_a"
 params.plot_live = True
 params.varplot_max = 250
 params.RGI = 'RGI60-01.00709'
@@ -72,6 +68,7 @@ state = igm.State(params)
 
 # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
 with tf.device("/GPU:0"):
+    
     # Initialize all the model components in turn
     for module in modules:
         getattr(igm, "init_" + module)(params, state)
@@ -81,6 +78,7 @@ with tf.device("/GPU:0"):
 
     # Time loop, perform the simulation until reaching the defined end time
     while state.t < params.tend:
+
         # Update in turn each model components
         for module in modules:
             getattr(igm, "update_" + module)(params, state)

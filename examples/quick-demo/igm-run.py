@@ -15,12 +15,12 @@ modules = [
     "prepare_data",
     "load_ncdf_data",
     "mysmb",
-    "iceflow_v1",
+    "iceflow_v2",
     "time_step",
     "thk",
     "write_ncdf_ex",
     "write_ncdf_ts",
-#    "write_plot2d",
+    "write_plot2d",
     "print_info",
 ]
 
@@ -55,10 +55,9 @@ params = parser.parse_args()
 
 # Override parameters
 params.tstart = 2000.0
-params.tend   = 2100.0
+params.tend   = 2500.0
 params.tsave  = 5
 params.plot_live = True
-params.varplot_max = 250
 params.RGI = 'RGI60-01.00709'
 # params.logging_file      = ''
 # params.logging_level     = 'INFO'

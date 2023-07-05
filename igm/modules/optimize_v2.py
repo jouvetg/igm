@@ -6,8 +6,9 @@ Published under the GNU GPL (Version 3), check at the LICENSE file
 """
 
 import numpy as np
-import os
+import os, copy
 import matplotlib.pyplot as plt
+import matplotlib
 import datetime, time
 import math
 import tensorflow as tf
@@ -26,19 +27,13 @@ def params_optimize_v2(parser):
             "topg",
             "usurf",
             "thk",
-            "arrhenius",
             "slidingco",
             "velsurf_mag",
             "velsurfobs_mag",
             "divflux",
+            "icemask",
         ],
         help="List of variables to be recorded in the ncdef file",
-    )
-    parser.add_argument(
-        "--opti_thr_slidingco",
-        type=float,
-        default=78000.0,
-        help="TARGET SLIDINGCO",
     )
     parser.add_argument(
         "--opti_init_zero_thk",
@@ -55,7 +50,7 @@ def params_optimize_v2(parser):
     parser.add_argument(
         "--opti_regu_param_slidingco",
         type=float,
-        default=10,
+        default=1,
         help="Regularization weight for the strflowctrl field in the optimization",
     )
     parser.add_argument(
@@ -73,14 +68,8 @@ def params_optimize_v2(parser):
     parser.add_argument(
         "--opti_usurfobs_std",
         type=float,
-        default=5.0,
+        default=2.0,
         help="Confidence/STD of the top ice surface as input data for the optimization",
-    )
-    parser.add_argument(
-        "--opti_slidingco_std",
-        type=float,
-        default=5000.0,
-        help="Confidence/STD of slidingco",
     )
     parser.add_argument(
         "--opti_velsurfobs_std",
@@ -103,13 +92,13 @@ def params_optimize_v2(parser):
     parser.add_argument(
         "--opti_control",
         type=list,
-        default=["thk", "slidingco", "usurf"],
+        default=["thk", "slidingco"],
         help="List of optimized variables for the optimization",
     )
     parser.add_argument(
         "--opti_cost",
         type=list,
-        default=["velsurf", "thk", "usurf", "divfluxfcz", "icemask"],
+        default=["velsurf", "thk", "divfluxfcz", "icemask"],
         help="List of cost components for the optimization",
     )
     parser.add_argument(
@@ -127,7 +116,7 @@ def params_optimize_v2(parser):
     parser.add_argument(
         "--opti_step_size",
         type=float,
-        default=0.25,
+        default=1,
         help="Step size for the optimization",
     )
     parser.add_argument(
@@ -141,6 +130,31 @@ def params_optimize_v2(parser):
         type=str,
         default="geology-optimized.nc",
         help="Geology input file",
+    )
+
+    parser.add_argument(
+        "--plot2d_live_inversion",
+        type=str2bool,
+        default=True,
+        help="plot2d_live_inversion",
+    )
+    parser.add_argument(
+        "--plot2d_inversion",
+        type=str2bool,
+        default=True,
+        help="plot 2d inversion",
+    )
+    parser.add_argument(
+        "--write_ncdf_optimize",
+        type=str2bool,
+        default=True,
+        help="write_ncdf_optimize",
+    )
+    parser.add_argument(
+        "--editor_plot2d_optimize",
+        type=str,
+        default="vs",
+        help="optimized for VS code (vs) or spyder (sp) for live plot",
     )
 
 
@@ -202,7 +216,7 @@ def init_optimize_v2(params, self):
     sc = {}
     sc["thk"] = 1
     sc["usurf"] = 1
-    sc["slidingco"] = 10
+    sc["slidingco"] = 100
 
     for f in params.opti_control:
         vars()[f] = tf.Variable(vars(self)[f] / sc[f])
@@ -340,16 +354,6 @@ def init_optimize_v2(params, self):
             else:
                 COST_HPO = tf.Variable(0.0)
 
-            # # Make sur to keep reasonable values for slidingco
-            # if "slidingco" in params.opti_control:
-            #     COST_STR = 0.5 * tf.reduce_mean(
-            #         ( (self.slidingco - params.opti_thr_slidingco) / params.opti_slidingco_std)**2
-            #     )
-            # else:
-            #     COST_STR = tf.Variable(0.0)
-
-            COST_STR = tf.Variable(0.0)
-
             # Here one adds a regularization terms for the ice thickness to the cost function
             if "thk" in params.opti_control:
                 if params.opti_smooth_anisotropy_factor == 1:
@@ -386,11 +390,11 @@ def init_optimize_v2(params, self):
                     dady,
                     0.0,
                 )
-                REGU_A = (params.opti_regu_param_slidingco / (10000**2)) * (
+                REGU_S = (params.opti_regu_param_slidingco / (10000**2)) * (
                     tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
                 )
             else:
-                REGU_A = tf.Variable(0.0)
+                REGU_S = tf.Variable(0.0)
 
             # sum all component into the main cost function
             COST = (
@@ -401,9 +405,8 @@ def init_optimize_v2(params, self):
                 + COST_T
                 + COST_O
                 + COST_HPO
-                + COST_STR
                 + REGU_H
-                + REGU_A
+                + REGU_S
             )
 
             vol = np.sum(self.thk) * (self.dx**2) / 10**9
@@ -420,19 +423,23 @@ def init_optimize_v2(params, self):
 
             ###############
 
-            if i % params.opti_output_freq == 0:
+            if i==0:
+                print("                   Step  |  ICE_VOL |  COST_U  |  COST_H  |  COST_D  |  COST_S  |   REGU_H |   REGU_S | COST_GLEN  ")
+
+            if i%params.opti_output_freq==0:
                 print(
-                    " OPTI, step %5.0f , ICE_VOL: %7.2f , COST_U: %7.2f , COST_H: %7.2f , COST_D : %7.2f , COST_S : %7.2f , REGU_H : %7.2f , REGU_A : %7.2f , COST_GLEN : %7.2f "
+                    "OPTI %s :   %6.0f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |"
                     % (
-                        i,
-                        vol,
-                        COST_U.numpy(),
-                        COST_H.numpy(),
-                        COST_D.numpy(),
-                        COST_S.numpy(),
-                        REGU_H.numpy(),
-                        REGU_A.numpy(),
-                        COST_GLEN.numpy(),
+                        datetime.datetime.now().strftime("%H:%M:%S"),
+                                i,
+                                vol,
+                                COST_U.numpy(),
+                                COST_H.numpy(),
+                                COST_D.numpy(),
+                                COST_S.numpy(),
+                                REGU_H.numpy(),
+                                REGU_S.numpy(),
+                                COST_GLEN.numpy(),
                     )
                 )
 
@@ -443,7 +450,7 @@ def init_optimize_v2(params, self):
                     COST_D.numpy(),
                     COST_S.numpy(),
                     REGU_H.numpy(),
-                    REGU_A.numpy(),
+                    REGU_S.numpy(),
                     COST_GLEN.numpy(),
                 ]
             )
@@ -482,9 +489,10 @@ def init_optimize_v2(params, self):
             self.tcomp["optimize_v2"][-1] *= -1
 
             if i % params.opti_output_freq == 0:
-                update_plot_inversion(params, self, i)
-                update_ncdf_optimize(params, self, i)
-            # self.update_plot_profiles(params,self,i)
+                if params.plot2d_inversion:
+                    update_plot_inversion(params, self, i)
+                if params.write_ncdf_optimize:
+                    update_ncdf_optimize(params, self, i)
 
             # stopping criterion: stop if the cost no longer decrease
             # if i>params.opti_nbitmin:
@@ -498,7 +506,7 @@ def init_optimize_v2(params, self):
     # now that the ice thickness is optimized, we can fix the bed once for all!
     self.topg = self.usurf - self.thk
 
-    #    output_ncdf_optimize_final(params,self)
+    output_ncdf_optimize_final(params, self)
 
     plot_cost_functions(params, self, self.costs)
 
@@ -506,7 +514,7 @@ def init_optimize_v2(params, self):
         os.path.join(params.working_dir, "costs.dat"),
         np.stack(self.costs),
         fmt="%.10f",
-        header="        COST_U        COST_H      COST_D       COST_S       REGU_H       REGU_A          HPO           COSTGLEN ",
+        header="        COST_U        COST_H      COST_D       COST_S       REGU_H       REGU_S          HPO           COSTGLEN ",
     )
 
     np.savetxt(
@@ -527,7 +535,7 @@ def init_optimize_v2(params, self):
         fmt="%.10f",
         header="        rmsthk      stdthk       rmsvel       stdvel       rmsdiv       stddiv       rmsusurf       stdusurf",
     )
-    
+
     os.system(
         "echo rm " + os.path.join(params.working_dir, "rms_std.dat") + " >> clean.sh"
     )
@@ -557,7 +565,7 @@ def compute_rms_std_optimization(self, i):
         self.rmsdiv = []
         self.stddiv = []
 
-    if hasattr(self, "profile") | hasattr(self, "thkobs"):
+    if hasattr(self, "thkobs"):
         ACT = ~tf.math.is_nan(self.thkobs)
         if np.sum(ACT) == 0:
             self.rmsthk.append(0)
@@ -680,31 +688,6 @@ def output_ncdf_optimize_final(params, self):
     Write final geology after optimizing
     """
 
-    nc = Dataset(os.path.join(params.working_dir, params.observation_file), "r")
-    varori = [v for v in nc.variables]
-    nc.close()
-
-    varori.remove("x")
-    varori.remove("y")
-    if not "strflowctrl" in varori:
-        varori.append("strflowctrl")
-    if not "arrhenius" in varori:
-        varori.append("arrhenius")
-    if not "slidingco" in varori:
-        varori.append("slidingco")
-    if not "thk" in varori:
-        varori.append("thk")
-    if not "usurf" in varori:
-        varori.append("usurf")
-    if not "icemask" in varori:
-        varori.append("icemask")
-
-    self.velsurf_mag = getmag(self.uvelsurf, self.vvelsurf)
-
-    self.icemask = tf.where(
-        self.thk > 1.0, tf.ones_like(self.thk), tf.zeros_like(self.thk)
-    )
-
     nc = Dataset(
         os.path.join(params.working_dir, params.geology_optimized_file),
         "w",
@@ -725,12 +708,11 @@ def output_ncdf_optimize_final(params, self):
     E.axis = "X"
     E[:] = self.x.numpy()
 
-    for var in varori:
-        if hasattr(self, var):
-            E = nc.createVariable(var, np.dtype("float32").char, ("y", "x"))
-            #                E.long_name = self.var_info[var][0]
-            #                E.units     = self.var_info[var][1]
-            E[:, :] = vars(self)[var].numpy()
+    for v in params.opti_vars_to_save:
+        if hasattr(self, v):
+            E = nc.createVariable(v, np.dtype("float32").char, ("y", "x"))
+            E.standard_name = v
+            E[:] = vars(self)[v]
 
     nc.close()
 
@@ -758,7 +740,7 @@ def plot_cost_functions(params, self, costs):
     plt.ylim(0, 1)
     plt.legend()
 
-    if params.plot_live:
+    if params.plot2d_live_inversion:
         plt.show()
     else:
         plt.savefig(os.path.join(params.working_dir, "convergence.png"), pad_inches=0)
@@ -785,143 +767,162 @@ def update_plot_inversion(params, self, i):
     else:
         usurfobs = np.zeros_like(self.thk.numpy())
 
-    ########################################################
-
-    fig = plt.figure(figsize=(18, 13))
+    velsurf_mag = getmag(self.uvelsurf, self.vvelsurf).numpy()
 
     #########################################################
 
-    ax = fig.add_subplot(2, 3, 1)
-    extent = [self.x[0], self.x[-1], self.y[0], self.y[-1]]
-    im1 = ax.imshow(self.thk, origin="lower", extent=extent, vmin=0, vmax=800)
-    plt.colorbar(im1)
+    if i == 0:
+        if params.editor_plot2d_optimize == "vs":
+            plt.ion()  # enable interactive mode
 
-    if hasattr(self, "profile"):
-        fthk = RectBivariateSpline(self.x, self.y, np.transpose(self.thk))
-        for j, p in enumerate(self.profile):
-            if j > 0:
-                meanfitprofile = np.mean(fthk(p[:, 1], p[:, 2], grid=False) - p[:, 3])
-                ax.scatter(p[:, 1], p[:, 2], c="k", s=1)
-                ax.text(
-                    np.mean(p[:, 1]),
-                    np.mean(p[:, 2]),
-                    str(int(meanfitprofile)),
-                    fontsize=15,
-                )
+        # self.fig = plt.figure()
+        self.fig, self.axes = plt.subplots(2, 3)
 
-    ax.set_title(
-        "THK, RMS : "
+        self.extent = [self.x[0], self.x[-1], self.y[0], self.y[-1]]
+
+    #########################################################
+
+    cmap = copy.copy(matplotlib.cm.jet)
+    cmap.set_bad(color="white")
+
+    ax1 = self.axes[0, 0]
+
+    im1 = ax1.imshow(
+        np.ma.masked_where(self.thk == 0, self.thk),
+        origin="lower",
+        extent=self.extent,
+        vmin=0,
+        #                    vmax=np.quantile(self.thk, 0.98),
+        cmap=cmap,
+    )
+    if i == 0:
+        plt.colorbar(im1, ax=ax1)
+    ax1.set_title(
+        "Ice thickness \n (RMS : "
         + str(int(self.rmsthk[-1]))
         + ", STD : "
-        + str(int(self.stdthk[-1])),
-        size=15,
+        + str(int(self.stdthk[-1]))
+        + ")",
+        size=12,
     )
-    ax.axis("off")
+    ax1.axis("off")
 
     #########################################################
 
-    ax = fig.add_subplot(2, 3, 2)
-    velsurf_mag = getmag(self.uvelsurf, self.vvelsurf).numpy()
-    im1 = ax.imshow(velsurf_mag, origin="lower", vmin=0, vmax=np.nanmax(velsurfobs_mag))
-    plt.colorbar(im1, format="%.2f")
-    ax.set_title(
-        "MOD VEL, RMS : "
+    ax2 = self.axes[0, 1]
+
+    im1 = ax2.imshow(
+        np.ma.masked_where(self.thk == 0, self.slidingco),
+        origin="lower",
+        vmin=0,
+        vmax=20000,
+        cmap=cmap,
+    )
+    if i == 0:
+        plt.colorbar(im1, format="%.2f", ax=ax2)
+    ax2.set_title("Iteration " + str(i) + " \n Sliding coefficient", size=12)
+    ax2.axis("off")
+
+    ########################################################
+
+    ax3 = self.axes[0, 2]
+
+    im1 = ax3.imshow(
+        self.usurf - usurfobs,
+        origin="lower",
+        extent=self.extent,
+        vmin=-10,
+        vmax=10,
+        cmap="RdBu",
+    )
+    if i == 0:
+        plt.colorbar(im1, format="%.2f", ax=ax3)
+    ax3.set_title(
+        "Top surface adjustement \n (RMS : %5.1f , STD : %5.1f"
+        % (self.rmsusurf[-1], self.stdusurf[-1])
+        + ")",
+        size=12,
+    )
+    ax3.axis("off")
+
+    #########################################################
+
+    cmap = copy.copy(matplotlib.cm.viridis)
+    cmap.set_bad(color="white")
+
+    ax4 = self.axes[1, 0]
+
+    im1 = ax4.imshow(
+        np.ma.masked_where(self.thk == 0, velsurf_mag),
+        origin="lower",
+        extent=self.extent,
+        vmin=0,
+        vmax=np.nanmax(velsurfobs_mag),
+        cmap=cmap,
+    )
+    if i == 0:
+        plt.colorbar(im1, format="%.2f", ax=ax4)
+    ax4.set_title(
+        "Modelled velocities \n (RMS : "
         + str(int(self.rmsvel[-1]))
         + ", STD : "
-        + str(int(self.stdvel[-1])),
-        size=15,
+        + str(int(self.stdvel[-1]))
+        + ")",
+        size=12,
     )
-    ax.axis("off")
+    ax4.axis("off")
 
     ########################################################
 
-    ax = fig.add_subplot(2, 3, 3)
-    im1 = ax.imshow(self.divflux, origin="lower", vmin=-15, vmax=5)
-    plt.colorbar(im1, format="%.2f")
-    ax.set_title(
-        "MOD DIV, RMS : %5.1f , STD : %5.1f" % (self.rmsdiv[-1], self.stddiv[-1]),
-        size=15,
+    ax5 = self.axes[1, 1]
+    im1 = ax5.imshow(
+        np.ma.masked_where(self.thk == 0, velsurfobs_mag),
+        origin="lower",
+        extent=self.extent,
+        vmin=0,
+        vmax=np.nanmax(velsurfobs_mag),
+        cmap=cmap,
     )
-    ax.axis("off")
-
-    #########################################################
-
-    ax = fig.add_subplot(2, 3, 4)
-    im1 = ax.imshow(self.usurf - usurfobs, origin="lower", vmin=-10, vmax=10)
-    plt.colorbar(im1, format="%.2f")
-    ax.set_title(
-        "DELTA USURF, RMS : %5.1f , STD : %5.1f"
-        % (self.rmsusurf[-1], self.stdusurf[-1]),
-        size=15,
-    )
-    ax.axis("off")
-
-    ########################################################
-
-    ax = fig.add_subplot(2, 3, 5)
-    im1 = ax.imshow(
-        velsurfobs_mag, origin="lower", vmin=0, vmax=np.nanmax(velsurfobs_mag)
-    )
-    plt.colorbar(im1, format="%.2f")
-    ax.set_title("OBS VEL (TARGET)", size=15)
-    ax.axis("off")
+    if i == 0:
+        plt.colorbar(im1, format="%.2f", ax=ax5)
+    ax5.set_title("Target \n Observed velocities", size=12)
+    ax5.axis("off")
 
     #######################################################
 
-    ax = fig.add_subplot(2, 3, 6)
-    im1 = ax.imshow(
-        self.slidingco,
+    ax6 = self.axes[1, 2]
+    im1 = ax6.imshow(
+        np.ma.masked_where(self.thk == 0, self.divflux),
         origin="lower",
-        vmin=np.quantile(self.slidingco, 0.02),
-        vmax=np.quantile(self.slidingco, 0.98),
+        extent=self.extent,
+        vmin=-10,
+        vmax=10,
+        cmap="RdBu",
     )
-    plt.colorbar(im1, format="%.2f")
-    ax.set_title("slidingco", size=15)
-    ax.axis("off")
+    if i == 0:
+        plt.colorbar(im1, format="%.2f", ax=ax6)
+    ax6.set_title(
+        "Flux divergence \n (RMS : %5.1f , STD : %5.1f"
+        % (self.rmsdiv[-1], self.stddiv[-1])
+        + ")",
+        size=12,
+    )
+    ax6.axis("off")
 
     #########################################################
 
-    plt.tight_layout()
+    if params.plot2d_live_inversion:
+        if params.editor_plot2d_optimize == "vs":
+            self.fig.canvas.draw()  # re-drawing the figure
+            self.fig.canvas.flush_events()  # to flush the GUI events
+        else:
+            from IPython.display import display, clear_output
 
-    if params.plot_live:
-        plt.show()
+            clear_output(wait=True)
+            display(self.fig)
     else:
         plt.savefig(
             os.path.join(params.working_dir, "resu-opti-" + str(i).zfill(4) + ".png"),
-            pad_inches=0,
-        )
-        plt.close("all")
-
-        os.system(
-            "echo rm " + os.path.join(params.working_dir, "*.png") + " >> clean.sh"
-        )
-
-
-def update_plot_profiles(params, self, i):
-    from scipy.interpolate import RectBivariateSpline
-
-    fthk = RectBivariateSpline(self.x, self.y, np.transpose(self.thk))
-
-    N = len(self.profile)
-    N1 = int(np.sqrt(N)) + 1
-    N2 = N1
-    fig, axs = plt.subplots(N1, N2, figsize=(N1 * 10, N2 * 5))
-    #            fig, axs = plt.subplots(N,1,figsize=(10,N*4))
-    for j, p in enumerate(self.profile):
-        if j > 0:
-            jj = j // N1
-            ii = j % N1
-            axs[ii, jj].set_title(" PROFILE N° : " + str(j))
-            axs[ii, jj].plot(p[:, 0], p[:, 3], "-k")
-            axs[ii, jj].plot(p[:, 0], fthk(p[:, 1], p[:, 2], grid=False), "-b")
-            axs[ii, jj].axis("equal")
-    plt.tight_layout()
-
-    if params.plot_live:
-        plt.show()
-    else:
-        plt.savefig(
-            os.path.join(params.working_dir, "S1-pro-" + str(i).zfill(4) + ".png"),
             pad_inches=0,
         )
         plt.close("all")

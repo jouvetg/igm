@@ -25,7 +25,7 @@ def params_particles_v2(parser):
     parser.add_argument(
         "--frequency_seeding",
         type=int,
-        default=10,
+        default=50,
         help="Frequency of seeding (default: 10)",
     )
     parser.add_argument(

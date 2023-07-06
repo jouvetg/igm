@@ -9,36 +9,48 @@ import logging, os
 
 
 class State:
-    def __init__(self, params):
-        """
-        function build class IGM
-        """
+    def __init__(self):
 
         # this serves in fact to use a dictionnary, but it looks like a class
         self.__dict__ = dict()
 
-        # this will collect  statisitics of the computational times
-        self.tcomp = {}
+def init_state(params, self):
 
-        # Configure the logging
-        if params.logging_file == "":
-            logging.basicConfig(
-                filemode="w",
-                level=getattr(logging, params.logging_level),
-                format="%(asctime)s - %(levelname)s - %(message)s",
-            )
-        else:
-            logging.basicConfig(
-                filename=params.logging_file,
-                encoding="utf-8",
-                filemode="w",
-                level=getattr(logging, params.logging_level),
-                format="%(asctime)s - %(levelname)s - %(message)s",
-            )
+    # this will collect  statisitics of the computational times
+    self.tcomp = {}
 
-        # Create a logger
-        self.logger = logging.getLogger("my_logger")
+    # Configure the logging
+    if params.logging_file == "":
+        logging.basicConfig(
+            filemode="w",
+            level=getattr(logging, params.logging_level),
+            format="%(asctime)s - %(levelname)s - %(message)s",
+        )
+    else:
+        logging.basicConfig(
+            filename=params.logging_file,
+            encoding="utf-8",
+            filemode="w",
+            level=getattr(logging, params.logging_level),
+            format="%(asctime)s - %(levelname)s - %(message)s",
+        )
 
-        os.system("rm clean.sh")
-        os.system("echo rm clean.sh >> clean.sh")
-        os.system("echo rm igm.log >> clean.sh")
+    # Create a logger
+    self.logger = logging.getLogger("my_logger")
+
+    # Print parameters in screen and a dedicated file
+    with open(os.path.join(params.working_dir, "igm-run-parameters.txt"), "w") as f:
+        print("PARAMETERS ARE ...... ")
+        for ck in params.__dict__:
+            print("%30s : %s" % (ck, params.__dict__[ck]))
+            print("%30s : %s" % (ck, params.__dict__[ck]), file=f)
+
+    os.system(
+        "echo rm "
+        + os.path.join(params.working_dir, "igm-run-parameters.txt")
+        + " >> clean.sh"
+    )
+
+    os.system("rm clean.sh")
+    os.system("echo rm clean.sh >> clean.sh")
+    os.system("echo rm igm.log >> clean.sh")

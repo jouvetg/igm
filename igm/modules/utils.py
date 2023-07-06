@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This util files provides a large number of usefull function for other modules
 """
 
 import numpy as np
@@ -157,9 +159,12 @@ def complete_data(self):
 
     # define usurf (or topg) from topg (or usurf) and thk
     if hasattr(self, "usurf"):
-        self.topg = tf.Variable(self.usurf - self.thk)
+        self.lsurf = tf.Variable(self.usurf - self.thk)
+        self.topg  = tf.Variable(self.usurf - self.thk)
+
     else:
-        self.usurf = tf.Variable(self.topg + self.thk)
+        self.lsurf = tf.maximum(self.topg,-0.9*self.thk)
+        self.usurf = tf.Variable(self.lsurf + self.thk)
 
 
 def anim_3d_from_ncdf_ex(params):
@@ -261,3 +266,84 @@ def anim_mp4_from_ncdf_ex(params):
         + " >> clean.sh"
     )
 
+
+def print_all_comp_info(params, self):
+    """
+    This serves to print computational info report
+    """
+
+    self.tcomp["all"] = []
+    self.tcomp["all"].append(np.sum([np.sum(self.tcomp[f]) for f in self.tcomp.keys()]))
+
+    print("Computational statistics report:")
+    with open(
+        os.path.join(params.working_dir, "computational-statistics.txt"), "w"
+    ) as f:
+        for key in self.tcomp.keys():
+            CELA = (
+                key,
+                np.mean(self.tcomp[key]),
+                np.sum(self.tcomp[key]),
+                len(self.tcomp[key]),
+            )
+            print(
+                "     %15s  |  mean time per it : %8.4f  |  total : %8.4f  |  number it : %8.0f"
+                % CELA,
+                file=f,
+            )
+            print(
+                "     %15s  |  mean time per it : %8.4f  |  total : %8.4f  |  number it  : %8.0f"
+                % CELA
+            )
+
+    os.system(
+        "echo rm "
+        + os.path.join(params.working_dir, "computational-statistics.txt")
+        + " >> clean.sh"
+    )
+
+def plot_computational_pie(params, self):
+    """
+    Plot to the computational time of each model components in a pie
+    """
+
+    def make_autopct(values):
+        def my_autopct(pct):
+            total = sum(values)
+            val = int(round(pct * total / 100.0))
+            return "{:.0f}".format(val)
+
+        return my_autopct
+
+    total = []
+    name = []
+
+    for i, key in enumerate(self.tcomp.keys()):
+        if not key == "All":
+            total.append(np.sum(self.tcomp[key][1:]))
+            name.append(key)
+
+    sumallindiv = np.sum(total)
+
+    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(aspect="equal"), dpi=200)
+    wedges, texts, autotexts = ax.pie(
+        total, autopct=make_autopct(total), textprops=dict(color="w")
+    )
+    ax.legend(
+        wedges,
+        name,
+        title="Model components",
+        loc="center left",
+        bbox_to_anchor=(1, 0, 0.5, 1),
+    )
+    plt.setp(autotexts, size=8, weight="bold")
+    #    ax.set_title("Matplotlib bakery: A pie")
+    plt.tight_layout()
+    plt.savefig(os.path.join(params.working_dir, "PIE-COMPUTATIONAL.png"), pad_inches=0)
+    plt.close("all")
+
+    os.system(
+        "echo rm "
+        + os.path.join(params.working_dir, "PIE-COMPUTATIONAL.png")
+        + " >> clean.sh"
+    )

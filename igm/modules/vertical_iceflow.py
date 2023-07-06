@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 
-"""
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
-"""
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
 
+"""
+This IGM module computes the vertical component of the velocity
+by integrating the imcompressibility condition
+==============================================================================
+Input: U, thk, dX
+Output: W
+"""
 
 import numpy as np
 import datetime, time
@@ -23,10 +28,7 @@ def init_vertical_iceflow(params, self):
 
 def update_vertical_iceflow(params, self):
     """
-    This routine compute the vertical component of the velocity
-    by integrating the imcompressibility condition
-    Input: U, thk, dX
-    Output: W
+
     """
 
     self.tcomp["vertical_iceflow"].append(time.time())
@@ -42,10 +44,6 @@ def update_vertical_iceflow(params, self):
 
 # @tf.function(experimental_relax_shapes=True)
 def _compute_vertical_velocity_tf(params, self, U, thk, dX):
-    """
-    This routine compute the vertical component of the velocity
-    by integrating the imcompressibility condition
-    """
 
     # Compute horinzontal derivatives
     dUdx = (U[0, :, :, 2:] - U[0, :, :, :-2]) / (2 * dX[0, 0])

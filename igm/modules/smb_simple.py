@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM modules models a simple mass balance model  parametrized by ELA, ablation
+and accumulation gradients, and max acuumulation from a given file mb_simple_file
+
+==============================================================================
+
+Input  : self.usurf
+Output : self.smb
 """
 
 import numpy as np
@@ -28,9 +36,7 @@ def params_smb_simple(parser):
 
 
 def init_smb_simple(params, self):
-    """
-    Read parameters of simple mass balance from an ascii file
-    """
+
     self.smbpar = np.loadtxt(
         os.path.join(params.working_dir, params.mb_simple_file),
         skiprows=1,
@@ -42,19 +48,6 @@ def init_smb_simple(params, self):
 
 
 def update_smb_simple(params, self):
-    """
-    Surface Mass balance implementation 'simple' parametrized by ELA, ablation
-    and accumulation gradients, and max acuumulation from a given file mb_simple_file
-
-    Inputs fields
-    ----------
-    self.usurf
-
-    Output fields
-    ----------
-    self.smb
-
-    """
 
     # update smb each X years
     if (self.t - self.tlast_mb) >= params.mb_update_freq:

@@ -1,8 +1,19 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM module implements change in basal topography (due to glacial erosion
+The bedrock is updated (each params.erosion_update_freq years) assuming the erosion
+rate to be proportional (parameter params.erosion_cst) to a power (parameter params.erosion_exp)
+of the sliding velocity magnitude. By default, we use the parameters from Herman,
+F. et al. Erosion by an Alpine glacier. Science 350, 193-195 (2015).
+
+==============================================================================
+
+Input  : self.ubar, self.vbar, self.dx 
+Output : self.dt, self.t, self.it, self.saveresult 
 """
 
 import numpy as np
@@ -37,21 +48,12 @@ def params_topg_glacial_erosion(parser):
 
 
 def init_topg_glacial_erosion(params, self):
-    """ """
 
     self.tcomp["topg_glacial_erosion"] = []
     self.tlast_erosion = tf.Variable(params.tstart)
 
 
 def update_topg_glacial_erosion(params, self):
-    """
-    This function implements change in basal topography (due to glacial erosion
-    The bedrock is updated (each params.erosion_update_freq years) assuming the erosion
-    rate to be proportional (parameter params.erosion_cst) to a power (parameter params.erosion_exp)
-    of the sliding velocity magnitude. By default, we use the parameters from Herman,
-    F. et al. Erosion by an Alpine glacier. Science 350, 193–195 (2015).
-
-    """
 
     if (self.t - self.tlast_erosion) >= params.erosion_update_freq:
 
@@ -66,6 +68,7 @@ def update_topg_glacial_erosion(params, self):
 
         self.topg = self.topg - (self.t - self.tlast_erosion) * dtopgdt
 
+        # THIS WORK ONLY FOR GROUNDED ICE, TO BE ADAPTED FOR FLOATING ICE
         self.usurf = self.topg + self.thk
 
         self.tlast_erosion.assign(self.t)

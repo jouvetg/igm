@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
-"""
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
-"""
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
 
+"""
+This IGM module writes particle time-position in csv files at a given freq.
+==============================================================================
+Input: self.xpos, self.ypos, self.zpos, self.rhpos, self.tpos, self.englt
+Output: csv file in forder trajectories
+"""
 
 import numpy as np
 import os
@@ -12,7 +16,6 @@ import datetime, time
 import tensorflow as tf
 
 from igm.modules.utils import *
-
 
 def params_write_particles(parser):
     parser.add_argument(
@@ -46,12 +49,6 @@ def init_write_particles(params, self):
 
 
 def update_write_particles(params, self):
-    """
-    This routine write particle position over time in a csv file. It is called
-    on a regular basis by the main loop.
-    Input: self.xpos, self.ypos, self.zpos, self.rhpos, self.tpos, self.englt
-    Output: csv file in forder trajectories
-    """
     if self.saveresult:
         self.tcomp["write_particles"].append(time.time())
 

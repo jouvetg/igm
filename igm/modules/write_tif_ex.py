@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM module saves state variables in tiff file at a given frequency.
+Variables to be saved are provided as list in parameter vars_to_save.
+Files will be created with names like thk-000040.tif in the working directory.
+==============================================================================
+Input: variables to be saved
+Output: tiff files
 """
 
 import numpy as np
 import os
 import tensorflow as tf
-
 
 def params_write_tif_ex(parser):
     parser.add_argument(
@@ -25,14 +31,6 @@ def init_write_tif_ex(params, self):
     pass
 
 def update_write_tif_ex(params, self):
-    """
-    This routine save variable variables in tiff file on a regular basis
-    Variable to be saved are provided as list in parameter vars_to_save.
-    Files will be created with names like thk-000040.tif in the working directory.
-    One need you need rasterio to play this function
-    Input: variables to be saved
-    Output: tiff files
-    """
 
     import rasterio
 

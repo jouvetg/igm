@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM module makes a synthetic glacier bedrock with zero thickness for test.
+
+==============================================================================
+
+Output: variables topg, thk, usurf defining a synthetic case glacier.
 """
 
 import os
@@ -17,9 +23,7 @@ def params_make_synthetic(parser):
 
 
 def init_make_synthetic(params, self):
-    """
-    Make a synthetic glacier bedrock
-    """
+
     x = np.arange(0, 100) * 100  # make x-axis, lenght 10 km, resolution 100 m
     y = np.arange(0, 200) * 100  # make y-axis, lenght 20 km, resolution 100 m
 

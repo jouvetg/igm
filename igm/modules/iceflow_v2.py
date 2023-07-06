@@ -1,8 +1,19 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM module models ice flow using a Convolutional Neural Network
+based on Physics Informed Neural Network.
+
+You may find trained and ready-to-use ice flow emulators in the folder
+`emulators/T_M_I_Y_V/`, where 'T_M_I_Y_V' defines the emulator.
+
+==============================================================================
+
+Input: thk, usurf, arrhenuis, slidingco, dX
+Output: U, V
 """
 
 import numpy as np
@@ -210,9 +221,6 @@ def params_iceflow_v2(parser):
 
 
 def init_iceflow_v2(params, self):
-    """
-    set-up the iceflow emulator
-    """
 
     self.tcomp["iceflow"] = []
 

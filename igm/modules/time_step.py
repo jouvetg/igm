@@ -1,8 +1,20 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM modules compute time step dt (computed to satisfy the CFL condition),
+updated time t, and a boolean telling whether results must be saved or not.
+For stability reasons of the transport scheme for the ice thickness evolution,
+the time step must respect a CFL condition, controlled by parameter params.cfl,
+which is the maximum number of cells crossed in one iteration
+(this parameter cannot exceed one).
+
+==============================================================================
+
+Input  : self.ubar, self.vbar, self.dx 
+Output : self.dt, self.t, self.it, self.saveresult 
 """
 
 import numpy as np
@@ -63,14 +75,6 @@ def init_time_step(params, self):
 
 
 def update_time_step(params, self):
-    """
-    Function update_t_dt() return time step dt (computed to satisfy the CFL condition),
-    updated time t, and a boolean telling whether results must be saved or not.
-    For stability reasons of the transport scheme for the ice thickness evolution,
-    the time step must respect a CFL condition, controlled by parameter params.cfl,
-    which is the maximum number of cells crossed in one iteration
-    (this parameter cannot exceed one).
-    """
 
     self.logger.info(
         "Update DT from the CFL condition at time : " + str(self.t.numpy())

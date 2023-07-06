@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM module loads input spatial fields from tiff file. You may select
+available fields in variables you need at least topg or usurf, and thk,
+filed e.g. topg.tif, thk.tif must be present in the working forlder.
+
+==============================================================================
+
+Input: tiff files
+Output: variables contained inside as tensorflow objects
 """
+
 
 import numpy as np
 import os
@@ -15,13 +25,6 @@ def params_load_tif_data(parser):
     pass
 
 def init_load_tif_data(params, self):
-    """
-    Load the input files from tiff file (alternative to load_ncdf_data)
-    Select available fields in variables
-    you need at least topg or usurf, and thk,
-    filed e.g. topg.tif, thk.tif must be present in the working forlder
-    you need rasterio to play this function
-    """
 
     import rasterio
 

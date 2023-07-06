@@ -1,8 +1,36 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM module models ice flow using a Convolutional Neural Network.
+
+You may find trained and ready-to-use ice flow emulators in the folder
+`emulators/T_M_I_Y_V/R/`, where 'T_M_I_Y_V' defines the emulator, and
+R defines the spatial resolution. Make sure that the resolution of the
+picked emulator is available in the database. Results produced with IGM
+will strongly rely on the chosen emulator. Make sure that you use the
+emulator within the hull of its training dataset (e.g., do not model
+an ice sheet with an emulator trained with mountain glaciers) to ensure
+reliability (or fidelity w.r.t to the instructor model) -- the emulator
+is probably much better at interpolating than at extrapolating.
+Information on the training dataset is provided in a dedicated README
+coming along with the emulator.
+
+At the time of writing, I recommend using *f15_cfsflow_GJ_22_a*, which
+takes ice thickness, top surface slopes, the sliding coefficient c
+('slidingco'), and Arrhenuis factor A ('arrhenius'), and return basal,
+vertical-average and surface x- and y- velocity components.
+
+I have trained *f15_cfsflow_GJ_22_a* using a large dataset of modeled
+glaciers (based on a Stokes-based CfsFlow ice flow solver) and varying
+sliding coefficient c, and Arrhenius factor A into a 2D space.
+
+==============================================================================
+
+Input: thk, usurf, arrhenuis, slidingco
+Output: ubar,vbar, uvelsurf, vvelsurf, uvelbase, vvelbase
 """
 
 import numpy as np
@@ -11,11 +39,10 @@ import matplotlib.pyplot as plt
 import datetime, time
 import math
 import tensorflow as tf
+import importlib_resources
 
 from igm.modules.utils import *
-
 from igm import emulators
-import importlib_resources
 
 def params_iceflow_v1(parser):
     parser.add_argument(
@@ -59,9 +86,6 @@ def params_iceflow_v1(parser):
 
 
 def init_iceflow_v1(params, self):
-    """
-    set-up the iceflow emulator
-    """
 
     self.tcomp["iceflow"] = []
 
@@ -107,36 +131,6 @@ def init_iceflow_v1(params, self):
 
 
 def update_iceflow_v1(params, self):
-    """
-    Ice flow dynamics are modeled using Artificial Neural Networks trained
-    from physical models.
-
-    You may find trained and ready-to-use ice flow emulators in the folder
-    `model-lib/T_M_I_Y_V/R/`, where 'T_M_I_Y_V' defines the emulator, and
-    R defines the spatial resolution. Make sure that the resolution of the
-    picked emulator is available in the database. Results produced with IGM
-    will strongly rely on the chosen emulator. Make sure that you use the
-    emulator within the hull of its training dataset (e.g., do not model
-    an ice sheet with an emulator trained with mountain glaciers) to ensure
-    reliability (or fidelity w.r.t to the instructor model) -- the emulator
-    is probably much better at interpolating than at extrapolating.
-    Information on the training dataset is provided in a dedicated README
-    coming along with the emulator.
-
-    At the time of writing, I recommend using *f15_cfsflow_GJ_22_a*, which
-    takes ice thickness, top surface slopes, the sliding coefficient c
-    ('slidingco'), and Arrhenuis factor A ('arrhenius'), and return basal,
-    vertical-average and surface x- and y- velocity components.
-
-    I have trained *f15_cfsflow_GJ_22_a* using a large dataset of modeled
-    glaciers (based on a Stokes-based CfsFlow ice flow solver) and varying
-    sliding coefficient c, and Arrhenius factor A into a 2D space.
-
-    For now, only the emulator trained by CfsFlow and PISM is available
-    with different resolutions. Consider training your own with the
-    [Deep Learning Emulator](https://github.com/jouvetg/dle) if none of
-    these emulators fill your need.
-    """
 
     self.logger.info("Update ICEFLOW at time : " + str(self.t.numpy()))
 
@@ -188,9 +182,6 @@ def update_iceflow_v1(params, self):
 
 
 def _read_fields_and_bounds(self, path):
-    """
-    get fields (input and outputs) from given file
-    """
 
     fieldbounds = {}
     fieldin = []

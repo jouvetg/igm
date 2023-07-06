@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 
-"""
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
-"""
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
 
+"""
+This IGM module produces 2D plan-view plots of variable params.varplot at
+a given frequency. The plots are saved as png files in the working directory.
+==============================================================================
+Input: variable to be plotted
+Output: png files
+"""
 
 import numpy as np
 import os, sys, shutil
@@ -69,12 +74,6 @@ def init_write_plot2d(params, self):
 
 
 def update_write_plot2d(params, self):
-    """
-    This routine produces 2D plan-view plots of variable params.varplot 
-    on a regular basis. The plots are saved as png files in the working directory.
-    Input: variable to be plotted
-    Output: png files
-    """
 
     if self.saveresult:
  

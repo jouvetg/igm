@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM module loads spatial raster data from a netcdf file (geology.nc) and
+transform the fields into tensorflow variables. It also complete the data,
+e.g. ge the basal topography from ice thickness and surface topography.
+(there is no update function defined)
+
+==============================================================================
+
+Input: geology.nc
+Output: variables contained inside as tensorflow objects
 """
 
 import numpy as np
@@ -31,9 +41,6 @@ def params_load_ncdf_data(parser):
 
 
 def init_load_ncdf_data(params, self):
-    """
-    Load the input files from netcdf file
-    """
 
     self.logger.info("LOAD NCDF file")
 

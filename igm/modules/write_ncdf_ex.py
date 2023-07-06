@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM modules write 2D field variables defined in the list 
+params.vars_to_save_ncdf_ex into the ncdf output file ex.nc
+==============================================================================
+Input: variables defined in params.vars_to_save_ncdf_ex
+Output: ex.nc
 """
 
 import numpy as np
@@ -70,13 +76,6 @@ def init_write_ncdf_ex(params, self):
 
 
 def update_write_ncdf_ex(params, self):
-    """
-    This function write 2D field variables defined in the list params.vars_to_save_ncdf_ex
-    into the ncdf output file ex.nc
-    Input: variables defined in params.vars_to_save_ncdf_ex
-    Output: ex.nc
-    """
-
     if self.saveresult:
         self.tcomp["write_ncdf_ex"].append(time.time())
 

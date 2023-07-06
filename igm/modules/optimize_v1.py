@@ -1,8 +1,26 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This function does the data assimilation (inverse modelling) to optimize thk, 
+strflowctrl and usurf from observational data from the follwoing reference:
+
+@article{jouvet2023inversion,
+  title={Inversion of a Stokes glacier flow model emulated by deep learning},
+  author={Jouvet, Guillaume},
+  journal={Journal of Glaciology},
+  volume={69},
+  number={273},
+  pages={13--26},
+  year={2023},
+  publisher={Cambridge University Press}
+}
+==============================================================================
+
+Input: usurfobs,uvelsurfobs,vvelsurfobs,thkobs, ...
+Output: thk, strflowctrl, usurf
 """
 
 import numpy as np
@@ -24,7 +42,6 @@ def params_optimize_v1(parser):
         "--opti_vars_to_save",
         type=list,
         default=[
-            "topg",
             "usurf",
             "thk",
             "strflowctrl",
@@ -173,10 +190,6 @@ def params_optimize_v1(parser):
 
 
 def init_optimize_v1(params, self):
-    """
-    This function does the data assimilation (inverse modelling) to optimize thk, strflowctrl ans usurf from data
-    Check at this [page](https://github.com/jouvetg/igm/blob/main/doc/Inverse-modeling.md)
-    """
 
     init_iceflow_v1(params, self)
 
@@ -478,20 +491,6 @@ def init_optimize_v1(params, self):
             else:
                 COST_S = tf.Variable(0.0)
 
-            # force usurf = usurf - topg
-            if "topg" in params.opti_cost:
-                ACT = self.icemaskobs == 1
-                COST_T = 10**10 * tf.reduce_mean(
-                    (
-                        usurf[ACT] * self.iceflow_fieldbounds["usurf"]
-                        - thk[ACT] * self.iceflow_fieldbounds["thk"]
-                        - self.topg[ACT]
-                    )
-                    ** 2
-                )
-            else:
-                COST_T = tf.Variable(0.0)
-
             # force zero thikness outisde the mask
             if "icemask" in params.opti_cost:
                 COST_O = 10**10 * tf.math.reduce_mean(
@@ -571,7 +570,6 @@ def init_optimize_v1(params, self):
                 + COST_H
                 + COST_D
                 + COST_S
-                + COST_T
                 + COST_O
                 + COST_HPO
                 + COST_STR
@@ -792,9 +790,6 @@ def update_ncdf_optimize(params, self, it):
             0,
             self.strflowctrl - params.opti_thr_strflowctrl,
         )
-
-    if "topg" in params.opti_vars_to_save:
-        self.topg = self.usurf - self.thk
 
     if "velsurf_mag" in params.opti_vars_to_save:
         self.velsurf_mag = getmag(self.uvelsurf, self.vvelsurf)

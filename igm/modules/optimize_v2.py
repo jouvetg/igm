@@ -1,8 +1,23 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This function does the data assimilation (inverse modelling) to optimize thk, 
+slidingco and usurf from observational data from the follwoing reference:
+
+@article{jouvet2023ice,
+  title={Ice flow model emulator based on physics-informed deep learning},
+  author={Jouvet, Guillaume and Cordonnier, Guillaume},
+  year={2023},
+  publisher={EarthArXiv}
+}
+
+==============================================================================
+
+Input: usurfobs,uvelsurfobs,vvelsurfobs,thkobs, ...
+Output: thk, slidingco, usurf
 """
 
 import numpy as np
@@ -24,7 +39,6 @@ def params_optimize_v2(parser):
         "--opti_vars_to_save",
         type=list,
         default=[
-            "topg",
             "usurf",
             "thk",
             "slidingco",
@@ -329,15 +343,6 @@ def init_optimize_v2(params, self):
             else:
                 COST_S = tf.Variable(0.0)
 
-            # force usurf = usurf - topg
-            if "topg" in params.opti_cost:
-                ACT = self.icemaskobs == 1
-                COST_T = 10**10 * tf.reduce_mean(
-                    (self.usurf[ACT] - self.thk[ACT] - self.topg[ACT]) ** 2
-                )
-            else:
-                COST_T = tf.Variable(0.0)
-
             # force zero thikness outisde the mask
             if "icemask" in params.opti_cost:
                 COST_O = 10**10 * tf.math.reduce_mean(
@@ -402,7 +407,6 @@ def init_optimize_v2(params, self):
                 + COST_H
                 + COST_D
                 + COST_S
-                + COST_T
                 + COST_O
                 + COST_HPO
                 + REGU_H
@@ -503,7 +507,7 @@ def init_optimize_v2(params, self):
     for f in params.opti_control:
         vars(self)[f] = vars()[f] * sc[f]
 
-    # now that the ice thickness is optimized, we can fix the bed once for all!
+    # now that the ice thickness is optimized, we can fix the bed once for all! (ONLY FOR GROUNDED ICE)
     self.topg = self.usurf - self.thk
 
     output_ncdf_optimize_final(params, self)
@@ -614,9 +618,6 @@ def update_ncdf_optimize(params, self, it):
     """
 
     self.logger.info("Initialize  and write NCDF output Files")
-
-    if "topg" in params.opti_vars_to_save:
-        self.topg = self.usurf - self.thk
 
     if "velsurf_mag" in params.opti_vars_to_save:
         self.velsurf_mag = getmag(self.uvelsurf, self.vvelsurf)

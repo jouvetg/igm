@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
+
 """
-Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-Published under the GNU GPL (Version 3), check at the LICENSE file
+This IGM module write time serie variables (ice glaciated area and volume)
+into the ncdf output file ts.nc
+==============================================================================
+Input: self.thk, self.dx
+Output: ts.nc
 """
 
 import numpy as np
@@ -10,7 +16,6 @@ import os, sys, shutil
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from netCDF4 import Dataset
-
 
 def params_write_ncdf_ts(self):
     pass
@@ -25,12 +30,6 @@ def init_write_ncdf_ts(params, self):
 
 
 def update_write_ncdf_ts(params, self):
-    """
-    This function write time serie variables (ice glaciated area and volume)
-    into the ncdf output file ts.nc
-    Input: self.thk, self.dx
-    Output: ts.nc
-    """
 
     if self.saveresult:
         vol = np.sum(self.thk) * (self.dx**2) / 10**9

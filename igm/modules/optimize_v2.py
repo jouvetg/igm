@@ -110,7 +110,7 @@ def params_optimize_v2(parser):
     parser.add_argument(
         "--opti_nbitmax",
         type=int,
-        default=100,
+        default=1000,
         help="Max iterations for the optimization",
     )
     parser.add_argument(

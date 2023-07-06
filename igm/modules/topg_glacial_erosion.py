@@ -46,8 +46,8 @@ def init_topg_glacial_erosion(params, self):
 def update_topg_glacial_erosion(params, self):
     """
     This function implements change in basal topography (due to glacial erosion
-    The bedrock is updated (each glacier.config.erosion_update_freq years) assuming the erosion
-    rate to be proportional (parameter glacier.config.erosion_cst) to a power (parameter glacier.config.erosion_exp)
+    The bedrock is updated (each params.erosion_update_freq years) assuming the erosion
+    rate to be proportional (parameter params.erosion_cst) to a power (parameter params.erosion_exp)
     of the sliding velocity magnitude. By default, we use the parameters from Herman,
     F. et al. Erosion by an Alpine glacier. Science 350, 193–195 (2015).
 

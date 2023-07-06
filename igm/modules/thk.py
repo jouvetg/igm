@@ -47,8 +47,12 @@ def update_thk(params, self):
     # Forward Euler with projection to keep ice thickness non-negative
     self.thk = tf.maximum(self.thk + self.dt * (self.smb - self.divflux), 0)
 
-    # update ice surface accordingly
+    # update ice surface accordingly   
     self.usurf = self.topg + self.thk
+
+    # TODO: replace the previous line b these one to introduce poss floating ice
+    #self.lsurf = tf.maximum(self.topg,-0.9*self.thk)
+    #self.usurf = self.lsurf + self.thk
 
     self.tcomp["thk"][-1] -= time.time()
     self.tcomp["thk"][-1] *= -1

@@ -25,8 +25,7 @@ def params_write_particles(parser):
 
 def init_write_particles(params, self):
     self.tcomp["write_particles"] = []
-
-    # create trajectory folder to store outputs
+ 
     directory = os.path.join(params.working_dir, "trajectories")
     if os.path.exists(directory):
         shutil.rmtree(directory)
@@ -47,6 +46,12 @@ def init_write_particles(params, self):
 
 
 def update_write_particles(params, self):
+    """
+    This routine write particle position over time in a csv file. It is called
+    on a regular basis by the main loop.
+    Input: self.xpos, self.ypos, self.zpos, self.rhpos, self.tpos, self.englt
+    Output: csv file in forder trajectories
+    """
     if self.saveresult:
         self.tcomp["write_particles"].append(time.time())
 

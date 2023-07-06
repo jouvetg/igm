@@ -20,6 +20,7 @@ from igm.modules.optimize_v2 import *
 
 from igm.modules.iceflow_v1 import *
 from igm.modules.iceflow_v2 import *
+from igm.modules.vertical_iceflow import *
 from igm.modules.smb_simple import *
 from igm.modules.thk import *
 from igm.modules.time_step import *

@@ -64,11 +64,11 @@ def compute_gradient_tf(s, dx, dy):
 @tf.function()
 def compute_divflux(u, v, h, dx, dy):
     """
-    #   upwind computation of the divergence of the flux : d(u h)/dx + d(v h)/dy
-    #   First, u and v are computed on the staggered grid (i.e. cell edges)
-    #   Second, one extend h horizontally by a cell layer on any bords (assuming same value)
-    #   Third, one compute the flux on the staggered grid slecting upwind quantities
-    #   Last, computing the divergence on the staggered grid yields values def on the original grid
+    upwind computation of the divergence of the flux : d(u h)/dx + d(v h)/dy
+    First, u and v are computed on the staggered grid (i.e. cell edges)
+    Second, one extend h horizontally by a cell layer on any bords (assuming same value)
+    Third, one compute the flux on the staggered grid slecting upwind quantities
+    Last, computing the divergence on the staggered grid yields values def on the original grid
     """
 
     ## Compute u and v on the staggered grid
@@ -133,7 +133,7 @@ def interp1d_tf(xs, ys, x):
 
 def complete_data(self):
     """
-    This function add a postriori import fields such as X, Y, x, dx, ....
+    This function adds a postriori import fields such as X, Y, x, dx, ....
     """
 
     # define grids, i.e. self.X and self.Y has same shape as self.thk
@@ -162,16 +162,16 @@ def complete_data(self):
         self.usurf = tf.Variable(self.topg + self.thk)
 
 
-def anim3d_from_netcdf(working_dir=""):
+def anim_3d_from_ncdf_ex(params):
     """
-    3d Plot using mayavi library
+    Produce a 3d animated Plot using mayavi library from the ex.nc netcdf file
     """
     from mayavi import mlab
     import xarray as xr
     import numpy as np
     import os
 
-    ds = xr.open_dataset(os.path.join(working_dir, "ex.nc"), engine="netcdf4")
+    ds = xr.open_dataset(os.path.join(params.working_dir, "ex.nc"), engine="netcdf4")
 
     X, Y = np.meshgrid(ds.x, ds.y)
 
@@ -191,13 +191,15 @@ def anim3d_from_netcdf(working_dir=""):
     surf = mlab.mesh(XX, YY, ZZ, scalars=CC, colormap="jet", vmin=vmin, vmax=vmax)
     mlab.colorbar(surf, orientation="vertical", title="Ice speed (m/y)")
     mlab.title(str(TIME[0]) + " y", size=0.5)
-
-    # mlab.quiver3d(tf.expand_dims(state.X,axis=0),
-    #               tf.expand_dims(state.Y,axis=0),
-    #               tf.expand_dims(state.usurf,axis=0),
-    #               state.U[0,-1:],
-    #               state.U[1,-1:],
-    #               state.W[-1:])
+    
+    if (hasattr(ds,'uvelsurf')&hasattr(ds,'vvelsurf')&hasattr(ds,'wvelsurf')):
+        quiv = mlab.quiver3d(tf.expand_dims(X,axis=0),
+                             tf.expand_dims(Y,axis=0),
+                             tf.expand_dims(ds.usurf[0],axis=0),
+                             tf.expand_dims(ds.uvelsurf[0],axis=0),
+                             tf.expand_dims(ds.vvelsurf[0],axis=0),
+                             tf.expand_dims(ds.wvelsurf[0],axis=0)
+                             )
 
     @mlab.animate(ui=True)
     def anim():
@@ -211,31 +213,36 @@ def anim3d_from_netcdf(working_dir=""):
     mlab.show()
 
 
-def anim_from_netcdf(working_dir=""):
+def anim_mp4_from_ncdf_ex(params):
+    """
+    Produce an animated video from the netcdf ex.nc file
+    """
     import xarray as xr
     from matplotlib import animation
 
-    ds = xr.open_dataset(os.path.join(working_dir, "ex.nc"), engine="netcdf4")
+    ds = xr.open_dataset(os.path.join(params.working_dir, "ex.nc"), engine="netcdf4")
 
     tas = ds.thk
 
     # Get a handle on the figure and the axes
-    fig, ax = plt.subplots(figsize=(8, 10))
+    fig, ax = plt.subplots(figsize=(7,7))
 
     # Plot the initial frame.
-    cax = tas[0, :, :].plot(
+    cax = tas[0,:,:].where(tas[0,:,:]>0).plot(
         add_colorbar=True,
-        cmap="coolwarm",
+        cmap="jet",
         vmin=0,
-        vmax=800,
-        cbar_kwargs={"extend": "neither"},
+        vmax=np.max(tas),
+        cbar_kwargs={"extend": "neither"}
     )
+    
+    cax.axes.set_aspect('equal')
 
     ax.axis("off")
 
     # Next we need to create a function that updates the values for the colormesh, as well as the title.
     def animate(frame):
-        cax.set_array(tas[frame, :, :].values.flatten())
+        cax.set_array(tas[frame,:,:].where(tas[frame,:,:]>0).values.flatten())
         ax.set_title("Time = " + str(tas.coords["time"].values[frame])[:13])
 
     # Finally, we use the animation module to create the animation.
@@ -246,4 +253,11 @@ def anim_from_netcdf(working_dir=""):
         interval=500,  # ms between frames
     )
 
-    ani.save(os.path.join(working_dir, "animation.mp4"))
+    ani.save(os.path.join(params.working_dir, "animation.mp4"))
+    
+    os.system(
+        "echo rm "
+        + os.path.join(params.working_dir, "animation.mp4")
+        + " >> clean.sh"
+    )
+

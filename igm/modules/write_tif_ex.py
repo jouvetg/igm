@@ -10,7 +10,7 @@ import os
 import tensorflow as tf
 
 
-def params_tif_ex(parser):
+def params_write_tif_ex(parser):
     parser.add_argument(
         "--vars_to_save",
         type=list,
@@ -21,15 +21,17 @@ def params_tif_ex(parser):
         help="List of variables to be recorded in the ncdf file",
     )
 
-def init_tif_ex(params, self):
+def init_write_tif_ex(params, self):
     pass
 
-def update_tif_ex(params, self):
+def update_write_tif_ex(params, self):
     """
-    Save variables in tiff file (alternative to update_ncdf_ex)
-    Select available fields in variables, e.g. topg, usurf, ...
-    Files will be created with names like thk-000040.tif in the workin direc.
-    you need rasterio to play this function
+    This routine save variable variables in tiff file on a regular basis
+    Variable to be saved are provided as list in parameter vars_to_save.
+    Files will be created with names like thk-000040.tif in the working directory.
+    One need you need rasterio to play this function
+    Input: variables to be saved
+    Output: tiff files
     """
 
     import rasterio

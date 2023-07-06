@@ -52,8 +52,7 @@ def init_write_plot2d(params, self):
     self.extent = [np.min(self.x), np.max(self.x), np.min(self.y), np.max(self.y)]
 
     if params.editor_plot2d == "vs":
-        # enable interactive mode
-        plt.ion()
+        plt.ion() # enable interactive mode
 
     self.tcomp["write_plot2d"] = []
 
@@ -71,7 +70,10 @@ def init_write_plot2d(params, self):
 
 def update_write_plot2d(params, self):
     """
-    Plot some variables (e.g. thickness, velocity, mass balance) over time
+    This routine produces 2D plan-view plots of variable params.varplot 
+    on a regular basis. The plots are saved as png files in the working directory.
+    Input: variable to be plotted
+    Output: png files
     """
 
     if self.saveresult:
@@ -80,17 +82,22 @@ def update_write_plot2d(params, self):
 
         if params.varplot == "velbar_mag":
             self.velbar_mag = getmag(self.ubar, self.vbar)
-
-        cmap = matplotlib.cm.viridis
-        cmap.set_bad(color='white')
+ 
+        im0 = self.ax.imshow(
+            self.topg,
+            origin="lower",
+            cmap=matplotlib.cm.terrain,
+            extent=self.extent,
+            alpha=0.65
+        )
 
         im = self.ax.imshow(
-            np.ma.masked_where(self.thk==0, vars(self)[params.varplot]),
+            np.where(self.thk>0, vars(self)[params.varplot],np.nan),
             origin="lower",
-            cmap=cmap,
+            cmap=matplotlib.cm.viridis,
             vmin=0,
             vmax=params.varplot_max,
-            extent=self.extent,
+            extent=self.extent
         )
         if params.plot_particles:
             if hasattr(self, "xpos"):

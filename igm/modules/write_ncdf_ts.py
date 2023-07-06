@@ -19,11 +19,17 @@ def params_write_ncdf_ts(self):
 def init_write_ncdf_ts(params, self):
     os.system("echo rm " + os.path.join(params.working_dir, "ts.nc") + " >> clean.sh")
 
+    self.var_info_ncdf_ts = {}
+    self.var_info_ncdf_ts["vol"] = ["Ice volume", "km^3"]
+    self.var_info_ncdf_ts["area"] = ["Glaciated area", "km^2"]
+
 
 def update_write_ncdf_ts(params, self):
     """
-    This function write time serie variables (ice glaziated area and volume)
+    This function write time serie variables (ice glaciated area and volume)
     into the ncdf output file ts.nc
+    Input: self.thk, self.dx
+    Output: ts.nc
     """
 
     if self.saveresult:
@@ -51,8 +57,8 @@ def update_write_ncdf_ts(params, self):
             for var in ["vol", "area"]:
                 E = nc.createVariable(var, np.dtype("float32").char, ("time"))
                 E[0] = vars()[var].numpy()
-                E.long_name = self.var_info[var][0]
-                E.units = self.var_info[var][1]
+                E.long_name = self.var_info_ncdf_ts[var][0]
+                E.units = self.var_info_ncdf_ts[var][1]
             nc.close()
 
             # os.system('echo rm '+ os.path.join(params.working_dir, "ts.nc") + ' >> clean.sh')

@@ -18,26 +18,32 @@ def params_vertical_iceflow(parser):
 
 
 def init_vertical_iceflow(params, self):
-    pass
+    self.tcomp["vertical_iceflow"]=[]
 
 
 def update_vertical_iceflow(params, self):
     """
-    Updtae the third component of the velocity
+    This routine compute the vertical component of the velocity
+    by integrating the imcompressibility condition
+    Input: U, thk, dX
+    Output: W
     """
 
     self.tcomp["vertical_iceflow"].append(time.time())
 
-    self.W = compute_vertical_velocity_tf(params, self, self.U, self.thk, self.dX)
+    self.W = _compute_vertical_velocity_tf(params, self, self.U, self.thk, self.dX)
+    
+    self.wvelbase = self.W[0]
+    self.wvelsurf = self.W[-1]
 
     self.tcomp["vertical_iceflow"][-1] -= time.time()
     self.tcomp["vertical_iceflow"][-1] *= -1
 
 
-@tf.function(experimental_relax_shapes=True)
-def compute_vertical_velocity_tf(self, U, thk, dX):
+# @tf.function(experimental_relax_shapes=True)
+def _compute_vertical_velocity_tf(params, self, U, thk, dX):
     """
-    Compute the vertical component of the velocity
+    This routine compute the vertical component of the velocity
     by integrating the imcompressibility condition
     """
 

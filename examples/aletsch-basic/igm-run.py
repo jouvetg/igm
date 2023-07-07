@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import igm
+
  
 # Define in order the model components step to be updated
 modules = [
@@ -43,7 +44,8 @@ params.plot_live = True
 # params.logging_level     = 'INFO'
 
 # Define a state class/dictionnary that contains all the data
-state = igm.State(params)
+state = igm.State()
+igm.init_state(params, state)
 
 # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
 with tf.device("/GPU:0"):
@@ -60,5 +62,5 @@ with tf.device("/GPU:0"):
             getattr(igm, "update_" + module)(params, state)
 
 # Provide computational statistic of the run
-igm.update_print_all_comp_info(params, state)
+igm.modules.utils.print_all_comp_info(params, state)
 

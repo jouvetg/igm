@@ -14,10 +14,10 @@ import igm
 modules = [
 #    "prepare_data",
     "load_ncdf_data",
-#    "optimize_v2",
+#    "optimize",
     "smb_simple",
-    "iceflow_v2",
-#    "particles_v2",
+    "iceflow",
+#    "particles",
     "time_step",
     "thk",
 #    "topg_glacial_erosion",

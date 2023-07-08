@@ -54,7 +54,7 @@ import tensorflow as tf
 from igm.modules.utils import *
 
 
-def params_particles_v2(parser):
+def params_particles(parser):
     parser.add_argument(
         "--tracking_method",
         type=str,
@@ -75,7 +75,7 @@ def params_particles_v2(parser):
     )
 
 
-def init_particles_v2(params, self):
+def init_particles(params, self):
     self.tlast_seeding = -1.0e5000
     self.tcomp["particles"] = []
 
@@ -94,7 +94,7 @@ def init_particles_v2(params, self):
     self.gridseed[::rr, ::rr] = True
 
 
-def update_particles_v2(params, self):
+def update_particles(params, self):
  
     import tensorflow_addons as tfa
 

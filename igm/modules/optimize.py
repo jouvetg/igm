@@ -31,10 +31,10 @@ from scipy import stats
 from netCDF4 import Dataset
 
 from igm.modules.utils import *
-from igm.modules.iceflow_v2 import *
+from igm.modules.iceflow import *
 
 
-def params_optimize_v2(parser):
+def params_optimize(parser):
     parser.add_argument(
         "--opti_vars_to_save",
         type=list,
@@ -172,13 +172,13 @@ def params_optimize_v2(parser):
     )
 
 
-def init_optimize_v2(params, self):
+def init_optimize(params, self):
     """
     This function does the data assimilation (inverse modelling) to optimize thk, strflowctrl ans usurf from data
     Check at this [page](https://github.com/jouvetg/igm/blob/main/doc/Inverse-modeling.md)
     """
 
-    init_iceflow_v2(params, self)
+    init_iceflow(params, self)
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
 
@@ -222,7 +222,7 @@ def init_optimize_v2(params, self):
 
     self.costs = []
 
-    self.tcomp["optimize_v2"] = []
+    self.tcomp["optimize"] = []
 
     sc = {}
     sc["thk"] = 1
@@ -235,7 +235,7 @@ def init_optimize_v2(params, self):
     # main loop
     for i in range(params.opti_nbitmax):
         with tf.GradientTape() as t, tf.GradientTape() as s:
-            self.tcomp["optimize_v2"].append(time.time())
+            self.tcomp["optimize"].append(time.time())
 
             # is necessary to remember all operation to derive the gradients w.r.t. control variables
             for f in params.opti_control:
@@ -489,8 +489,8 @@ def init_optimize_v2(params, self):
 
             compute_rms_std_optimization(self, i)
 
-            self.tcomp["optimize_v2"][-1] -= time.time()
-            self.tcomp["optimize_v2"][-1] *= -1
+            self.tcomp["optimize"][-1] -= time.time()
+            self.tcomp["optimize"][-1] *= -1
 
             if i % params.opti_output_freq == 0:
                 if params.plot2d_inversion:
@@ -550,7 +550,7 @@ def init_optimize_v2(params, self):
     )
 
 
-def update_optimize_v2(params, self):
+def update_optimize(params, self):
     pass
 
 

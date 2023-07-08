@@ -15,7 +15,7 @@ modules = [
 #    "prepare_data",
     "load_ncdf_data",
     "mysmb",
-    "iceflow_v2",
+    "iceflow",
     "time_step",
     "thk",
     "write_ncdf_ex",

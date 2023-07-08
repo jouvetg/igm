@@ -30,7 +30,7 @@ import importlib_resources
 
 ############################################
 
-def params_iceflow_v2(parser):
+def params_iceflow(parser):
     # type of ice flow computations
     parser.add_argument(
         "--type_iceflow",
@@ -220,7 +220,7 @@ def params_iceflow_v2(parser):
     )
 
 
-def init_iceflow_v2(params, self):
+def init_iceflow(params, self):
 
     self.tcomp["iceflow"] = []
 
@@ -336,7 +336,7 @@ def init_iceflow_v2(params, self):
         self.PAD = [[0, 0], [0, 0]]
 
 
-def update_iceflow_v2(params, self):
+def update_iceflow(params, self):
     self.logger.info("Update ICEFLOW at time : " + str(self.t.numpy()))
 
     self.tcomp["iceflow"].append(time.time())

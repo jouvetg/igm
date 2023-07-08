@@ -45,12 +45,12 @@ def init_state(params, self):
             print("%30s : %s" % (ck, params.__dict__[ck]))
             print("%30s : %s" % (ck, params.__dict__[ck]), file=f)
 
+    os.system("rm clean.sh")
+    os.system("echo rm clean.sh >> clean.sh")
+    os.system("echo rm igm.log >> clean.sh")
+
     os.system(
         "echo rm "
         + os.path.join(params.working_dir, "igm-run-parameters.txt")
         + " >> clean.sh"
     )
-
-    os.system("rm clean.sh")
-    os.system("echo rm clean.sh >> clean.sh")
-    os.system("echo rm igm.log >> clean.sh")

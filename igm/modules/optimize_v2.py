@@ -88,7 +88,7 @@ def params_optimize_v2(parser):
     parser.add_argument(
         "--opti_velsurfobs_std",
         type=float,
-        default=3.0,
+        default=2.0,
         help="Confidence/STD of the surface ice velocities as input data for the optimization (if 0, velsurfobs_std field must be given)",
     )
     parser.add_argument(
@@ -106,13 +106,13 @@ def params_optimize_v2(parser):
     parser.add_argument(
         "--opti_control",
         type=list,
-        default=["thk", "slidingco"],
+        default=["thk", "usurf"], # "slidingco"
         help="List of optimized variables for the optimization",
     )
     parser.add_argument(
         "--opti_cost",
         type=list,
-        default=["velsurf", "thk", "divfluxfcz", "icemask"],
+        default=["velsurf", "thk", "divfluxfcz", "icemask","usurf"],
         help="List of cost components for the optimization",
     )
     parser.add_argument(
@@ -124,7 +124,7 @@ def params_optimize_v2(parser):
     parser.add_argument(
         "--opti_nbitmax",
         type=int,
-        default=1000,
+        default=600,
         help="Max iterations for the optimization",
     )
     parser.add_argument(
@@ -514,6 +514,8 @@ def init_optimize_v2(params, self):
 
     plot_cost_functions(params, self, self.costs)
 
+    plt.close("all")
+
     np.savetxt(
         os.path.join(params.working_dir, "costs.dat"),
         np.stack(self.costs),
@@ -741,17 +743,14 @@ def plot_cost_functions(params, self, costs):
     plt.ylim(0, 1)
     plt.legend()
 
-    if params.plot2d_live_inversion:
-        plt.show()
-    else:
-        plt.savefig(os.path.join(params.working_dir, "convergence.png"), pad_inches=0)
-        plt.close("all")
+    plt.savefig(os.path.join(params.working_dir, "convergence.png"), pad_inches=0)
+    plt.close("all")
 
-        os.system(
-            "echo rm "
-            + os.path.join(params.working_dir, "convergence.png")
-            + " >> clean.sh"
-        )
+    os.system(
+        "echo rm "
+        + os.path.join(params.working_dir, "convergence.png")
+        + " >> clean.sh"
+    )
 
 
 def update_plot_inversion(params, self, i):

@@ -197,9 +197,6 @@ def init_optimize_v2(params, self):
     if "divfluxobs" in params.opti_cost:
         self.divfluxobs = self.smb - self.dhdt
 
-    if not params.opti_smooth_anisotropy_factor == 1:
-        compute_flow_direction_for_anisotropic_smoothing(self)
-
     if hasattr(self, "thkinit"):
         self.thk = self.thkinit
     else:
@@ -281,6 +278,9 @@ def init_optimize_v2(params, self):
                 [self.uvelsurf, self.vvelsurf], axis=-1
             )  # NOT normalized vars
 
+            if not params.opti_smooth_anisotropy_factor == 1:
+                compute_flow_direction_for_anisotropic_smoothing(self)
+
             # misfit between surface velocity
             if "velsurf" in params.opti_cost:
                 ACT = ~tf.math.is_nan(self.velsurfobs)
@@ -361,7 +361,7 @@ def init_optimize_v2(params, self):
 
             # Here one adds a regularization terms for the ice thickness to the cost function
             if "thk" in params.opti_control:
-                if params.opti_smooth_anisotropy_factor == 1:
+                if not hasattr(self,'flowdirx'):
                     dbdx = self.thk[:, 1:] - self.thk[:, :-1]
                     dbdy = self.thk[1:, :] - self.thk[:-1, :]
                     REGU_H = (params.opti_regu_param_thk / (1000**2)) * (
@@ -494,7 +494,7 @@ def init_optimize_v2(params, self):
 
             if i % params.opti_output_freq == 0:
                 if params.plot2d_inversion:
-                    update_plot_inversion(params, self, i)
+                    update_plot_inversion_simple(params, self, i)
                 if params.write_ncdf_optimize:
                     update_ncdf_optimize(params, self, i)
 
@@ -932,25 +932,131 @@ def update_plot_inversion(params, self, i):
         )
 
 
+
+def update_plot_inversion_simple(params, self, i):
+    """
+    Plot thickness, velocity, mand slidingco"""
+
+    if hasattr(self, "uvelsurfobs"):
+        velsurfobs_mag = getmag(self.uvelsurfobs, self.vvelsurfobs).numpy()
+    else:
+        velsurfobs_mag = np.zeros_like(self.thk.numpy())
+
+    if hasattr(self, "usurfobs"):
+        usurfobs = self.usurfobs
+    else:
+        usurfobs = np.zeros_like(self.thk.numpy())
+
+    velsurf_mag = getmag(self.uvelsurf, self.vvelsurf).numpy()
+
+    #########################################################
+
+    if i == 0:
+        if params.editor_plot2d_optimize == "vs":
+            plt.ion()  # enable interactive mode
+
+        # self.fig = plt.figure()
+        self.fig, self.axes = plt.subplots(1, 2)
+
+        self.extent = [self.x[0], self.x[-1], self.y[0], self.y[-1]]
+
+    #########################################################
+
+    cmap = copy.copy(matplotlib.cm.jet)
+    cmap.set_bad(color="white")
+
+    ax1 = self.axes[0]
+
+    im1 = ax1.imshow(
+        np.ma.masked_where(self.thk == 0, self.thk),
+        origin="lower",
+        extent=self.extent,
+        vmin=0,
+        #                    vmax=np.quantile(self.thk, 0.98),
+        cmap=cmap,
+    )
+    if i == 0:
+        plt.colorbar(im1, ax=ax1)
+    ax1.set_title(
+        "Ice thickness \n (RMS : "
+        + str(int(self.rmsthk[-1]))
+        + ", STD : "
+        + str(int(self.stdthk[-1]))
+        + ")",
+        size=12,
+    )
+    ax1.axis("off")
+ 
+    #########################################################
+
+    cmap = copy.copy(matplotlib.cm.viridis)
+    cmap.set_bad(color="white")
+
+    ax4 = self.axes[1]
+
+    im1 = ax4.imshow(
+        np.ma.masked_where(self.thk == 0, velsurf_mag),
+        origin="lower",
+        extent=self.extent,
+        vmin=0,
+        vmax=np.nanmax(velsurfobs_mag),
+        cmap=cmap,
+    )
+    if i == 0:
+        plt.colorbar(im1, format="%.2f", ax=ax4)
+    ax4.set_title(
+        "Modelled velocities \n (RMS : "
+        + str(int(self.rmsvel[-1]))
+        + ", STD : "
+        + str(int(self.stdvel[-1]))
+        + ")",
+        size=12,
+    )
+    ax4.axis("off")
+  
+    #########################################################
+
+    if params.plot2d_live_inversion:
+        if params.editor_plot2d_optimize == "vs":
+            self.fig.canvas.draw()  # re-drawing the figure
+            self.fig.canvas.flush_events()  # to flush the GUI events
+        else:
+            from IPython.display import display, clear_output
+
+            clear_output(wait=True)
+            display(self.fig)
+    else:
+        plt.savefig(
+            os.path.join(params.working_dir, "resu-opti-" + str(i).zfill(4) + ".png"),
+            pad_inches=0,
+        )
+        plt.close("all")
+
+        os.system(
+            "echo rm " + os.path.join(params.working_dir, "*.png") + " >> clean.sh"
+        )
+
+
+
 def compute_flow_direction_for_anisotropic_smoothing(self):
     """
     compute_flow_direction_for_anisotropic_smoothing
     """
 
-    uvelsurfobs = tf.where(tf.math.is_nan(self.uvelsurfobs), 0.0, self.uvelsurfobs)
-    vvelsurfobs = tf.where(tf.math.is_nan(self.vvelsurfobs), 0.0, self.vvelsurfobs)
+    uvelsurf = tf.where(tf.math.is_nan(self.uvelsurf), 0.0, self.uvelsurf)
+    vvelsurf = tf.where(tf.math.is_nan(self.vvelsurf), 0.0, self.vvelsurf)
 
     self.flowdirx = (
-        uvelsurfobs[1:, 1:]
-        + uvelsurfobs[:-1, 1:]
-        + uvelsurfobs[1:, :-1]
-        + uvelsurfobs[:-1, :-1]
+        uvelsurf[1:, 1:]
+        + uvelsurf[:-1, 1:]
+        + uvelsurf[1:, :-1]
+        + uvelsurf[:-1, :-1]
     ) / 4.0
     self.flowdiry = (
-        vvelsurfobs[1:, 1:]
-        + vvelsurfobs[:-1, 1:]
-        + vvelsurfobs[1:, :-1]
-        + vvelsurfobs[:-1, :-1]
+        vvelsurf[1:, 1:]
+        + vvelsurf[:-1, 1:]
+        + vvelsurf[1:, :-1]
+        + vvelsurf[:-1, :-1]
     ) / 4.0
 
     from scipy.ndimage import gaussian_filter

@@ -494,7 +494,7 @@ def init_optimize(params, self):
 
             if i % params.opti_output_freq == 0:
                 if params.plot2d_inversion:
-                    update_plot_inversion_simple(params, self, i)
+                    update_plot_inversion(params, self, i)
                 if params.write_ncdf_optimize:
                     update_ncdf_optimize(params, self, i)
 

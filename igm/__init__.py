@@ -14,16 +14,16 @@ from igm.modules.load_ncdf_data import *
 from igm.modules.load_tif_data import *
 
 from igm.modules.optimize_v1 import *
-from igm.modules.optimize_v2 import *
+from igm.modules.optimize import *
 
 from igm.modules.iceflow_v1 import *
-from igm.modules.iceflow_v2 import *
+from igm.modules.iceflow import *
 from igm.modules.vertical_iceflow import *
 from igm.modules.smb_simple import *
 from igm.modules.thk import *
 from igm.modules.time_step import *
 from igm.modules.particles_v1 import *
-from igm.modules.particles_v2 import *
+from igm.modules.particles import *
 from igm.modules.topg_glacial_erosion import *
 from igm.modules.print_info import *
 

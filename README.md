@@ -5,7 +5,11 @@
 
 # Goal:
 - Release of an improved version (IGM 2.0) that meets standard of collaborative codes, keeping it simple.
- 
+
+# Documentation
+
+Check at the in-construction [documentation](https://github.com/jouvetg/igm2/wiki)
+
 # Major change:
 - Get rid of the all-in-one igm class, split into multiple indendent modules/files (functions) that may work independly
 - Make igm a python module that contains functions and utilities

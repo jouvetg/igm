@@ -322,7 +322,7 @@ def init_iceflow(params, self):
         )
 
     # create the vertica discretization
-    define_vertical_weight(params, self)
+    _define_vertical_weight(params, self)
 
     Ny = self.thk.shape[0]
     Nx = self.thk.shape[1]
@@ -343,15 +343,15 @@ def update_iceflow(params, self):
 
     if params.type_iceflow == "emulated":
         if params.retrain_iceflow_emulator_freq > 0:
-            update_iceflow_emulator(params, self)
+            _update_iceflow_emulator(params, self)
 
-        update_iceflow_emulated(params, self)
+        _update_iceflow_emulated(params, self)
 
     elif params.type_iceflow == "solved":
-        update_iceflow_solved(params, self)
+        _update_iceflow_solved(params, self)
 
     elif params.type_iceflow == "diagnostic":
-        update_iceflow_diagnostic(params, self)
+        _update_iceflow_diagnostic(params, self)
 
     self.tcomp["iceflow"][-1] -= time.time()
     self.tcomp["iceflow"][-1] *= -1
@@ -368,7 +368,7 @@ def final_iceflow(params, self):
 
 
 @tf.function(experimental_relax_shapes=True)
-def compute_gradient_stag(s, dX, dY):
+def _compute_gradient_stag(s, dX, dY):
     """
     compute spatial gradient, outcome on stagerred grid
     """
@@ -383,7 +383,7 @@ def compute_gradient_stag(s, dX, dY):
 
 
 @tf.function(experimental_relax_shapes=True)
-def compute_strainrate_Glen_tf(U, thk, dX, ddz, sloptopgx, sloptopgy, thr):
+def _compute_strainrate_Glen_tf(U, thk, dX, ddz, sloptopgx, sloptopgy, thr):
     # Compute horinzontal derivatives
     dUdx = (U[:, 0, :, :, 1:] - U[:, 0, :, :, :-1]) / dX[0, 0, 0]
     dVdx = (U[:, 1, :, :, 1:] - U[:, 1, :, :, :-1]) / dX[0, 0, 0]
@@ -497,11 +497,11 @@ def compute_strainrate_Glen_tf(U, thk, dX, ddz, sloptopgx, sloptopgy, thr):
     )
 
 
-def stag4(B):
+def _stag4(B):
     return (B[:, 1:, 1:] + B[:, 1:, :-1] + B[:, :-1, 1:] + B[:, :-1, :-1]) / 4
 
 
-def stag8(B):
+def _stag8(B):
     return (
         B[:, 1:, 1:, 1:]
         + B[:, 1:, 1:, :-1]
@@ -531,9 +531,9 @@ def iceflow_energy(params, U, thk, usurf, arrhenius, slidingco, dX):
         zeta = np.arange(params.Nz) / (params.Nz - 1)
         temp = (zeta / params.vert_spacing) * (1.0 + (params.vert_spacing - 1.0) * zeta)
         temd = temp[1:] - temp[:-1]
-        dz = tf.stack([stag4(thk) * z for z in temd], axis=1)
+        dz = tf.stack([_stag4(thk) * z for z in temd], axis=1)
     else:
-        dz = tf.expand_dims(stag4(thk), axis=0)
+        dz = tf.expand_dims(_stag4(thk), axis=0)
 
     # B has Unit Mpa y^(1/n)
     B = 2.0 * arrhenius ** (-1.0 / params.exp_glen)
@@ -547,14 +547,14 @@ def iceflow_energy(params, U, thk, usurf, arrhenius, slidingco, dX):
     p = 1.0 + 1.0 / params.exp_glen
     s = 1.0 + 1.0 / params.exp_weertman
 
-    sloptopgx, sloptopgy = compute_gradient_stag(usurf - thk, dX, dX)
+    sloptopgx, sloptopgy = _compute_gradient_stag(usurf - thk, dX, dX)
     sloptopgx = tf.expand_dims(sloptopgx, axis=1)
     sloptopgy = tf.expand_dims(sloptopgy, axis=1)
 
     # TODO : sloptopgx, sloptopgy must be the elevaion of layers! not the bedrock, this probably has very little effects.
 
     # sr has unit y^(-1)
-    sr, div = compute_strainrate_Glen_tf(
+    sr, div = _compute_strainrate_Glen_tf(
         U, thk, dX, dz, sloptopgx, sloptopgy, thr=params.thr_ice_thk
     )
 
@@ -563,7 +563,7 @@ def iceflow_energy(params, U, thk, usurf, arrhenius, slidingco, dX):
     # C_shear is unit  Mpa y^(1/n) y^(-1-1/n) * m^3 = Mpa y^(-1) m^3
     C_shear = (
         tf.reduce_mean(
-            stag4(B)
+            _stag4(B)
             * tf.reduce_sum(dz * ((sr + params.regu_glen**2) ** (p / 2)), axis=1),
             axis=(-1, -2),
         )
@@ -572,19 +572,19 @@ def iceflow_energy(params, U, thk, usurf, arrhenius, slidingco, dX):
 
     # C_slid is unit Mpa y^m m^(-m) * m^(1+m) * y^(-1-m) * m*2 = Mpa y^(-1) m^3
     N = (
-        stag4(U[:, 0, 0, :, :] ** 2 + U[:, 1, 0, :, :] ** 2)
+        _stag4(U[:, 0, 0, :, :] ** 2 + U[:, 1, 0, :, :] ** 2)
         + params.regu_weertman**2
-        + (stag4(U[:, 0, 0, :, :]) * sloptopgx + stag4(U[:, 1, 0, :, :]) * sloptopgy)
+        + (_stag4(U[:, 0, 0, :, :]) * sloptopgx + _stag4(U[:, 1, 0, :, :]) * sloptopgy)
         ** 2
     )
-    C_slid = tf.reduce_mean(stag4(C) * N ** (s / 2), axis=(-1, -2)) / s
+    C_slid = tf.reduce_mean(_stag4(C) * N ** (s / 2), axis=(-1, -2)) / s
 
     if params.iceflow_physics == 2:
-        slopsurfx, slopsurfy = compute_gradient_stag(usurf, dX, dX)
+        slopsurfx, slopsurfy = _compute_gradient_stag(usurf, dX, dX)
         slopsurfx = tf.expand_dims(slopsurfx, axis=1)
         slopsurfy = tf.expand_dims(slopsurfy, axis=1)
 
-        uds = stag8(U[:, 0]) * slopsurfx + stag8(U[:, 1]) * slopsurfy
+        uds = _stag8(U[:, 0]) * slopsurfx + _stag8(U[:, 1]) * slopsurfy
         uds = tf.where(COND, uds, 0.0)
         C_grav = (
             910
@@ -595,9 +595,9 @@ def iceflow_energy(params, U, thk, usurf, arrhenius, slidingco, dX):
 
     elif params.iceflow_physics == 4:
         # THIS IS NOT WORKING YET
-        w = stag8(U[:, 2])
+        w = _stag8(U[:, 2])
         w = tf.where(COND, w, 0.0)
-        p = stag8(U[:, 3])
+        p = _stag8(U[:, 3])
         p = tf.where(COND, p, 0.0)
         C_grav = (
             910
@@ -656,7 +656,7 @@ def iceflow_energy_XY(params, X, Y):
     )
 
 
-def Y_to_U(params, Y):
+def _Y_to_U(params, Y):
     N = params.Nz
 
     if params.iceflow_physics == 2:
@@ -681,7 +681,7 @@ def Y_to_U(params, Y):
     return U
 
 
-def U_to_Y(params, U):
+def _U_to_Y(params, U):
     if params.iceflow_physics == 2:
         UU = tf.experimental.numpy.moveaxis(U[0], [0], [-1])
         VV = tf.experimental.numpy.moveaxis(U[1], [0], [-1])
@@ -715,7 +715,7 @@ def U_to_Y(params, U):
 ########################################################################
 
 
-def define_vertical_weight(params, self):
+def _define_vertical_weight(params, self):
     """
     define_vertical_weight
     """
@@ -733,7 +733,7 @@ def define_vertical_weight(params, self):
 ########################################################################
 
 
-def solve_iceflow(params, self, U):
+def _solve_iceflow(params, self, U):
     """
     solve_iceflow
     """
@@ -776,24 +776,18 @@ def solve_iceflow(params, self, U):
     return U, Cost_Glen
 
 
-def update_iceflow_solved(params, self):
-    """
-    update_iceflow_solved
-    """
+def _update_iceflow_solved(params, self):
 
-    U, Cost_Glen = solve_iceflow(params, self, self.U)
+    U, Cost_Glen = _solve_iceflow(params, self, self.U)
 
     self.U.assign(U)
 
     self.COST_Glen = Cost_Glen[-1].numpy()
 
-    update_2d_iceflow_variables(params, self)
+    _update_2d_iceflow_variables(params, self)
 
 
-def update_2d_iceflow_variables(params, self):
-    """
-    update_2d_iceflow_variables
-    """
+def _update_2d_iceflow_variables(params, self):
 
     self.uvelbase = self.U[0, 0, :, :]
     self.vvelbase = self.U[1, 0, :, :]
@@ -810,10 +804,7 @@ def update_2d_iceflow_variables(params, self):
 ########################################################################
 
 
-def update_iceflow_emulated(params, self):
-    """
-    update_iceflow_emulated
-    """
+def _update_iceflow_emulated(params, self):
 
     # Define the input of the NN, include scaling
     X = tf.expand_dims(
@@ -829,7 +820,7 @@ def update_iceflow_emulated(params, self):
     Ny, Nx = self.thk.shape
     N = params.Nz
 
-    U = Y_to_U(params, Y[:, :Ny, :Nx, :])
+    U = _Y_to_U(params, Y[:, :Ny, :Nx, :])
 
     U = tf.where(self.thk > 0, U, 0)
 
@@ -841,20 +832,17 @@ def update_iceflow_emulated(params, self):
             self.U, -params.force_max_velbar, params.force_max_velbar
         )
 
-    update_2d_iceflow_variables(params, self)
+    _update_2d_iceflow_variables(params, self)
 
 
-def update_iceflow_emulator(params, self):
-    """
-    update_iceflow_emulator
-    """
+def _update_iceflow_emulator(params, self):
 
     if self.it % params.retrain_iceflow_emulator_freq == 0:
         XX = tf.expand_dims(
             tf.stack([vars(self)[f] for f in self.fieldin], axis=-1), axis=0
         )
 
-        X = split_into_patches(XX, params.retrain_iceflow_emulator_framesizemax)
+        X = _split_into_patches(XX, params.retrain_iceflow_emulator_framesizemax)
 
         self.COST_EMULATOR = []
 
@@ -870,7 +858,7 @@ def update_iceflow_emulator(params, self):
                     cost_emulator = cost_emulator + COST
 
                     if (epoch + 1) % 100 == 0:
-                        U = Y_to_U(params, Y)
+                        U = _Y_to_U(params, Y)
                         velsurf_mag = tf.sqrt(U[0, -1] ** 2 + U[1, -1] ** 2)
                         print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 
@@ -887,7 +875,7 @@ def update_iceflow_emulator(params, self):
             self.COST_EMULATOR.append(cost_emulator)
 
 
-def split_into_patches(X, nbmax):
+def _split_into_patches(X, nbmax):
     XX = []
     ny = X.shape[1]
     nx = X.shape[2]
@@ -910,27 +898,24 @@ def split_into_patches(X, nbmax):
 ########################################################################
 
 
-def update_iceflow_diagnostic(params, self):
-    """
-    update_iceflow_diagnostic
-    """
+def _update_iceflow_diagnostic(params, self):
 
     if params.retrain_iceflow_emulator_freq > 0:
-        update_iceflow_emulator(params, self)
+        _update_iceflow_emulator(params, self)
         COST_Emulator = self.COST_EMULATOR[-1].numpy()
     else:
         COST_Emulator = 0.0
 
-    update_iceflow_emulated(params, self)
+    _update_iceflow_emulated(params, self)
 
     if self.it % 10 == 0:
-        UT, Cost_Glen = solve_iceflow(params, self, self.UT)
+        UT, Cost_Glen = _solve_iceflow(params, self, self.UT)
         self.UT.assign(UT)
         COST_Glen = Cost_Glen[-1].numpy()
 
         print("nb solve iterations :", len(Cost_Glen))
 
-        l1, l2 = computemisfit(self, self.thk, self.U - self.UT)
+        l1, l2 = _computemisfit(self, self.thk, self.U - self.UT)
 
         ERR = [self.t.numpy(), COST_Glen, COST_Emulator, l1, l2]
 
@@ -940,7 +925,7 @@ def update_iceflow_diagnostic(params, self):
             np.savetxt(f, np.expand_dims(ERR, axis=0), delimiter=",", fmt="%5.5f")
 
 
-def computemisfit(self, thk, U):
+def _computemisfit(self, thk, U):
     ubar = tf.reduce_sum(self.vert_weight * U[0], axis=0)
     vbar = tf.reduce_sum(self.vert_weight * U[1], axis=0)
 

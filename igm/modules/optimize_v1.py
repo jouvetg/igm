@@ -228,7 +228,7 @@ def init_optimize_v1(params, self):
         self.divfluxobs = self.smb - self.dhdt
 
     if not params.opti_smooth_anisotropy_factor == 1:
-        compute_flow_direction_for_anisotropic_smoothing(self)
+        _compute_flow_direction_for_anisotropic_smoothing(self)
 
     if hasattr(self, "thkinit"):
         self.thk = self.thkinit
@@ -640,16 +640,16 @@ def init_optimize_v1(params, self):
                 self.ubar, self.vbar, self.thk, self.dx, self.dx
             )
 
-            compute_rms_std_optimization(self, i)
+            _compute_rms_std_optimization(self, i)
 
             self.tcomp["optimize_v1"][-1] -= time.time()
             self.tcomp["optimize_v1"][-1] *= -1
 
             if i % params.opti_output_freq == 0:
                 if params.plot2d_inversion:
-                    update_plot_inversion(params, self, i)
+                    _update_plot_inversion(params, self, i)
                 if params.write_ncdf_optimize:
-                    update_ncdf_optimize(params, self, i)
+                    _update_ncdf_optimize(params, self, i)
 
             # stopping criterion: stop if the cost no longer decrease
             # if i>params.opti_nbitmin:
@@ -660,9 +660,9 @@ def init_optimize_v1(params, self):
     # now that the ice thickness is optimized, we can fix the bed once for all!
     self.topg = self.usurf - self.thk
 
-    output_ncdf_optimize_final(params, self)
+    _output_ncdf_optimize_final(params, self)
 
-    plot_cost_functions(params, self, self.costs)
+    _plot_cost_functions(params, self, self.costs)
 
     np.savetxt(
         os.path.join(params.working_dir, "costs.dat"),
@@ -714,10 +714,7 @@ def final_optimize_v1(params, self):
     pass
 
 
-def compute_rms_std_optimization(self, i):
-    """
-    compute_std_optimization
-    """
+def _compute_rms_std_optimization(self, i):
 
     I = self.icemaskobs == 1
 
@@ -774,7 +771,7 @@ def compute_rms_std_optimization(self, i):
         self.stdusurf.append(0)
 
 
-def update_ncdf_optimize(params, self, it):
+def _update_ncdf_optimize(params, self, it):
     """
     Initialize and write the ncdf optimze file
     """
@@ -860,7 +857,7 @@ def update_ncdf_optimize(params, self, it):
         nc.close()
 
 
-def output_ncdf_optimize_final(params, self):
+def _output_ncdf_optimize_final(params, self):
     """
     Write final geology after optimizing
     """
@@ -900,7 +897,7 @@ def output_ncdf_optimize_final(params, self):
     )
 
 
-def plot_cost_functions(params, self, costs):
+def _plot_cost_functions(params, self, costs):
     costs = np.stack(costs)
 
     for i in range(costs.shape[1]):
@@ -930,7 +927,7 @@ def plot_cost_functions(params, self, costs):
         )
 
 
-def update_plot_inversion(params, self, i):
+def _update_plot_inversion(params, self, i):
     """
     Plot thickness, velocity, mand slidingco"""
 
@@ -1109,10 +1106,7 @@ def update_plot_inversion(params, self, i):
         )
 
 
-def compute_flow_direction_for_anisotropic_smoothing(self):
-    """
-    compute_flow_direction_for_anisotropic_smoothing
-    """
+def _compute_flow_direction_for_anisotropic_smoothing(self):
 
     uvelsurfobs = tf.where(tf.math.is_nan(self.uvelsurfobs), 0.0, self.uvelsurfobs)
     vvelsurfobs = tf.where(tf.math.is_nan(self.vvelsurfobs), 0.0, self.vvelsurfobs)

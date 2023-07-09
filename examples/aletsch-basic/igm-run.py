@@ -26,6 +26,8 @@ modules = [
 #    "write_plot2d",
 #    "write_particles",
     "print_info",
+#   "print_all_comp_info",
+#   "anim3d_from_ncdf_ex"
 ]
 
 # Collect and parse all the parameters of all model components
@@ -64,7 +66,3 @@ with tf.device("/GPU:0"):
     # Finalize each module in turn
     for module in modules:
         getattr(igm, "final_" + module)(params, state)
-
-# Provide computational statistic of the run
-igm.modules.utils.print_all_comp_info(params, state)
-

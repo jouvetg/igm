@@ -32,3 +32,7 @@ from igm.modules.write_ncdf_ex import *
 from igm.modules.write_ncdf_ts import *
 from igm.modules.write_plot2d  import *
 from igm.modules.write_particles import *
+
+from igm.modules.anim3d_from_ncdf_ex import *
+from igm.modules.anim_mp4_from_ncdf_ex import *
+from igm.modules.print_all_comp_info import *

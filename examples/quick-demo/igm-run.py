@@ -8,21 +8,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import igm
-from mysmb import *
 
+from mysmb import *
+ 
 # Define in order the model components step to be updated
 modules = [
-#    "prepare_data",
-    "load_ncdf_data",
-    "mysmb",
-    "iceflow",
-    "time_step",
-    "thk",
-    "write_ncdf_ex",
-    "write_ncdf_ts",
-    "write_plot2d",
-    "print_info",
-]
+           "prepare_data",
+           "optimize",
+#           "load_ncdf_data",
+           "mysmb", 
+           "iceflow", 
+           "vertical_iceflow",
+           "time_step",
+#           "particles",
+           "thk", 
+           "write_ncdf_ex", 
+#           "write_particles",
+#           "write_plot2d", 
+           "print_info",
+           "print_all_comp_info",
+           "anim3d_from_ncdf_ex"
+          ]
 
 # Collect and parse all the parameters of all model components
 parser = igm.params_core()
@@ -33,11 +39,10 @@ params = parser.parse_args()
 # Override parameters
 params.tstart = 2000.0
 params.tend   = 2100.0
-params.tsave  = 5
+params.tsave  = 2
 params.plot_live = True
-params.RGI = 'RGI60-01.00709'
-# params.logging_file      = ''
-# params.logging_level     = 'INFO'
+params.RGI = 'RGI60-11.01450' 
+params.observation = True
 
 # Define a state class/dictionnary that contains all the data
 state = igm.State()
@@ -45,26 +50,20 @@ igm.init_state(params, state)
 
 # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
 with tf.device("/GPU:0"):
-    
+
     # Initialize all the model components in turn
     for module in modules:
         getattr(igm, "init_" + module)(params, state)
 
-    # give a mean ela that is suitable for this glacier
-    params.meanela = np.quantile(state.usurf[state.thk>10],0.3)
-
     # Time loop, perform the simulation until reaching the defined end time
     while state.t < params.tend:
-
-        # Update in turn each model components
+        
+        # Update each model components in turn
         for module in modules:
+#            if (not (module=='particles_v2'))|(state.t>2300):
             getattr(igm, "update_" + module)(params, state)
             
     # Finalize each module in turn
     for module in modules:
         getattr(igm, "final_" + module)(params, state)
 
-# Provide computational statistic of the run
-igm.modules.utils.print_all_comp_info(params, state)
-
-igm.modules.utils.anim_3d_from_ncdf_ex(params)

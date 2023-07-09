@@ -156,7 +156,7 @@ def update_particles(params, self):
         indexing="ij",
     )[0, :, 0]
 
-    zeta = rhs_to_zeta(params, self.rhpos)  # get the position in the column
+    zeta = _rhs_to_zeta(params, self.rhpos)  # get the position in the column
     I0 = tf.cast(tf.math.floor(zeta * (params.Nz - 1)), dtype="int32")
     I0 = tf.minimum(I0, params.Nz - 2)  # make sure to not reach the upper-most pt
     I1 = I0 + 1
@@ -283,11 +283,11 @@ def final_particles(params, self):
     pass
 
 
-def zeta_to_rhs(self, zeta):
+def _zeta_to_rhs(self, zeta):
     return (zeta / params.vert_spacing) * (1.0 + (params.vert_spacing - 1.0) * zeta)
 
 
-def rhs_to_zeta(params, rhs):
+def _rhs_to_zeta(params, rhs):
     if params.vert_spacing == 1:
         rhs = zeta
     else:

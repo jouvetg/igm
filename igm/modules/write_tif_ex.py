@@ -44,3 +44,8 @@ def update_write_tif_ex(params, self):
                 src.write(np.flipud(vars(self)[var]), 1)
 
             del src
+            
+            
+def final_write_tif_ex(params, self):
+    pass
+

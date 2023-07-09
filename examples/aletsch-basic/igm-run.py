@@ -60,6 +60,10 @@ with tf.device("/GPU:0"):
         # Update each model components in turn
         for module in modules:
             getattr(igm, "update_" + module)(params, state)
+            
+    # Finalize each module in turn
+    for module in modules:
+        getattr(igm, "final_" + module)(params, state)
 
 # Provide computational statistic of the run
 igm.modules.utils.print_all_comp_info(params, state)

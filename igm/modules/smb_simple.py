@@ -74,3 +74,8 @@ def update_smb_simple(params, self):
 
         self.tcomp["smb_simple"][-1] -= time.time()
         self.tcomp["smb_simple"][-1] *= -1
+
+
+def final_smb_simple(params, self):
+    pass
+

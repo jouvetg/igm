@@ -357,6 +357,9 @@ def update_iceflow(params, self):
     self.tcomp["iceflow"][-1] *= -1
 
 
+def final_iceflow(params, self):
+    pass 
+
 ########################################################################
 ########################################################################
 ##############  Definition of the system energy ########################

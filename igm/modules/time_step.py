@@ -110,3 +110,7 @@ def update_time_step(params, self):
 
     self.tcomp["time_step"][-1] -= time.time()
     self.tcomp["time_step"][-1] *= -1
+
+
+def final_time_step(params, self):
+    pass

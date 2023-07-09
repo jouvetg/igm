@@ -217,6 +217,11 @@ def init_prepare_data(params, self):
 def update_prepare_data(params, self):
     pass
 
+
+def final_prepare_data(params, self):
+    pass
+
+
 #########################################################################
 
 

@@ -94,3 +94,7 @@ def update_write_particles(params, self):
 
         self.tcomp["write_particles"][-1] -= time.time()
         self.tcomp["write_particles"][-1] *= -1
+
+
+def final_write_particles(params, self):
+    pass

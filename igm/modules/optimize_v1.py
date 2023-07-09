@@ -710,6 +710,10 @@ def update_optimize_v1(params, self):
     pass
 
 
+def final_optimize_v1(params, self):
+    pass
+
+
 def compute_rms_std_optimization(self, i):
     """
     compute_std_optimization

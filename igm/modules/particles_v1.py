@@ -235,6 +235,10 @@ def update_particles_v1(params, self):
     self.tcomp["particles"][-1] *= -1
 
 
+def final_particles_v1(params, self):
+    pass
+    
+
 def seeding_particles(params, self):
     """
     here we define (xpos,ypos) the horiz coordinate of tracked particles

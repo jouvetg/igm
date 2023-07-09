@@ -43,4 +43,8 @@ def update_print_info(params, self):
                 np.sum(self.thk) * (self.dx**2) / 10**9,
             )
         )
+        
+        
+def final_print_info(params, self):
+    pass
 

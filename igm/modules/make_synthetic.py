@@ -43,3 +43,8 @@ def init_make_synthetic(params, self):
 
 def update_make_synthetic(params, self):
     pass
+
+
+def final_make_synthetic(params, self):
+    pass
+    

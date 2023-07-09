@@ -76,3 +76,7 @@ def update_write_ncdf_ts(params, self):
             for var in ["vol", "area"]:
                 nc.variables[var][d] = vars()[var].numpy()
             nc.close()
+
+    
+def final_write_ncdf_ts(params, self):
+    pass

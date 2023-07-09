@@ -40,6 +40,10 @@ def update_vertical_iceflow(params, self):
 
     self.tcomp["vertical_iceflow"][-1] -= time.time()
     self.tcomp["vertical_iceflow"][-1] *= -1
+    
+
+def final_vertical_iceflow(params, self):
+    pass
 
 
 # @tf.function(experimental_relax_shapes=True)

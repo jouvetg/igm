@@ -52,3 +52,10 @@ def init_load_tif_data(params, self):
 
 def update_load_tif_data(params, self):
     pass
+    
+    
+def final_load_tif_data(params, self):
+    pass
+    
+
+

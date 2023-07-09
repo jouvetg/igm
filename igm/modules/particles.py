@@ -277,6 +277,10 @@ def update_particles(params, self):
 
     self.tcomp["particles"][-1] -= time.time()
     self.tcomp["particles"][-1] *= -1
+    
+
+def final_particles(params, self):
+    pass
 
 
 def zeta_to_rhs(self, zeta):

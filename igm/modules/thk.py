@@ -60,3 +60,7 @@ def update_thk(params, self):
 
     self.tcomp["thk"][-1] -= time.time()
     self.tcomp["thk"][-1] *= -1
+
+
+def final_thk(params, self):
+    pass

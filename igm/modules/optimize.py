@@ -553,6 +553,10 @@ def init_optimize(params, self):
 def update_optimize(params, self):
     pass
 
+    
+def final_optimize(params, self):
+    pass
+
 
 def compute_rms_std_optimization(self, i):
     """

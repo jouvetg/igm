@@ -156,3 +156,6 @@ def update_write_ncdf_ex(params, self):
         self.tcomp["write_ncdf_ex"][-1] -= time.time()
         self.tcomp["write_ncdf_ex"][-1] *= -1
  
+ 
+def final_write_ncdf_ex(params, self):
+    pass

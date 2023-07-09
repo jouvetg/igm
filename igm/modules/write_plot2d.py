@@ -138,3 +138,7 @@ def update_write_plot2d(params, self):
 
         self.tcomp["write_plot2d"][-1] -= time.time()
         self.tcomp["write_plot2d"][-1] *= -1
+
+
+def final_write_plot2d(params, self):
+    pass

@@ -75,3 +75,7 @@ def update_topg_glacial_erosion(params, self):
 
         self.tcomp["topg_glacial_erosion"][-1] -= time.time()
         self.tcomp["topg_glacial_erosion"][-1] *= -1
+
+
+def final_topg_glacial_erosion(params, self):
+    pass

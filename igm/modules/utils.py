@@ -167,8 +167,8 @@ def complete_data(self):
         self.usurf = tf.Variable(self.lsurf + self.thk)
  
  
- def crop_field(params, self):
-   
+def crop_field(params, self):
+  
     i0 = np.clip(int((params.crop_xmin-self.x[0])/self.dx), 0, self.x.shape[0]-1)
     i1 = np.clip(int((params.crop_xmax-self.x[0])/self.dx), 0, self.x.shape[0]-1)
 

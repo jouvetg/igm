@@ -515,7 +515,7 @@ def _stag8(B):
 
 
 # @tf.function(experimental_relax_shapes=True)
-def iceflow_energy(params, U, thk, usurf, arrhenius, slidingco, dX):
+def _iceflow_energy(params, U, thk, usurf, arrhenius, slidingco, dX):
     # warning, the energy is here normalized dividing by int_Omega
 
     COND = (

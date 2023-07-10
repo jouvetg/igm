@@ -15,25 +15,15 @@ class State:
         self.__dict__ = dict()
 
 def init_state(params, self):
-
-    # this will collect  statisitics of the computational times
-    self.tcomp = {}
-
+ 
     # Configure the logging
-    if params.logging_file == "":
-        logging.basicConfig(
-            filemode="w",
-            level=getattr(logging, params.logging_level),
-            format="%(asctime)s - %(levelname)s - %(message)s",
-        )
-    else:
-        logging.basicConfig(
-            filename=params.logging_file,
-            encoding="utf-8",
-            filemode="w",
-            level=getattr(logging, params.logging_level),
-            format="%(asctime)s - %(levelname)s - %(message)s",
-        )
+    logging.basicConfig(
+        filename=params.logging_file,
+        encoding="utf-8",
+        filemode="w",
+        level=getattr(logging, params.logging_level),
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
 
     # Create a logger
     self.logger = logging.getLogger("my_logger")

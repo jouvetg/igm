@@ -59,7 +59,7 @@ def init_write_plot2d(params, self):
     if params.editor_plot2d == "vs":
         plt.ion() # enable interactive mode
 
-    self.tcomp["write_plot2d"] = []
+    self.tcomp_write_plot2d = []
 
     self.fig = plt.figure(dpi=200)
     self.ax = self.fig.add_subplot(1, 1, 1)
@@ -77,7 +77,7 @@ def update_write_plot2d(params, self):
 
     if self.saveresult:
  
-        self.tcomp["write_plot2d"].append(time.time())
+        self.tcomp_write_plot2d.append(time.time())
 
         if params.varplot == "velbar_mag":
             self.velbar_mag = getmag(self.ubar, self.vbar)
@@ -136,8 +136,8 @@ def update_write_plot2d(params, self):
                 pad_inches=0.2,
             )
 
-        self.tcomp["write_plot2d"][-1] -= time.time()
-        self.tcomp["write_plot2d"][-1] *= -1
+        self.tcomp_write_plot2d[-1] -= time.time()
+        self.tcomp_write_plot2d[-1] *= -1
 
 
 def final_write_plot2d(params, self):

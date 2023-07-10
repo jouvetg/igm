@@ -222,7 +222,7 @@ def params_iceflow(parser):
 
 def init_iceflow(params, self):
 
-    self.tcomp["iceflow"] = []
+    self.tcomp_iceflow = []
 
     # here we initialize variable parmaetrizing ice flow
     if not hasattr(self, "arrhenius"):
@@ -339,7 +339,7 @@ def init_iceflow(params, self):
 def update_iceflow(params, self):
     self.logger.info("Update ICEFLOW at time : " + str(self.t.numpy()))
 
-    self.tcomp["iceflow"].append(time.time())
+    self.tcomp_iceflow.append(time.time())
 
     if params.type_iceflow == "emulated":
         if params.retrain_iceflow_emulator_freq > 0:
@@ -353,8 +353,8 @@ def update_iceflow(params, self):
     elif params.type_iceflow == "diagnostic":
         _update_iceflow_diagnostic(params, self)
 
-    self.tcomp["iceflow"][-1] -= time.time()
-    self.tcomp["iceflow"][-1] *= -1
+    self.tcomp_iceflow[-1] -= time.time()
+    self.tcomp_iceflow[-1] *= -1
 
 
 def final_iceflow(params, self):

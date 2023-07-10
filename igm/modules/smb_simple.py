@@ -43,7 +43,7 @@ def init_smb_simple(params, self):
         dtype=np.float32,
     )
 
-    self.tcomp["smb_simple"] = []
+    self.tcomp_smb_simple = []
     self.tlast_mb = tf.Variable(-1.0e5000)
 
 
@@ -53,7 +53,7 @@ def update_smb_simple(params, self):
     if (self.t - self.tlast_mb) >= params.mb_update_freq:
         self.logger.info("Construct mass balance at time : " + str(self.t.numpy()))
 
-        self.tcomp["smb_simple"].append(time.time())
+        self.tcomp_smb_simple.append(time.time())
 
         # get the smb parameters at given time t
         gradabl = interp1d_tf(self.smbpar[:, 0], self.smbpar[:, 1], self.t)
@@ -72,8 +72,8 @@ def update_smb_simple(params, self):
 
         self.tlast_mb.assign(self.t)
 
-        self.tcomp["smb_simple"][-1] -= time.time()
-        self.tcomp["smb_simple"][-1] *= -1
+        self.tcomp_smb_simple[-1] -= time.time()
+        self.tcomp_smb_simple[-1] *= -1
 
 
 def final_smb_simple(params, self):

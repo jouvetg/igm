@@ -87,7 +87,7 @@ def params_iceflow_v1(parser):
 
 def init_iceflow_v1(params, self):
 
-    self.tcomp["iceflow"] = []
+    self.tcomp_iceflow = []
 
     # here we initialize variable parmaetrizing ice flow
     if not hasattr(self, "strflowctrl"):
@@ -134,7 +134,7 @@ def update_iceflow_v1(params, self):
 
     self.logger.info("Update ICEFLOW at time : " + str(self.t.numpy()))
 
-    self.tcomp["iceflow"].append(time.time())
+    self.tcomp_iceflow.append(time.time())
 
     # update gradients of the surface (slopes)
     self.slopsurfx, self.slopsurfy = compute_gradient_tf(self.usurf, self.dx, self.dx)
@@ -177,8 +177,8 @@ def update_iceflow_v1(params, self):
             self.vbar,
         )
 
-    self.tcomp["iceflow"][-1] -= time.time()
-    self.tcomp["iceflow"][-1] *= -1
+    self.tcomp_iceflow[-1] -= time.time()
+    self.tcomp_iceflow[-1] *= -1
 
 
 def final_iceflow_v1(params, self):

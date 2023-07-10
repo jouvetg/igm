@@ -34,16 +34,15 @@ from igm.modules.utils import compute_divflux
 def params_thk(self):
     pass
 
-
 def init_thk(params, self):
-    self.tcomp["thk"] = []
+    self.tcomp_thk = []
 
 
 def update_thk(params, self):
 
     self.logger.info("Ice thickness equation at time : " + str(self.t.numpy()))
 
-    self.tcomp["thk"].append(time.time())
+    self.tcomp_thk.append(time.time())
 
     # compute the divergence of the flux
     self.divflux = compute_divflux(self.ubar, self.vbar, self.thk, self.dx, self.dx)
@@ -58,8 +57,8 @@ def update_thk(params, self):
     # define the upper ice surface
     self.usurf = self.lsurf + self.thk
 
-    self.tcomp["thk"][-1] -= time.time()
-    self.tcomp["thk"][-1] *= -1
+    self.tcomp_thk[-1] -= time.time()
+    self.tcomp_thk[-1] *= -1
 
 
 def final_thk(params, self):

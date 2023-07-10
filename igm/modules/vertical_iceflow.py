@@ -23,7 +23,7 @@ def params_vertical_iceflow(parser):
 
 
 def init_vertical_iceflow(params, self):
-    self.tcomp["vertical_iceflow"]=[]
+    self.tcomp_vertical_iceflow=[]
 
 
 def update_vertical_iceflow(params, self):
@@ -31,15 +31,15 @@ def update_vertical_iceflow(params, self):
 
     """
 
-    self.tcomp["vertical_iceflow"].append(time.time())
+    self.tcomp_vertical_iceflow.append(time.time())
 
     self.W = _compute_vertical_velocity_tf(params, self, self.U, self.thk, self.dX)
     
     self.wvelbase = self.W[0]
     self.wvelsurf = self.W[-1]
 
-    self.tcomp["vertical_iceflow"][-1] -= time.time()
-    self.tcomp["vertical_iceflow"][-1] *= -1
+    self.tcomp_vertical_iceflow[-1] -= time.time()
+    self.tcomp_vertical_iceflow[-1] *= -1
     
 
 def final_vertical_iceflow(params, self):

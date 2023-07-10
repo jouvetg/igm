@@ -30,27 +30,28 @@ def update_print_all_comp_info(params, self):
 
 def final_print_all_comp_info(params, self):
  
-    self.tcomp["all"] = []
-    self.tcomp["all"].append(np.sum([np.sum(self.tcomp[f]) for f in self.tcomp.keys()]))
+    modules = [A for A in self.__dict__.keys() if 'tcomp_' in A]
+
+    self.tcomp_all = [ np.sum([np.sum(getattr(self,m)) for m in modules]) ]
 
     print("Computational statistics report:")
     with open(
         os.path.join(params.working_dir, "computational-statistics.txt"), "w"
     ) as f:
-        for key in self.tcomp.keys():
+        for m in modules:
             CELA = (
-                key,
-                np.mean(self.tcomp[key]),
-                np.sum(self.tcomp[key]),
-                len(self.tcomp[key]),
+                m[6:],
+                np.mean(getattr(self,m)),
+                np.sum(getattr(self,m)),
+                len(getattr(self,m)),
             )
             print(
-                "     %15s  |  mean time per it : %8.4f  |  total : %8.4f  |  number it : %8.0f"
+                "     %24s  |  mean time per it : %8.4f  |  total : %8.4f  |  number it : %8.0f"
                 % CELA,
                 file=f,
             )
             print(
-                "     %15s  |  mean time per it : %8.4f  |  total : %8.4f  |  number it  : %8.0f"
+                "     %24s  |  mean time per it : %8.4f  |  total : %8.4f  |  number it  : %8.0f"
                 % CELA
             )
 
@@ -78,10 +79,12 @@ def _plot_computational_pie(params, self):
     total = []
     name = []
 
-    for i, key in enumerate(self.tcomp.keys()):
-        if not key == "All":
-            total.append(np.sum(self.tcomp[key][1:]))
-            name.append(key)
+    modules = [A for A in self.__dict__.keys() if 'tcomp_' in A]
+    modules.remove('tcomp_all')
+
+    for m in modules:
+        total.append(np.sum(getattr(self,m)[1:]))
+        name.append(m[6:])
 
     sumallindiv = np.sum(total)
 
@@ -99,11 +102,11 @@ def _plot_computational_pie(params, self):
     plt.setp(autotexts, size=8, weight="bold")
     #    ax.set_title("Matplotlib bakery: A pie")
     plt.tight_layout()
-    plt.savefig(os.path.join(params.working_dir, "PIE-COMPUTATIONAL.png"), pad_inches=0)
+    plt.savefig(os.path.join(params.working_dir, "computational-pie.png"), pad_inches=0)
     plt.close("all")
 
     os.system(
         "echo rm "
-        + os.path.join(params.working_dir, "PIE-COMPUTATIONAL.png")
+        + os.path.join(params.working_dir, "computational-pie.png")
         + " >> clean.sh"
     )

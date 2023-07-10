@@ -77,7 +77,7 @@ def params_particles(parser):
 
 def init_particles(params, self):
     self.tlast_seeding = -1.0e5000
-    self.tcomp["particles"] = []
+    self.tcomp_particles = []
 
     # initialize trajectories
     self.xpos = tf.Variable([])
@@ -114,7 +114,7 @@ def update_particles(params, self):
 
         self.tlast_seeding = self.t.numpy()
 
-    self.tcomp["particles"].append(time.time())
+    self.tcomp_particles.append(time.time())
 
     # find the indices of trajectories
     # these indicies are real values to permit 2D interpolations
@@ -275,8 +275,8 @@ def update_particles(params, self):
         tf.where(self.rhpos < 1, self.dt, 0.0), dtype="float32"
     )
 
-    self.tcomp["particles"][-1] -= time.time()
-    self.tcomp["particles"][-1] *= -1
+    self.tcomp_particles[-1] -= time.time()
+    self.tcomp_particles[-1] *= -1
     
 
 def final_particles(params, self):

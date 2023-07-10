@@ -42,7 +42,7 @@ def params_write_ncdf_ex(parser):
 
 
 def init_write_ncdf_ex(params, self):
-    self.tcomp["write_ncdf_ex"] = []
+    self.tcomp_write_ncdf_ex = []
 
     os.system("echo rm " + os.path.join(params.working_dir, "ex.nc") + " >> clean.sh")
 
@@ -77,7 +77,7 @@ def init_write_ncdf_ex(params, self):
 
 def update_write_ncdf_ex(params, self):
     if self.saveresult:
-        self.tcomp["write_ncdf_ex"].append(time.time())
+        self.tcomp_write_ncdf_ex.append(time.time())
 
         if "velbar_mag" in params.vars_to_save_ncdf_ex:
             self.velbar_mag = getmag(self.ubar, self.vbar)
@@ -153,8 +153,8 @@ def update_write_ncdf_ex(params, self):
 
             nc.close()
 
-        self.tcomp["write_ncdf_ex"][-1] -= time.time()
-        self.tcomp["write_ncdf_ex"][-1] *= -1
+        self.tcomp_write_ncdf_ex[-1] -= time.time()
+        self.tcomp_write_ncdf_ex[-1] *= -1
  
  
 def final_write_ncdf_ex(params, self):

@@ -49,7 +49,7 @@ def params_topg_glacial_erosion(parser):
 
 def init_topg_glacial_erosion(params, self):
 
-    self.tcomp["topg_glacial_erosion"] = []
+    self.tcomp_topg_glacial_erosion = []
     self.tlast_erosion = tf.Variable(params.tstart)
 
 
@@ -59,7 +59,7 @@ def update_topg_glacial_erosion(params, self):
 
         self.logger.info("update topg_glacial_erosion at time : " + str(self.t.numpy()))
 
-        self.tcomp["topg_glacial_erosion"].append(time.time())
+        self.tcomp_topg_glacial_erosion.append(time.time())
 
         velbase_mag = getmag(self.U[0, 0], self.U[1, 0])
 
@@ -73,8 +73,8 @@ def update_topg_glacial_erosion(params, self):
 
         self.tlast_erosion.assign(self.t)
 
-        self.tcomp["topg_glacial_erosion"][-1] -= time.time()
-        self.tcomp["topg_glacial_erosion"][-1] *= -1
+        self.tcomp_topg_glacial_erosion[-1] -= time.time()
+        self.tcomp_topg_glacial_erosion[-1] *= -1
 
 
 def final_topg_glacial_erosion(params, self):

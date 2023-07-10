@@ -52,7 +52,7 @@ def params_time_step(parser):
 
 
 def init_time_step(params, self):
-    self.tcomp["time_step"] = []
+    self.tcomp_time_step = []
 
     # Initialize the time with starting time
     self.t = tf.Variable(float(params.tstart))
@@ -80,7 +80,7 @@ def update_time_step(params, self):
         "Update DT from the CFL condition at time : " + str(self.t.numpy())
     )
 
-    self.tcomp["time_step"].append(time.time())
+    self.tcomp_time_step.append(time.time())
 
     # compute maximum ice velocitiy magnitude
     velomax = max(
@@ -108,8 +108,8 @@ def update_time_step(params, self):
 
     self.it += 1
 
-    self.tcomp["time_step"][-1] -= time.time()
-    self.tcomp["time_step"][-1] *= -1
+    self.tcomp_time_step[-1] -= time.time()
+    self.tcomp_time_step[-1] *= -1
 
 
 def final_time_step(params, self):

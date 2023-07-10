@@ -27,7 +27,7 @@ def params_write_particles(parser):
 
 
 def init_write_particles(params, self):
-    self.tcomp["write_particles"] = []
+    self.tcomp_write_particles = []
  
     directory = os.path.join(params.working_dir, "trajectories")
     if os.path.exists(directory):
@@ -50,7 +50,7 @@ def init_write_particles(params, self):
 
 def update_write_particles(params, self):
     if self.saveresult:
-        self.tcomp["write_particles"].append(time.time())
+        self.tcomp_write_particles.append(time.time())
 
         f = os.path.join(
             params.working_dir,
@@ -92,8 +92,8 @@ def update_write_particles(params, self):
             )
             np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
 
-        self.tcomp["write_particles"][-1] -= time.time()
-        self.tcomp["write_particles"][-1] *= -1
+        self.tcomp_write_particles[-1] -= time.time()
+        self.tcomp_write_particles[-1] *= -1
 
 
 def final_write_particles(params, self):

@@ -276,12 +276,12 @@ def init_optimize_v1(params, self):
 
     self.costs = []
 
-    self.tcomp["optimize_v1"] = []
+    self.tcomp_optimize = []
 
     # main loop
     for i in range(params.opti_nbitmax):
         with tf.GradientTape() as t:
-            self.tcomp["optimize_v1"].append(time.time())
+            self.tcomp_optimize.append(time.time())
 
             # is necessary to remember all operation to derive the gradients w.r.t. control variables
             if "thk" in params.opti_control:
@@ -642,8 +642,8 @@ def init_optimize_v1(params, self):
 
             _compute_rms_std_optimization(self, i)
 
-            self.tcomp["optimize_v1"][-1] -= time.time()
-            self.tcomp["optimize_v1"][-1] *= -1
+            self.tcomp_optimize[-1] -= time.time()
+            self.tcomp_optimize[-1] *= -1
 
             if i % params.opti_output_freq == 0:
                 if params.plot2d_inversion:

@@ -24,6 +24,3 @@ def params_core():
     )
 
     return parser
-
-    # # parsing ...
-    # config = self.parser.parse_args()

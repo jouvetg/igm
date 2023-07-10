@@ -14,7 +14,7 @@ class State:
         # this serves in fact to use a dictionnary, but it looks like a class
         self.__dict__ = dict()
 
-def init_state(params, self):
+def init_state(params, state):
  
     # Configure the logging
     logging.basicConfig(
@@ -26,7 +26,7 @@ def init_state(params, self):
     )
 
     # Create a logger
-    self.logger = logging.getLogger("my_logger")
+    state.logger = logging.getLogger("my_logger")
 
     # Print parameters in screen and a dedicated file
     with open(os.path.join(params.working_dir, "igm-run-parameters.txt"), "w") as f:

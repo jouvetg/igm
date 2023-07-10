@@ -16,13 +16,39 @@ Output: variables contained inside as tensorflow objects
 
 
 import numpy as np
-import os
+import os, glob
 import tensorflow as tf
 
-from igm.modules.utils import complete_data
+from igm.modules.utils import *
 
 def params_load_tif_data(parser):
-    pass
+    parser.add_argument(
+        "--crop_data",
+        type=str2bool,
+        default="False",
+        help="Crop the data with xmin, xmax, ymin, ymax (default: False)",
+    )
+    parser.add_argument(
+        "--crop_xmin",
+        type=float, 
+        help="crop_xmin",
+    )
+    parser.add_argument(
+        "--crop_xmax",
+        type=float, 
+        help="crop_xmax",
+    )
+    parser.add_argument(
+        "--crop_ymin",
+        type=float, 
+        help="crop_ymin",
+    )
+    parser.add_argument(
+        "--crop_ymax",
+        type=float, 
+        help="crop_ymax"
+    )
+
 
 def init_load_tif_data(params, self):
 

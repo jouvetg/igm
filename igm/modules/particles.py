@@ -25,7 +25,7 @@ the surface mass balance is positive (then igm.rhpos decreases),
 and re-emerge when the surface mass balance is negative.
 * '3d', The vertical velocity is reconsructed by integrating the divergence 
 of the horizontal velocity, this permits in turn to perform 3D particle tracking. 
-self.zpos is the z- position within the ice.
+state.zpos is the z- position within the ice.
 Note that in both case, the velocity in the ice layer is reconstructed from 
 bottom and surface one assuming 4rth order polynomial profile (SIA-like)
 
@@ -42,7 +42,7 @@ To do so, you may redefine the function seeding_particles.
 ==============================================================================
 
 Input: U,W
-Output: self.xpos, ...
+Output: state.xpos, ...
 """
 
 import numpy as np
@@ -75,51 +75,51 @@ def params_particles(parser):
     )
 
 
-def init_particles(params, self):
-    self.tlast_seeding = -1.0e5000
-    self.tcomp_particles = []
+def init_particles(params, state):
+    state.tlast_seeding = -1.0e5000
+    state.tcomp_particles = []
 
     # initialize trajectories
-    self.xpos = tf.Variable([])
-    self.ypos = tf.Variable([])
-    self.zpos = tf.Variable([])
-    self.rhpos = tf.Variable([])
-    self.wpos = tf.Variable([])  # this is to give a weight to the particle
-    self.tpos = tf.Variable([])
-    self.englt = tf.Variable([])
+    state.xpos = tf.Variable([])
+    state.ypos = tf.Variable([])
+    state.zpos = tf.Variable([])
+    state.rhpos = tf.Variable([])
+    state.wpos = tf.Variable([])  # this is to give a weight to the particle
+    state.tpos = tf.Variable([])
+    state.englt = tf.Variable([])
 
     # build the gridseed
-    self.gridseed = np.zeros_like(self.thk) == 1
+    state.gridseed = np.zeros_like(state.thk) == 1
     rr = int(1.0 / params.density_seeding)
-    self.gridseed[::rr, ::rr] = True
+    state.gridseed[::rr, ::rr] = True
 
 
-def update_particles(params, self):
+def update_particles(params, state):
  
     import tensorflow_addons as tfa
 
-    self.logger.info("Update particle tracking at time : " + str(self.t.numpy()))
+    state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
 
-    if (self.t.numpy() - self.tlast_seeding) >= params.frequency_seeding:
-        seeding_particles(params, self)
+    if (state.t.numpy() - state.tlast_seeding) >= params.frequency_seeding:
+        seeding_particles(params, state)
 
         # merge the new seeding points with the former ones
-        self.xpos = tf.Variable(tf.concat([self.xpos, self.nxpos], axis=-1))
-        self.ypos = tf.Variable(tf.concat([self.ypos, self.nypos], axis=-1))
-        self.zpos = tf.Variable(tf.concat([self.zpos, self.nzpos], axis=-1))
-        self.rhpos = tf.Variable(tf.concat([self.rhpos, self.nrhpos], axis=-1))
-        self.wpos = tf.Variable(tf.concat([self.wpos, self.nwpos], axis=-1))
-        self.tpos = tf.Variable(tf.concat([self.tpos, self.ntpos], axis=-1))
-        self.englt = tf.Variable(tf.concat([self.englt, self.nenglt], axis=-1))
+        state.xpos = tf.Variable(tf.concat([state.xpos, state.nxpos], axis=-1))
+        state.ypos = tf.Variable(tf.concat([state.ypos, state.nypos], axis=-1))
+        state.zpos = tf.Variable(tf.concat([state.zpos, state.nzpos], axis=-1))
+        state.rhpos = tf.Variable(tf.concat([state.rhpos, state.nrhpos], axis=-1))
+        state.wpos = tf.Variable(tf.concat([state.wpos, state.nwpos], axis=-1))
+        state.tpos = tf.Variable(tf.concat([state.tpos, state.ntpos], axis=-1))
+        state.englt = tf.Variable(tf.concat([state.englt, state.nenglt], axis=-1))
 
-        self.tlast_seeding = self.t.numpy()
+        state.tlast_seeding = state.t.numpy()
 
-    self.tcomp_particles.append(time.time())
+    state.tcomp_particles.append(time.time())
 
     # find the indices of trajectories
     # these indicies are real values to permit 2D interpolations
-    i = (self.xpos - self.x[0]) / self.dx
-    j = (self.ypos - self.y[0]) / self.dx
+    i = (state.xpos - state.x[0]) / state.dx
+    j = (state.ypos - state.y[0]) / state.dx
 
     indices = tf.expand_dims(
         tf.concat([tf.expand_dims(j, axis=-1), tf.expand_dims(i, axis=-1)], axis=-1),
@@ -127,36 +127,36 @@ def update_particles(params, self):
     )
 
     u = tfa.image.interpolate_bilinear(
-        tf.expand_dims(self.U[0], axis=-1),
+        tf.expand_dims(state.U[0], axis=-1),
         indices,
         indexing="ij",
     )[:, :, 0]
 
     v = tfa.image.interpolate_bilinear(
-        tf.expand_dims(self.U[1], axis=-1),
+        tf.expand_dims(state.U[1], axis=-1),
         indices,
         indexing="ij",
     )[:, :, 0]
 
     othk = tfa.image.interpolate_bilinear(
-        tf.expand_dims(tf.expand_dims(self.thk, axis=0), axis=-1),
+        tf.expand_dims(tf.expand_dims(state.thk, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
     topg = tfa.image.interpolate_bilinear(
-        tf.expand_dims(tf.expand_dims(self.topg, axis=0), axis=-1),
+        tf.expand_dims(tf.expand_dims(state.topg, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
     smb = tfa.image.interpolate_bilinear(
-        tf.expand_dims(tf.expand_dims(self.smb, axis=0), axis=-1),
+        tf.expand_dims(tf.expand_dims(state.smb, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
-    zeta = _rhs_to_zeta(params, self.rhpos)  # get the position in the column
+    zeta = _rhs_to_zeta(params, state.rhpos)  # get the position in the column
     I0 = tf.cast(tf.math.floor(zeta * (params.Nz - 1)), dtype="int32")
     I0 = tf.minimum(I0, params.Nz - 2)  # make sure to not reach the upper-most pt
     I1 = I0 + 1
@@ -173,88 +173,88 @@ def update_particles(params, self):
     wei = tf.tensor_scatter_nd_add(wei, indices=ind1, updates=lamb)
 
     if params.tracking_method == "simple":
-        nthk = othk + smb * self.dt  # new ice thicnkess after smb update
+        nthk = othk + smb * state.dt  # new ice thicnkess after smb update
 
         # adjust the relative height within the ice column with smb
-        self.rhpos = tf.where(
-            nthk > 0.1, tf.clip_by_value(self.rhpos * othk / nthk, 0, 1), 1
+        state.rhpos = tf.where(
+            nthk > 0.1, tf.clip_by_value(state.rhpos * othk / nthk, 0, 1), 1
         )
 
-        self.xpos = self.xpos + self.dt * tf.reduce_sum(
+        state.xpos = state.xpos + state.dt * tf.reduce_sum(
             wei * u, axis=0
         )  # forward euler
-        self.ypos = self.ypos + self.dt * tf.reduce_sum(
+        state.ypos = state.ypos + state.dt * tf.reduce_sum(
             wei * v, axis=0
         )  # forward euler
-        self.zpos = topg + nthk * self.rhpos
+        state.zpos = topg + nthk * state.rhpos
 
     elif params.tracking_method == "3d":
         method = 0
 
         # make sure the particle remian withi the ice body
-        self.zpos = tf.clip_by_value(self.zpos, topg, topg + othk)
+        state.zpos = tf.clip_by_value(state.zpos, topg, topg + othk)
 
         # get the relative height
-        self.rhpos = tf.where(othk > 0.1, (self.zpos - topg) / othk, 1)
+        state.rhpos = tf.where(othk > 0.1, (state.zpos - topg) / othk, 1)
 
         if method == 0:
             # This is the former working methd
 
-            slopsurfx, slopsurfy = compute_gradient_tf(self.usurf, self.dx, self.dx)
-            sloptopgx, sloptopgy = compute_gradient_tf(self.topg, self.dx, self.dx)
+            slopsurfx, slopsurfy = compute_gradient_tf(state.usurf, state.dx, state.dx)
+            sloptopgx, sloptopgy = compute_gradient_tf(state.topg, state.dx, state.dx)
 
-            self.divflux = compute_divflux(
-                self.ubar, self.vbar, self.thk, self.dx, self.dx
+            state.divflux = compute_divflux(
+                state.ubar, state.vbar, state.thk, state.dx, state.dx
             )
 
             # the vertical velocity is the scalar product of horizont. velo and bedrock gradient
-            self.wvelbase = self.U[0, 0] * sloptopgx + self.U[1, 0] * sloptopgy
+            state.wvelbase = state.U[0, 0] * sloptopgx + state.U[1, 0] * sloptopgy
             # Using rules of derivative the surface vertical velocity can be found from the
             # divergence of the flux considering that the ice 3d velocity is divergence-free.
-            self.wvelsurf = (
-                self.U[0, -1] * slopsurfx + self.U[1, -1] * slopsurfy - self.divflux
+            state.wvelsurf = (
+                state.U[0, -1] * slopsurfx + state.U[1, -1] * slopsurfy - state.divflux
             )
 
             wvelbase = tfa.image.interpolate_bilinear(
-                tf.expand_dims(tf.expand_dims(self.wvelbase, axis=0), axis=-1),
+                tf.expand_dims(tf.expand_dims(state.wvelbase, axis=0), axis=-1),
                 indices,
                 indexing="ij",
             )[0, :, 0]
 
             wvelsurf = tfa.image.interpolate_bilinear(
-                tf.expand_dims(tf.expand_dims(self.wvelsurf, axis=0), axis=-1),
+                tf.expand_dims(tf.expand_dims(state.wvelsurf, axis=0), axis=-1),
                 indices,
                 indexing="ij",
             )[0, :, 0]
 
             wvel = wvelbase + (wvelsurf - wvelbase) * (
-                1 - (1 - self.rhpos) ** 4
+                1 - (1 - state.rhpos) ** 4
             )  # SIA-like
 
         else:
             # This is the new attemps not working yet :-(
 
-            assert hasattr(self, W)
+            assert hasattr(state, W)
 
             w = tfa.image.interpolate_bilinear(
-                tf.expand_dims(self.W, axis=-1),
+                tf.expand_dims(state.W, axis=-1),
                 indices,
                 indexing="ij",
             )[:, :, 0]
 
             wvel = tf.reduce_sum(wei * w, axis=0)
 
-        self.xpos = self.xpos + self.dt * tf.reduce_sum(
+        state.xpos = state.xpos + state.dt * tf.reduce_sum(
             wei * u, axis=0
         )  # forward euler
-        self.ypos = self.ypos + self.dt * tf.reduce_sum(
+        state.ypos = state.ypos + state.dt * tf.reduce_sum(
             wei * v, axis=0
         )  # forward euler
-        self.zpos = self.zpos + self.dt * wvel  # forward euler
+        state.zpos = state.zpos + state.dt * wvel  # forward euler
 
     # make sur the particle remains in the horiz. comp. domain
-    self.xpos = tf.clip_by_value(self.xpos, self.x[0], self.x[-1])
-    self.ypos = tf.clip_by_value(self.ypos, self.y[0], self.y[-1])
+    state.xpos = tf.clip_by_value(state.xpos, state.x[0], state.x[-1])
+    state.ypos = tf.clip_by_value(state.ypos, state.y[0], state.y[-1])
 
     indices = tf.concat(
         [
@@ -263,27 +263,27 @@ def update_particles(params, self):
         ],
         axis=-1,
     )
-    updates = tf.cast(tf.where(self.rhpos == 1, self.wpos, 0), dtype="float32")
+    updates = tf.cast(tf.where(state.rhpos == 1, state.wpos, 0), dtype="float32")
 
     # this computes the sum of the weight of particles on a 2D grid
-    self.weight_particles = tf.tensor_scatter_nd_add(
-        tf.zeros_like(self.thk), indices, updates
+    state.weight_particles = tf.tensor_scatter_nd_add(
+        tf.zeros_like(state.thk), indices, updates
     )
 
     # compute the englacial time
-    self.englt = self.englt + tf.cast(
-        tf.where(self.rhpos < 1, self.dt, 0.0), dtype="float32"
+    state.englt = state.englt + tf.cast(
+        tf.where(state.rhpos < 1, state.dt, 0.0), dtype="float32"
     )
 
-    self.tcomp_particles[-1] -= time.time()
-    self.tcomp_particles[-1] *= -1
+    state.tcomp_particles[-1] -= time.time()
+    state.tcomp_particles[-1] *= -1
     
 
-def final_particles(params, self):
+def final_particles(params, state):
     pass
 
 
-def _zeta_to_rhs(self, zeta):
+def _zeta_to_rhs(state, zeta):
     return (zeta / params.vert_spacing) * (1.0 + (params.vert_spacing - 1.0) * zeta)
 
 
@@ -300,13 +300,13 @@ def _rhs_to_zeta(params, rhs):
     return zeta
 
 
-def seeding_particles(params, self):
+def seeding_particles(params, state):
     """
     here we define (xpos,ypos) the horiz coordinate of tracked particles
     and rhpos is the relative position in the ice column (scaled bwt 0 and 1)
 
     here we seed only the accum. area (a bit more), where there is
-    significant ice, and in some points of a regular grid self.gridseed
+    significant ice, and in some points of a regular grid state.gridseed
     (density defined by density_seeding)
 
     """
@@ -314,25 +314,25 @@ def seeding_particles(params, self):
     #        This will serve to remove imobile particles, but it is not active yet.
 
     #        indices = tf.expand_dims( tf.concat(
-    #                       [tf.expand_dims((self.ypos - self.y[0]) / self.dx, axis=-1),
-    #                        tf.expand_dims((self.xpos - self.x[0]) / self.dx, axis=-1)],
+    #                       [tf.expand_dims((state.ypos - state.y[0]) / state.dx, axis=-1),
+    #                        tf.expand_dims((state.xpos - state.x[0]) / state.dx, axis=-1)],
     #                       axis=-1 ), axis=0)
 
     #        import tensorflow_addons as tfa
 
     #        thk = tfa.image.interpolate_bilinear(
-    #                    tf.expand_dims(tf.expand_dims(self.thk, axis=0), axis=-1),
+    #                    tf.expand_dims(tf.expand_dims(state.thk, axis=0), axis=-1),
     #                    indices,indexing="ij",      )[0, :, 0]
 
     #        J = (thk>1)
 
     I = (
-        (self.thk > 10) & (self.smb > -2) & self.gridseed
+        (state.thk > 10) & (state.smb > -2) & state.gridseed
     )  # seed where thk>10, smb>-2, on a coarse grid
-    self.nxpos = self.X[I]
-    self.nypos = self.Y[I]
-    self.nzpos = self.usurf[I]
-    self.nrhpos = tf.ones_like(self.X[I])
-    self.nwpos = tf.ones_like(self.X[I])
-    self.ntpos = tf.ones_like(self.X[I]) * self.t
-    self.nenglt = tf.zeros_like(self.X[I])
+    state.nxpos = state.X[I]
+    state.nypos = state.Y[I]
+    state.nzpos = state.usurf[I]
+    state.nrhpos = tf.ones_like(state.X[I])
+    state.nwpos = tf.ones_like(state.X[I])
+    state.ntpos = tf.ones_like(state.X[I]) * state.t
+    state.nenglt = tf.zeros_like(state.X[I])

@@ -9,8 +9,8 @@ and accumulation gradients, and max acuumulation from a given file mb_simple_fil
 
 ==============================================================================
 
-Input  : self.usurf
-Output : self.smb
+Input  : state.usurf
+Output : state.smb
 """
 
 import numpy as np
@@ -35,47 +35,47 @@ def params_smb_simple(parser):
     )
 
 
-def init_smb_simple(params, self):
+def init_smb_simple(params, state):
 
-    self.smbpar = np.loadtxt(
+    state.smbpar = np.loadtxt(
         os.path.join(params.working_dir, params.mb_simple_file),
         skiprows=1,
         dtype=np.float32,
     )
 
-    self.tcomp_smb_simple = []
-    self.tlast_mb = tf.Variable(-1.0e5000)
+    state.tcomp_smb_simple = []
+    state.tlast_mb = tf.Variable(-1.0e5000)
 
 
-def update_smb_simple(params, self):
+def update_smb_simple(params, state):
 
     # update smb each X years
-    if (self.t - self.tlast_mb) >= params.mb_update_freq:
-        self.logger.info("Construct mass balance at time : " + str(self.t.numpy()))
+    if (state.t - state.tlast_mb) >= params.mb_update_freq:
+        state.logger.info("Construct mass balance at time : " + str(state.t.numpy()))
 
-        self.tcomp_smb_simple.append(time.time())
+        state.tcomp_smb_simple.append(time.time())
 
         # get the smb parameters at given time t
-        gradabl = interp1d_tf(self.smbpar[:, 0], self.smbpar[:, 1], self.t)
-        gradacc = interp1d_tf(self.smbpar[:, 0], self.smbpar[:, 2], self.t)
-        ela = interp1d_tf(self.smbpar[:, 0], self.smbpar[:, 3], self.t)
-        maxacc = interp1d_tf(self.smbpar[:, 0], self.smbpar[:, 4], self.t)
+        gradabl = interp1d_tf(state.smbpar[:, 0], state.smbpar[:, 1], state.t)
+        gradacc = interp1d_tf(state.smbpar[:, 0], state.smbpar[:, 2], state.t)
+        ela = interp1d_tf(state.smbpar[:, 0], state.smbpar[:, 3], state.t)
+        maxacc = interp1d_tf(state.smbpar[:, 0], state.smbpar[:, 4], state.t)
 
         # compute smb from glacier surface elevation and parameters
-        self.smb = self.usurf - ela
-        self.smb *= tf.where(tf.less(self.smb, 0), gradabl, gradacc)
-        self.smb = tf.clip_by_value(self.smb, -100, maxacc)
+        state.smb = state.usurf - ela
+        state.smb *= tf.where(tf.less(state.smb, 0), gradabl, gradacc)
+        state.smb = tf.clip_by_value(state.smb, -100, maxacc)
 
         # if an icemask exists, then force negative smb aside to prevent leaks
-        if hasattr(self, "icemask"):
-            self.smb = tf.where(self.icemask > 0.5, self.smb, -10)
+        if hasattr(state, "icemask"):
+            state.smb = tf.where(state.icemask > 0.5, state.smb, -10)
 
-        self.tlast_mb.assign(self.t)
+        state.tlast_mb.assign(state.t)
 
-        self.tcomp_smb_simple[-1] -= time.time()
-        self.tcomp_smb_simple[-1] *= -1
+        state.tcomp_smb_simple[-1] -= time.time()
+        state.tcomp_smb_simple[-1] *= -1
 
 
-def final_smb_simple(params, self):
+def final_smb_simple(params, state):
     pass
 

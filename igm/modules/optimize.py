@@ -172,13 +172,13 @@ def params_optimize(parser):
     )
 
 
-def init_optimize(params, self):
+def init_optimize(params, state):
     """
     This function does the data assimilation (inverse modelling) to optimize thk, strflowctrl ans usurf from data
     Check at this [page](https://github.com/jouvetg/igm/blob/main/doc/Inverse-modeling.md)
     """
 
-    init_iceflow(params, self)
+    init_iceflow(params, state)
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
 
@@ -187,23 +187,23 @@ def init_optimize(params, self):
 
     # make sure that there are lease some profiles in thkobs
     if "thk" in params.opti_cost:
-        assert not tf.reduce_all(tf.math.is_nan(self.thkobs))
+        assert not tf.reduce_all(tf.math.is_nan(state.thkobs))
 
     ###### PREPARE DATA PRIOR OPTIMIZATIONS
 
-    if hasattr(self, "uvelsurfobs") & hasattr(self, "vvelsurfobs"):
-        self.velsurfobs = tf.stack([self.uvelsurfobs, self.vvelsurfobs], axis=-1)
+    if hasattr(state, "uvelsurfobs") & hasattr(state, "vvelsurfobs"):
+        state.velsurfobs = tf.stack([state.uvelsurfobs, state.vvelsurfobs], axis=-1)
 
     if "divfluxobs" in params.opti_cost:
-        self.divfluxobs = self.smb - self.dhdt
+        state.divfluxobs = state.smb - state.dhdt
 
-    if hasattr(self, "thkinit"):
-        self.thk = self.thkinit
+    if hasattr(state, "thkinit"):
+        state.thk = state.thkinit
     else:
-        self.thk = tf.zeros_like(self.thk)
+        state.thk = tf.zeros_like(state.thk)
 
     if params.opti_init_zero_thk:
-        self.thk = tf.zeros_like(self.thk)
+        state.thk = tf.zeros_like(state.thk)
 
     ###### PREPARE OPIMIZER
 
@@ -220,9 +220,9 @@ def init_optimize(params, self):
 
     ###### PREPARE VARIABLES TO OPTIMIZE
 
-    self.costs = []
+    state.costs = []
 
-    self.tcomp_optimize = []
+    state.tcomp_optimize = []
 
     sc = {}
     sc["thk"] = 1
@@ -230,63 +230,63 @@ def init_optimize(params, self):
     sc["slidingco"] = 100
 
     for f in params.opti_control:
-        vars()[f] = tf.Variable(vars(self)[f] / sc[f])
+        vars()[f] = tf.Variable(vars(state)[f] / sc[f])
 
     # main loop
     for i in range(params.opti_nbitmax):
         with tf.GradientTape() as t, tf.GradientTape() as s:
-            self.tcomp_optimize.append(time.time())
+            state.tcomp_optimize.append(time.time())
 
             # is necessary to remember all operation to derive the gradients w.r.t. control variables
             for f in params.opti_control:
                 t.watch(vars()[f])
 
             for f in params.opti_control:
-                vars(self)[f] = vars()[f] * sc[f]
+                vars(state)[f] = vars()[f] * sc[f]
 
             # build input of the emulator
             X = tf.expand_dims(
                 tf.stack(
-                    [tf.pad(vars(self)[f], self.PAD, "CONSTANT") for f in self.fieldin],
+                    [tf.pad(vars(state)[f], state.PAD, "CONSTANT") for f in state.fieldin],
                     axis=-1,
                 ),
                 axis=0,
             )
 
             # evalutae th ice flow emulator
-            Y = self.iceflow_model(X)
+            Y = state.iceflow_model(X)
 
             # get the dimensions of the working array
-            Ny, Nx = self.thk.shape
+            Ny, Nx = state.thk.shape
 
             N = params.Nz
 
-            # self.U = self.Y_to_U(Y[:,:Ny,:Nx,:])
+            # state.U = state.Y_to_U(Y[:,:Ny,:Nx,:])
 
-            # self.update_2d_iceflow_variables()
+            # state.update_2d_iceflow_variables()
 
-            self.uvelsurf = Y[0, :Ny, :Nx, N - 1]
-            self.vvelsurf = Y[0, :Ny, :Nx, 2 * N - 1]
+            state.uvelsurf = Y[0, :Ny, :Nx, N - 1]
+            state.vvelsurf = Y[0, :Ny, :Nx, 2 * N - 1]
 
             # TODO UPDATE : SWITHC TO THE OTHER
-            self.ubar = tf.reduce_mean(Y[0, :Ny, :Nx, :N], axis=-1)
-            # self.ubar = tf.reduce_sum(Y[0, :Ny, :Nx, :N]*self.vert_weight, axis=-1)
-            self.vbar = tf.reduce_mean(Y[0, :Ny, :Nx, N:], axis=-1)
-            # self.vbar = tf.reduce_sum(Y[0, :Ny, :Nx, N:]*self.vert_weight, axis=-1)
+            state.ubar = tf.reduce_mean(Y[0, :Ny, :Nx, :N], axis=-1)
+            # state.ubar = tf.reduce_sum(Y[0, :Ny, :Nx, :N]*state.vert_weight, axis=-1)
+            state.vbar = tf.reduce_mean(Y[0, :Ny, :Nx, N:], axis=-1)
+            # state.vbar = tf.reduce_sum(Y[0, :Ny, :Nx, N:]*state.vert_weight, axis=-1)
 
-            self.velsurf = tf.stack(
-                [self.uvelsurf, self.vvelsurf], axis=-1
+            state.velsurf = tf.stack(
+                [state.uvelsurf, state.vvelsurf], axis=-1
             )  # NOT normalized vars
 
             if not params.opti_smooth_anisotropy_factor == 1:
-                _compute_flow_direction_for_anisotropic_smoothing(self)
+                _compute_flow_direction_for_anisotropic_smoothing(state)
 
             # misfit between surface velocity
             if "velsurf" in params.opti_cost:
-                ACT = ~tf.math.is_nan(self.velsurfobs)
+                ACT = ~tf.math.is_nan(state.velsurfobs)
                 COST_U = 0.5 * tf.reduce_mean(
                     (
-                        (self.velsurfobs[ACT] - self.velsurf[ACT])
+                        (state.velsurfobs[ACT] - state.velsurf[ACT])
                         / params.opti_velsurfobs_std
                     )
                     ** 2
@@ -296,9 +296,9 @@ def init_optimize(params, self):
 
             # misfit between ice thickness profiles
             if "thk" in params.opti_cost:
-                ACT = ~tf.math.is_nan(self.thkobs)
+                ACT = ~tf.math.is_nan(state.thkobs)
                 COST_H = 0.5 * tf.reduce_mean(
-                    ((self.thkobs[ACT] - self.thk[ACT]) / params.opti_thkobs_std) ** 2
+                    ((state.thkobs[ACT] - state.thk[ACT]) / params.opti_thkobs_std) ** 2
                 )
             else:
                 COST_H = tf.Variable(0.0)
@@ -306,26 +306,26 @@ def init_optimize(params, self):
             # misfit divergence of the flux
             if ("divfluxobs" in params.opti_cost) | ("divfluxfcz" in params.opti_cost):
                 divflux = compute_divflux(
-                    self.ubar, self.vbar, self.thk, self.dx, self.dx
+                    state.ubar, state.vbar, state.thk, state.dx, state.dx
                 )
 
                 if "divfluxfcz" in params.opti_cost:
-                    ACT = self.icemaskobs > 0.5
+                    ACT = state.icemaskobs > 0.5
                     if i % 10 == 0:
                         # his does not need to be comptued any iteration as this is expensive
                         res = stats.linregress(
-                            self.usurf[ACT], divflux[ACT]
+                            state.usurf[ACT], divflux[ACT]
                         )  # this is a linear regression (usually that's enough)
                     # or you may go for polynomial fit (more gl, but may leads to errors)
-                    #  weights = np.polyfit(self.usurf[ACT],divflux[ACT], 2)
+                    #  weights = np.polyfit(state.usurf[ACT],divflux[ACT], 2)
                     divfluxtar = tf.where(
-                        ACT, res.intercept + res.slope * self.usurf, 0.0
+                        ACT, res.intercept + res.slope * state.usurf, 0.0
                     )
-                #   divfluxtar = tf.where(ACT, np.poly1d(weights)(self.usurf) , 0.0 )
+                #   divfluxtar = tf.where(ACT, np.poly1d(weights)(state.usurf) , 0.0 )
                 else:
-                    divfluxtar = self.divfluxobs
+                    divfluxtar = state.divfluxobs
 
-                ACT = self.icemaskobs > 0.5
+                ACT = state.icemaskobs > 0.5
                 COST_D = 0.5 * tf.reduce_mean(
                     ((divfluxtar[ACT] - divflux[ACT]) / params.opti_divfluxobs_std) ** 2
                 )
@@ -335,9 +335,9 @@ def init_optimize(params, self):
 
             # misfit between top ice surfaces
             if "usurf" in params.opti_cost:
-                ACT = self.icemaskobs > 0.5
+                ACT = state.icemaskobs > 0.5
                 COST_S = 0.5 * tf.reduce_mean(
-                    ((self.usurf[ACT] - self.usurfobs[ACT]) / params.opti_usurfobs_std)
+                    ((state.usurf[ACT] - state.usurfobs[ACT]) / params.opti_usurfobs_std)
                     ** 2
                 )
             else:
@@ -346,7 +346,7 @@ def init_optimize(params, self):
             # force zero thikness outisde the mask
             if "icemask" in params.opti_cost:
                 COST_O = 10**10 * tf.math.reduce_mean(
-                    tf.where(self.icemaskobs > 0.5, 0.0, self.thk**2)
+                    tf.where(state.icemaskobs > 0.5, 0.0, state.thk**2)
                 )
             else:
                 COST_O = tf.Variable(0.0)
@@ -354,44 +354,44 @@ def init_optimize(params, self):
             # Here one enforces non-negative ice thickness, and possibly zero-thickness in user-defined ice-free areas.
             if "thk" in params.opti_control:
                 COST_HPO = 10**10 * tf.math.reduce_mean(
-                    tf.where(self.thk >= 0, 0.0, self.thk**2)
+                    tf.where(state.thk >= 0, 0.0, state.thk**2)
                 )
             else:
                 COST_HPO = tf.Variable(0.0)
 
             # Here one adds a regularization terms for the ice thickness to the cost function
             if "thk" in params.opti_control:
-                if not hasattr(self,'flowdirx'):
-                    dbdx = self.thk[:, 1:] - self.thk[:, :-1]
-                    dbdy = self.thk[1:, :] - self.thk[:-1, :]
+                if not hasattr(state,'flowdirx'):
+                    dbdx = state.thk[:, 1:] - state.thk[:, :-1]
+                    dbdy = state.thk[1:, :] - state.thk[:-1, :]
                     REGU_H = (params.opti_regu_param_thk / (1000**2)) * (
                         tf.nn.l2_loss(dbdx) + tf.nn.l2_loss(dbdy)
                     )
                 else:
-                    dbdx = self.thk[:, 1:] - self.thk[:, :-1]
+                    dbdx = state.thk[:, 1:] - state.thk[:, :-1]
                     dbdx = (dbdx[1:, :] + dbdx[:-1, :]) / 2.0
-                    dbdy = self.thk[1:, :] - self.thk[:-1, :]
+                    dbdy = state.thk[1:, :] - state.thk[:-1, :]
                     dbdy = (dbdy[:, 1:] + dbdy[:, :-1]) / 2.0
                     REGU_H = (params.opti_regu_param_thk / (1000**2)) * (
-                        tf.nn.l2_loss((dbdx * self.flowdirx + dbdy * self.flowdiry))
+                        tf.nn.l2_loss((dbdx * state.flowdirx + dbdy * state.flowdiry))
                         + params.opti_smooth_anisotropy_factor
-                        * tf.nn.l2_loss((dbdx * self.flowdiry - dbdy * self.flowdirx))
-                        - params.opti_convexity_weight * tf.math.reduce_sum(self.thk)
+                        * tf.nn.l2_loss((dbdx * state.flowdiry - dbdy * state.flowdirx))
+                        - params.opti_convexity_weight * tf.math.reduce_sum(state.thk)
                     )
             else:
                 REGU_H = tf.Variable(0.0)
 
             # Here one adds a regularization terms for slidingco to the cost function
             if "slidingco" in params.opti_control:
-                dadx = tf.math.abs(self.slidingco[:, 1:] - self.slidingco[:, :-1])
-                dady = tf.math.abs(self.slidingco[1:, :] - self.slidingco[:-1, :])
+                dadx = tf.math.abs(state.slidingco[:, 1:] - state.slidingco[:, :-1])
+                dady = tf.math.abs(state.slidingco[1:, :] - state.slidingco[:-1, :])
                 dadx = tf.where(
-                    (self.icemaskobs[:, 1:] > 0.5) & (self.icemaskobs[:, :-1] > 0.5),
+                    (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5),
                     dadx,
                     0.0,
                 )
                 dady = tf.where(
-                    (self.icemaskobs[1:, :] > 0.5) & (self.icemaskobs[:-1, :] > 0.5),
+                    (state.icemaskobs[1:, :] > 0.5) & (state.icemaskobs[:-1, :] > 0.5),
                     dady,
                     0.0,
                 )
@@ -413,16 +413,16 @@ def init_optimize(params, self):
                 + REGU_S
             )
 
-            vol = np.sum(self.thk) * (self.dx**2) / 10**9
+            vol = np.sum(state.thk) * (state.dx**2) / 10**9
 
             ################
 
             COST_GLEN = iceflow_energy_XY(params, X, Y)
 
-            grads = s.gradient(COST_GLEN, self.iceflow_model.trainable_variables)
+            grads = s.gradient(COST_GLEN, state.iceflow_model.trainable_variables)
 
             opti_retrain.apply_gradients(
-                zip(grads, self.iceflow_model.trainable_variables)
+                zip(grads, state.iceflow_model.trainable_variables)
             )
 
             ###############
@@ -447,7 +447,7 @@ def init_optimize(params, self):
                     )
                 )
 
-            self.costs.append(
+            state.costs.append(
                 [
                     COST_U.numpy(),
                     COST_H.numpy(),
@@ -470,7 +470,7 @@ def init_optimize(params, self):
 
             # this serve to restict the optimization of controls to the mask
             for ii in range(grads.shape[0]):
-                grads[ii].assign(tf.where((self.icemaskobs > 0.5), grads[ii], 0))
+                grads[ii].assign(tf.where((state.icemaskobs > 0.5), grads[ii], 0))
 
             # One step of descent -> this will update input variable X
             optimizer.apply_gradients(
@@ -479,24 +479,24 @@ def init_optimize(params, self):
 
             ###################
 
-            # get back optimized variables in the pool of self.variables
+            # get back optimized variables in the pool of state.variables
             if "thk" in params.opti_control:
-                self.thk = tf.where(self.thk < 0.01, 0, self.thk)
+                state.thk = tf.where(state.thk < 0.01, 0, state.thk)
 
-            self.divflux = compute_divflux(
-                self.ubar, self.vbar, self.thk, self.dx, self.dx
+            state.divflux = compute_divflux(
+                state.ubar, state.vbar, state.thk, state.dx, state.dx
             )
 
-            _compute_rms_std_optimization(self, i)
+            _compute_rms_std_optimization(state, i)
 
-            self.tcomp_optimize[-1] -= time.time()
-            self.tcomp_optimize[-1] *= -1
+            state.tcomp_optimize[-1] -= time.time()
+            state.tcomp_optimize[-1] *= -1
 
             if i % params.opti_output_freq == 0:
                 if params.plot2d_inversion:
-                    _update_plot_inversion(params, self, i)
+                    _update_plot_inversion(params, state, i)
                 if params.write_ncdf_optimize:
-                    _update_ncdf_optimize(params, self, i)
+                    _update_ncdf_optimize(params, state, i)
 
             # stopping criterion: stop if the cost no longer decrease
             # if i>params.opti_nbitmin:
@@ -505,20 +505,20 @@ def init_optimize(params, self):
             #         break;
 
     for f in params.opti_control:
-        vars(self)[f] = vars()[f] * sc[f]
+        vars(state)[f] = vars()[f] * sc[f]
 
     # now that the ice thickness is optimized, we can fix the bed once for all! (ONLY FOR GROUNDED ICE)
-    self.topg = self.usurf - self.thk
+    state.topg = state.usurf - state.thk
 
-    _output_ncdf_optimize_final(params, self)
+    _output_ncdf_optimize_final(params, state)
 
-    _plot_cost_functions(params, self, self.costs)
+    _plot_cost_functions(params, state, state.costs)
 
     plt.close("all")
 
     np.savetxt(
         os.path.join(params.working_dir, "costs.dat"),
-        np.stack(self.costs),
+        np.stack(state.costs),
         fmt="%.10f",
         header="        COST_U        COST_H      COST_D       COST_S       REGU_H       REGU_S          HPO           COSTGLEN ",
     )
@@ -527,14 +527,14 @@ def init_optimize(params, self):
         os.path.join(params.working_dir, "rms_std.dat"),
         np.stack(
             [
-                self.rmsthk,
-                self.stdthk,
-                self.rmsvel,
-                self.stdvel,
-                self.rmsdiv,
-                self.stddiv,
-                self.rmsusurf,
-                self.stdusurf,
+                state.rmsthk,
+                state.stdthk,
+                state.rmsvel,
+                state.stdvel,
+                state.rmsdiv,
+                state.stddiv,
+                state.rmsusurf,
+                state.stdusurf,
             ],
             axis=-1,
         ),
@@ -550,83 +550,83 @@ def init_optimize(params, self):
     )
 
 
-def update_optimize(params, self):
+def update_optimize(params, state):
     pass
 
     
-def final_optimize(params, self):
+def final_optimize(params, state):
     pass
 
 
-def _compute_rms_std_optimization(self, i):
+def _compute_rms_std_optimization(state, i):
 
-    I = self.icemaskobs == 1
+    I = state.icemaskobs == 1
 
     if i == 0:
-        self.rmsthk = []
-        self.stdthk = []
-        self.rmsvel = []
-        self.stdvel = []
-        self.rmsusurf = []
-        self.stdusurf = []
-        self.rmsdiv = []
-        self.stddiv = []
+        state.rmsthk = []
+        state.stdthk = []
+        state.rmsvel = []
+        state.stdvel = []
+        state.rmsusurf = []
+        state.stdusurf = []
+        state.rmsdiv = []
+        state.stddiv = []
 
-    if hasattr(self, "thkobs"):
-        ACT = ~tf.math.is_nan(self.thkobs)
+    if hasattr(state, "thkobs"):
+        ACT = ~tf.math.is_nan(state.thkobs)
         if np.sum(ACT) == 0:
-            self.rmsthk.append(0)
-            self.stdthk.append(0)
+            state.rmsthk.append(0)
+            state.stdthk.append(0)
         else:
-            self.rmsthk.append(np.nanmean(self.thk[ACT] - self.thkobs[ACT]))
-            self.stdthk.append(np.nanstd(self.thk[ACT] - self.thkobs[ACT]))
+            state.rmsthk.append(np.nanmean(state.thk[ACT] - state.thkobs[ACT]))
+            state.stdthk.append(np.nanstd(state.thk[ACT] - state.thkobs[ACT]))
 
     else:
-        self.rmsthk.append(0)
-        self.stdthk.append(0)
+        state.rmsthk.append(0)
+        state.stdthk.append(0)
 
-    if hasattr(self, "uvelsurfobs"):
-        velsurf_mag = getmag(self.uvelsurf, self.vvelsurf).numpy()
-        velsurfobs_mag = getmag(self.uvelsurfobs, self.vvelsurfobs).numpy()
+    if hasattr(state, "uvelsurfobs"):
+        velsurf_mag = getmag(state.uvelsurf, state.vvelsurf).numpy()
+        velsurfobs_mag = getmag(state.uvelsurfobs, state.vvelsurfobs).numpy()
         ACT = ~np.isnan(velsurfobs_mag)
 
-        self.rmsvel.append(
+        state.rmsvel.append(
             np.mean(velsurf_mag[(I & ACT).numpy()] - velsurfobs_mag[(I & ACT).numpy()])
         )
-        self.stdvel.append(
+        state.stdvel.append(
             np.std(velsurf_mag[(I & ACT).numpy()] - velsurfobs_mag[(I & ACT).numpy()])
         )
     else:
-        self.rmsvel.append(0)
-        self.stdvel.append(0)
+        state.rmsvel.append(0)
+        state.stdvel.append(0)
 
-    if hasattr(self, "divfluxobs"):
-        self.rmsdiv.append(np.mean(self.divfluxobs[I] - self.divflux[I]))
-        self.stddiv.append(np.std(self.divfluxobs[I] - self.divflux[I]))
+    if hasattr(state, "divfluxobs"):
+        state.rmsdiv.append(np.mean(state.divfluxobs[I] - state.divflux[I]))
+        state.stddiv.append(np.std(state.divfluxobs[I] - state.divflux[I]))
     else:
-        self.rmsdiv.append(0)
-        self.stddiv.append(0)
+        state.rmsdiv.append(0)
+        state.stddiv.append(0)
 
-    if hasattr(self, "usurfobs"):
-        self.rmsusurf.append(np.mean(self.usurf[I] - self.usurfobs[I]))
-        self.stdusurf.append(np.std(self.usurf[I] - self.usurfobs[I]))
+    if hasattr(state, "usurfobs"):
+        state.rmsusurf.append(np.mean(state.usurf[I] - state.usurfobs[I]))
+        state.stdusurf.append(np.std(state.usurf[I] - state.usurfobs[I]))
     else:
-        self.rmsusurf.append(0)
-        self.stdusurf.append(0)
+        state.rmsusurf.append(0)
+        state.stdusurf.append(0)
 
 
-def _update_ncdf_optimize(params, self, it):
+def _update_ncdf_optimize(params, state, it):
     """
     Initialize and write the ncdf optimze file
     """
 
-    self.logger.info("Initialize  and write NCDF output Files")
+    state.logger.info("Initialize  and write NCDF output Files")
 
     if "velsurf_mag" in params.opti_vars_to_save:
-        self.velsurf_mag = getmag(self.uvelsurf, self.vvelsurf)
+        state.velsurf_mag = getmag(state.uvelsurf, state.vvelsurf)
 
     if "velsurfobs_mag" in params.opti_vars_to_save:
-        self.velsurfobs_mag = getmag(self.uvelsurfobs, self.vvelsurfobs)
+        state.velsurfobs_mag = getmag(state.uvelsurfobs, state.vvelsurfobs)
 
     if it == 0:
         nc = Dataset(
@@ -642,25 +642,25 @@ def _update_ncdf_optimize(params, self, it):
         E.axis = "ITERATIONS"
         E[0] = it
 
-        nc.createDimension("y", len(self.y))
+        nc.createDimension("y", len(state.y))
         E = nc.createVariable("y", np.dtype("float32").char, ("y",))
         E.units = "m"
         E.long_name = "y"
         E.axis = "Y"
-        E[:] = self.y.numpy()
+        E[:] = state.y.numpy()
 
-        nc.createDimension("x", len(self.x))
+        nc.createDimension("x", len(state.x))
         E = nc.createVariable("x", np.dtype("float32").char, ("x",))
         E.units = "m"
         E.long_name = "x"
         E.axis = "X"
-        E[:] = self.x.numpy()
+        E[:] = state.x.numpy()
 
         for var in params.opti_vars_to_save:
             E = nc.createVariable(
                 var, np.dtype("float32").char, ("iterations", "y", "x")
             )
-            E[0, :, :] = vars(self)[var].numpy()
+            E[0, :, :] = vars(state)[var].numpy()
 
         nc.close()
 
@@ -682,12 +682,12 @@ def _update_ncdf_optimize(params, self, it):
         nc.variables["iterations"][d] = it
 
         for var in params.opti_vars_to_save:
-            nc.variables[var][d, :, :] = vars(self)[var].numpy()
+            nc.variables[var][d, :, :] = vars(state)[var].numpy()
 
         nc.close()
 
 
-def _output_ncdf_optimize_final(params, self):
+def _output_ncdf_optimize_final(params, state):
     """
     Write final geology after optimizing
     """
@@ -698,25 +698,25 @@ def _output_ncdf_optimize_final(params, self):
         format="NETCDF4",
     )
 
-    nc.createDimension("y", len(self.y))
+    nc.createDimension("y", len(state.y))
     E = nc.createVariable("y", np.dtype("float32").char, ("y",))
     E.units = "m"
     E.long_name = "y"
     E.axis = "Y"
-    E[:] = self.y.numpy()
+    E[:] = state.y.numpy()
 
-    nc.createDimension("x", len(self.x))
+    nc.createDimension("x", len(state.x))
     E = nc.createVariable("x", np.dtype("float32").char, ("x",))
     E.units = "m"
     E.long_name = "x"
     E.axis = "X"
-    E[:] = self.x.numpy()
+    E[:] = state.x.numpy()
 
     for v in params.opti_vars_to_save:
-        if hasattr(self, v):
+        if hasattr(state, v):
             E = nc.createVariable(v, np.dtype("float32").char, ("y", "x"))
             E.standard_name = v
-            E[:] = vars(self)[v]
+            E[:] = vars(state)[v]
 
     nc.close()
 
@@ -727,7 +727,7 @@ def _output_ncdf_optimize_final(params, self):
     )
 
 
-def _plot_cost_functions(params, self, costs):
+def _plot_cost_functions(params, state, costs):
     costs = np.stack(costs)
 
     for i in range(costs.shape[1]):
@@ -754,21 +754,21 @@ def _plot_cost_functions(params, self, costs):
     )
 
 
-def _update_plot_inversion(params, self, i):
+def _update_plot_inversion(params, state, i):
     """
     Plot thickness, velocity, mand slidingco"""
 
-    if hasattr(self, "uvelsurfobs"):
-        velsurfobs_mag = getmag(self.uvelsurfobs, self.vvelsurfobs).numpy()
+    if hasattr(state, "uvelsurfobs"):
+        velsurfobs_mag = getmag(state.uvelsurfobs, state.vvelsurfobs).numpy()
     else:
-        velsurfobs_mag = np.zeros_like(self.thk.numpy())
+        velsurfobs_mag = np.zeros_like(state.thk.numpy())
 
-    if hasattr(self, "usurfobs"):
-        usurfobs = self.usurfobs
+    if hasattr(state, "usurfobs"):
+        usurfobs = state.usurfobs
     else:
-        usurfobs = np.zeros_like(self.thk.numpy())
+        usurfobs = np.zeros_like(state.thk.numpy())
 
-    velsurf_mag = getmag(self.uvelsurf, self.vvelsurf).numpy()
+    velsurf_mag = getmag(state.uvelsurf, state.vvelsurf).numpy()
 
     #########################################################
 
@@ -776,33 +776,33 @@ def _update_plot_inversion(params, self, i):
         if params.editor_plot2d_optimize == "vs":
             plt.ion()  # enable interactive mode
 
-        # self.fig = plt.figure()
-        self.fig, self.axes = plt.subplots(2, 3)
+        # state.fig = plt.figure()
+        state.fig, state.axes = plt.subplots(2, 3)
 
-        self.extent = [self.x[0], self.x[-1], self.y[0], self.y[-1]]
+        state.extent = [state.x[0], state.x[-1], state.y[0], state.y[-1]]
 
     #########################################################
 
     cmap = copy.copy(matplotlib.cm.jet)
     cmap.set_bad(color="white")
 
-    ax1 = self.axes[0, 0]
+    ax1 = state.axes[0, 0]
 
     im1 = ax1.imshow(
-        np.ma.masked_where(self.thk == 0, self.thk),
+        np.ma.masked_where(state.thk == 0, state.thk),
         origin="lower",
-        extent=self.extent,
+        extent=state.extent,
         vmin=0,
-        #                    vmax=np.quantile(self.thk, 0.98),
+        #                    vmax=np.quantile(state.thk, 0.98),
         cmap=cmap,
     )
     if i == 0:
         plt.colorbar(im1, ax=ax1)
     ax1.set_title(
         "Ice thickness \n (RMS : "
-        + str(int(self.rmsthk[-1]))
+        + str(int(state.rmsthk[-1]))
         + ", STD : "
-        + str(int(self.stdthk[-1]))
+        + str(int(state.stdthk[-1]))
         + ")",
         size=12,
     )
@@ -810,10 +810,10 @@ def _update_plot_inversion(params, self, i):
 
     #########################################################
 
-    ax2 = self.axes[0, 1]
+    ax2 = state.axes[0, 1]
 
     im1 = ax2.imshow(
-        np.ma.masked_where(self.thk == 0, self.slidingco),
+        np.ma.masked_where(state.thk == 0, state.slidingco),
         origin="lower",
         vmin=0,
         vmax=20000,
@@ -826,12 +826,12 @@ def _update_plot_inversion(params, self, i):
 
     ########################################################
 
-    ax3 = self.axes[0, 2]
+    ax3 = state.axes[0, 2]
 
     im1 = ax3.imshow(
-        self.usurf - usurfobs,
+        state.usurf - usurfobs,
         origin="lower",
-        extent=self.extent,
+        extent=state.extent,
         vmin=-10,
         vmax=10,
         cmap="RdBu",
@@ -840,7 +840,7 @@ def _update_plot_inversion(params, self, i):
         plt.colorbar(im1, format="%.2f", ax=ax3)
     ax3.set_title(
         "Top surface adjustement \n (RMS : %5.1f , STD : %5.1f"
-        % (self.rmsusurf[-1], self.stdusurf[-1])
+        % (state.rmsusurf[-1], state.stdusurf[-1])
         + ")",
         size=12,
     )
@@ -851,12 +851,12 @@ def _update_plot_inversion(params, self, i):
     cmap = copy.copy(matplotlib.cm.viridis)
     cmap.set_bad(color="white")
 
-    ax4 = self.axes[1, 0]
+    ax4 = state.axes[1, 0]
 
     im1 = ax4.imshow(
-        np.ma.masked_where(self.thk == 0, velsurf_mag),
+        np.ma.masked_where(state.thk == 0, velsurf_mag),
         origin="lower",
-        extent=self.extent,
+        extent=state.extent,
         vmin=0,
         vmax=np.nanmax(velsurfobs_mag),
         cmap=cmap,
@@ -865,9 +865,9 @@ def _update_plot_inversion(params, self, i):
         plt.colorbar(im1, format="%.2f", ax=ax4)
     ax4.set_title(
         "Modelled velocities \n (RMS : "
-        + str(int(self.rmsvel[-1]))
+        + str(int(state.rmsvel[-1]))
         + ", STD : "
-        + str(int(self.stdvel[-1]))
+        + str(int(state.stdvel[-1]))
         + ")",
         size=12,
     )
@@ -875,11 +875,11 @@ def _update_plot_inversion(params, self, i):
 
     ########################################################
 
-    ax5 = self.axes[1, 1]
+    ax5 = state.axes[1, 1]
     im1 = ax5.imshow(
-        np.ma.masked_where(self.thk == 0, velsurfobs_mag),
+        np.ma.masked_where(state.thk == 0, velsurfobs_mag),
         origin="lower",
-        extent=self.extent,
+        extent=state.extent,
         vmin=0,
         vmax=np.nanmax(velsurfobs_mag),
         cmap=cmap,
@@ -891,11 +891,11 @@ def _update_plot_inversion(params, self, i):
 
     #######################################################
 
-    ax6 = self.axes[1, 2]
+    ax6 = state.axes[1, 2]
     im1 = ax6.imshow(
-        np.ma.masked_where(self.thk == 0, self.divflux),
+        np.ma.masked_where(state.thk == 0, state.divflux),
         origin="lower",
-        extent=self.extent,
+        extent=state.extent,
         vmin=-10,
         vmax=10,
         cmap="RdBu",
@@ -904,7 +904,7 @@ def _update_plot_inversion(params, self, i):
         plt.colorbar(im1, format="%.2f", ax=ax6)
     ax6.set_title(
         "Flux divergence \n (RMS : %5.1f , STD : %5.1f"
-        % (self.rmsdiv[-1], self.stddiv[-1])
+        % (state.rmsdiv[-1], state.stddiv[-1])
         + ")",
         size=12,
     )
@@ -914,13 +914,13 @@ def _update_plot_inversion(params, self, i):
 
     if params.plot2d_live_inversion:
         if params.editor_plot2d_optimize == "vs":
-            self.fig.canvas.draw()  # re-drawing the figure
-            self.fig.canvas.flush_events()  # to flush the GUI events
+            state.fig.canvas.draw()  # re-drawing the figure
+            state.fig.canvas.flush_events()  # to flush the GUI events
         else:
             from IPython.display import display, clear_output
 
             clear_output(wait=True)
-            display(self.fig)
+            display(state.fig)
     else:
         plt.savefig(
             os.path.join(params.working_dir, "resu-opti-" + str(i).zfill(4) + ".png"),
@@ -934,21 +934,21 @@ def _update_plot_inversion(params, self, i):
 
 
 
-def _update_plot_inversion_simple(params, self, i):
+def _update_plot_inversion_simple(params, state, i):
     """
     Plot thickness, velocity, mand slidingco"""
 
-    if hasattr(self, "uvelsurfobs"):
-        velsurfobs_mag = getmag(self.uvelsurfobs, self.vvelsurfobs).numpy()
+    if hasattr(state, "uvelsurfobs"):
+        velsurfobs_mag = getmag(state.uvelsurfobs, state.vvelsurfobs).numpy()
     else:
-        velsurfobs_mag = np.zeros_like(self.thk.numpy())
+        velsurfobs_mag = np.zeros_like(state.thk.numpy())
 
-    if hasattr(self, "usurfobs"):
-        usurfobs = self.usurfobs
+    if hasattr(state, "usurfobs"):
+        usurfobs = state.usurfobs
     else:
-        usurfobs = np.zeros_like(self.thk.numpy())
+        usurfobs = np.zeros_like(state.thk.numpy())
 
-    velsurf_mag = getmag(self.uvelsurf, self.vvelsurf).numpy()
+    velsurf_mag = getmag(state.uvelsurf, state.vvelsurf).numpy()
 
     #########################################################
 
@@ -956,33 +956,33 @@ def _update_plot_inversion_simple(params, self, i):
         if params.editor_plot2d_optimize == "vs":
             plt.ion()  # enable interactive mode
 
-        # self.fig = plt.figure()
-        self.fig, self.axes = plt.subplots(1, 2)
+        # state.fig = plt.figure()
+        state.fig, state.axes = plt.subplots(1, 2)
 
-        self.extent = [self.x[0], self.x[-1], self.y[0], self.y[-1]]
+        state.extent = [state.x[0], state.x[-1], state.y[0], state.y[-1]]
 
     #########################################################
 
     cmap = copy.copy(matplotlib.cm.jet)
     cmap.set_bad(color="white")
 
-    ax1 = self.axes[0]
+    ax1 = state.axes[0]
 
     im1 = ax1.imshow(
-        np.ma.masked_where(self.thk == 0, self.thk),
+        np.ma.masked_where(state.thk == 0, state.thk),
         origin="lower",
-        extent=self.extent,
+        extent=state.extent,
         vmin=0,
-        #                    vmax=np.quantile(self.thk, 0.98),
+        #                    vmax=np.quantile(state.thk, 0.98),
         cmap=cmap,
     )
     if i == 0:
         plt.colorbar(im1, ax=ax1)
     ax1.set_title(
         "Ice thickness \n (RMS : "
-        + str(int(self.rmsthk[-1]))
+        + str(int(state.rmsthk[-1]))
         + ", STD : "
-        + str(int(self.stdthk[-1]))
+        + str(int(state.stdthk[-1]))
         + ")",
         size=12,
     )
@@ -993,12 +993,12 @@ def _update_plot_inversion_simple(params, self, i):
     cmap = copy.copy(matplotlib.cm.viridis)
     cmap.set_bad(color="white")
 
-    ax4 = self.axes[1]
+    ax4 = state.axes[1]
 
     im1 = ax4.imshow(
-        np.ma.masked_where(self.thk == 0, velsurf_mag),
+        np.ma.masked_where(state.thk == 0, velsurf_mag),
         origin="lower",
-        extent=self.extent,
+        extent=state.extent,
         vmin=0,
         vmax=np.nanmax(velsurfobs_mag),
         cmap=cmap,
@@ -1007,9 +1007,9 @@ def _update_plot_inversion_simple(params, self, i):
         plt.colorbar(im1, format="%.2f", ax=ax4)
     ax4.set_title(
         "Modelled velocities \n (RMS : "
-        + str(int(self.rmsvel[-1]))
+        + str(int(state.rmsvel[-1]))
         + ", STD : "
-        + str(int(self.stdvel[-1]))
+        + str(int(state.stdvel[-1]))
         + ")",
         size=12,
     )
@@ -1019,13 +1019,13 @@ def _update_plot_inversion_simple(params, self, i):
 
     if params.plot2d_live_inversion:
         if params.editor_plot2d_optimize == "vs":
-            self.fig.canvas.draw()  # re-drawing the figure
-            self.fig.canvas.flush_events()  # to flush the GUI events
+            state.fig.canvas.draw()  # re-drawing the figure
+            state.fig.canvas.flush_events()  # to flush the GUI events
         else:
             from IPython.display import display, clear_output
 
             clear_output(wait=True)
-            display(self.fig)
+            display(state.fig)
     else:
         plt.savefig(
             os.path.join(params.working_dir, "resu-opti-" + str(i).zfill(4) + ".png"),
@@ -1039,18 +1039,18 @@ def _update_plot_inversion_simple(params, self, i):
 
 
 
-def _compute_flow_direction_for_anisotropic_smoothing(self):
+def _compute_flow_direction_for_anisotropic_smoothing(state):
 
-    uvelsurf = tf.where(tf.math.is_nan(self.uvelsurf), 0.0, self.uvelsurf)
-    vvelsurf = tf.where(tf.math.is_nan(self.vvelsurf), 0.0, self.vvelsurf)
+    uvelsurf = tf.where(tf.math.is_nan(state.uvelsurf), 0.0, state.uvelsurf)
+    vvelsurf = tf.where(tf.math.is_nan(state.vvelsurf), 0.0, state.vvelsurf)
 
-    self.flowdirx = (
+    state.flowdirx = (
         uvelsurf[1:, 1:]
         + uvelsurf[:-1, 1:]
         + uvelsurf[1:, :-1]
         + uvelsurf[:-1, :-1]
     ) / 4.0
-    self.flowdiry = (
+    state.flowdiry = (
         vvelsurf[1:, 1:]
         + vvelsurf[:-1, 1:]
         + vvelsurf[1:, :-1]
@@ -1059,20 +1059,20 @@ def _compute_flow_direction_for_anisotropic_smoothing(self):
 
     from scipy.ndimage import gaussian_filter
 
-    self.flowdirx = gaussian_filter(self.flowdirx, 3, mode="constant")
-    self.flowdiry = gaussian_filter(self.flowdiry, 3, mode="constant")
+    state.flowdirx = gaussian_filter(state.flowdirx, 3, mode="constant")
+    state.flowdiry = gaussian_filter(state.flowdiry, 3, mode="constant")
 
     # Same as gaussian filter above but for tensorflow is (NOT TESTED)
     # import tensorflow_addons as tfa
-    # self.flowdirx = ( tfa.image.gaussian_filter2d( self.flowdirx , sigma=3, filter_shape=100, padding="CONSTANT") )
+    # state.flowdirx = ( tfa.image.gaussian_filter2d( state.flowdirx , sigma=3, filter_shape=100, padding="CONSTANT") )
 
-    self.flowdirx /= getmag(self.flowdirx, self.flowdiry)
-    self.flowdiry /= getmag(self.flowdirx, self.flowdiry)
+    state.flowdirx /= getmag(state.flowdirx, state.flowdiry)
+    state.flowdiry /= getmag(state.flowdirx, state.flowdiry)
 
-    self.flowdirx = tf.where(tf.math.is_nan(self.flowdirx), 0.0, self.flowdirx)
-    self.flowdiry = tf.where(tf.math.is_nan(self.flowdiry), 0.0, self.flowdiry)
+    state.flowdirx = tf.where(tf.math.is_nan(state.flowdirx), 0.0, state.flowdirx)
+    state.flowdiry = tf.where(tf.math.is_nan(state.flowdiry), 0.0, state.flowdiry)
 
     # this is to plot the observed flow directions
     # fig, axs = plt.subplots(1, 1, figsize=(8,16))
-    # plt.quiver(self.flowdirx,self.flowdiry)
+    # plt.quiver(state.flowdirx,state.flowdiry)
     # axs.axis("equal")

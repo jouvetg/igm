@@ -41,63 +41,63 @@ def params_write_ncdf_ex(parser):
     )
 
 
-def init_write_ncdf_ex(params, self):
-    self.tcomp_write_ncdf_ex = []
+def init_write_ncdf_ex(params, state):
+    state.tcomp_write_ncdf_ex = []
 
     os.system("echo rm " + os.path.join(params.working_dir, "ex.nc") + " >> clean.sh")
 
     # give information on variables for output ncdf, TODO: IMPROVE
-    self.var_info_ncdf_ex = {}
-    self.var_info_ncdf_ex["topg"] = ["Basal Topography", "m"]
-    self.var_info_ncdf_ex["usurf"] = ["Surface Topography", "m"]
-    self.var_info_ncdf_ex["thk"] = ["Ice Thickness", "m"]
-    self.var_info_ncdf_ex["icemask"] = ["Ice mask", "NO UNIT"]
-    self.var_info_ncdf_ex["smb"] = ["Surface Mass Balance", "m/y"]
-    self.var_info_ncdf_ex["ubar"] = ["x depth-average velocity of ice", "m/y"]
-    self.var_info_ncdf_ex["vbar"] = ["y depth-average velocity of ice", "m/y"]
-    self.var_info_ncdf_ex["velbar_mag"] = ["Depth-average velocity magnitude of ice", "m/y"]
-    self.var_info_ncdf_ex["uvelsurf"] = ["x surface velocity of ice", "m/y"]
-    self.var_info_ncdf_ex["vvelsurf"] = ["y surface velocity of ice", "m/y"]
-    self.var_info_ncdf_ex["wvelsurf"] = ["z surface velocity of ice", "m/y"]
-    self.var_info_ncdf_ex["velsurf_mag"] = ["Surface velocity magnitude of ice", "m/y"]
-    self.var_info_ncdf_ex["uvelbase"] = ["x basal velocity of ice", "m/y"]
-    self.var_info_ncdf_ex["vvelbase"] = ["y basal velocity of ice", "m/y"]
-    self.var_info_ncdf_ex["wvelbase"] = ["z basal velocity of ice", "m/y"]
-    self.var_info_ncdf_ex["velbase_mag"] = ["Basal velocity magnitude of ice", "m/y"]
-    self.var_info_ncdf_ex["divflux"] = ["Divergence of the ice flux", "m/y"]
-    self.var_info_ncdf_ex["strflowctrl"] = ["arrhenius+1.0*slidingco", "MPa$^{-3}$ a$^{-1}$"]
-    self.var_info_ncdf_ex["dtopgdt"] = ["Erosion rate", "m/y"]
-    self.var_info_ncdf_ex["arrhenius"] = ["Arrhenius factor", "MPa$^{-3}$ a$^{-1}$"]
-    self.var_info_ncdf_ex["slidingco"] = ["Sliding Coefficient", "km MPa$^{-3}$ a$^{-1}$"]
-    self.var_info_ncdf_ex["meantemp"] = ["Mean anual surface temperatures", "°C"]
-    self.var_info_ncdf_ex["meanprec"] = ["Mean anual precipitation", "m/y"]
-    self.var_info_ncdf_ex["velsurfobs_mag"] = ["Obs. surf. speed of ice", "m/y"]
-    self.var_info_ncdf_ex["weight_particles"] = ["weight_particles", "no"]
+    state.var_info_ncdf_ex = {}
+    state.var_info_ncdf_ex["topg"] = ["Basal Topography", "m"]
+    state.var_info_ncdf_ex["usurf"] = ["Surface Topography", "m"]
+    state.var_info_ncdf_ex["thk"] = ["Ice Thickness", "m"]
+    state.var_info_ncdf_ex["icemask"] = ["Ice mask", "NO UNIT"]
+    state.var_info_ncdf_ex["smb"] = ["Surface Mass Balance", "m/y"]
+    state.var_info_ncdf_ex["ubar"] = ["x depth-average velocity of ice", "m/y"]
+    state.var_info_ncdf_ex["vbar"] = ["y depth-average velocity of ice", "m/y"]
+    state.var_info_ncdf_ex["velbar_mag"] = ["Depth-average velocity magnitude of ice", "m/y"]
+    state.var_info_ncdf_ex["uvelsurf"] = ["x surface velocity of ice", "m/y"]
+    state.var_info_ncdf_ex["vvelsurf"] = ["y surface velocity of ice", "m/y"]
+    state.var_info_ncdf_ex["wvelsurf"] = ["z surface velocity of ice", "m/y"]
+    state.var_info_ncdf_ex["velsurf_mag"] = ["Surface velocity magnitude of ice", "m/y"]
+    state.var_info_ncdf_ex["uvelbase"] = ["x basal velocity of ice", "m/y"]
+    state.var_info_ncdf_ex["vvelbase"] = ["y basal velocity of ice", "m/y"]
+    state.var_info_ncdf_ex["wvelbase"] = ["z basal velocity of ice", "m/y"]
+    state.var_info_ncdf_ex["velbase_mag"] = ["Basal velocity magnitude of ice", "m/y"]
+    state.var_info_ncdf_ex["divflux"] = ["Divergence of the ice flux", "m/y"]
+    state.var_info_ncdf_ex["strflowctrl"] = ["arrhenius+1.0*slidingco", "MPa$^{-3}$ a$^{-1}$"]
+    state.var_info_ncdf_ex["dtopgdt"] = ["Erosion rate", "m/y"]
+    state.var_info_ncdf_ex["arrhenius"] = ["Arrhenius factor", "MPa$^{-3}$ a$^{-1}$"]
+    state.var_info_ncdf_ex["slidingco"] = ["Sliding Coefficient", "km MPa$^{-3}$ a$^{-1}$"]
+    state.var_info_ncdf_ex["meantemp"] = ["Mean anual surface temperatures", "°C"]
+    state.var_info_ncdf_ex["meanprec"] = ["Mean anual precipitation", "m/y"]
+    state.var_info_ncdf_ex["velsurfobs_mag"] = ["Obs. surf. speed of ice", "m/y"]
+    state.var_info_ncdf_ex["weight_particles"] = ["weight_particles", "no"]
 
 
-def update_write_ncdf_ex(params, self):
-    if self.saveresult:
-        self.tcomp_write_ncdf_ex.append(time.time())
+def update_write_ncdf_ex(params, state):
+    if state.saveresult:
+        state.tcomp_write_ncdf_ex.append(time.time())
 
         if "velbar_mag" in params.vars_to_save_ncdf_ex:
-            self.velbar_mag = getmag(self.ubar, self.vbar)
+            state.velbar_mag = getmag(state.ubar, state.vbar)
 
         if "velsurf_mag" in params.vars_to_save_ncdf_ex:
-            self.velsurf_mag = getmag(self.uvelsurf, self.vvelsurf)
+            state.velsurf_mag = getmag(state.uvelsurf, state.vvelsurf)
 
         if "velbase_mag" in params.vars_to_save_ncdf_ex:
-            self.velbase_mag = getmag(self.uvelbase, self.vvelbase)
+            state.velbase_mag = getmag(state.uvelbase, state.vvelbase)
 
         if "meanprec" in params.vars_to_save_ncdf_ex:
-            self.meanprec = tf.math.reduce_mean(self.precipitation, axis=0)
+            state.meanprec = tf.math.reduce_mean(state.precipitation, axis=0)
 
         if "meantemp" in params.vars_to_save_ncdf_ex:
-            self.meantemp = tf.math.reduce_mean(self.air_temp, axis=0)
+            state.meantemp = tf.math.reduce_mean(state.air_temp, axis=0)
 
-        if not hasattr(self, "already_called_update_write_ncdf_ex"):
-            self.already_called_update_write_ncdf_ex = True
+        if not hasattr(state, "already_called_update_write_ncdf_ex"):
+            state.already_called_update_write_ncdf_ex = True
 
-            self.logger.info("Initialize NCDF ex output Files")
+            state.logger.info("Initialize NCDF ex output Files")
 
             nc = Dataset(
                 os.path.join(params.working_dir, "ex.nc"),
@@ -110,33 +110,33 @@ def update_write_ncdf_ex(params, self):
             E.units = "yr"
             E.long_name = "time"
             E.axis = "T"
-            E[0] = self.t.numpy()
+            E[0] = state.t.numpy()
 
-            nc.createDimension("y", len(self.y))
+            nc.createDimension("y", len(state.y))
             E = nc.createVariable("y", np.dtype("float32").char, ("y",))
             E.units = "m"
             E.long_name = "y"
             E.axis = "Y"
-            E[:] = self.y.numpy()
+            E[:] = state.y.numpy()
 
-            nc.createDimension("x", len(self.x))
+            nc.createDimension("x", len(state.x))
             E = nc.createVariable("x", np.dtype("float32").char, ("x",))
             E.units = "m"
             E.long_name = "x"
             E.axis = "X"
-            E[:] = self.x.numpy()
+            E[:] = state.x.numpy()
 
             for var in params.vars_to_save_ncdf_ex:
-                if hasattr(self, var):
+                if hasattr(state, var):
                     E = nc.createVariable(var, np.dtype("float32").char, ("time", "y", "x"))
-                    E.long_name = self.var_info_ncdf_ex[var][0]
-                    E.units = self.var_info_ncdf_ex[var][1]
-                    E[0, :, :] = vars(self)[var].numpy()
+                    E.long_name = state.var_info_ncdf_ex[var][0]
+                    E.units = state.var_info_ncdf_ex[var][1]
+                    E[0, :, :] = vars(state)[var].numpy()
 
             nc.close()
 
         else:
-            self.logger.info("Write NCDF ex file at time : " + str(self.t.numpy()))
+            state.logger.info("Write NCDF ex file at time : " + str(state.t.numpy()))
 
             nc = Dataset(
                 os.path.join(params.working_dir, "ex.nc"),
@@ -145,17 +145,17 @@ def update_write_ncdf_ex(params, self):
             )
 
             d = nc.variables["time"][:].shape[0]
-            nc.variables["time"][d] = self.t.numpy()
+            nc.variables["time"][d] = state.t.numpy()
 
             for var in params.vars_to_save_ncdf_ex:
-                if hasattr(self, var):
-                    nc.variables[var][d, :, :] = vars(self)[var].numpy()
+                if hasattr(state, var):
+                    nc.variables[var][d, :, :] = vars(state)[var].numpy()
 
             nc.close()
 
-        self.tcomp_write_ncdf_ex[-1] -= time.time()
-        self.tcomp_write_ncdf_ex[-1] *= -1
+        state.tcomp_write_ncdf_ex[-1] -= time.time()
+        state.tcomp_write_ncdf_ex[-1] *= -1
  
  
-def final_write_ncdf_ex(params, self):
+def final_write_ncdf_ex(params, state):
     pass

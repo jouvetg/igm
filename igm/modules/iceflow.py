@@ -220,46 +220,46 @@ def params_iceflow(parser):
     )
 
 
-def init_iceflow(params, self):
+def init_iceflow(params, state):
 
-    self.tcomp_iceflow = []
+    state.tcomp_iceflow = []
 
     # here we initialize variable parmaetrizing ice flow
-    if not hasattr(self, "arrhenius"):
-        self.arrhenius = tf.Variable(tf.ones_like(self.thk) * params.init_arrhenius)
+    if not hasattr(state, "arrhenius"):
+        state.arrhenius = tf.Variable(tf.ones_like(state.thk) * params.init_arrhenius)
 
-    if not hasattr(self, "slidingco"):
-        self.slidingco = tf.Variable(tf.ones_like(self.thk) * params.init_slidingco)
+    if not hasattr(state, "slidingco"):
+        state.slidingco = tf.Variable(tf.ones_like(state.thk) * params.init_slidingco)
 
     # here we create a new velocity field
-    if not hasattr(self, "U"):
-        self.U = tf.Variable(
+    if not hasattr(state, "U"):
+        state.U = tf.Variable(
             tf.zeros(
                 (
                     params.iceflow_physics,
                     params.Nz,
-                    self.thk.shape[0],
-                    self.thk.shape[1],
+                    state.thk.shape[0],
+                    state.thk.shape[1],
                 )
             )
         )
 
     if not params.type_iceflow == "solved":
         if int(tf.__version__.split(".")[1]) <= 10:
-            self.opti_retrain = tf.keras.optimizers.Adam(
+            state.opti_retrain = tf.keras.optimizers.Adam(
                 learning_rate=params.retrain_iceflow_emulator_lr
             )
         else:
-            self.opti_retrain = tf.keras.optimizers.legacy.Adam(
+            state.opti_retrain = tf.keras.optimizers.legacy.Adam(
                 learning_rate=params.retrain_iceflow_emulator_lr
             )
 
         # if empty string, we create a deel learning emaultor from scratch
         if params.emulator == "":
-            self.fieldin = params.fieldin
-            nb_inputs = len(self.fieldin)
+            state.fieldin = params.fieldin
+            nb_inputs = len(state.fieldin)
             nb_outputs = params.iceflow_physics * params.Nz
-            self.iceflow_model = getattr(self, params.network)(nb_inputs, nb_outputs)
+            state.iceflow_model = getattr(state, params.network)(nb_inputs, nb_outputs)
 
         # otherwise we load it
         else:
@@ -269,11 +269,11 @@ def init_iceflow(params, self):
             else:
                 dirpath = params.emulator
  
-            self.fieldin = []
+            state.fieldin = []
             fid = open(os.path.join(dirpath, "fieldin.dat"), "r")
             for fileline in fid:
                 part = fileline.split()
-                self.fieldin.append(part[0])
+                state.fieldin.append(part[0])
             fid.close()
 
             fid = open(os.path.join(dirpath, "vert_grid.dat"), "r")
@@ -292,72 +292,72 @@ def init_iceflow(params, self):
                         )
             fid.close()
 
-            self.iceflow_model = tf.keras.models.load_model(
+            state.iceflow_model = tf.keras.models.load_model(
                 os.path.join(dirpath, "model.h5")
             )
 
-            self.iceflow_model.compile()
+            state.iceflow_model.compile()
 
     if not params.type_iceflow == "emulated":
         if int(tf.__version__.split(".")[1]) <= 10:
-            self.optimizer = tf.keras.optimizers.Adam(
+            state.optimizer = tf.keras.optimizers.Adam(
                 learning_rate=params.solve_iceflow_step_size
             )
         else:
-            self.optimizer = tf.keras.optimizers.legacy.Adam(
+            state.optimizer = tf.keras.optimizers.legacy.Adam(
                 learning_rate=params.solve_iceflow_step_size
             )
 
     # if we do disoangostic, one neds to create a solved solution
     if params.type_iceflow == "diagnostic":
-        self.UT = tf.Variable(
+        state.UT = tf.Variable(
             tf.zeros(
                 (
                     params.iceflow_physics,
                     params.Nz,
-                    self.thk.shape[0],
-                    self.thk.shape[1],
+                    state.thk.shape[0],
+                    state.thk.shape[1],
                 )
             )
         )
 
     # create the vertica discretization
-    _define_vertical_weight(params, self)
+    _define_vertical_weight(params, state)
 
-    Ny = self.thk.shape[0]
-    Nx = self.thk.shape[1]
+    Ny = state.thk.shape[0]
+    Nx = state.thk.shape[1]
 
     # In case of a U-net, must make sure the I/O size is multiple of 2**N
     if params.multiple_window_size > 0:
         NNy = params.multiple_window_size * math.ceil(Ny / params.multiple_window_size)
         NNx = params.multiple_window_size * math.ceil(Nx / params.multiple_window_size)
-        self.PAD = [[0, NNy - Ny], [0, NNx - Nx]]
+        state.PAD = [[0, NNy - Ny], [0, NNx - Nx]]
     else:
-        self.PAD = [[0, 0], [0, 0]]
+        state.PAD = [[0, 0], [0, 0]]
 
 
-def update_iceflow(params, self):
-    self.logger.info("Update ICEFLOW at time : " + str(self.t.numpy()))
+def update_iceflow(params, state):
+    state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
-    self.tcomp_iceflow.append(time.time())
+    state.tcomp_iceflow.append(time.time())
 
     if params.type_iceflow == "emulated":
         if params.retrain_iceflow_emulator_freq > 0:
-            _update_iceflow_emulator(params, self)
+            _update_iceflow_emulator(params, state)
 
-        _update_iceflow_emulated(params, self)
+        _update_iceflow_emulated(params, state)
 
     elif params.type_iceflow == "solved":
-        _update_iceflow_solved(params, self)
+        _update_iceflow_solved(params, state)
 
     elif params.type_iceflow == "diagnostic":
-        _update_iceflow_diagnostic(params, self)
+        _update_iceflow_diagnostic(params, state)
 
-    self.tcomp_iceflow[-1] -= time.time()
-    self.tcomp_iceflow[-1] *= -1
+    state.tcomp_iceflow[-1] -= time.time()
+    state.tcomp_iceflow[-1] *= -1
 
 
-def final_iceflow(params, self):
+def final_iceflow(params, state):
     pass 
 
 ########################################################################
@@ -715,7 +715,7 @@ def _U_to_Y(params, U):
 ########################################################################
 
 
-def _define_vertical_weight(params, self):
+def _define_vertical_weight(params, state):
     """
     define_vertical_weight
     """
@@ -723,7 +723,7 @@ def _define_vertical_weight(params, self):
     zeta = np.arange(params.Nz + 1) / params.Nz
     weight = (zeta / params.vert_spacing) * (1.0 + (params.vert_spacing - 1.0) * zeta)
     weight = tf.Variable(weight[1:] - weight[:-1], dtype=tf.float32)
-    self.vert_weight = tf.expand_dims(tf.expand_dims(weight, axis=-1), axis=-1)
+    state.vert_weight = tf.expand_dims(tf.expand_dims(weight, axis=-1), axis=-1)
 
 
 ########################################################################
@@ -733,7 +733,7 @@ def _define_vertical_weight(params, self):
 ########################################################################
 
 
-def _solve_iceflow(params, self, U):
+def _solve_iceflow(params, state, U):
     """
     solve_iceflow
     """
@@ -747,11 +747,11 @@ def _solve_iceflow(params, self, U):
             COST = iceflow_energy(
                 params,
                 tf.expand_dims(U, axis=0),
-                tf.expand_dims(self.thk, axis=0),
-                tf.expand_dims(self.usurf, axis=0),
-                tf.expand_dims(self.arrhenius, axis=0),
-                tf.expand_dims(self.slidingco, axis=0),
-                tf.expand_dims(self.dX, axis=0),
+                tf.expand_dims(state.thk, axis=0),
+                tf.expand_dims(state.usurf, axis=0),
+                tf.expand_dims(state.arrhenius, axis=0),
+                tf.expand_dims(state.slidingco, axis=0),
+                tf.expand_dims(state.dX, axis=0),
             )
             Cost_Glen.append(COST)
 
@@ -763,7 +763,7 @@ def _solve_iceflow(params, self, U):
 
             grads = tf.Variable(t.gradient(COST, [U]))
 
-            self.optimizer.apply_gradients(
+            state.optimizer.apply_gradients(
                 zip([grads[i] for i in range(grads.shape[0])], [U])
             )
 
@@ -771,30 +771,30 @@ def _solve_iceflow(params, self, U):
                 velsurf_mag = tf.sqrt(U[0, -1] ** 2 + U[1, -1] ** 2)
                 print("solve :", i, COST.numpy(), np.max(velsurf_mag))
 
-    U = tf.where(self.thk > 0, U, 0)
+    U = tf.where(state.thk > 0, U, 0)
 
     return U, Cost_Glen
 
 
-def _update_iceflow_solved(params, self):
+def _update_iceflow_solved(params, state):
 
-    U, Cost_Glen = _solve_iceflow(params, self, self.U)
+    U, Cost_Glen = _solve_iceflow(params, state, state.U)
 
-    self.U.assign(U)
+    state.U.assign(U)
 
-    self.COST_Glen = Cost_Glen[-1].numpy()
+    state.COST_Glen = Cost_Glen[-1].numpy()
 
-    _update_2d_iceflow_variables(params, self)
+    _update_2d_iceflow_variables(params, state)
 
 
-def _update_2d_iceflow_variables(params, self):
+def _update_2d_iceflow_variables(params, state):
 
-    self.uvelbase = self.U[0, 0, :, :]
-    self.vvelbase = self.U[1, 0, :, :]
-    self.ubar = tf.reduce_sum(self.U[0] * self.vert_weight, axis=0)
-    self.vbar = tf.reduce_sum(self.U[1] * self.vert_weight, axis=0)
-    self.uvelsurf = self.U[0, -1, :, :]
-    self.vvelsurf = self.U[1, -1, :, :]
+    state.uvelbase = state.U[0, 0, :, :]
+    state.vvelbase = state.U[1, 0, :, :]
+    state.ubar = tf.reduce_sum(state.U[0] * state.vert_weight, axis=0)
+    state.vbar = tf.reduce_sum(state.U[1] * state.vert_weight, axis=0)
+    state.uvelsurf = state.U[0, -1, :, :]
+    state.vvelsurf = state.U[1, -1, :, :]
 
 
 ########################################################################
@@ -804,54 +804,54 @@ def _update_2d_iceflow_variables(params, self):
 ########################################################################
 
 
-def _update_iceflow_emulated(params, self):
+def _update_iceflow_emulated(params, state):
 
     # Define the input of the NN, include scaling
     X = tf.expand_dims(
         tf.stack(
-            [tf.pad(vars(self)[f], self.PAD, "CONSTANT") for f in self.fieldin],
+            [tf.pad(vars(state)[f], state.PAD, "CONSTANT") for f in state.fieldin],
             axis=-1,
         ),
         axis=0,
     )
 
-    Y = self.iceflow_model(X)
+    Y = state.iceflow_model(X)
 
-    Ny, Nx = self.thk.shape
+    Ny, Nx = state.thk.shape
     N = params.Nz
 
     U = _Y_to_U(params, Y[:, :Ny, :Nx, :])
 
-    U = tf.where(self.thk > 0, U, 0)
+    U = tf.where(state.thk > 0, U, 0)
 
-    self.U.assign(U)
+    state.U.assign(U)
 
     # If requested, the speeds are artifically upper-bounded
     if not params.force_max_velbar == 0:
-        self.U = tf.clip_by_value(
-            self.U, -params.force_max_velbar, params.force_max_velbar
+        state.U = tf.clip_by_value(
+            state.U, -params.force_max_velbar, params.force_max_velbar
         )
 
-    _update_2d_iceflow_variables(params, self)
+    _update_2d_iceflow_variables(params, state)
 
 
-def _update_iceflow_emulator(params, self):
+def _update_iceflow_emulator(params, state):
 
-    if self.it % params.retrain_iceflow_emulator_freq == 0:
+    if state.it % params.retrain_iceflow_emulator_freq == 0:
         XX = tf.expand_dims(
-            tf.stack([vars(self)[f] for f in self.fieldin], axis=-1), axis=0
+            tf.stack([vars(state)[f] for f in state.fieldin], axis=-1), axis=0
         )
 
         X = _split_into_patches(XX, params.retrain_iceflow_emulator_framesizemax)
 
-        self.COST_EMULATOR = []
+        state.COST_EMULATOR = []
 
         for epoch in range(params.retrain_iceflow_emulator_nbit):
             cost_emulator = tf.Variable(0.0)
 
             for i in range(X.shape[0]):
                 with tf.GradientTape() as t:
-                    Y = self.iceflow_model(X[i : i + 1, :, :, :])
+                    Y = state.iceflow_model(X[i : i + 1, :, :, :])
 
                     COST = iceflow_energy_XY(params, X[i : i + 1, :, :, :], Y)
 
@@ -862,17 +862,17 @@ def _update_iceflow_emulator(params, self):
                         velsurf_mag = tf.sqrt(U[0, -1] ** 2 + U[1, -1] ** 2)
                         print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 
-                grads = t.gradient(COST, self.iceflow_model.trainable_variables)
+                grads = t.gradient(COST, state.iceflow_model.trainable_variables)
 
-                self.opti_retrain.apply_gradients(
-                    zip(grads, self.iceflow_model.trainable_variables)
+                state.opti_retrain.apply_gradients(
+                    zip(grads, state.iceflow_model.trainable_variables)
                 )
 
-                self.opti_retrain.lr = params.retrain_iceflow_emulator_lr * (
+                state.opti_retrain.lr = params.retrain_iceflow_emulator_lr * (
                     0.95 ** (epoch / 1000)
                 )
 
-            self.COST_EMULATOR.append(cost_emulator)
+            state.COST_EMULATOR.append(cost_emulator)
 
 
 def _split_into_patches(X, nbmax):
@@ -898,26 +898,26 @@ def _split_into_patches(X, nbmax):
 ########################################################################
 
 
-def _update_iceflow_diagnostic(params, self):
+def _update_iceflow_diagnostic(params, state):
 
     if params.retrain_iceflow_emulator_freq > 0:
-        _update_iceflow_emulator(params, self)
-        COST_Emulator = self.COST_EMULATOR[-1].numpy()
+        _update_iceflow_emulator(params, state)
+        COST_Emulator = state.COST_EMULATOR[-1].numpy()
     else:
         COST_Emulator = 0.0
 
-    _update_iceflow_emulated(params, self)
+    _update_iceflow_emulated(params, state)
 
-    if self.it % 10 == 0:
-        UT, Cost_Glen = _solve_iceflow(params, self, self.UT)
-        self.UT.assign(UT)
+    if state.it % 10 == 0:
+        UT, Cost_Glen = _solve_iceflow(params, state, state.UT)
+        state.UT.assign(UT)
         COST_Glen = Cost_Glen[-1].numpy()
 
         print("nb solve iterations :", len(Cost_Glen))
 
-        l1, l2 = _computemisfit(self, self.thk, self.U - self.UT)
+        l1, l2 = _computemisfit(state, state.thk, state.U - state.UT)
 
-        ERR = [self.t.numpy(), COST_Glen, COST_Emulator, l1, l2]
+        ERR = [state.t.numpy(), COST_Glen, COST_Emulator, l1, l2]
 
         print(ERR)
 
@@ -925,12 +925,12 @@ def _update_iceflow_diagnostic(params, self):
             np.savetxt(f, np.expand_dims(ERR, axis=0), delimiter=",", fmt="%5.5f")
 
 
-def _computemisfit(self, thk, U):
-    ubar = tf.reduce_sum(self.vert_weight * U[0], axis=0)
-    vbar = tf.reduce_sum(self.vert_weight * U[1], axis=0)
+def _computemisfit(state, thk, U):
+    ubar = tf.reduce_sum(state.vert_weight * U[0], axis=0)
+    vbar = tf.reduce_sum(state.vert_weight * U[1], axis=0)
 
     VEL = tf.stack([ubar, vbar], axis=0)
-    MA = tf.where(self.thk > 1, tf.ones_like(VEL), 0)
+    MA = tf.where(state.thk > 1, tf.ones_like(VEL), 0)
 
     nl1diff = tf.reduce_sum(MA * tf.abs(VEL)) / tf.reduce_sum(MA)
     nl2diff = tf.reduce_sum(MA * tf.abs(VEL) ** 2) / tf.reduce_sum(MA)
@@ -945,7 +945,7 @@ def _computemisfit(self, thk, U):
 ########################################################################
 
 
-def cnn(params, self, nb_inputs, nb_outputs):
+def cnn(params, state, nb_inputs, nb_outputs):
     """
     Routine serve to build a convolutional neural network
     """
@@ -984,7 +984,7 @@ def cnn(params, self, nb_inputs, nb_outputs):
     return tf.keras.models.Model(inputs=inputs, outputs=outputs)
 
 
-def unet(params, self, nb_inputs, nb_outputs):
+def unet(params, state, nb_inputs, nb_outputs):
     """
     Routine serve to define a UNET network from keras_unet_collection
     """
@@ -1019,7 +1019,7 @@ def unet(params, self, nb_inputs, nb_outputs):
 ########################################################################
 
 
-def save_iceflow_model(params, self):
+def save_iceflow_model(params, state):
     directory = os.path.join(params.working_dir, "iceflow-model")
 
     if os.path.exists(directory):
@@ -1027,10 +1027,10 @@ def save_iceflow_model(params, self):
 
     os.mkdir(directory)
 
-    self.iceflow_model.save(os.path.join(directory, "model.h5"))
+    state.iceflow_model.save(os.path.join(directory, "model.h5"))
 
     fid = open(os.path.join(directory, "fieldin.dat"), "w")
-    for key in self.fieldin:
+    for key in state.fieldin:
         fid.write("%s %.1f \n" % (key, 1.0))
     fid.close()
 

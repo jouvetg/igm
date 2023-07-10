@@ -12,8 +12,8 @@ F. et al. Erosion by an Alpine glacier. Science 350, 193-195 (2015).
 
 ==============================================================================
 
-Input  : self.ubar, self.vbar, self.dx 
-Output : self.dt, self.t, self.it, self.saveresult 
+Input  : state.ubar, state.vbar, state.dx 
+Output : state.dt, state.t, state.it, state.saveresult 
 """
 
 import numpy as np
@@ -47,35 +47,35 @@ def params_topg_glacial_erosion(parser):
     )
 
 
-def init_topg_glacial_erosion(params, self):
+def init_topg_glacial_erosion(params, state):
 
-    self.tcomp_topg_glacial_erosion = []
-    self.tlast_erosion = tf.Variable(params.tstart)
+    state.tcomp_topg_glacial_erosion = []
+    state.tlast_erosion = tf.Variable(params.tstart)
 
 
-def update_topg_glacial_erosion(params, self):
+def update_topg_glacial_erosion(params, state):
 
-    if (self.t - self.tlast_erosion) >= params.erosion_update_freq:
+    if (state.t - state.tlast_erosion) >= params.erosion_update_freq:
 
-        self.logger.info("update topg_glacial_erosion at time : " + str(self.t.numpy()))
+        state.logger.info("update topg_glacial_erosion at time : " + str(state.t.numpy()))
 
-        self.tcomp_topg_glacial_erosion.append(time.time())
+        state.tcomp_topg_glacial_erosion.append(time.time())
 
-        velbase_mag = getmag(self.U[0, 0], self.U[1, 0])
+        velbase_mag = getmag(state.U[0, 0], state.U[1, 0])
 
         # apply erosion law, erosion rate is proportional to a power of basal sliding speed
         dtopgdt = params.erosion_cst * (velbase_mag**params.erosion_exp)
 
-        self.topg = self.topg - (self.t - self.tlast_erosion) * dtopgdt
+        state.topg = state.topg - (state.t - state.tlast_erosion) * dtopgdt
 
         # THIS WORK ONLY FOR GROUNDED ICE, TO BE ADAPTED FOR FLOATING ICE
-        self.usurf = self.topg + self.thk
+        state.usurf = state.topg + state.thk
 
-        self.tlast_erosion.assign(self.t)
+        state.tlast_erosion.assign(state.t)
 
-        self.tcomp_topg_glacial_erosion[-1] -= time.time()
-        self.tcomp_topg_glacial_erosion[-1] *= -1
+        state.tcomp_topg_glacial_erosion[-1] -= time.time()
+        state.tcomp_topg_glacial_erosion[-1] *= -1
 
 
-def final_topg_glacial_erosion(params, self):
+def final_topg_glacial_erosion(params, state):
     pass

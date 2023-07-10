@@ -13,8 +13,8 @@ which is the maximum number of cells crossed in one iteration
 
 ==============================================================================
 
-Input  : self.ubar, self.vbar, self.dx 
-Output : self.dt, self.t, self.it, self.saveresult 
+Input  : state.ubar, state.vbar, state.dx 
+Output : state.dt, state.t, state.it, state.saveresult 
 """
 
 import numpy as np
@@ -51,66 +51,66 @@ def params_time_step(parser):
     )
 
 
-def init_time_step(params, self):
-    self.tcomp_time_step = []
+def init_time_step(params, state):
+    state.tcomp_time_step = []
 
     # Initialize the time with starting time
-    self.t = tf.Variable(float(params.tstart))
+    state.t = tf.Variable(float(params.tstart))
 
-    self.it = 0
+    state.it = 0
 
-    self.dt = tf.Variable(float(params.dtmax))
+    state.dt = tf.Variable(float(params.dtmax))
 
-    self.dt_target = tf.Variable(float(params.dtmax))
+    state.dt_target = tf.Variable(float(params.dtmax))
 
-    self.tsave = np.ndarray.tolist(
+    state.tsave = np.ndarray.tolist(
         np.arange(params.tstart, params.tend, params.tsave)
     ) + [params.tend]
 
-    self.tsave = tf.constant(self.tsave)
+    state.tsave = tf.constant(state.tsave)
 
-    self.itsave = 0
+    state.itsave = 0
 
-    self.saveresult = True
+    state.saveresult = True
 
 
-def update_time_step(params, self):
+def update_time_step(params, state):
 
-    self.logger.info(
-        "Update DT from the CFL condition at time : " + str(self.t.numpy())
+    state.logger.info(
+        "Update DT from the CFL condition at time : " + str(state.t.numpy())
     )
 
-    self.tcomp_time_step.append(time.time())
+    state.tcomp_time_step.append(time.time())
 
     # compute maximum ice velocitiy magnitude
     velomax = max(
-        tf.math.reduce_max(tf.math.abs(self.ubar)),
-        tf.math.reduce_max(tf.math.abs(self.vbar)),
+        tf.math.reduce_max(tf.math.abs(state.ubar)),
+        tf.math.reduce_max(tf.math.abs(state.vbar)),
     )
 
     # dt_target account for both cfl and dt_max
     if velomax > 0:
-        self.dt_target = min(params.cfl * self.dx / velomax, params.dtmax)
+        state.dt_target = min(params.cfl * state.dx / velomax, params.dtmax)
     else:
-        self.dt_target = params.dtmax
+        state.dt_target = params.dtmax
 
-    self.dt = self.dt_target
+    state.dt = state.dt_target
 
     # modify dt such that times of requested savings are reached exactly
-    if self.tsave[self.itsave + 1] <= self.t + self.dt:
-        self.dt = self.tsave[self.itsave + 1] - self.t
-        self.saveresult = True
-        self.itsave += 1
+    if state.tsave[state.itsave + 1] <= state.t + state.dt:
+        state.dt = state.tsave[state.itsave + 1] - state.t
+        state.saveresult = True
+        state.itsave += 1
     else:
-        self.saveresult = False
+        state.saveresult = False
 
-    self.t.assign(self.t + self.dt)
+    state.t.assign(state.t + state.dt)
 
-    self.it += 1
+    state.it += 1
 
-    self.tcomp_time_step[-1] -= time.time()
-    self.tcomp_time_step[-1] *= -1
+    state.tcomp_time_step[-1] -= time.time()
+    state.tcomp_time_step[-1] *= -1
 
 
-def final_time_step(params, self):
+def final_time_step(params, state):
     pass

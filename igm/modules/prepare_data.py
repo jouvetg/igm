@@ -93,13 +93,13 @@ def params_prepare_data(parser):
     # )
 
 
-def init_prepare_data(params, self):
+def init_prepare_data(params, state):
 
     import json
 
     gdirs, paths_ncdf = _oggm_util([params.RGI], params)
 
-    self.logger.info("Prepare data using oggm and glathida")
+    state.logger.info("Prepare data using oggm and glathida")
 
     nc = Dataset(paths_ncdf[0], "r+")
 
@@ -162,12 +162,12 @@ def init_prepare_data(params, self):
     # transform from numpy to tensorflow
   
     for var in ['x','y']:
-        vars(self)[var] = tf.constant(vars()[var].astype("float32"))
+        vars(state)[var] = tf.constant(vars()[var].astype("float32"))
 
     for var in vars_to_save:
-        vars(self)[var] = tf.Variable(vars()[var].astype("float32"))
+        vars(state)[var] = tf.Variable(vars()[var].astype("float32"))
 
-    complete_data(self)
+    complete_data(state)
 
     ########################################################
 
@@ -211,14 +211,14 @@ def init_prepare_data(params, self):
 
         nc.close()
 
-        self.logger.setLevel(params.logging_level)
+        state.logger.setLevel(params.logging_level)
 
 
-def update_prepare_data(params, self):
+def update_prepare_data(params, state):
     pass
 
 
-def final_prepare_data(params, self):
+def final_prepare_data(params, state):
     pass
 
 

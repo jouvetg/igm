@@ -21,8 +21,8 @@ which is the maximum number of cells crossed in one iteration
 
 ==============================================================================
 
-Input  : self.ubar, self.vbar, self.thk, self.dx, 
-Output : self.thk, self.usurf, self.lsurf
+Input  : state.ubar, state.vbar, state.thk, state.dx, 
+Output : state.thk, state.usurf, state.lsurf
 """
 
 import datetime, time
@@ -31,35 +31,35 @@ import tensorflow as tf
 from igm.modules.utils import compute_divflux
 
 
-def params_thk(self):
+def params_thk(state):
     pass
 
-def init_thk(params, self):
-    self.tcomp_thk = []
+def init_thk(params, state):
+    state.tcomp_thk = []
 
 
-def update_thk(params, self):
+def update_thk(params, state):
 
-    self.logger.info("Ice thickness equation at time : " + str(self.t.numpy()))
+    state.logger.info("Ice thickness equation at time : " + str(state.t.numpy()))
 
-    self.tcomp_thk.append(time.time())
+    state.tcomp_thk.append(time.time())
 
     # compute the divergence of the flux
-    self.divflux = compute_divflux(self.ubar, self.vbar, self.thk, self.dx, self.dx)
+    state.divflux = compute_divflux(state.ubar, state.vbar, state.thk, state.dx, state.dx)
 
     # Forward Euler with projection to keep ice thickness non-negative
-    self.thk = tf.maximum(self.thk + self.dt * (self.smb - self.divflux), 0)
+    state.thk = tf.maximum(state.thk + state.dt * (state.smb - state.divflux), 0)
 
     # TODO: replace 0.9 by physical constant, and add SL value
     # define the lower ice surface
-    self.lsurf = tf.maximum(self.topg,-0.9*self.thk)
+    state.lsurf = tf.maximum(state.topg,-0.9*state.thk)
 
     # define the upper ice surface
-    self.usurf = self.lsurf + self.thk
+    state.usurf = state.lsurf + state.thk
 
-    self.tcomp_thk[-1] -= time.time()
-    self.tcomp_thk[-1] *= -1
+    state.tcomp_thk[-1] -= time.time()
+    state.tcomp_thk[-1] *= -1
 
 
-def final_thk(params, self):
+def final_thk(params, state):
     pass

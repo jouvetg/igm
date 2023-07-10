@@ -85,67 +85,67 @@ def params_iceflow_v1(parser):
     )
 
 
-def init_iceflow_v1(params, self):
+def init_iceflow_v1(params, state):
 
-    self.tcomp_iceflow = []
+    state.tcomp_iceflow = []
 
     # here we initialize variable parmaetrizing ice flow
-    if not hasattr(self, "strflowctrl"):
-        self.strflowctrl = tf.Variable(tf.ones_like(self.thk) * params.init_strflowctrl)
+    if not hasattr(state, "strflowctrl"):
+        state.strflowctrl = tf.Variable(tf.ones_like(state.thk) * params.init_strflowctrl)
 
-    if not hasattr(self, "arrhenius"):
-        self.arrhenius = tf.Variable(tf.ones_like(self.thk) * params.init_arrhenius)
+    if not hasattr(state, "arrhenius"):
+        state.arrhenius = tf.Variable(tf.ones_like(state.thk) * params.init_arrhenius)
 
-    if not hasattr(self, "slidingco"):
-        self.slidingco = tf.Variable(tf.ones_like(self.thk) * params.init_slidingco)
+    if not hasattr(state, "slidingco"):
+        state.slidingco = tf.Variable(tf.ones_like(state.thk) * params.init_slidingco)
         
     if os.path.exists(importlib_resources.files(emulators).joinpath(params.emulator)):
         dirpath = importlib_resources.files(emulators).joinpath(params.emulator)
     else:
         dirpath = params.emulator
 
-    dirpath = os.path.join(dirpath, str(int(self.dx)))
+    dirpath = os.path.join(dirpath, str(int(state.dx)))
 
     # fieldin, fieldout, fieldbounds contains name of I/O variables, and bounds for scaling
-    fieldin, fieldout, fieldbounds = _read_fields_and_bounds(self, dirpath)
+    fieldin, fieldout, fieldbounds = _read_fields_and_bounds(state, dirpath)
 
-    self.iceflow_mapping = {}
-    self.iceflow_mapping["fieldin"] = fieldin
-    self.iceflow_mapping["fieldout"] = fieldout
-    self.iceflow_fieldbounds = fieldbounds
+    state.iceflow_mapping = {}
+    state.iceflow_mapping["fieldin"] = fieldin
+    state.iceflow_mapping["fieldout"] = fieldout
+    state.iceflow_fieldbounds = fieldbounds
 
-    self.iceflow_model = tf.keras.models.load_model(os.path.join(dirpath, "model.h5"))
+    state.iceflow_model = tf.keras.models.load_model(os.path.join(dirpath, "model.h5"))
 
-    # print(self.iceflow_model.summary())
+    # print(state.iceflow_model.summary())
 
-    Ny = self.thk.shape[0]
-    Nx = self.thk.shape[1]
+    Ny = state.thk.shape[0]
+    Nx = state.thk.shape[1]
 
     # In case of a U-net, must make sure the I/O size is multiple of 2**N
     if params.multiple_window_size > 0:
         NNy = params.multiple_window_size * math.ceil(Ny / params.multiple_window_size)
         NNx = params.multiple_window_size * math.ceil(Nx / params.multiple_window_size)
-        self.PAD = [[0, NNy - Ny], [0, NNx - Nx]]
+        state.PAD = [[0, NNy - Ny], [0, NNx - Nx]]
     else:
-        self.PAD = [[0, 0], [0, 0]]
+        state.PAD = [[0, 0], [0, 0]]
 
 
-def update_iceflow_v1(params, self):
+def update_iceflow_v1(params, state):
 
-    self.logger.info("Update ICEFLOW at time : " + str(self.t.numpy()))
+    state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
-    self.tcomp_iceflow.append(time.time())
+    state.tcomp_iceflow.append(time.time())
 
     # update gradients of the surface (slopes)
-    self.slopsurfx, self.slopsurfy = compute_gradient_tf(self.usurf, self.dx, self.dx)
+    state.slopsurfx, state.slopsurfy = compute_gradient_tf(state.usurf, state.dx, state.dx)
 
     # Define the input of the NN, include scaling
     X = tf.expand_dims(
         tf.stack(
             [
-                tf.pad(vars(self)[f], self.PAD, "CONSTANT")
-                / self.iceflow_fieldbounds[f]
-                for f in self.iceflow_mapping["fieldin"]
+                tf.pad(vars(state)[f], state.PAD, "CONSTANT")
+                / state.iceflow_fieldbounds[f]
+                for f in state.iceflow_mapping["fieldin"]
             ],
             axis=-1,
         ),
@@ -153,39 +153,39 @@ def update_iceflow_v1(params, self):
     )
 
     # Get the ice flow after applying the NN
-    Y = self.iceflow_model(X)
+    Y = state.iceflow_model(X)
 
     # Appplying scaling, and update variables
-    Ny, Nx = self.thk.shape
-    for kk, f in enumerate(self.iceflow_mapping["fieldout"]):
-        vars(self)[f] = (
-            tf.where(self.thk > 0, Y[0, :Ny, :Nx, kk], 0) * self.iceflow_fieldbounds[f]
+    Ny, Nx = state.thk.shape
+    for kk, f in enumerate(state.iceflow_mapping["fieldout"]):
+        vars(state)[f] = (
+            tf.where(state.thk > 0, Y[0, :Ny, :Nx, kk], 0) * state.iceflow_fieldbounds[f]
         )
 
     # If requested, the speeds are artifically upper-bounded
     if params.force_max_velbar > 0:
-        self.velbar_mag = self.getmag(self.ubar, self.vbar)
+        state.velbar_mag = state.getmag(state.ubar, state.vbar)
 
-        self.ubar = tf.where(
-            self.velbar_mag >= params.force_max_velbar,
-            params.force_max_velbar * (self.ubar / self.velbar_mag),
-            self.ubar,
+        state.ubar = tf.where(
+            state.velbar_mag >= params.force_max_velbar,
+            params.force_max_velbar * (state.ubar / state.velbar_mag),
+            state.ubar,
         )
-        self.vbar = tf.where(
-            self.velbar_mag >= params.force_max_velbar,
-            params.force_max_velbar * (self.vbar / self.velbar_mag),
-            self.vbar,
+        state.vbar = tf.where(
+            state.velbar_mag >= params.force_max_velbar,
+            params.force_max_velbar * (state.vbar / state.velbar_mag),
+            state.vbar,
         )
 
-    self.tcomp_iceflow[-1] -= time.time()
-    self.tcomp_iceflow[-1] *= -1
+    state.tcomp_iceflow[-1] -= time.time()
+    state.tcomp_iceflow[-1] *= -1
 
 
-def final_iceflow_v1(params, self):
+def final_iceflow_v1(params, state):
     pass 
     
 
-def _read_fields_and_bounds(self, path):
+def _read_fields_and_bounds(state, path):
 
     fieldbounds = {}
     fieldin = []

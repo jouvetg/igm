@@ -17,34 +17,34 @@ import datetime
 import matplotlib.pyplot as plt
 
 
-def params_print_info(self):
+def params_print_info(state):
     pass
 
 
-def init_print_info(params, self):
+def init_print_info(params, state):
 
     print(
         "IGM %s :         Iterations   |         Time (y)     |     Time Step (y)   |   Ice Volume (km^3) "
     )
 
 
-def update_print_info(params, self):
+def update_print_info(params, state):
     """
     This serves to print key info on the fly during computation
     """
-    if self.saveresult:
+    if state.saveresult:
         print(
             "IGM %s :      %6.0f    |      %8.0f        |     %7.2f        |     %10.2f "
             % (
                 datetime.datetime.now().strftime("%H:%M:%S"),
-                self.it,
-                self.t,
-                self.dt_target,
-                np.sum(self.thk) * (self.dx**2) / 10**9,
+                state.it,
+                state.t,
+                state.dt_target,
+                np.sum(state.thk) * (state.dx**2) / 10**9,
             )
         )
         
         
-def final_print_info(params, self):
+def final_print_info(params, state):
     pass
 

@@ -22,13 +22,13 @@ import matplotlib.pyplot as plt
 def params_anim_mp4_from_ncdf_ex(parser):
     pass
 
-def init_anim_mp4_from_ncdf_ex(params, self):
+def init_anim_mp4_from_ncdf_ex(params, state):
     pass
 
-def update_anim_mp4_from_ncdf_ex(params, self):
+def update_anim_mp4_from_ncdf_ex(params, state):
     pass
 
-def final_anim_mp4_from_ncdf_ex(params, self):
+def final_anim_mp4_from_ncdf_ex(params, state):
 
     import xarray as xr
     from matplotlib import animation

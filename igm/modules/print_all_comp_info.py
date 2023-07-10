@@ -22,17 +22,17 @@ import matplotlib.pyplot as plt
 def params_print_all_comp_info(parser):
     pass
 
-def init_print_all_comp_info(params, self):
+def init_print_all_comp_info(params, state):
     pass
 
-def update_print_all_comp_info(params, self):
+def update_print_all_comp_info(params, state):
     pass
 
-def final_print_all_comp_info(params, self):
+def final_print_all_comp_info(params, state):
  
-    modules = [A for A in self.__dict__.keys() if 'tcomp_' in A]
+    modules = [A for A in state.__dict__.keys() if 'tcomp_' in A]
 
-    self.tcomp_all = [ np.sum([np.sum(getattr(self,m)) for m in modules]) ]
+    state.tcomp_all = [ np.sum([np.sum(getattr(state,m)) for m in modules]) ]
 
     print("Computational statistics report:")
     with open(
@@ -41,9 +41,9 @@ def final_print_all_comp_info(params, self):
         for m in modules:
             CELA = (
                 m[6:],
-                np.mean(getattr(self,m)),
-                np.sum(getattr(self,m)),
-                len(getattr(self,m)),
+                np.mean(getattr(state,m)),
+                np.sum(getattr(state,m)),
+                len(getattr(state,m)),
             )
             print(
                 "     %24s  |  mean time per it : %8.4f  |  total : %8.4f  |  number it : %8.0f"
@@ -61,9 +61,9 @@ def final_print_all_comp_info(params, self):
         + " >> clean.sh"
     )
 
-    _plot_computational_pie(params, self)
+    _plot_computational_pie(params, state)
 
-def _plot_computational_pie(params, self):
+def _plot_computational_pie(params, state):
     """
     Plot to the computational time of each model components in a pie
     """
@@ -79,11 +79,11 @@ def _plot_computational_pie(params, self):
     total = []
     name = []
 
-    modules = [A for A in self.__dict__.keys() if 'tcomp_' in A]
+    modules = [A for A in state.__dict__.keys() if 'tcomp_' in A]
     modules.remove('tcomp_all')
 
     for m in modules:
-        total.append(np.sum(getattr(self,m)[1:]))
+        total.append(np.sum(getattr(state,m)[1:]))
         name.append(m[6:])
 
     sumallindiv = np.sum(total)

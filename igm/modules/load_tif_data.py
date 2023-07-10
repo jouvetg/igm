@@ -50,19 +50,19 @@ def params_load_tif_data(parser):
     )
 
 
-def init_load_tif_data(params, self):
+def init_load_tif_data(params, state):
 
     import rasterio
 
-    files = glob.glob(os.path.join(self.config.working_dir, "*.tif"))
+    files = glob.glob(os.path.join(state.config.working_dir, "*.tif"))
 
     if params.crop_data:
-        i0,i1,j0,j1 = crop_field(params, self)
+        i0,i1,j0,j1 = crop_field(params, state)
 
     for file in files:
         var = os.path.split(file)[-1].split(".")[0]
         if os.path.exists(file):
-            self.profile_tif_file = rasterio.open(file, "r").profile
+            state.profile_tif_file = rasterio.open(file, "r").profile
             with rasterio.open(file) as src:
                 vars()[var] = np.flipud(src.read(1))
                 height = vars()[var].shape[0]
@@ -76,22 +76,22 @@ def init_load_tif_data(params, self):
         if params.crop_data: 
             vars()[var] = vars()[var][j0:j1,i0:i1] 
  
-        vars(self)[var] = tf.Variable(vars()[var].astype("float32"))
+        vars(state)[var] = tf.Variable(vars()[var].astype("float32"))
  
     if params.crop_data: 
         y = y[j0:j1]
         x = x[i0:i1]
 
-    self.x = tf.constant(x.astype("float32"))
-    self.y = tf.constant(y.astype("float32"))
+    state.x = tf.constant(x.astype("float32"))
+    state.y = tf.constant(y.astype("float32"))
 
-    complete_data(self)
+    complete_data(state)
 
-def update_load_tif_data(params, self):
+def update_load_tif_data(params, state):
     pass
     
     
-def final_load_tif_data(params, self):
+def final_load_tif_data(params, state):
     pass
     
 

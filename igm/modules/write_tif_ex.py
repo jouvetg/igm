@@ -27,25 +27,25 @@ def params_write_tif_ex(parser):
         help="List of variables to be recorded in the ncdf file",
     )
 
-def init_write_tif_ex(params, self):
+def init_write_tif_ex(params, state):
     pass
 
-def update_write_tif_ex(params, self):
+def update_write_tif_ex(params, state):
 
     import rasterio
 
-    if self.saveresult:
+    if state.saveresult:
         for var in params.vars_to_save:
             file = os.path.join(
-                params.working_dir, var + "-" + str(int(self.t)).zfill(6) + ".tif"
+                params.working_dir, var + "-" + str(int(state.t)).zfill(6) + ".tif"
             )
 
-            with rasterio.open(file, mode="w", **self.profile_tif_file) as src:
-                src.write(np.flipud(vars(self)[var]), 1)
+            with rasterio.open(file, mode="w", **state.profile_tif_file) as src:
+                src.write(np.flipud(vars(state)[var]), 1)
 
             del src
             
             
-def final_write_tif_ex(params, self):
+def final_write_tif_ex(params, state):
     pass
 

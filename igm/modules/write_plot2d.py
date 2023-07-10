@@ -53,18 +53,18 @@ def params_write_plot2d(parser):
     )
 
 
-def init_write_plot2d(params, self):
-    self.extent = [np.min(self.x), np.max(self.x), np.min(self.y), np.max(self.y)]
+def init_write_plot2d(params, state):
+    state.extent = [np.min(state.x), np.max(state.x), np.min(state.y), np.max(state.y)]
 
     if params.editor_plot2d == "vs":
         plt.ion() # enable interactive mode
 
-    self.tcomp_write_plot2d = []
+    state.tcomp_write_plot2d = []
 
-    self.fig = plt.figure(dpi=200)
-    self.ax = self.fig.add_subplot(1, 1, 1)
-    self.ax.axis("off")
-    self.ax.set_aspect("equal")
+    state.fig = plt.figure(dpi=200)
+    state.ax = state.fig.add_subplot(1, 1, 1)
+    state.ax.axis("off")
+    state.ax.set_aspect("equal")
 
     os.system(
         "echo rm "
@@ -73,72 +73,72 @@ def init_write_plot2d(params, self):
     )
 
 
-def update_write_plot2d(params, self):
+def update_write_plot2d(params, state):
 
-    if self.saveresult:
+    if state.saveresult:
  
-        self.tcomp_write_plot2d.append(time.time())
+        state.tcomp_write_plot2d.append(time.time())
 
         if params.varplot == "velbar_mag":
-            self.velbar_mag = getmag(self.ubar, self.vbar)
+            state.velbar_mag = getmag(state.ubar, state.vbar)
  
-        im0 = self.ax.imshow(
-            self.topg,
+        im0 = state.ax.imshow(
+            state.topg,
             origin="lower",
             cmap=matplotlib.cm.terrain,
-            extent=self.extent,
+            extent=state.extent,
             alpha=0.65
         )
 
-        im = self.ax.imshow(
-            np.where(self.thk>0, vars(self)[params.varplot],np.nan),
+        im = state.ax.imshow(
+            np.where(state.thk>0, vars(state)[params.varplot],np.nan),
             origin="lower",
             cmap=matplotlib.cm.viridis,
             vmin=0,
             vmax=params.varplot_max,
-            extent=self.extent
+            extent=state.extent
         )
         if params.plot_particles:
-            if hasattr(self, "xpos"):
-                if hasattr(self, "ip"):
-                    self.ip.set_visible(False)
+            if hasattr(state, "xpos"):
+                if hasattr(state, "ip"):
+                    state.ip.set_visible(False)
                 r = 1
-                self.ip = self.ax.scatter(
-                    x=self.xpos[::r],
-                    y=self.ypos[::r],
-                    c=1 - self.rhpos[::r].numpy(),
+                state.ip = state.ax.scatter(
+                    x=state.xpos[::r],
+                    y=state.ypos[::r],
+                    c=1 - state.rhpos[::r].numpy(),
                     vmin=0,
                     vmax=1,
                     s=0.5,
                     cmap="RdBu",
                 )
-        self.ax.set_title("YEAR : " + str(self.t.numpy()), size=15)
+        state.ax.set_title("YEAR : " + str(state.t.numpy()), size=15)
 
-        if not hasattr(self,'already_set_cbar'):
-                self.cbar = plt.colorbar(im, label=params.varplot)
-                self.already_set_cbar = True
+        if not hasattr(state,'already_set_cbar'):
+                state.cbar = plt.colorbar(im, label=params.varplot)
+                state.already_set_cbar = True
 
         if params.plot_live:
             if params.editor_plot2d == "vs":
-                self.fig.canvas.draw()         # re-drawing the figure
-                self.fig.canvas.flush_events() # to flush the GUI events
+                state.fig.canvas.draw()         # re-drawing the figure
+                state.fig.canvas.flush_events() # to flush the GUI events
             else:
                 from IPython.display import display, clear_output
                 clear_output(wait=True)
-                display(self.fig)
+                display(state.fig)
         else:
             plt.savefig(
                 os.path.join(
                     params.working_dir,
-                    params.varplot + "-" + str(self.t.numpy()).zfill(4) + ".png",
+                    params.varplot + "-" + str(state.t.numpy()).zfill(4) + ".png",
                 ),
                 bbox_inches="tight",
                 pad_inches=0.2,
             )
 
-        self.tcomp_write_plot2d[-1] -= time.time()
-        self.tcomp_write_plot2d[-1] *= -1
+        state.tcomp_write_plot2d[-1] -= time.time()
+        state.tcomp_write_plot2d[-1] *= -1
 
 
-def final_write_plot2d(params, self):
+def final_write_plot2d(params, state):
     pass

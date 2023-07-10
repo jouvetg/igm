@@ -69,9 +69,9 @@ def params_load_ncdf_data(parser):
 
 
 
-def init_load_ncdf_data(params, self):
+def init_load_ncdf_data(params, state):
 
-    self.logger.info("LOAD NCDF file")
+    state.logger.info("LOAD NCDF file")
 
     nc = Dataset(os.path.join(params.working_dir, params.geology_file), "r")
 
@@ -99,28 +99,28 @@ def init_load_ncdf_data(params, self):
 
     # crop if requested
     if params.crop_data:
-        i0,i1,j0,j1 = crop_field(params, self)
+        i0,i1,j0,j1 = crop_field(params, state)
         for var in nc.variables:
             if not var in ["x", "y"]:
-                vars(self)[var] = vars(self)[var][j0:j1,i0:i1]
-        self.y = self.y[j0:j1]
-        self.x = self.x[i0:i1]
+                vars(state)[var] = vars(state)[var][j0:j1,i0:i1]
+        state.y = state.y[j0:j1]
+        state.x = state.x[i0:i1]
 
     # transform from numpy to tensorflow
     for var in nc.variables:
         if var in ["x", "y"]:
-            vars(self)[var] = tf.constant(vars()[var].astype("float32"))
+            vars(state)[var] = tf.constant(vars()[var].astype("float32"))
         else:
-            vars(self)[var] = tf.Variable(vars()[var].astype("float32"))
+            vars(state)[var] = tf.Variable(vars()[var].astype("float32"))
  
     nc.close()
 
-    complete_data(self)
+    complete_data(state)
 
 
-def update_load_ncdf_data(params, self):
+def update_load_ncdf_data(params, state):
     pass
 
 
-def final_load_ncdf_data(params, self):
+def final_load_ncdf_data(params, state):
     pass 

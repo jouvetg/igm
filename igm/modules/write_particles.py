@@ -6,7 +6,7 @@
 """
 This IGM module writes particle time-position in csv files at a given freq.
 ==============================================================================
-Input: self.xpos, self.ypos, self.zpos, self.rhpos, self.tpos, self.englt
+Input: state.xpos, state.ypos, state.zpos, state.rhpos, state.tpos, state.englt
 Output: csv file in forder trajectories
 """
 
@@ -26,8 +26,8 @@ def params_write_particles(parser):
     )
 
 
-def init_write_particles(params, self):
-    self.tcomp_write_particles = []
+def init_write_particles(params, state):
+    state.tcomp_write_particles = []
  
     directory = os.path.join(params.working_dir, "trajectories")
     if os.path.exists(directory):
@@ -43,32 +43,32 @@ def init_write_particles(params, self):
     if params.add_topography_to_particles:
         ftt = os.path.join(params.working_dir, "trajectories", "topg.csv")
         array = tf.transpose(
-            tf.stack([self.X[self.X > 0], self.Y[self.X > 0], self.topg[self.X > 0]])
+            tf.stack([state.X[state.X > 0], state.Y[state.X > 0], state.topg[state.X > 0]])
         )
         np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
 
 
-def update_write_particles(params, self):
-    if self.saveresult:
-        self.tcomp_write_particles.append(time.time())
+def update_write_particles(params, state):
+    if state.saveresult:
+        state.tcomp_write_particles.append(time.time())
 
         f = os.path.join(
             params.working_dir,
             "trajectories",
-            "traj-" + "{:06d}".format(int(self.t.numpy())) + ".csv",
+            "traj-" + "{:06d}".format(int(state.t.numpy())) + ".csv",
         )
 
-        ID = tf.cast(tf.range(self.xpos.shape[0]), dtype="float32")
+        ID = tf.cast(tf.range(state.xpos.shape[0]), dtype="float32")
         array = tf.transpose(
             tf.stack(
                 [
                     ID,
-                    self.xpos,
-                    self.ypos,
-                    self.zpos,
-                    self.rhpos,
-                    self.tpos,
-                    self.englt,
+                    state.xpos,
+                    state.ypos,
+                    state.zpos,
+                    state.rhpos,
+                    state.tpos,
+                    state.englt,
                 ],
                 axis=0,
             )
@@ -77,24 +77,24 @@ def update_write_particles(params, self):
 
         ft = os.path.join(params.working_dir, "trajectories", "time.dat")
         with open(ft, "a") as f:
-            print(self.t.numpy(), file=f)
+            print(state.t.numpy(), file=f)
 
         if params.add_topography_to_particles:
             ftt = os.path.join(
                 params.working_dir,
                 "trajectories",
-                "usurf-" + "{:06d}".format(int(self.t.numpy())) + ".csv",
+                "usurf-" + "{:06d}".format(int(state.t.numpy())) + ".csv",
             )
             array = tf.transpose(
                 tf.stack(
-                    [self.X[self.X > 1], self.Y[self.X > 1], self.usurf[self.X > 1]]
+                    [state.X[state.X > 1], state.Y[state.X > 1], state.usurf[state.X > 1]]
                 )
             )
             np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
 
-        self.tcomp_write_particles[-1] -= time.time()
-        self.tcomp_write_particles[-1] *= -1
+        state.tcomp_write_particles[-1] -= time.time()
+        state.tcomp_write_particles[-1] *= -1
 
 
-def final_write_particles(params, self):
+def final_write_particles(params, state):
     pass

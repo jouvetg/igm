@@ -166,3 +166,13 @@ def complete_data(self):
         self.lsurf = tf.maximum(self.topg,-0.9*self.thk)
         self.usurf = tf.Variable(self.lsurf + self.thk)
  
+ 
+ def crop_field(params, self):
+   
+    i0 = np.clip(int((params.crop_xmin-self.x[0])/self.dx), 0, self.x.shape[0]-1)
+    i1 = np.clip(int((params.crop_xmax-self.x[0])/self.dx), 0, self.x.shape[0]-1)
+
+    j0 = np.clip(int((params.crop_ymin-self.y[0])/self.dx), 0, self.y.shape[0]-1)
+    j1 = np.clip(int((params.crop_ymax-self.y[0])/self.dx), 0, self.y.shape[0]-1)
+ 
+    return i0,i1,j0,j1

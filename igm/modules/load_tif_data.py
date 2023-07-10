@@ -30,6 +30,9 @@ def init_load_tif_data(params, self):
 
     files = glob.glob(os.path.join(self.config.working_dir, "*.tif"))
 
+    if params.crop_data:
+        i0,i1,j0,j1 = crop_field(params, self)
+
     for file in files:
         var = os.path.split(file)[-1].split(".")[0]
         if os.path.exists(file):
@@ -42,8 +45,16 @@ def init_load_tif_data(params, self):
                 x, y = rasterio.transform.xy(src.transform, rows, cols)
                 x = np.array(x)[0, :]
                 y = np.flip(np.array(y)[:, 0])
-                vars(self)[var] = tf.Variable(vars()[var].astype("float32"))
             del src
+
+        if params.crop_data: 
+            vars()[var] = vars()[var][j0:j1,i0:i1] 
+ 
+        vars(self)[var] = tf.Variable(vars()[var].astype("float32"))
+ 
+    if params.crop_data: 
+        y = y[j0:j1]
+        x = x[i0:i1]
 
     self.x = tf.constant(x.astype("float32"))
     self.y = tf.constant(y.astype("float32"))

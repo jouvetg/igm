@@ -7,7 +7,8 @@
 This IGM module loads spatial raster data from a netcdf file (geology.nc) and
 transform the fields into tensorflow variables. It also complete the data,
 e.g. ge the basal topography from ice thickness and surface topography.
-(there is no update function defined)
+(there is no update function defined). It contains the two functions for
+resampling and cropping the data.
 
 ==============================================================================
 
@@ -22,7 +23,7 @@ import tensorflow as tf
 from netCDF4 import Dataset
 from scipy.interpolate import RectBivariateSpline
 
-from igm.modules.utils import complete_data
+from igm.modules.utils import *
 
 
 def params_load_ncdf_data(parser):
@@ -38,6 +39,34 @@ def params_load_ncdf_data(parser):
         default=1,
         help="Resample the data of ncdf data file to a coarser resolution (default: 1)",
     )
+    parser.add_argument(
+        "--crop_data",
+        type=str2bool,
+        default="False",
+        help="Crop the data with xmin, xmax, ymin, ymax (default: False)",
+    )
+    parser.add_argument(
+        "--crop_xmin",
+        type=float, 
+        help="crop_xmin",
+    )
+    parser.add_argument(
+        "--crop_xmax",
+        type=float, 
+        help="crop_xmax",
+    )
+    parser.add_argument(
+        "--crop_ymin",
+        type=float, 
+        help="crop_ymin",
+    )
+    parser.add_argument(
+        "--crop_ymax",
+        type=float, 
+        help="crop_ymax"
+    )
+
+
 
 
 def init_load_ncdf_data(params, self):
@@ -68,13 +97,22 @@ def init_load_ncdf_data(params, self):
         x = xx
         y = yy
 
+    # crop if requested
+    if params.crop_data:
+        i0,i1,j0,j1 = crop_field(params, self)
+        for var in nc.variables:
+            if not var in ["x", "y"]:
+                vars(self)[var] = vars(self)[var][j0:j1,i0:i1]
+        self.y = self.y[j0:j1]
+        self.x = self.x[i0:i1]
+
     # transform from numpy to tensorflow
     for var in nc.variables:
         if var in ["x", "y"]:
             vars(self)[var] = tf.constant(vars()[var].astype("float32"))
         else:
             vars(self)[var] = tf.Variable(vars()[var].astype("float32"))
-
+ 
     nc.close()
 
     complete_data(self)

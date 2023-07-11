@@ -102,9 +102,9 @@ def init_load_ncdf_data(params, state):
         i0,i1,j0,j1 = crop_field(params, state)
         for var in nc.variables:
             if not var in ["x", "y"]:
-                vars(state)[var] = vars(state)[var][j0:j1,i0:i1]
-        state.y = state.y[j0:j1]
-        state.x = state.x[i0:i1]
+                vars()[var] = vars()[var][j0:j1,i0:i1]
+        y = y[j0:j1]
+        x = x[i0:i1]
 
     # transform from numpy to tensorflow
     for var in nc.variables:

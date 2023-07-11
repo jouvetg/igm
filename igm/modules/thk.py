@@ -47,7 +47,11 @@ def update_thk(params, state):
     # compute the divergence of the flux
     state.divflux = compute_divflux(state.ubar, state.vbar, state.thk, state.dx, state.dx)
 
-    # Forward Euler with projection to keep ice thickness non-negative
+    # if not smb model is given, set smb to zero
+    if not hasattr(state, 'smb'):
+        state.smb = tf.zeros_like(state.thk)
+
+    # Forward Euler with projection to keep ice thickness non-negative    
     state.thk = tf.maximum(state.thk + state.dt * (state.smb - state.divflux), 0)
 
     # TODO: replace 0.9 by physical constant, and add SL value

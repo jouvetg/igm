@@ -94,7 +94,7 @@ def params_optimize(parser):
     parser.add_argument(
         "--opti_thkobs_std",
         type=float,
-        default=5.0,
+        default=3.0,
         help="Confidence/STD of the ice thickness profiles (unless given)",
     )
     parser.add_argument(
@@ -124,7 +124,7 @@ def params_optimize(parser):
     parser.add_argument(
         "--opti_nbitmax",
         type=int,
-        default=600,
+        default=1000,
         help="Max iterations for the optimization",
     )
     parser.add_argument(
@@ -227,7 +227,7 @@ def init_optimize(params, state):
     sc = {}
     sc["thk"] = 1
     sc["usurf"] = 1
-    sc["slidingco"] = 100
+    sc["slidingco"] = 20
 
     for f in params.opti_control:
         vars()[f] = tf.Variable(vars(state)[f] / sc[f])
@@ -359,18 +359,19 @@ def init_optimize(params, state):
             else:
                 COST_HPO = tf.Variable(0.0)
 
-            # Here one adds a regularization terms for the ice thickness to the cost function
+            # Here one adds a regularization terms for the bed toporgraphy to the cost function
             if "thk" in params.opti_control:
+                state.topg = state.usurf - state.thk
                 if not hasattr(state,'flowdirx'):
-                    dbdx = state.thk[:, 1:] - state.thk[:, :-1]
-                    dbdy = state.thk[1:, :] - state.thk[:-1, :]
+                    dbdx = state.topg[:, 1:] - state.topg[:, :-1]
+                    dbdy = state.topg[1:, :] - state.topg[:-1, :]
                     REGU_H = (params.opti_regu_param_thk / (1000**2)) * (
                         tf.nn.l2_loss(dbdx) + tf.nn.l2_loss(dbdy)
                     )
                 else:
-                    dbdx = state.thk[:, 1:] - state.thk[:, :-1]
+                    dbdx = state.topg[:, 1:] - state.topg[:, :-1]
                     dbdx = (dbdx[1:, :] + dbdx[:-1, :]) / 2.0
-                    dbdy = state.thk[1:, :] - state.thk[:-1, :]
+                    dbdy = state.topg[1:, :] - state.topg[:-1, :]
                     dbdy = (dbdy[:, 1:] + dbdy[:, :-1]) / 2.0
                     REGU_H = (params.opti_regu_param_thk / (1000**2)) * (
                         tf.nn.l2_loss((dbdx * state.flowdirx + dbdy * state.flowdiry))
@@ -383,21 +384,37 @@ def init_optimize(params, state):
 
             # Here one adds a regularization terms for slidingco to the cost function
             if "slidingco" in params.opti_control:
-                dadx = tf.math.abs(state.slidingco[:, 1:] - state.slidingco[:, :-1])
-                dady = tf.math.abs(state.slidingco[1:, :] - state.slidingco[:-1, :])
-                dadx = tf.where(
-                    (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5),
-                    dadx,
-                    0.0,
-                )
-                dady = tf.where(
-                    (state.icemaskobs[1:, :] > 0.5) & (state.icemaskobs[:-1, :] > 0.5),
-                    dady,
-                    0.0,
-                )
-                REGU_S = (params.opti_regu_param_slidingco / (10000**2)) * (
-                    tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
-                )
+                # dadx = tf.math.abs(state.slidingco[:, 1:] - state.slidingco[:, :-1])
+                # dady = tf.math.abs(state.slidingco[1:, :] - state.slidingco[:-1, :])
+                # dadx = tf.where(
+                #     (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5),
+                #     dadx,
+                #     0.0,
+                # )
+                # dady = tf.where(
+                #     (state.icemaskobs[1:, :] > 0.5) & (state.icemaskobs[:-1, :] > 0.5),
+                #     dady,
+                #     0.0,
+                # )
+                # REGU_S = (params.opti_regu_param_slidingco / (10000**2)) * (
+                #     tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
+                # )
+                if not hasattr(state,'flowdirx'):
+                    dadx = state.slidingco[:, 1:] - state.slidingco[:, :-1]
+                    dady = state.slidingco[1:, :] - state.slidingco[:-1, :]
+                    REGU_S = (params.opti_regu_param_slidingco / (10000**2)) * (
+                        tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
+                    )
+                else:
+                    dadx = state.slidingco[:, 1:] - state.slidingco[:, :-1]
+                    dadx = (dadx[1:, :] + dadx[:-1, :]) / 2.0
+                    dady = state.slidingco[1:, :] - state.slidingco[:-1, :]
+                    dady = (dady[:, 1:] + dady[:, :-1]) / 2.0
+                    REGU_S = (params.opti_regu_param_slidingco / (10000**2)) * (
+                        tf.nn.l2_loss((dadx * state.flowdirx + dady * state.flowdiry))
+                        + params.opti_smooth_anisotropy_factor
+                        * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx))
+                    )
             else:
                 REGU_S = tf.Variable(0.0)
 
@@ -984,7 +1001,7 @@ def _update_plot_inversion_simple(params, state, i):
         + ", STD : "
         + str(int(state.stdthk[-1]))
         + ")",
-        size=12,
+        size=16,
     )
     ax1.axis("off")
  
@@ -1011,7 +1028,7 @@ def _update_plot_inversion_simple(params, state, i):
         + ", STD : "
         + str(int(state.stdvel[-1]))
         + ")",
-        size=12,
+        size=16,
     )
     ax4.axis("off")
   

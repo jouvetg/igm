@@ -18,6 +18,7 @@ from igm.modules.optimize import *
 
 from igm.modules.iceflow_v1 import *
 from igm.modules.iceflow import *
+from igm.modules.flow_dt_thk import *
 from igm.modules.vertical_iceflow import *
 from igm.modules.smb_simple import *
 from igm.modules.thk import *

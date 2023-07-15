@@ -4,12 +4,14 @@
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 """
-Produce a 3d animated Plot using mayavi library from the ex.nc netcdf file
+This IGM modules makes a 3D animated plot using mayavi library from the ex.nc 
+netcdf file over time. It only implements the 'final' function, the rest 
+('init', 'update') doing nothing.
 
 ==============================================================================
 
-Input  : .....
-Output : .....
+Takes  : ncdf file ex.nc of transient 2d gridded data
+Return : interactive 3D plot.
 """
 
 import numpy as np

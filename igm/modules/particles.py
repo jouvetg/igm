@@ -50,6 +50,7 @@ import os, sys, shutil
 import matplotlib.pyplot as plt
 import datetime, time
 import tensorflow as tf
+import igm
 
 from igm.modules.utils import *
 
@@ -58,7 +59,7 @@ def params_particles(parser):
     parser.add_argument(
         "--tracking_method",
         type=str,
-        default="3d",
+        default="simple",
         help="Method for tracking particles (3d or simple)",
     )
     parser.add_argument(
@@ -101,7 +102,7 @@ def update_particles(params, state):
     state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
 
     if (state.t.numpy() - state.tlast_seeding) >= params.frequency_seeding:
-        seeding_particles(params, state)
+        igm.seeding_particles(params, state)
 
         # merge the new seeding points with the former ones
         state.xpos = tf.Variable(tf.concat([state.xpos, state.nxpos], axis=-1))
@@ -180,77 +181,26 @@ def update_particles(params, state):
             nthk > 0.1, tf.clip_by_value(state.rhpos * othk / nthk, 0, 1), 1
         )
 
-        state.xpos = state.xpos + state.dt * tf.reduce_sum(
-            wei * u, axis=0
-        )  # forward euler
-        state.ypos = state.ypos + state.dt * tf.reduce_sum(
-            wei * v, axis=0
-        )  # forward euler
+        state.xpos = state.xpos + state.dt * tf.reduce_sum( wei * u, axis=0 ) 
+        state.ypos = state.ypos + state.dt * tf.reduce_sum( wei * v, axis=0 ) 
         state.zpos = topg + nthk * state.rhpos
 
     elif params.tracking_method == "3d":
-        method = 0
-
         # make sure the particle remian withi the ice body
         state.zpos = tf.clip_by_value(state.zpos, topg, topg + othk)
 
         # get the relative height
         state.rhpos = tf.where(othk > 0.1, (state.zpos - topg) / othk, 1)
 
-        if method == 0:
-            # This is the former working methd
-
-            slopsurfx, slopsurfy = compute_gradient_tf(state.usurf, state.dx, state.dx)
-            sloptopgx, sloptopgy = compute_gradient_tf(state.topg, state.dx, state.dx)
-
-            state.divflux = compute_divflux(
-                state.ubar, state.vbar, state.thk, state.dx, state.dx
-            )
-
-            # the vertical velocity is the scalar product of horizont. velo and bedrock gradient
-            state.wvelbase = state.U[0, 0] * sloptopgx + state.U[1, 0] * sloptopgy
-            # Using rules of derivative the surface vertical velocity can be found from the
-            # divergence of the flux considering that the ice 3d velocity is divergence-free.
-            state.wvelsurf = (
-                state.U[0, -1] * slopsurfx + state.U[1, -1] * slopsurfy - state.divflux
-            )
-
-            wvelbase = tfa.image.interpolate_bilinear(
-                tf.expand_dims(tf.expand_dims(state.wvelbase, axis=0), axis=-1),
-                indices,
-                indexing="ij",
-            )[0, :, 0]
-
-            wvelsurf = tfa.image.interpolate_bilinear(
-                tf.expand_dims(tf.expand_dims(state.wvelsurf, axis=0), axis=-1),
-                indices,
-                indexing="ij",
-            )[0, :, 0]
-
-            wvel = wvelbase + (wvelsurf - wvelbase) * (
-                1 - (1 - state.rhpos) ** 4
-            )  # SIA-like
-
-        else:
-            # This is the new attemps not working yet :-(
-
-            assert hasattr(state, W)
-
-            w = tfa.image.interpolate_bilinear(
+        w = tfa.image.interpolate_bilinear(
                 tf.expand_dims(state.W, axis=-1),
                 indices,
                 indexing="ij",
-            )[:, :, 0]
+        )[:, :, 0]
 
-            wvel = tf.reduce_sum(wei * w, axis=0)
-
-        state.xpos = state.xpos + state.dt * tf.reduce_sum(
-            wei * u, axis=0
-        )  # forward euler
-        state.ypos = state.ypos + state.dt * tf.reduce_sum(
-            wei * v, axis=0
-        )  # forward euler
-        state.zpos = state.zpos + state.dt * wvel  # forward euler
+        state.xpos = state.xpos + state.dt * tf.reduce_sum( wei * u, axis=0 )  
+        state.ypos = state.ypos + state.dt * tf.reduce_sum( wei * v, axis=0 ) 
+        state.zpos = state.zpos + state.dt * tf.reduce_sum( wei * w, axis=0 )
 
     # make sur the particle remains in the horiz. comp. domain
     state.xpos = tf.clip_by_value(state.xpos, state.x[0], state.x[-1])

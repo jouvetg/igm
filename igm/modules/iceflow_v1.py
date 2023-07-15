@@ -4,7 +4,8 @@
 # Published under the GNU GPL (Version 3), check at the LICENSE file 
 
 """
-This IGM module models ice flow using a Convolutional Neural Network.
+This IGM module models ice flow using a Convolutional Neural Network
+following the former online training from external data.
 
 You may find trained and ready-to-use ice flow emulators in the folder
 `emulators/T_M_I_Y_V/R/`, where 'T_M_I_Y_V' defines the emulator, and

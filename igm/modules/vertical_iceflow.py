@@ -25,6 +25,8 @@ def params_vertical_iceflow(parser):
 def init_vertical_iceflow(params, state):
     state.tcomp_vertical_iceflow=[]
 
+#    state.W = tf.zeros_like(state.U[0])
+
 
 def update_vertical_iceflow(params, state):
     """

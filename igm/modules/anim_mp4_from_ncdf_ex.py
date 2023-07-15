@@ -4,12 +4,14 @@
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 """
-Produce an animated video from the netcdf ex.nc file
+This IGM module makes an animated mp4 video of ice thickness overt tim from 
+the netcdf ex.nc file produced by module write_ncdf_ex. It only implements the
+'final' function, the rest ('init', 'update') doing nothing.
 
 ==============================================================================
 
-Input  : .....
-Output : .....
+Takes  : ncdf file ex.nc of transient 2d gridded data
+Return : mp4 animation of the ice thickness over time
 """
 
 import numpy as np

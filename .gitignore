@@ -2,3 +2,4 @@ igm/__pycache__
 igm/modules/__pycache__
 setup.py
 igm/modules/texture.py
+igm/modules/enthalpy.py

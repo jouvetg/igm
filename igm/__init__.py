@@ -26,6 +26,7 @@ from igm.modules.time_step import *
 from igm.modules.particles_v1 import *
 from igm.modules.particles import *
 from igm.modules.topg_glacial_erosion import *
+from igm.modules.rockflow import *
 from igm.modules.print_info import *
 
 from igm.modules.write_tif_ex import *

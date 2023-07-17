@@ -2,6 +2,30 @@
 import numpy as np
 import tensorflow as tf
 import igm
+from netCDF4 import Dataset
+import os
+
+def init_particles(params, state):
+    state.tlast_seeding = -1.0e5000
+    state.tcomp_particles = []
+
+    # initialize trajectories
+    state.xpos = tf.Variable([])
+    state.ypos = tf.Variable([])
+    state.zpos = tf.Variable([])
+    state.rhpos = tf.Variable([])
+    state.wpos = tf.Variable([])  # this is to give a weight to the particle
+    state.tpos = tf.Variable([])
+    state.englt = tf.Variable([])
+
+    # build the gridseed
+    state.gridseed = np.zeros_like(state.thk) == 1
+    rr = int(1.0 / params.density_seeding)
+    state.gridseed[::rr, ::rr] = True
+    
+    nc = Dataset( os.path.join(params.working_dir, 'seeding.nc'), "r" ) 
+    state.seeding = np.squeeze( nc.variables["seeding"] ).astype("float32") 
+    nc.close()
 
 def seeding_particles(params, state):
     # here we seed where i) thickness is higher than 1 m
@@ -17,4 +41,5 @@ def seeding_particles(params, state):
     state.nenglt = tf.zeros_like(state.X[I])
 
 igm.seeding_particles = seeding_particles
+igm.init_particles    = init_particles
 

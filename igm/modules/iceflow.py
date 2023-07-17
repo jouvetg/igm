@@ -821,7 +821,7 @@ def _update_iceflow_emulated(params, state):
 
     U = _Y_to_U(params, Y[:, :Ny, :Nx, :])
 
-    U = tf.where(state.thk > 0, U, 0)
+#    U = tf.where(state.thk > 0, U, 0)
 
     state.U.assign(U)
 

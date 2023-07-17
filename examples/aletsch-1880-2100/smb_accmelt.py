@@ -96,13 +96,24 @@ def init_smb_accmelt(params,state):
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")
 
-    state.snow_redistribution = np.squeeze(
-        nc.variables["snow_redistribution"]
+    state.snow_redistribution = np.squeeze(         nc.variables["snow_redistribution"]
     ).astype("float32")
     state.direct_radiation = np.squeeze(nc.variables["direct_radiation"]).astype(
         "float32"
     )
     nc.close()
+    
+    
+    nc = Dataset( os.path.join(params.working_dir, 'bassin.nc'), "r" )
+    x = np.squeeze(nc.variables["x"]).astype("float32")
+    y = np.squeeze(nc.variables["y"]).astype("float32")
+
+    state.Aletschfirn = np.squeeze( nc.variables["Aletschfirn"] ).astype("float32")
+    state.Ewigschneefeld = np.squeeze( nc.variables["Ewigschneefeld"] ).astype("float32")
+    state.Jungfraufirn = np.squeeze( nc.variables["Jungfraufirn"] ).astype("float32")
+ 
+    nc.close()
+
 
     if not hasattr(state, "x"):
         state.x = tf.constant(x, dtype="float32")

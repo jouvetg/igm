@@ -62,7 +62,7 @@ def _compute_vertical_velocity_tf(params, state, U, thk, dX):
     dVdy = (dVdy[1:] + dVdy[:-1]) / 2  # compute between the layers
 
     # get dVdz from impcrompressibility condition
-    dVdz = -dUdx - dVdy
+    dVdz = - dUdx - dVdy
 
     # get the basal vertical velocities
     sloptopgx, sloptopgy = compute_gradient_tf(state.topg, state.dx, state.dx)

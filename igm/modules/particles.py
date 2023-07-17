@@ -139,7 +139,7 @@ def update_particles(params, state):
         indexing="ij",
     )[:, :, 0]
 
-    othk = tfa.image.interpolate_bilinear(
+    thk = tfa.image.interpolate_bilinear(
         tf.expand_dims(tf.expand_dims(state.thk, axis=0), axis=-1),
         indices,
         indexing="ij",
@@ -172,25 +172,26 @@ def update_particles(params, state):
     wei = tf.zeros_like(u)
     wei = tf.tensor_scatter_nd_add(wei, indices=ind0, updates=1 - lamb)
     wei = tf.tensor_scatter_nd_add(wei, indices=ind1, updates=lamb)
-
+ 
     if params.tracking_method == "simple":
-        nthk = othk + smb * state.dt  # new ice thicnkess after smb update
 
         # adjust the relative height within the ice column with smb
         state.rhpos = tf.where(
-            nthk > 0.1, tf.clip_by_value(state.rhpos * othk / nthk, 0, 1), 1
+            thk > 0.1, 
+            tf.clip_by_value(state.rhpos * (thk - smb * state.dt) / thk, 0, 1), 
+            1
         )
 
         state.xpos = state.xpos + state.dt * tf.reduce_sum( wei * u, axis=0 ) 
         state.ypos = state.ypos + state.dt * tf.reduce_sum( wei * v, axis=0 ) 
-        state.zpos = topg + nthk * state.rhpos
+        state.zpos = topg + thk * state.rhpos
 
     elif params.tracking_method == "3d":
+        
         # make sure the particle remian withi the ice body
-        state.zpos = tf.clip_by_value(state.zpos, topg, topg + othk)
+        state.zpos = tf.clip_by_value(state.zpos, topg, topg + thk)
 
-        # get the relative height
-        state.rhpos = tf.where(othk > 0.1, (state.zpos - topg) / othk, 1)
+        state.rhpos = (state.zpos - topg) / thk
 
         w = tfa.image.interpolate_bilinear(
                 tf.expand_dims(state.W, axis=-1),

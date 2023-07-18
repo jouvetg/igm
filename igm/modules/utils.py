@@ -133,46 +133,46 @@ def interp1d_tf(xs, ys, x):
     return tf.cast(tf.reshape(y, tf.shape(x)), dtype)
 
 
-def complete_data(self):
+def complete_data(state):
     """
     This function adds a postriori import fields such as X, Y, x, dx, ....
     """
 
-    # define grids, i.e. self.X and self.Y has same shape as self.thk
-    if not hasattr(self, "X"):
-        self.X, self.Y = tf.meshgrid(self.x, self.y)
+    # define grids, i.e. state.X and state.Y has same shape as state.thk
+    if not hasattr(state, "X"):
+        state.X, state.Y = tf.meshgrid(state.x, state.y)
 
     # define cell spacing
-    if not hasattr(self, "dx"):
-        self.dx = self.x[1] - self.x[0]
+    if not hasattr(state, "dx"):
+        state.dx = state.x[1] - state.x[0]
 
     # define dX
-    if not hasattr(self, "dX"):
-        self.dX = tf.ones_like(self.X) * self.dx
+    if not hasattr(state, "dX"):
+        state.dX = tf.ones_like(state.X) * state.dx
 
     # if thickness is not defined in the netcdf, then it is set to zero
-    if not hasattr(self, "thk"):
-        self.thk = tf.Variable(tf.zeros((self.y.shape[0], self.x.shape[0])))
+    if not hasattr(state, "thk"):
+        state.thk = tf.Variable(tf.zeros((state.y.shape[0], state.x.shape[0])))
 
     # at this point, we should have defined at least topg or usurf
-    assert hasattr(self, "topg") | hasattr(self, "usurf")
+    assert hasattr(state, "topg") | hasattr(state, "usurf")
 
     # define usurf (or topg) from topg (or usurf) and thk
-    if hasattr(self, "usurf"):
-        self.lsurf = tf.Variable(self.usurf - self.thk)
-        self.topg  = tf.Variable(self.usurf - self.thk)
+    if hasattr(state, "usurf"):
+        state.lsurf = tf.Variable(state.usurf - state.thk)
+        state.topg  = tf.Variable(state.usurf - state.thk)
 
     else:
-        self.lsurf = tf.maximum(self.topg,-0.9*self.thk)
-        self.usurf = tf.Variable(self.lsurf + self.thk)
+        state.lsurf = tf.maximum(state.topg,-0.9*state.thk)
+        state.usurf = tf.Variable(state.lsurf + state.thk)
  
  
-def crop_field(params, self):
+def crop_field(params, state):
   
-    i0 = np.clip(int((params.crop_xmin-self.x[0])/self.dx), 0, self.x.shape[0]-1)
-    i1 = np.clip(int((params.crop_xmax-self.x[0])/self.dx), 0, self.x.shape[0]-1)
+    i0 = np.clip(int((params.crop_xmin-state.x[0])/state.dx), 0, state.x.shape[0]-1)
+    i1 = np.clip(int((params.crop_xmax-state.x[0])/state.dx), 0, state.x.shape[0]-1)
 
-    j0 = np.clip(int((params.crop_ymin-self.y[0])/self.dx), 0, self.y.shape[0]-1)
-    j1 = np.clip(int((params.crop_ymax-self.y[0])/self.dx), 0, self.y.shape[0]-1)
+    j0 = np.clip(int((params.crop_ymin-state.y[0])/state.dx), 0, state.y.shape[0]-1)
+    j1 = np.clip(int((params.crop_ymax-state.y[0])/state.dx), 0, state.y.shape[0]-1)
  
     return i0,i1,j0,j1

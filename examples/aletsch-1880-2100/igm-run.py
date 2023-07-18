@@ -86,3 +86,4 @@ with tf.device("/GPU:0"):
     # Finalize each module in turn
     for module in modules:
         getattr(igm, "final_" + module)(params, state)
+ 

@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-sys.path.append("/home/gjouvet/IGM2/igm2-public/")
-
-# Import the most important libraries
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -17,7 +13,7 @@ from track_usurf_obs import *
 # Define in order the model components step to be updated
 modules = [
            "load_ncdf_data",
-           "optimize",
+#           "optimize",
            "track_usurf_obs",
            "clim_aletsch",
            "smb_accmelt", 
@@ -62,7 +58,7 @@ params.frequency_seeding     = 500
 params.tracking_method       = 'simple'
 params.density_seeding       = 1
 
-# params.geology_file = 'geology-optimized.nc' # this permits to skip the "optimize" step
+params.geology_file = 'geology-optimized.nc' # this permits to skip the "optimize" step
 
 # Define a state class/dictionnary that contains all the data
 state = igm.State()

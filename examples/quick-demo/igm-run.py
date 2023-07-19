@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-
-import sys
-sys.path.append("/home/gjouvet/IGM/igm2-public/")
-
-# Import the most important libraries
+ 
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf

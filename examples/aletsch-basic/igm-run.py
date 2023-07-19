@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-
-import sys
-sys.path.append("/home/gjouvet/IGM2/igm2-public/")
-
-# Import the most important libraries
+ 
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -23,10 +19,10 @@ modules = [
 #    "topg_glacial_erosion",
     "write_ncdf_ex",
     "write_ncdf_ts",
-#    "write_plot2d",
-#    "write_particles",
+#   "write_plot2d",
+#   "write_particles",
     "print_info",
-#   "print_all_comp_info",
+   "print_all_comp_info",
 #   "anim3d_from_ncdf_ex"
 ]
 

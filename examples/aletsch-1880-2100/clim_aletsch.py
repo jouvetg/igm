@@ -3,24 +3,12 @@
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
 # Published under the GNU GPL (Version 3), check at the LICENSE file 
 
-"""
-
-Generate climate for the Aletsch Glacier simulation
-
-==============================================================================
-
-Input: ---
-Output: ----
-"""
-
-# Import the most important libraries
 import numpy as np
 import os, sys, shutil
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import igm
 import time
-
 
 def params_clim_aletsch(parser):
 

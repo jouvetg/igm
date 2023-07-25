@@ -22,7 +22,7 @@ modules = [
 #   "write_plot2d",
 #   "write_particles",
     "print_info",
-   "print_all_comp_info",
+    "print_all_comp_info",
 #   "anim3d_from_ncdf_ex"
 ]
 

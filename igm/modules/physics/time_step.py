@@ -53,7 +53,7 @@ def init_time_step(params, state):
         np.arange(params.tstart, params.tend, params.tsave)
     ) + [params.tend]
 
-    state.tsave = tf.constant(state.tsave)
+    state.tsave = tf.constant(state.tsave,dtype="float32")
 
     state.itsave = 0
 

@@ -10,11 +10,11 @@ def params_mysmb(parser):
     parser.add_argument("--meanela", type=float, default=3000 )
 
 def init_mysmb(params,state):
-    params.meanela = np.quantile(state.usurf[state.thk>10],0.3)
+    params.meanela = np.quantile(state.usurf[state.thk>10],0.2)
 
 def update_mysmb(params,state):
     # perturabe the ELA with sinusional signal 
-    ELA = ( params.meanela + 750*math.sin((state.t/100)*math.pi) )
+    ELA = ( params.meanela - 750*math.sin((state.t/100)*math.pi) )
     # compute smb linear with elevation with 2 acc & abl gradients
     state.smb  = state.usurf - ELA
     state.smb *= tf.where(state.smb<0, 0.005, 0.009)

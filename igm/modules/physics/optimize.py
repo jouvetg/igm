@@ -230,7 +230,7 @@ def init_optimize(params, state):
             # build input of the emulator
             X = tf.expand_dims(
                 tf.stack(
-                    [tf.pad(vars(state)[f], state.PAD, "CONSTANT") for f in state.fieldin],
+                    [tf.pad(vars(state)[f], state.PAD, "CONSTANT") for f in params.fieldin],
                     axis=-1,
                 ),
                 axis=0,

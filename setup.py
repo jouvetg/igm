@@ -44,6 +44,7 @@ setup(
 	'tables',
 	'oggm',
 	'geopandas',
+	'rasterio',
 	'mayavi',
 	'pyqt5'	
     ]

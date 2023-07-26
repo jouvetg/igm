@@ -21,7 +21,8 @@ def update_mysmb(params,state):
     # cap smb by 2 m/y 
     state.smb  = tf.clip_by_value(state.smb, -100, 2)
     # make sure the smb is not positive outside of the mask to prevent overflow
-    state.smb  = tf.where((state.smb<0)|(state.icemask>0.5),state.smb,-10)
+    if hasattr(state, "icemask"):
+        state.smb  = tf.where((state.smb<0)|(state.icemask>0.5),state.smb,-10)
     
 def final_mysmb(params,state):
     pass

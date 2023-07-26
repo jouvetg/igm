@@ -30,9 +30,22 @@ def update_write_tif_ex(params, state):
             file = os.path.join(
                 params.working_dir, var + "-" + str(int(state.t)).zfill(6) + ".tif"
             )
+            
+            if hasattr(state, "profile_tif_file"):
+                
+                with rasterio.open(file, mode="w", **state.profile_tif_file) as src:
+                    src.write(np.flipud(vars(state)[var]), 1)
+            else:
 
-            with rasterio.open(file, mode="w", **state.profile_tif_file) as src:
-                src.write(np.flipud(vars(state)[var]), 1)
+                xres = (state.x[-1] - state.x[0]) / len(state.x)
+                yres = (state.y[-1] - state.y[0]) / len(state.y)
+                transform = rasterio.Affine.translation(state.x[0] - xres / 2, state.y[0] - yres / 2) \
+                          * rasterio.Affine.scale(xres, yres)
+
+                with rasterio.open(file, mode="w", driver="GTiff", 
+                         height=vars(state)[var].shape[0], width=vars(state)[var].shape[1],
+                         count=1, dtype=np.float32, transform=transform,) as src:
+                    src.write(np.flipud(vars(state)[var]), 1)
 
             del src
             

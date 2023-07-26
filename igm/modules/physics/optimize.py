@@ -41,7 +41,7 @@ def params_optimize(parser):
     parser.add_argument(
         "--opti_regu_param_thk",
         type=float,
-        default=10.0,
+        default=5.0,
         help="Regularization weight for the ice thickness in the optimization",
     )
     parser.add_argument(
@@ -89,13 +89,13 @@ def params_optimize(parser):
     parser.add_argument(
         "--opti_control",
         type=list,
-        default=["thk", "usurf"], # "slidingco"
+        default=["thk"], # "slidingco", "usurf"
         help="List of optimized variables for the optimization",
     )
     parser.add_argument(
         "--opti_cost",
         type=list,
-        default=["velsurf", "thk", "divfluxfcz", "icemask","usurf"],
+        default=["velsurf", "thk", "icemask"], # "divfluxfcz", ,"usurf"
         help="List of cost components for the optimization",
     )
     parser.add_argument(
@@ -107,7 +107,7 @@ def params_optimize(parser):
     parser.add_argument(
         "--opti_nbitmax",
         type=int,
-        default=1000,
+        default=500,
         help="Max iterations for the optimization",
     )
     parser.add_argument(
@@ -169,8 +169,8 @@ def init_optimize(params, state):
     assert ("usurf" in params.opti_cost) == ("usurf" in params.opti_control)
 
     # make sure that there are lease some profiles in thkobs
-    if "thk" in params.opti_cost:
-        assert not tf.reduce_all(tf.math.is_nan(state.thkobs))
+    if tf.reduce_all(tf.math.is_nan(state.thkobs)):
+        params.opti_cost.remove("thk")
 
     ###### PREPARE DATA PRIOR OPTIMIZATIONS
 

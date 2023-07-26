@@ -42,7 +42,7 @@ def init_load_tif_data(params, state):
 
     import rasterio
 
-    files = glob.glob(os.path.join(state.config.working_dir, "*.tif"))
+    files = glob.glob(os.path.join(params.working_dir, "*.tif"))
 
     if params.crop_data:
         i0,i1,j0,j1 = crop_field(params, state)

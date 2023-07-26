@@ -112,8 +112,11 @@ def init_prepare_data(params, state):
             data = json.load(f)
         proj = data["proj"]
 
-        thkobs = _read_glathida(x, y, usurfobs, proj, params.path_glathida)
-        thkobs = np.where(icemaskobs, thkobs, np.nan)
+        try:
+            thkobs = _read_glathida(x, y, usurfobs, proj, params.path_glathida)
+            thkobs = np.where(icemaskobs, thkobs, np.nan)
+        except:
+            thkobs = np.zeros_like(thk)*np.nan
 
     nc.close()
 

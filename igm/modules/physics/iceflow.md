@@ -11,7 +11,3 @@ an initial untrained with emulator =''.
 
 Input: thk, usurf, arrhenuis, slidingco, dX
 Output: U, V
-
-# Parameters
-
-!include https://github.com/jouvetg/igm2/blob/main/doc_params/optimize.md

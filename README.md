@@ -5,9 +5,9 @@
 
 IGM simulates the ice dynamics, surface mass balance, and its coupling through mass conservation to predict the evolution of glaciers, icefields, or ice sheets. The specificity of IGM is that it models the ice flow by a Neural Network, which is trained from ice flow physics. As a result, IGM permits user-friendly, highly-efficient, and mechanically state-of-the-art glacier simulations. IGM is a modular open-source Python package, which runs across both CPU and GPU and deals with two-dimensional gridded input and output data. 
   
-# Manual / Wiki
+# Documentation
 
-IGM's documentation can be found on the dedicated [documentation](https://github.com/jouvetg/igm2/wiki)  
+IGM's documentation can be found on the dedicated [wiki](https://github.com/jouvetg/igm2/wiki).
   
 # Quick start
 

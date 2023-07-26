@@ -14,4 +14,4 @@ Output: U, V
 
 # Parameters
 
-:(https://github.com/jouvetg/igm2/blob/main/doc_params/optimize.md)
+!include https://github.com/jouvetg/igm2/blob/main/doc_params/optimize.md

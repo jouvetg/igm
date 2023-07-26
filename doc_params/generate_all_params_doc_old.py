@@ -13,7 +13,7 @@ for m in ['preproc','physics','postproc']:
 
         print(m,l)
 
-        with open('igm-run.py', "w") as f:
+        with open('PAR.py', "w") as f:
 
             print("import sys", file=f)
             print("sys.path.append('../')", file=f)
@@ -23,8 +23,6 @@ for m in ['preproc','physics','postproc']:
             print("igm.params_"+l+"(parser)", file=f)
             print("params = parser.parse_args()", file=f)
          
-        os.system("argmark -f igm-run.py")
-        
-        os.system('mv argmark.md '+ l + '.md')
+        os.system("python PAR.py -h > params_" + l +'.md')
 
-os.system('rm igm-run.py')
+os.system('rm PAR.py')

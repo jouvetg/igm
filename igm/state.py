@@ -18,7 +18,7 @@ def init_state(params, state):
  
     # Configure the logging
     logging.basicConfig(
-        filename=params.logging_file,
+        filename=os.path.join(params.working_dir, params.logging_file),
         encoding="utf-8",
         filemode="w",
         level=getattr(logging, params.logging_level),
@@ -35,12 +35,6 @@ def init_state(params, state):
             print("%30s : %s" % (ck, params.__dict__[ck]))
             print("%30s : %s" % (ck, params.__dict__[ck]), file=f)
 
-    os.system("rm clean.sh")
-    os.system("echo rm clean.sh >> clean.sh")
-    os.system("echo rm igm.log >> clean.sh")
-
-    os.system(
-        "echo rm "
-        + os.path.join(params.working_dir, "igm-run-parameters.txt")
-        + " >> clean.sh"
-    )
+    os.system("echo rm clean.sh >> clean.sh") 
+    os.system("echo rm " + params.logging_file + " >> clean.sh" )
+    os.system("echo rm " + "igm-run-parameters.txt" + " >> clean.sh")

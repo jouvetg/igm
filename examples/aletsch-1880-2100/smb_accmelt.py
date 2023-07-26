@@ -169,7 +169,8 @@ def update_smb_accmelt(params,state):
 
     if ((state.t - state.tlast_smb) >= params.smb_update_freq):
 
-        state.logger.info("update smb at time : " + str(state.t.numpy()))
+        if hasattr(state, "logger"):
+            state.logger.info("update smb at time : " + str(state.t.numpy()))
 
         state.tcomp_smb.append(time.time())
 

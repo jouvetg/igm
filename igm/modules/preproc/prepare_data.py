@@ -41,7 +41,7 @@ def params_prepare_data(parser):
         help="millan_ice_thickness or consensus_ice_thickness in geology.nc",
     )
     parser.add_argument(
-        "--observation",
+        "--include_glathida",
         type=str2bool,
         default=False,
         help="Make observation file (for IGM inverse)",
@@ -73,7 +73,8 @@ def init_prepare_data(params, state):
 
     gdirs, paths_ncdf = _oggm_util([params.RGI], params)
 
-    state.logger.info("Prepare data using oggm and glathida")
+    if hasattr(state,'logger'):
+        state.logger.info("Prepare data using oggm and glathida")
 
     nc = Dataset(paths_ncdf[0], "r+")
 
@@ -87,26 +88,28 @@ def init_prepare_data(params, state):
 
     icemask = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
 
-    if params.observation:
-        usurfobs = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
-        icemaskobs = np.flipud(
-            np.squeeze(nc.variables["glacier_mask"]).astype("float32")
-        )
-        uvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vx"]).astype("float32"))
-        vvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vy"]).astype("float32"))
-        thkinit = np.flipud(
-            np.squeeze(nc.variables["millan_ice_thickness"]).astype("float32")
-        )
+    usurfobs = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
+    icemaskobs = np.flipud(
+        np.squeeze(nc.variables["glacier_mask"]).astype("float32")
+    )
+    uvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vx"]).astype("float32"))
+    vvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vy"]).astype("float32"))
+    thkinit = np.flipud(
+        np.squeeze(nc.variables["millan_ice_thickness"]).astype("float32")
+    )
 
-        uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
-        uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
+    uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
+    uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
 
-        vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
-        vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
+    vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
+    vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
 
-        thkinit = np.where(np.isnan(thkinit), 0, thkinit)
-        thkinit = np.where(icemaskobs, thkinit, 0)
+    thkinit = np.where(np.isnan(thkinit), 0, thkinit)
+    thkinit = np.where(icemaskobs, thkinit, 0)
 
+    thkobs = np.zeros_like(thk)*np.nan
+
+    if params.include_glathida:
         fff = paths_ncdf[0].split("gridded_data.nc")[0] + "glacier_grid.json"
         with open(fff, "r") as f:
             data = json.load(f)
@@ -122,17 +125,9 @@ def init_prepare_data(params, state):
 
     #########################################################
 
-    vars_to_save = ["usurf", "thk", "icemask"]
-
-    if params.observation:
-        vars_to_save += [
-            "usurfobs",
-            "thkobs",
-            "icemaskobs",
-            "uvelsurfobs",
-            "vvelsurfobs",
-            "thkinit",
-        ]
+    vars_to_save =  [ "usurf", "thk", "icemask"]
+    vars_to_save += [ "usurfobs", "thkobs", "icemaskobs", "uvelsurfobs", "vvelsurfobs" ] 
+    vars_to_save += [ "thkinit" ]
 
     ########################################################
 
@@ -188,7 +183,8 @@ def init_prepare_data(params, state):
 
         nc.close()
 
-        state.logger.setLevel(params.logging_level)
+        if hasattr(state,'logger'):
+            state.logger.setLevel(params.logging_level)
 
 
 def update_prepare_data(params, state):

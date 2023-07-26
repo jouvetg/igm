@@ -755,8 +755,8 @@ def _update_ncdf_optimize(params, state, it):
     """
     Initialize and write the ncdf optimze file
     """
-
-    state.logger.info("Initialize  and write NCDF output Files")
+    if hasattr(state,'logger'):
+        state.logger.info("Initialize  and write NCDF output Files")
 
     if "arrhenius" in params.opti_vars_to_save:
         state.arrhenius = tf.where(

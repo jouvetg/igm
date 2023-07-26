@@ -62,9 +62,10 @@ def init_time_step(params, state):
 
 def update_time_step(params, state):
 
-    state.logger.info(
+    if hasattr(state,'logger'):
+        state.logger.info(
         "Update DT from the CFL condition at time : " + str(state.t.numpy())
-    )
+                         )
 
     state.tcomp_time_step.append(time.time())
 

@@ -620,7 +620,8 @@ def _update_ncdf_optimize(params, state, it):
     Initialize and write the ncdf optimze file
     """
 
-    state.logger.info("Initialize  and write NCDF output Files")
+    if hasattr(state,'logger'):
+        state.logger.info("Initialize  and write NCDF output Files")
 
     if "velsurf_mag" in params.opti_vars_to_save:
         state.velsurf_mag = getmag(state.uvelsurf, state.vvelsurf)

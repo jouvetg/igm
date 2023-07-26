@@ -2,11 +2,7 @@
 
 # Description:
 
-This IGM module loads spatial raster data from a netcdf file (geology.nc) and
-transform the fields into tensorflow variables. It also complete the data,
-e.g. ge the basal topography from ice thickness and surface topography.
-(there is no update function defined). It contains the two functions for
-resampling and cropping the data.
+This IGM module loads spatial raster data from a netcdf file (default: geology.nc) and transform the fields into tensorflow variables. It also complete the data, e.g. the basal topography from ice thickness and surface topography. It contains the two functions for resampling and cropping the data.
 
 # I/O:
 

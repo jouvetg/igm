@@ -18,13 +18,13 @@ def params_load_ncdf_data(parser):
         "--geology_file",
         type=str,
         default="geology.nc",
-        help="Geology input file (default: geology.nc)",
+        help="Input data file (default: geology.nc)",
     )
     parser.add_argument(
         "--resample",
         type=int,
         default=1,
-        help="Resample the data of ncdf data file to a coarser resolution (default: 1)",
+        help="Resample the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points",
     )
     parser.add_argument(
         "--crop_data",
@@ -35,22 +35,22 @@ def params_load_ncdf_data(parser):
     parser.add_argument(
         "--crop_xmin",
         type=float, 
-        help="crop_xmin",
+        help="X left coordinate for cropping",
     )
     parser.add_argument(
         "--crop_xmax",
         type=float, 
-        help="crop_xmax",
+        help="X right coordinate for cropping",
     )
     parser.add_argument(
         "--crop_ymin",
         type=float, 
-        help="crop_ymin",
+        help="Y bottom coordinate fro cropping",
     )
     parser.add_argument(
         "--crop_ymax",
         type=float, 
-        help="crop_ymax"
+        help="Y top coordinate for cropping"
     )
 
 
@@ -58,7 +58,8 @@ def params_load_ncdf_data(parser):
 
 def init_load_ncdf_data(params, state):
 
-    state.logger.info("LOAD NCDF file")
+    if hasattr(state,'logger'):
+        state.logger.info("LOAD NCDF file")
 
     nc = Dataset(os.path.join(params.working_dir, params.geology_file), "r")
 

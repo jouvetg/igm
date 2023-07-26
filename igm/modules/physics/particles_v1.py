@@ -56,7 +56,8 @@ def update_particles_v1(params, state):
 
     import tensorflow_addons as tfa
 
-    state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
+    if hasattr(state,'logger'):
+        state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
 
     if (state.t.numpy() - state.tlast_seeding) >= params.frequency_seeding:
         seeding_particles(params, state)

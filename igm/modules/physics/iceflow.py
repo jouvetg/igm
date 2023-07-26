@@ -342,7 +342,9 @@ def init_iceflow(params, state):
 
 
 def update_iceflow(params, state):
-    state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
+
+    if hasattr(state,'logger'):
+        state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
     state.tcomp_iceflow.append(time.time())
 

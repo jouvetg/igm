@@ -44,7 +44,8 @@ def update_topg_glacial_erosion(params, state):
 
     if (state.t - state.tlast_erosion) >= params.erosion_update_freq:
 
-        state.logger.info("update topg_glacial_erosion at time : " + str(state.t.numpy()))
+        if hasattr(state,'logger'):
+            state.logger.info("update topg_glacial_erosion at time : " + str(state.t.numpy()))
 
         state.tcomp_topg_glacial_erosion.append(time.time())
 

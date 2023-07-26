@@ -84,7 +84,8 @@ def update_clim_aletsch(params,state):
 
     if ((state.t - state.tlast_clim_aletsch) >= params.clim_update_freq):
 
-        state.logger.info("update climate at time : " + str(state.t.numpy()))
+        if hasattr(state, "logger"):
+            state.logger.info("update climate at time : " + str(state.t.numpy()))
 
         state.tcomp_clim_aletsch.append(time.time())
 

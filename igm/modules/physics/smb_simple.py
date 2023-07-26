@@ -41,7 +41,9 @@ def update_smb_simple(params, state):
 
     # update smb each X years
     if (state.t - state.tlast_mb) >= params.mb_update_freq:
-        state.logger.info("Construct mass balance at time : " + str(state.t.numpy()))
+
+        if hasattr(state,'logger'):
+            state.logger.info("Construct mass balance at time : " + str(state.t.numpy()))
 
         state.tcomp_smb_simple.append(time.time())
 

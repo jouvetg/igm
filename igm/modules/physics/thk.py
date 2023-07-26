@@ -18,7 +18,8 @@ def init_thk(params, state):
 
 def update_thk(params, state):
 
-    state.logger.info("Ice thickness equation at time : " + str(state.t.numpy()))
+    if hasattr(state,'logger'):
+        state.logger.info("Ice thickness equation at time : " + str(state.t.numpy()))
 
     state.tcomp_thk.append(time.time())
 

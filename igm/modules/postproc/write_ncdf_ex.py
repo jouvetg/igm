@@ -88,7 +88,8 @@ def update_write_ncdf_ex(params, state):
         if not hasattr(state, "already_called_update_write_ncdf_ex"):
             state.already_called_update_write_ncdf_ex = True
 
-            state.logger.info("Initialize NCDF ex output Files")
+            if hasattr(state,'logger'):
+                state.logger.info("Initialize NCDF ex output Files")
 
             nc = Dataset(
                 os.path.join(params.working_dir, "ex.nc"),
@@ -127,7 +128,8 @@ def update_write_ncdf_ex(params, state):
             nc.close()
 
         else:
-            state.logger.info("Write NCDF ex file at time : " + str(state.t.numpy()))
+            if hasattr(state,'logger'):
+                state.logger.info("Write NCDF ex file at time : " + str(state.t.numpy()))
 
             nc = Dataset(
                 os.path.join(params.working_dir, "ex.nc"),

@@ -30,7 +30,8 @@ def update_write_ncdf_ts(params, state):
         if not hasattr(state, "already_called_update_write_ncdf_ts"):
             state.already_called_update_write_ncdf_ts = True
 
-            state.logger.info("Initialize NCDF ts output Files")
+            if hasattr(state,'logger'):
+                state.logger.info("Initialize NCDF ts output Files")
 
             nc = Dataset(
                 os.path.join(params.working_dir, "ts.nc"),
@@ -55,7 +56,8 @@ def update_write_ncdf_ts(params, state):
             # os.system('echo rm '+ os.path.join(params.working_dir, "ts.nc") + ' >> clean.sh')
 
         else:
-            state.logger.info("Write NCDF ts file at time : " + str(state.t.numpy()))
+            if hasattr(state,'logger'):
+                state.logger.info("Write NCDF ts file at time : " + str(state.t.numpy()))
 
             nc = Dataset(
                 os.path.join(params.working_dir, "ts.nc"),

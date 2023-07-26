@@ -10,6 +10,8 @@ filed e.g. topg.tif, thk.tif must be present in the working forlder.
 
 Input: tiff files
 Output: variables contained inside as tensorflow objects
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -20,5 +22,3 @@ Output: variables contained inside as tensorflow objects
 ||`--crop_xmax`|`None`|crop_xmax|
 ||`--crop_ymin`|`None`|crop_ymin|
 ||`--crop_ymax`|`None`|crop_ymax|
- 
-# Parameters: 

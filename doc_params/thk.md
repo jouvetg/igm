@@ -22,10 +22,10 @@ which is the maximum number of cells crossed in one iteration
 
 Input  : state.ubar, state.vbar, state.thk, state.dx, 
 Output : state.thk, state.usurf, state.lsurf
+ 
+# Parameters: 
 
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
- 
-# Parameters: 

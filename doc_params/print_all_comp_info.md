@@ -8,10 +8,10 @@ This serves to print computational info report
 
 Input  : .....
 Output : .....
+ 
+# Parameters: 
 
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
- 
-# Parameters: 

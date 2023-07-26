@@ -21,6 +21,8 @@ strflowctrl and usurf from observational data from the follwoing reference:
 
 Input: usurfobs,uvelsurfobs,vvelsurfobs,thkobs, ...
 Output: thk, strflowctrl, usurf
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -49,5 +51,3 @@ Output: thk, strflowctrl, usurf
 ||`--plot2d_inversion`||plot 2d inversion|
 ||`--write_ncdf_optimize`||write_ncdf_optimize|
 ||`--editor_plot2d_optimize`|`vs`|optimized for VS code (vs) or spyder (sp) for live plot|
- 
-# Parameters: 

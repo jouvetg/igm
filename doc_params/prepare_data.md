@@ -25,6 +25,8 @@ Script written by G. Jouvet & F. Maussion & E. Welty
 # I/O:
 
 Output: all input variable fields neede to run IGM inverse and/or forward
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -38,5 +40,3 @@ Output: all input variable fields neede to run IGM inverse and/or forward
 ||`--include_glathida`||Make observation file (for IGM inverse)|
 ||`--path_glathida`|`/home/gjouvet/`|Path where the Glathida Folder is store, so that you don't need               to redownload it at any use of the script|
 ||`--output_geology`||Write prepared data into a geology file|
- 
-# Parameters: 

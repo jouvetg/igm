@@ -32,6 +32,8 @@ sliding coefficient c, and Arrhenius factor A into a 2D space.
 
 Input: thk, usurf, arrhenuis, slidingco
 Output: ubar,vbar, uvelsurf, vvelsurf, uvelbase, vvelbase
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -43,5 +45,3 @@ Output: ubar,vbar, uvelsurf, vvelsurf, uvelbase, vvelbase
 ||`--init_arrhenius`|`78`|Initial arrhenius factor arrhenuis (default: 78)|
 ||`--multiple_window_size`|`0`|If a U-net, this force window size a multiple of 2**N (default: 0)|
 ||`--force_max_velbar`|`0`|This permits to artif. upper-bound velocities, active if > 0 (default: 0)|
- 
-# Parameters: 

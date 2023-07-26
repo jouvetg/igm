@@ -7,10 +7,10 @@ This IGM modules prints basic information of IGM live while IGM is running
 # I/O:
 
 Output: informartion on the fly about ice volume, time steps, ect.
+ 
+# Parameters: 
 
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
- 
-# Parameters: 

@@ -13,6 +13,8 @@ Ice thickness
 
 update ice flow, ice thickness, and time step
 
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -53,5 +55,3 @@ update ice flow, ice thickness, and time step
 ||`--tsave`|`10`|Save result each X years (default: 10)|
 ||`--cfl`|`0.3`|CFL number for the stability of the mass conservation scheme,         it must be below 1 (Default: 0.3)|
 ||`--dtmax`|`10.0`|Maximum time step allowed, used only with slow ice (default: 10.0)|
- 
-# Parameters: 

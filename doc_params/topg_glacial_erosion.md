@@ -13,6 +13,8 @@ F. et al. Erosion by an Alpine glacier. Science 350, 193-195 (2015).
 
 Input  : state.ubar, state.vbar, state.dx 
 Output : state.dt, state.t, state.it, state.saveresult 
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -21,5 +23,3 @@ Output : state.dt, state.t, state.it, state.saveresult
 ||`--erosion_cst`|`2.7e-07`|Erosion multiplicative factor, here taken from Herman, F. et al.               Erosion by an Alpine glacier. Science 350, 193–195 (2015)|
 ||`--erosion_exp`|`2`|Erosion exponent factor, here taken from Herman, F. et al.                Erosion by an Alpine glacier. Science 350, 193–195 (2015)|
 ||`--erosion_update_freq`|`1`|Update the erosion only each X years (Default: 100)|
- 
-# Parameters: 

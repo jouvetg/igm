@@ -9,10 +9,10 @@ into the ncdf output file ts.nc
 
 Input: state.thk, state.dx
 Output: ts.nc
+ 
+# Parameters: 
 
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
- 
-# Parameters: 

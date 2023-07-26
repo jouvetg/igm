@@ -9,6 +9,8 @@ This IGM module implments the former particle tracking routine.
 
 Input: uubar,vbar, uvelbase, vvelbase, uvelsurf, vvelsurf
 Output: state.xpos, ...
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -17,5 +19,3 @@ Output: state.xpos, ...
 ||`--tracking_method`|`3d`|Method for tracking particles (3d or simple)|
 ||`--frequency_seeding`|`10`|Frequency of seeding (default: 10)|
 ||`--density_seeding`|`0.2`|Density of seeding (default: 0.2)|
- 
-# Parameters: 

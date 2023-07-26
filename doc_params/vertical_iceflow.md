@@ -9,10 +9,10 @@ by integrating the imcompressibility condition
 
 Input: U, thk, dX
 Output: W
+ 
+# Parameters: 
 
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
- 
-# Parameters: 

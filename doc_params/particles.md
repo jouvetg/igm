@@ -42,6 +42,8 @@ To do so, you may redefine the function seeding_particles.
 
 Input: U,W
 Output: state.xpos, ...
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -50,5 +52,3 @@ Output: state.xpos, ...
 ||`--tracking_method`|`simple`|Method for tracking particles (3d or simple)|
 ||`--frequency_seeding`|`50`|Frequency of seeding (default: 10)|
 ||`--density_seeding`|`0.2`|Density of seeding (default: 0.2)|
- 
-# Parameters: 

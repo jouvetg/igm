@@ -14,6 +14,8 @@ which is the maximum number of cells crossed in one iteration
 
 Input  : state.ubar, state.vbar, state.dx 
 Output : state.dt, state.t, state.it, state.saveresult 
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -24,5 +26,3 @@ Output : state.dt, state.t, state.it, state.saveresult
 ||`--tsave`|`10`|Save result each X years (default: 10)|
 ||`--cfl`|`0.3`|CFL number for the stability of the mass conservation scheme,         it must be below 1 (Default: 0.3)|
 ||`--dtmax`|`10.0`|Maximum time step allowed, used only with slow ice (default: 10.0)|
- 
-# Parameters: 

@@ -9,6 +9,8 @@ a given frequency. The plots are saved as png files in the working directory.
 
 Input: variable to be plotted
 Output: png files
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -19,5 +21,3 @@ Output: png files
 ||`--plot_particles`||Display particles (Default: True)|
 ||`--varplot`|`velbar_mag`|variable to plot|
 ||`--varplot_max`|`250`|maximum value of the varplot variable used to adjust the scaling of the colorbar|
- 
-# Parameters: 

@@ -14,7 +14,9 @@ Output: U, V
 
 # Parameters
 
-!include https://github.com/jouvetg/igm2/blob/main/doc_params/optimize.md
+!include https://github.com/jouvetg/igm2/blob/main/doc_params/optimize.md 
+# Parameters: 
+
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
@@ -49,5 +51,3 @@ Output: U, V
 ||`--nb_out_filter`|`32`|nb_out_filter|
 ||`--conv_ker_size`|`3`|conv_ker_size|
 ||`--dropout_rate`|`0`|dropout_rate|
- 
-# Parameters: 

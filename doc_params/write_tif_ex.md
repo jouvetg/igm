@@ -10,11 +10,11 @@ Files will be created with names like thk-000040.tif in the working directory.
 
 Input: variables to be saved
 Output: tiff files
+ 
+# Parameters: 
 
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
 ||`--vars_to_save`|`['usurf', 'thk']`|List of variables to be recorded in the ncdf file|
- 
-# Parameters: 

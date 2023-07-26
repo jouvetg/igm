@@ -10,10 +10,10 @@ netcdf file over time. It only implements the 'final' function, the rest
 
 Takes  : ncdf file ex.nc of transient 2d gridded data
 Return : interactive 3D plot.
+ 
+# Parameters: 
 
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
- 
-# Parameters: 

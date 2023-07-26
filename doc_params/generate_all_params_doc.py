@@ -25,9 +25,10 @@ for m in ['preproc','physics','postproc']:
             
          
         os.system("argmark -f igm-run.py")
-        os.system("sed -z 's/.*Arguments//' argmark.md > argmark1.md")
-        os.system("echo ' ' >> argmark1.md")
+        os.system("echo ' ' > argmark1.md")
         os.system("echo '# Parameters: ' >> argmark1.md")
+        os.system("sed -z 's/.*Arguments//' argmark.md >> argmark1.md")
+
         os.system('cat ../igm/modules/'+m+'/'+l+'.md argmark1.md > ' + l + '.md')
 
 os.system('rm igm-run.py argmark.md argmark1.md')

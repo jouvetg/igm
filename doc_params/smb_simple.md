@@ -11,6 +11,8 @@ and accumulation gradients, and max acuumulation from a given file mb_simple_fil
 
 Input  : state.usurf
 Output : state.smb
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -18,5 +20,3 @@ Output : state.smb
 |`-h`|`--help`||show this help message and exit|
 ||`--mb_update_freq`|`1`|Update the mass balance each X years (1)|
 ||`--mb_simple_file`|`mb_simple_param.txt`|Name of the imput file for the simple mass balance model|
- 
-# Parameters: 

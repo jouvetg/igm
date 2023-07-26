@@ -8,6 +8,8 @@ This IGM module loads spatial raster data from a netcdf file (default: geology.n
 
 Input: geology.nc
 Output: variables contained inside as tensorflow objects
+ 
+# Parameters: 
 
 
 |short|long|default|help|
@@ -20,5 +22,3 @@ Output: variables contained inside as tensorflow objects
 ||`--crop_xmax`|`None`|X right coordinate for cropping|
 ||`--crop_ymin`|`None`|Y bottom coordinate fro cropping|
 ||`--crop_ymax`|`None`|Y top coordinate for cropping|
- 
-# Parameters: 

@@ -1,16 +1,16 @@
+### <h1 align="center" id="title">IGM module print_info </h1>
 
-argmark
-=======
+# Description:
 
-# Usage:
+This IGM modules prints basic information of IGM live while IGM is running
 
+# I/O:
 
-```bash
-usage: argmark [-h]
+Output: informartion on the fly about ice volume, time steps, ect.
 
-```
-# Arguments
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+ 
+# Parameters: 

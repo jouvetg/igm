@@ -1,31 +1,20 @@
+### <h1 align="center" id="title">IGM module iceflow </h1>
 
-argmark
-=======
+# Description:
 
-# Usage:
+This IGM module models ice flow using a Convolutional Neural Network based on 
+Physics Informed Neural Network. You may find pre-trained and ready-to-use ice 
+flow emulators, e.g. using the default emulator = f21_pinnbp_GJ_23_a, or using 
+an initial untrained with emulator =''.
 
+# I/O
 
-```bash
-usage: argmark [-h] [--type_iceflow TYPE_ICEFLOW] [--emulator EMULATOR]
-               [--iceflow_physics ICEFLOW_PHYSICS] [--init_slidingco INIT_SLIDINGCO]
-               [--init_arrhenius INIT_ARRHENIUS] [--regu_glen REGU_GLEN]
-               [--regu_weertman REGU_WEERTMAN] [--exp_glen EXP_GLEN] [--exp_weertman EXP_WEERTMAN]
-               [--Nz NZ] [--vert_spacing VERT_SPACING] [--thr_ice_thk THR_ICE_THK]
-               [--solve_iceflow_step_size SOLVE_ICEFLOW_STEP_SIZE]
-               [--solve_iceflow_nbitmax SOLVE_ICEFLOW_NBITMAX]
-               [--stop_if_no_decrease STOP_IF_NO_DECREASE] [--fieldin FIELDIN]
-               [--z_dept_arrhenius Z_DEPT_ARRHENIUS]
-               [--retrain_iceflow_emulator_freq RETRAIN_ICEFLOW_EMULATOR_FREQ]
-               [--retrain_iceflow_emulator_lr RETRAIN_ICEFLOW_EMULATOR_LR]
-               [--retrain_iceflow_emulator_nbit RETRAIN_ICEFLOW_EMULATOR_NBIT]
-               [--retrain_iceflow_emulator_framesizemax RETRAIN_ICEFLOW_EMULATOR_FRAMESIZEMAX]
-               [--multiple_window_size MULTIPLE_WINDOW_SIZE] [--force_max_velbar FORCE_MAX_VELBAR]
-               [--network NETWORK] [--activation ACTIVATION] [--nb_layers NB_LAYERS]
-               [--nb_blocks NB_BLOCKS] [--nb_out_filter NB_OUT_FILTER]
-               [--conv_ker_size CONV_KER_SIZE] [--dropout_rate DROPOUT_RATE]
+Input: thk, usurf, arrhenuis, slidingco, dX
+Output: U, V
 
-```
-# Arguments
+# Parameters
+
+!include https://github.com/jouvetg/igm2/blob/main/doc_params/optimize.md
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
@@ -60,3 +49,5 @@ usage: argmark [-h] [--type_iceflow TYPE_ICEFLOW] [--emulator EMULATOR]
 ||`--nb_out_filter`|`32`|nb_out_filter|
 ||`--conv_ker_size`|`3`|conv_ker_size|
 ||`--dropout_rate`|`0`|dropout_rate|
+ 
+# Parameters: 

@@ -1,17 +1,18 @@
+### <h1 align="center" id="title">IGM module write_particles </h1>
 
-argmark
-=======
+# Description:
 
-# Usage:
+This IGM module writes particle time-position in csv files at a given freq.
 
+# I/O:
 
-```bash
-usage: argmark [-h] [--add_topography_to_particles ADD_TOPOGRAPHY_TO_PARTICLES]
+Input: state.xpos, state.ypos, state.zpos, state.rhpos, state.tpos, state.englt
+Output: csv file in forder trajectories
 
-```
-# Arguments
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
 ||`--add_topography_to_particles`||Add topg|
+ 
+# Parameters: 

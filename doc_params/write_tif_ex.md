@@ -1,17 +1,20 @@
+### <h1 align="center" id="title">IGM module write_tif_ex </h1>
 
-argmark
-=======
+# Description:
 
-# Usage:
+This IGM module saves state variables in tiff file at a given frequency.
+Variables to be saved are provided as list in parameter vars_to_save.
+Files will be created with names like thk-000040.tif in the working directory.
 
+# I/O:
 
-```bash
-usage: argmark [-h] [--vars_to_save VARS_TO_SAVE]
+Input: variables to be saved
+Output: tiff files
 
-```
-# Arguments
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
 ||`--vars_to_save`|`['usurf', 'thk']`|List of variables to be recorded in the ncdf file|
+ 
+# Parameters: 

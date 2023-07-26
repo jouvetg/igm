@@ -1,16 +1,15 @@
+### <h1 align="center" id="title">IGM module write_plt2d </h1>
 
-argmark
-=======
+# Description:
 
-# Usage:
+This IGM module produces 2D plan-view plots of variable params.varplot at
+a given frequency. The plots are saved as png files in the working directory.
 
+# I/O:
 
-```bash
-usage: argmark [-h] [--editor_plot2d EDITOR_PLOT2D] [--plot_live PLOT_LIVE]
-               [--plot_particles PLOT_PARTICLES] [--varplot VARPLOT] [--varplot_max VARPLOT_MAX]
+Input: variable to be plotted
+Output: png files
 
-```
-# Arguments
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
@@ -20,3 +19,5 @@ usage: argmark [-h] [--editor_plot2d EDITOR_PLOT2D] [--plot_live PLOT_LIVE]
 ||`--plot_particles`||Display particles (Default: True)|
 ||`--varplot`|`velbar_mag`|variable to plot|
 ||`--varplot_max`|`250`|maximum value of the varplot variable used to adjust the scaling of the colorbar|
+ 
+# Parameters: 

@@ -1,29 +1,23 @@
 
-argmark
-=======
+### <h1 align="center" id="title">IGM module optimize </h1>
 
-# Usage:
+# Description:
 
+This function does the data assimilation (inverse modelling) to optimize thk, 
+slidingco and usurf from observational data from the follwoing reference:
 
-```bash
-usage: argmark [-h] [--opti_vars_to_save OPTI_VARS_TO_SAVE]
-               [--opti_init_zero_thk OPTI_INIT_ZERO_THK]
-               [--opti_regu_param_thk OPTI_REGU_PARAM_THK]
-               [--opti_regu_param_slidingco OPTI_REGU_PARAM_SLIDINGCO]
-               [--opti_smooth_anisotropy_factor OPTI_SMOOTH_ANISOTROPY_FACTOR]
-               [--opti_convexity_weight OPTI_CONVEXITY_WEIGHT]
-               [--opti_usurfobs_std OPTI_USURFOBS_STD] [--opti_velsurfobs_std OPTI_VELSURFOBS_STD]
-               [--opti_thkobs_std OPTI_THKOBS_STD] [--opti_divfluxobs_std OPTI_DIVFLUXOBS_STD]
-               [--opti_control OPTI_CONTROL] [--opti_cost OPTI_COST] [--opti_nbitmin OPTI_NBITMIN]
-               [--opti_nbitmax OPTI_NBITMAX] [--opti_step_size OPTI_STEP_SIZE]
-               [--opti_output_freq OPTI_OUTPUT_FREQ]
-               [--geology_optimized_file GEOLOGY_OPTIMIZED_FILE]
-               [--plot2d_live_inversion PLOT2D_LIVE_INVERSION]
-               [--plot2d_inversion PLOT2D_INVERSION] [--write_ncdf_optimize WRITE_NCDF_OPTIMIZE]
-               [--editor_plot2d_optimize EDITOR_PLOT2D_OPTIMIZE]
+@article{jouvet2023ice,
+  title={Ice flow model emulator based on physics-informed deep learning},
+  author={Jouvet, Guillaume and Cordonnier, Guillaume},
+  year={2023},
+  publisher={EarthArXiv}
+}
 
-```
-# Arguments
+# I/=
+
+Input: usurfobs,uvelsurfobs,vvelsurfobs,thkobs, ...
+Output: thk, slidingco, usurf
+
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
@@ -49,3 +43,5 @@ usage: argmark [-h] [--opti_vars_to_save OPTI_VARS_TO_SAVE]
 ||`--plot2d_inversion`||plot 2d inversion|
 ||`--write_ncdf_optimize`||write_ncdf_optimize|
 ||`--editor_plot2d_optimize`|`vs`|optimized for VS code (vs) or spyder (sp) for live plot|
+ 
+# Parameters: 

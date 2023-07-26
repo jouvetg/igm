@@ -1,16 +1,17 @@
+### <h1 align="center" id="title">IGM module print_all_comp_info </h1>
 
-argmark
-=======
+# Description:
 
-# Usage:
+This serves to print computational info report
 
+# I/O
 
-```bash
-usage: argmark [-h]
+Input  : .....
+Output : .....
 
-```
-# Arguments
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+ 
+# Parameters: 

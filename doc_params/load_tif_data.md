@@ -1,16 +1,16 @@
+### <h1 align="center" id="title">IGM module load_tif_data </h1>
 
-argmark
-=======
+# Description:
 
-# Usage:
+This IGM module loads input spatial fields from tiff file. You may select
+available fields in variables you need at least topg or usurf, and thk,
+filed e.g. topg.tif, thk.tif must be present in the working forlder.
 
+# I/O:
 
-```bash
-usage: argmark [-h] [--crop_data CROP_DATA] [--crop_xmin CROP_XMIN] [--crop_xmax CROP_XMAX]
-               [--crop_ymin CROP_YMIN] [--crop_ymax CROP_YMAX]
+Input: tiff files
+Output: variables contained inside as tensorflow objects
 
-```
-# Arguments
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
@@ -20,3 +20,5 @@ usage: argmark [-h] [--crop_data CROP_DATA] [--crop_xmin CROP_XMIN] [--crop_xmax
 ||`--crop_xmax`|`None`|crop_xmax|
 ||`--crop_ymin`|`None`|crop_ymin|
 ||`--crop_ymax`|`None`|crop_ymax|
+ 
+# Parameters: 

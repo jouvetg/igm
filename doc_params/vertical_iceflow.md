@@ -1,16 +1,18 @@
+### <h1 align="center" id="title">IGM module vertical_iceflow </h1>
 
-argmark
-=======
+# Description:
 
-# Usage:
+This IGM module computes the vertical component of the velocity
+by integrating the imcompressibility condition
 
+# I/O:
 
-```bash
-usage: argmark [-h]
+Input: U, thk, dX
+Output: W
 
-```
-# Arguments
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+ 
+# Parameters: 

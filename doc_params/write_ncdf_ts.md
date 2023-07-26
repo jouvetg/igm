@@ -1,16 +1,18 @@
+### <h1 align="center" id="title">IGM module write_ncdf_ts </h1>
 
-argmark
-=======
+# Description:
 
-# Usage:
+This IGM module write time serie variables (ice glaciated area and volume)
+into the ncdf output file ts.nc
 
+# I/O:
 
-```bash
-usage: argmark [-h]
+Input: state.thk, state.dx
+Output: ts.nc
 
-```
-# Arguments
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+ 
+# Parameters: 

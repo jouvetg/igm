@@ -1,16 +1,15 @@
 
-argmark
-=======
+### <h1 align="center" id="title">IGM module particle_v1 </h1>
 
-# Usage:
+# Description:
 
+This IGM module implments the former particle tracking routine.
 
-```bash
-usage: argmark [-h] [--tracking_method TRACKING_METHOD] [--frequency_seeding FREQUENCY_SEEDING]
-               [--density_seeding DENSITY_SEEDING]
+# I/O
 
-```
-# Arguments
+Input: uubar,vbar, uvelbase, vvelbase, uvelsurf, vvelsurf
+Output: state.xpos, ...
+
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
@@ -18,3 +17,5 @@ usage: argmark [-h] [--tracking_method TRACKING_METHOD] [--frequency_seeding FRE
 ||`--tracking_method`|`3d`|Method for tracking particles (3d or simple)|
 ||`--frequency_seeding`|`10`|Frequency of seeding (default: 10)|
 ||`--density_seeding`|`0.2`|Density of seeding (default: 0.2)|
+ 
+# Parameters: 

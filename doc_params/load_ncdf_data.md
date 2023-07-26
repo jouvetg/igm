@@ -1,17 +1,14 @@
+### <h1 align="center" id="title">IGM module load_ncdf_data </h1>
 
-argmark
-=======
+# Description:
 
-# Usage:
+This IGM module loads spatial raster data from a netcdf file (default: geology.nc) and transform the fields into tensorflow variables. It also complete the data, e.g. the basal topography from ice thickness and surface topography. It contains the two functions for resampling and cropping the data.
 
+# I/O:
 
-```bash
-usage: argmark [-h] [--geology_file GEOLOGY_FILE] [--resample RESAMPLE] [--crop_data CROP_DATA]
-               [--crop_xmin CROP_XMIN] [--crop_xmax CROP_XMAX] [--crop_ymin CROP_YMIN]
-               [--crop_ymax CROP_YMAX]
+Input: geology.nc
+Output: variables contained inside as tensorflow objects
 
-```
-# Arguments
 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
@@ -23,3 +20,5 @@ usage: argmark [-h] [--geology_file GEOLOGY_FILE] [--resample RESAMPLE] [--crop_
 ||`--crop_xmax`|`None`|X right coordinate for cropping|
 ||`--crop_ymin`|`None`|Y bottom coordinate fro cropping|
 ||`--crop_ymax`|`None`|Y top coordinate for cropping|
+ 
+# Parameters: 

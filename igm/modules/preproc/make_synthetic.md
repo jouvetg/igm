@@ -4,6 +4,4 @@
 
 This IGM module makes a synthetic glacier bedrock with zero thickness for test.
 
-# I/O
-
-Output: variables topg, thk, usurf defining a synthetic case glacier.
+The module return topg, thk, usurf defining a synthetic case glacier.

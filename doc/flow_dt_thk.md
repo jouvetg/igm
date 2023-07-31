@@ -3,16 +3,7 @@
 
 # Description:
 
-This IGM module wraps up module iceflow, time_step and thk.
-
-# Input:
-
-Ice thickness
-
-# Output:
-
-update ice flow, ice thickness, and time step
-
+This IGM module wraps up module iceflow, time_step and thk (check for each modules for the documentation).
  
 # Parameters: 
 

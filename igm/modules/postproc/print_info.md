@@ -2,8 +2,5 @@
 
 # Description:
 
-This IGM modules prints basic information of IGM live while IGM is running
-
-# I/O:
-
-Output: informartion on the fly about ice volume, time steps, ect.
+This IGM modules prints basic information of IGM on the fly about ice volume, 
+time steps, ect.

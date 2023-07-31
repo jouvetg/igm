@@ -6,7 +6,4 @@ This IGM module saves state variables in tiff file at a given frequency.
 Variables to be saved are provided as list in parameter vars_to_save.
 Files will be created with names like thk-000040.tif in the working directory.
 
-# I/O:
-
-Input: variables to be saved
-Output: tiff files
+The module takes variables to be saved and return tiff files

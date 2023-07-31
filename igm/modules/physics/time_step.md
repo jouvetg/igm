@@ -10,7 +10,5 @@ the time step must respect a CFL condition, controlled by parameter params.cfl,
 which is the maximum number of cells crossed in one iteration
 (this parameter cannot exceed one).
 
-# I/O
-
-Input  : state.ubar, state.vbar, state.dx 
-Output : state.dt, state.t, state.it, state.saveresult 
+The module takes as inputs (state.ubar, state.vbar, state.dx) and return as 
+output (state.dt, state.t, state.it, state.saveresult)

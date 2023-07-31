@@ -4,7 +4,5 @@
 
 This IGM module writes particle time-position in csv files at a given freq.
 
-# I/O:
-
-Input: state.xpos, state.ypos, state.zpos, state.rhpos, state.tpos, state.englt
-Output: csv file in forder trajectories
+The module takes state.xpos, state.ypos, state.zpos, state.rhpos, state.tpos, state.englt
+as input and return csv file in forder trajectories

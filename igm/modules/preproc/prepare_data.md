@@ -22,6 +22,4 @@ downloaded from the GlaThiDa depo (https://gitlab.com/wgms/glathida)
 and are rasterized on working grids 
 Script written by G. Jouvet & F. Maussion & E. Welty
 
-# I/O:
-
-Output: all input variable fields neede to run IGM inverse and/or forward
+The module takes all input variable fields neede to run IGM inverse and/or forward

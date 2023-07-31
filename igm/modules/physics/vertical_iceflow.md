@@ -5,7 +5,5 @@
 This IGM module computes the vertical component of the velocity
 by integrating the imcompressibility condition
 
-# I/O:
-
-Input: U, thk, dX
-Output: W
+The module takes as input (state.U, thk, dX) and return the 
+vertical velocity (state.W) 

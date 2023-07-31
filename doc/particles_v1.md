@@ -3,12 +3,8 @@
 
 # Description:
 
-This IGM module implments the former particle tracking routine.
-
-# I/O
-
-Input: uubar,vbar, uvelbase, vvelbase, uvelsurf, vvelsurf
-Output: state.xpos, ...
+This IGM module implments the former particle tracking routine
+associated with iceflow_v1 (check at the doc of particles).
  
 # Parameters: 
 

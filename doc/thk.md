@@ -18,10 +18,8 @@ However, it is subject to a CFL condition. This means that the time step
 which is the maximum number of cells crossed in one iteration
 (this parameter cannot exceed one).
 
-# I/O
-
-Input  : state.ubar, state.vbar, state.thk, state.dx, 
-Output : state.thk, state.usurf, state.lsurf
+The module takes as input (state.ubar, state.vbar, state.thk, state.dx) and return
+as output (state.thk, state.usurf, state.lsurf)
  
 # Parameters: 
 

@@ -28,7 +28,5 @@ I have trained *f15_cfsflow_GJ_22_a* using a large dataset of modeled
 glaciers (based on a Stokes-based CfsFlow ice flow solver) and varying
 sliding coefficient c, and Arrhenius factor A into a 2D space.
 
-# I/O:
-
-Input: thk, usurf, arrhenuis, slidingco
-Output: ubar,vbar, uvelsurf, vvelsurf, uvelbase, vvelbase
+It takes as inputs (thk, usurf, arrhenuis, slidingco) and provides
+as output: (ubar,vbar, uvelsurf, vvelsurf, uvelbase, vvelbase)

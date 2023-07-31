@@ -9,7 +9,5 @@ rate to be proportional (parameter params.erosion_cst) to a power (parameter par
 of the sliding velocity magnitude. By default, we use the parameters from Herman,
 F. et al. Erosion by an Alpine glacier. Science 350, 193-195 (2015).
 
-# I/O
-
-Input  : state.ubar, state.vbar, state.dx 
-Output : state.dt, state.t, state.it, state.saveresult 
+The module takes as input (state.ubar, state.vbar, state.dx) and return as output 
+(state.dt, state.t, state.it, state.saveresult)

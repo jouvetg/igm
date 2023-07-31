@@ -38,10 +38,8 @@ To do so, you may redefine the function seeding_particles.
 * At each time step, the weight of surface debris contains in each cell the 2D
  horizontal grid is computed, and stored in variable igm.weight_particles.
 
-# I/O:
-
-Input: U,W
-Output: state.xpos, ...
+The module needs horizontal velocities (state.U), as well as vertical speeds (state.W)
+that ice computed with the vertical_iceflow module. 
  
 # Parameters: 
 

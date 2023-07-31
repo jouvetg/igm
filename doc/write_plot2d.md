@@ -5,10 +5,7 @@
 This IGM module produces 2D plan-view plots of variable params.varplot at
 a given frequency. The plots are saved as png files in the working directory.
 
-# I/O:
-
-Input: variable to be plotted
-Output: png files
+The module takes variable to be plotted and return png files
  
 # Parameters: 
 

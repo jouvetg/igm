@@ -5,12 +5,7 @@
 # Description:
 
 This IGM modules models a simple mass balance model  parametrized by ELA, ablation
-and accumulation gradients, and max acuumulation from a given file mb_simple_file
-
-# I/O
-
-Input  : state.usurf
-Output : state.smb
+and accumulation gradients, and max accumulation from a given file mb_simple_file.
  
 # Parameters: 
 

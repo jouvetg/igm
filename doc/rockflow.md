@@ -5,11 +5,6 @@
 
 This module extend the ice flow outside the glaciated area to allow particles
 to be evacuated following the stepest gradient of the ice-free terrain.
-
-# I/O
-
-Input: ---
-Output: ----
  
 # Parameters: 
 

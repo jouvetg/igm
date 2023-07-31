@@ -3,11 +3,6 @@
 # Description:
 
 This serves to print computational info report
-
-# I/O
-
-Input  : .....
-Output : .....
  
 # Parameters: 
 

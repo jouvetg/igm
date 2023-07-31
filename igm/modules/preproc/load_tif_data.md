@@ -6,7 +6,4 @@ This IGM module loads input spatial fields from tiff file. You may select
 available fields in variables you need at least topg or usurf, and thk,
 filed e.g. topg.tif, thk.tif must be present in the working forlder.
 
-# I/O:
-
-Input: tiff files
-Output: variables contained inside as tensorflow objects
+The module takes tiff files input and return variables contained inside as tensorflow objects

@@ -8,7 +8,7 @@ import igm
 # Select one OPTION btw the first, keep the MANDATORY ones, un/comment OPTIONAL modules
 modules_preproc =  [ "load_ncdf_data" ]
 
-modules_physics =   [
+modules_process =   [
             "smb_simple",           # OPTIONAL  : custom surface mass balance model
             "flow_dt_thk",          # MANDATORY : update the ice thickness solving mass cons.
 #           "vertical_iceflow",     # OPTIONAL  : retrieve vertical ice flow from horiz.
@@ -27,7 +27,7 @@ modules_postproc = [
                    ]
 
 
-modules = modules_preproc + modules_physics + modules_postproc
+modules = modules_preproc + modules_process + modules_postproc
 
 # Collect and parse all the parameters of all model components
 parser = igm.params_core()
@@ -57,7 +57,7 @@ with tf.device("/GPU:0"):
     for module in modules:
         getattr(igm, "init_" + module)(params, state)
 
-    if not modules_physics==[]:
+    if not modules_process==[]:
         # Time loop, perform the simulation until reaching the defined end time
         while state.t < params.tend:
             # Update each model components in turn

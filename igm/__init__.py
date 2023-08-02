@@ -14,17 +14,17 @@ from igm.modules.preproc.load_tif_data import *
 from igm.modules.preproc.optimize_v1 import *
 from igm.modules.preproc.optimize import *
 
-from igm.modules.physics.iceflow_v1 import *
-from igm.modules.physics.iceflow import *
-from igm.modules.physics.flow_dt_thk import *
-from igm.modules.physics.vertical_iceflow import *
-from igm.modules.physics.smb_simple import *
-from igm.modules.physics.thk import *
-from igm.modules.physics.time_step import *
-from igm.modules.physics.particles_v1 import *
-from igm.modules.physics.particles import *
-from igm.modules.physics.topg_glacial_erosion import *
-from igm.modules.physics.rockflow import *
+from igm.modules.process.iceflow_v1 import *
+from igm.modules.process.iceflow import *
+from igm.modules.process.flow_dt_thk import *
+from igm.modules.process.vertical_iceflow import *
+from igm.modules.process.smb_simple import *
+from igm.modules.process.thk import *
+from igm.modules.process.time_step import *
+from igm.modules.process.particles_v1 import *
+from igm.modules.process.particles import *
+from igm.modules.process.topg_glacial_erosion import *
+from igm.modules.process.rockflow import *
 
 from igm.modules.postproc.print_info import *
 from igm.modules.postproc.print_all_comp_info import *

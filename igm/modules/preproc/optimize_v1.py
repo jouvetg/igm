@@ -14,7 +14,7 @@ from scipy import stats
 from netCDF4 import Dataset
 
 from igm.modules.utils import *
-from igm.modules.physics.iceflow_v1 import *
+from igm.modules.process.iceflow_v1 import *
 
 
 def params_optimize_v1(parser):

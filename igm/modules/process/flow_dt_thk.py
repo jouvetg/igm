@@ -3,9 +3,9 @@
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
-from igm.modules.physics.iceflow import *
-from igm.modules.physics.time_step import *
-from igm.modules.physics.thk import *
+from igm.modules.process.iceflow import *
+from igm.modules.process.time_step import *
+from igm.modules.process.thk import *
 
 
 def params_flow_dt_thk(parser):

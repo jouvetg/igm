@@ -13,10 +13,10 @@ modules_preproc =  [
 #            "load_ncdf_data",       # OPTION 2  : read 2d data from netcdf files
 #           "load_tif_data",        # OPTION 3  : read 2d data from tif files
 #           "make_synthetic",       # OPTION 4  : make a synthetic glacier with ideal geom.
-            "optimize",             # OPTIONAL  : optimize unobservable variables from obs.
+#            "optimize",             # OPTIONAL  : optimize unobservable variables from obs.
                    ]
 
-modules_physics =  [
+modules_process =  [
             "mysmb",                # OPTIONAL  : custom surface mass balance model
             "flow_dt_thk",          # MANDATORY : update the ice thickness solving mass cons.
             "vertical_iceflow",     # OPTIONAL  : retrieve vertical ice flow from horiz.
@@ -34,7 +34,7 @@ modules_postproc = [
 #            "anim3d_from_ncdf_ex"  # OPTIONAL  : make a nice 3D animation of glacier evolution
                    ]
 
-modules = modules_preproc + modules_physics + modules_postproc
+modules = modules_preproc + modules_process + modules_postproc
 
 # Collect and parse all the parameters of all model components
 parser = igm.params_core()
@@ -64,7 +64,7 @@ with tf.device("/GPU:0"):
         getattr(igm, "init_" + module)(params, state)
 
     # Time loop, perform the simulation until reaching the defined end time
-    if not modules_physics==[]:
+    if not modules_process==[]:
         while state.t < params.tend:
             # Update each model components in turn
             for module in modules:

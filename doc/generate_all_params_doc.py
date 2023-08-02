@@ -3,7 +3,7 @@
 import glob,os,sys
 
 
-for m in ['preproc','physics','postproc']:
+for m in ['preproc','process','postproc']:
     
     L = glob.glob('../igm/modules/'+m+'/*.py')
     L = [l.split('/')[-1].split('.')[0] for l in L]

@@ -39,7 +39,7 @@ setup(
 	'tensorflow==2.8.0',
 	'tensorflow-gpu==2.8.0',
 	'tensorflow_addons',
-    'protobuf==3.20.3',
+        'protobuf==3.20.3',
 	'xarray',
 	'importlib_resources',
 	'tables',

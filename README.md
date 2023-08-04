@@ -1,7 +1,7 @@
 [![License badge](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ### <h1 align="center" id="title">The Instructed Glacier Model (IGM) -- 2.0 </h1>
 
-# Overview   
+# Overview    
 
 IGM simulates the ice dynamics, surface mass balance, and its coupling through mass conservation to predict the **evolution of glaciers, icefields, or ice sheets**. The specificity of IGM is that it models the ice flow by a **Neural Network**, which is trained from ice flow physics. Doing so permits to **speed-up** and **facilitate** considerably the implementation of the **forward model** and the **inverse model** required to assimilate data. As a result, IGM permits **user-friendly**, **highly-efficient**, and **mechanically state-of-the-art** glacier simulations with **data assimilation / inversion** capability. IGM is a **modular** open-source **Python** package, which runs across both **CPU and GPU** and deals with **two-dimensional gridded** input and output data. 
   

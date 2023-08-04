@@ -13,7 +13,7 @@ The script returns the geology.nc file as necessary for run
 IGM for a forward glacier evolution run, and optionaly 
 observation.nc that permit to do a first step of data assimilation & inversion. 
 Data are currently based on COPERNIUS DEM 90 
-the RGI, and the ice thckness and velocity from (MIllan, 2022) 
+the RGI, and the ice thckness and velocity from (Millan, 2022) 
 For the ice thickness in geology.nc, the use can choose 
 between consensus_ice_thickness (farinotti2019) or
 millan_ice_thickness (millan2022) dataset 
@@ -22,7 +22,29 @@ downloaded from the GlaThiDa depo (https://gitlab.com/wgms/glathida)
 and are rasterized on working grids 
 Script written by G. Jouvet & F. Maussion & E. Welty
 
-The module takes all input variable fields neede to run IGM inverse and/or forward
+The module takes all input variable fields needed to run IGM inverse and/or forward
+
+# Installing OGGM for IGM
+
+OGGM is used to fetch pre-processed data from the OGGM servers. For this 
+functionality, the following minimal conda/mamba environment should be enough:
+
+```
+name: oggm_igm_minimal
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - geopandas
+  - salem
+  - matplotlib
+  - configobj
+  - netcdf4
+  - xarray
+  - oggm
+```
+
+You'll need to add the packages required by IGM of course.
  
 # Parameters: 
 

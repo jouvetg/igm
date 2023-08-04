@@ -206,13 +206,25 @@ def _oggm_util(RGIs, params):
     import oggm.cfg as cfg
     from oggm import utils, workflow, tasks, graphics
 
-    # Initialize OGGM and set up the default run parameters
-    cfg.initialize()
-
-    cfg.PARAMS["continue_on_error"] = False
-    cfg.PARAMS["use_multiprocessing"] = False
-
     if params.preprocess:
+        # This uses OGGM preprocessed directories
+        # I think that a minimal environment should be enough for this to run
+        # Required packages:
+        #   - numpy
+        #   - geopandas
+        #   - salem
+        #   - matplotlib
+        #   - configobj
+        #   - netcdf4
+        #   - xarray
+        #   - oggm
+
+        # Initialize OGGM and set up the default run parameters
+        cfg.initialize_minimal()
+
+        cfg.PARAMS["continue_on_error"] = False
+        cfg.PARAMS["use_multiprocessing"] = False
+
         WD = "OGGM-prepro"
 
         # Where to store the data for the run - should be somewhere you have access to
@@ -222,14 +234,25 @@ def _oggm_util(RGIs, params):
         rgi_ids = utils.get_rgi_glacier_entities(RGIs)
 
         base_url = (
-            "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v1"
+            "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v2"
         )
         gdirs = workflow.init_glacier_directories(
-            rgi_ids, prepro_border=30, from_prepro_level=2, prepro_base_url=base_url
+            # Start from level 3 if you want some climate data in them
+            rgi_ids, prepro_border=40, from_prepro_level=2, prepro_base_url=base_url
         )
 
     else:
+        # Note: if you start from here you'll need most of the packages
+        # needed by OGGM, since you start "from scratch" entirely
+        # In my view this code should almost never be needed
+
         WD = "OGGM-dir"
+
+        # Initialize OGGM and set up the default run parameters
+        cfg.initialize()
+
+        cfg.PARAMS["continue_on_error"] = False
+        cfg.PARAMS["use_multiprocessing"] = False
 
         # Map resolution parameters
         cfg.PARAMS["grid_dx_method"] = "fixed"

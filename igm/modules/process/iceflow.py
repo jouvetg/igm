@@ -77,6 +77,18 @@ def params_iceflow(parser):
     parser.add_argument(
         "--exp_weertman", type=float, default=3, help="Weertman's law exponent"
     )
+    parser.add_argument(
+        "--gravity_cst",
+        type=float,
+        default=9.81,
+        help="Gravitational constant",
+    )
+    parser.add_argument(
+        "--ice_density",
+        type=float,
+        default=910,
+        help="Density of ice",
+    )
 
     # vertical discretization
     parser.add_argument(
@@ -528,12 +540,14 @@ def iceflow_energy(params, U, fieldin):
                            params.Nz, params.vert_spacing, 
                            params.exp_glen, params.exp_weertman, 
                            params.regu_glen, params.regu_weertman,
-                           params.thr_ice_thk, params.iceflow_physics)
+                           params.thr_ice_thk, params.iceflow_physics,
+                           params.ice_density, params.gravity_cst)
      
 @tf.function(experimental_relax_shapes=True)
 def _iceflow_energy(U, thk, usurf, arrhenius, slidingco, dX,
                     Nz, vert_spacing, exp_glen, exp_weertman, 
-                    regu_glen, regu_weertman, thr_ice_thk, iceflow_physics):
+                    regu_glen, regu_weertman, thr_ice_thk, 
+                    iceflow_physics, ice_density, gravity_cst):
     
     # warning, the energy is here normalized dividing by int_Omega
 
@@ -615,8 +629,8 @@ def _iceflow_energy(U, thk, usurf, arrhenius, slidingco, dX,
         uds = _stag8(U[:, 0]) * slopsurfx + _stag8(U[:, 1]) * slopsurfy
         uds = tf.where(COND, uds, 0.0)
         C_grav = (
-            910
-            * 9.81
+            ice_density
+            * gravity_cst
             * 10 ** (-6)
             * tf.reduce_mean(tf.reduce_sum(dz * uds, axis=1), axis=(-1, -2))
         )
@@ -628,8 +642,8 @@ def _iceflow_energy(U, thk, usurf, arrhenius, slidingco, dX,
         p = _stag8(U[:, 3])
         p = tf.where(COND, p, 0.0)
         C_grav = (
-            910
-            * 9.81
+            ice_density
+            * gravity_cst
             * 10 ** (-6)
             * tf.reduce_mean(tf.reduce_sum(dz * w, axis=1), axis=(-1, -2))
             - 10 ** (-6)

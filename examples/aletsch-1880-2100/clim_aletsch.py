@@ -7,7 +7,6 @@ import numpy as np
 import os, sys, shutil
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import igm
 import time
 
 def params_clim_aletsch(parser):
@@ -127,10 +126,4 @@ def update_clim_aletsch(params,state):
 
 def  final_clim_aletsch(params,state):
     pass
-
-# make sure to make these function new attributes of the igm module
-igm.params_clim_aletsch  = params_clim_aletsch  
-igm.init_clim_aletsch    = init_clim_aletsch  
-igm.update_clim_aletsch  = update_clim_aletsch
-igm.final_clim_aletsch   = final_clim_aletsch
-    
+ 

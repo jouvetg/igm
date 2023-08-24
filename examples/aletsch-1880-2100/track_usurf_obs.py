@@ -18,7 +18,6 @@ import numpy as np
 import os, sys, shutil
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import igm
 import time
 from netCDF4 import Dataset
 
@@ -56,10 +55,3 @@ def update_track_usurf_obs(params,state):
 
 def  final_track_usurf_obs(params,state):
     pass
-
-# make sure to make these function new attributes of the igm module
-igm.params_track_usurf_obs  = params_track_usurf_obs  
-igm.init_track_usurf_obs    = init_track_usurf_obs  
-igm.update_track_usurf_obs  = update_track_usurf_obs
-igm.final_track_usurf_obs   = final_track_usurf_obs
-    

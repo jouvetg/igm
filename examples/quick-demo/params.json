@@ -1,0 +1,15 @@
+{
+  "modules_preproc": ["prepare_data"],
+  "modules_process": ["mysmb",
+                      "flow_dt_thk",
+                      "vertical_iceflow",
+                      "particles"],
+  "modules_postproc": ["write_ncdf_ex",
+                       "write_plot2d",
+                       "print_info",
+                       "print_all_comp_info"],
+  "RGI": "RGI60-11.01238",
+  "tstart": 2000.0,
+  "tend": 2100.0,
+  "plot_live": true
+}

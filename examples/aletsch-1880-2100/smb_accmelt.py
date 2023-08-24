@@ -25,7 +25,6 @@ import os, sys, shutil
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from netCDF4 import Dataset
-import igm
 from scipy.interpolate import interp1d
 import time
 
@@ -246,11 +245,3 @@ def update_smb_accmelt(params,state):
 
 def final_smb_accmelt(params,state):
     pass
-
-
-# make sure to make these function new attributes of the igm module
-igm.params_smb_accmelt  = params_smb_accmelt  
-igm.init_smb_accmelt    = init_smb_accmelt  
-igm.update_smb_accmelt  = update_smb_accmelt
-igm.final_smb_accmelt   = final_smb_accmelt
-    

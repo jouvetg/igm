@@ -2,7 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import igm
 import math
 
  ## add custumized smb function
@@ -26,9 +25,3 @@ def update_mysmb(params,state):
     
 def final_mysmb(params,state):
     pass
-
-# make sure to make these function new attributes of the igm module
-igm.params_mysmb  = params_mysmb  
-igm.init_mysmb    = init_mysmb  
-igm.update_mysmb  = update_mysmb
-igm.final_mysmb   = final_mysmb

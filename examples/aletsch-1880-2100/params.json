@@ -1,0 +1,37 @@
+{
+  "modules_preproc": [
+    "load_ncdf_data",
+    "track_usurf_obs"
+  ],
+  "modules_process": [
+    "clim_aletsch",
+    "smb_accmelt",
+    "flow_dt_thk",
+    "rockflow",
+    "vertical_iceflow",
+    "particles"
+  ],
+  "modules_postproc": [
+    "write_ncdf_ex",
+    "write_plot2d",
+    "print_info",
+    "print_all_comp_info",
+    "anim3d_from_ncdf_ex"
+  ],
+  "tstart": 1880.0,
+  "tend": 2020.0,
+  "tsave": 5.0,
+  "plot_live": true,
+  "init_slidingco": 5000,
+  "weight_accumulation": 1.0,
+  "weight_ablation": 1.25,
+  "opti_nbitmax": 500,
+  "opti_control": ["thk"],
+  "opti_cost": ["velsurf", "thk", "icemask"],
+  "opti_convexity_weight": 0,
+  "opti_regu_param_thk": 10,
+  "frequency_seeding": 500,
+  "tracking_method": "simple",
+  "density_seeding": 1,
+  "geology_file": "geology.nc"
+}

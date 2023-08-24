@@ -1,7 +1,6 @@
 # Import the most important libraries
 import numpy as np
 import tensorflow as tf
-import igm
 from netCDF4 import Dataset
 import os
 
@@ -40,6 +39,4 @@ def seeding_particles(params, state):
     state.ntpos  = tf.ones_like(state.X[I]) * state.t
     state.nenglt = tf.zeros_like(state.X[I])
 
-igm.seeding_particles = seeding_particles
-igm.init_particles    = init_particles
 

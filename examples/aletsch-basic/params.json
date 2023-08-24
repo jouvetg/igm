@@ -1,0 +1,17 @@
+{
+  "modules_preproc": ["load_ncdf_data"],
+  "modules_process": ["smb_simple",
+                      "flow_dt_thk",
+                      "vertical_iceflow",
+                      "particles"
+                    ],
+  "modules_postproc": ["write_ncdf_ex",
+                       "write_plot2d",
+                       "print_info",
+                       "print_all_comp_info",
+                       "anim3d_from_ncdf_ex"],
+  "tstart": 100.0,
+  "tend": 200.0,
+  "tsave": 10.0,
+  "plot_live": true
+}

@@ -138,10 +138,10 @@ def params_iceflow(parser):
         help="Input parameter of the iceflow emulator",
     )    
     parser.add_argument(
-        "--z_dept_arrhenius",
-        type=str2bool,
-        default=False,
-        help="dimension of each field in z",
+        "--dim_arrhenius",
+        type=int,
+        default=2,
+        help="dimension of the arrhenius factor (horizontal 2D or 3D)",
     )
 
 
@@ -234,7 +234,7 @@ def init_iceflow(params, state):
     # here we initialize variable parmaetrizing ice flow
     if not hasattr(state, "arrhenius"):
         
-        if params.z_dept_arrhenius:
+        if params.dim_arrhenius==3:
             state.arrhenius = tf.Variable( \
                 tf.ones((params.Nz,state.thk.shape[0],state.thk.shape[1])) \
                                           * params.init_arrhenius )
@@ -269,7 +269,7 @@ def init_iceflow(params, state):
 
         # if empty string, we create a deel learning emaultor from scratch
         if params.emulator == "":
-            nb_inputs  = len(params.fieldin) + params.z_dept_arrhenius*(params.Nz-1)
+            nb_inputs  = len(params.fieldin) + (params.dim_arrhenius==3)*(params.Nz-1)
             nb_outputs = params.iceflow_physics * params.Nz
             state.iceflow_model = getattr(igm, params.network)(params, nb_inputs, nb_outputs)
 
@@ -282,16 +282,19 @@ def init_iceflow(params, state):
                 dirpath = params.emulator
  
             fieldin = []
-            fieldin_dim = []
+#            fieldin_dim = []
             fid = open(os.path.join(dirpath, "fieldin.dat"), "r")
             for fileline in fid:
                 part = fileline.split()
                 fieldin.append(part[0])
-                fieldin_dim.append(int(part[1]))
+#                fieldin_dim.append(int(part[1]))
             fid.close()
             
-            params.fieldin          = fieldin           
-            params.z_dept_arrhenius = (fieldin_dim[2]==1)
+            params.fieldin      = fieldin           
+#            if (fieldin_dim[2]==1):
+#                params.dim_arrhenius = 3
+#            else:
+#                params.dim_arrhenius = 2
 
             fid = open(os.path.join(dirpath, "vert_grid.dat"), "r")
             for i, fileline in enumerate(fid):
@@ -308,11 +311,10 @@ def init_iceflow(params, state):
                             params.vert_spacing,
                         )
             fid.close()
-
-            state.iceflow_model = tf.keras.models.load_model(
-                os.path.join(dirpath, "model.h5")
-            )
-
+            
+            file = 'model_'+str(params.dim_arrhenius)+'D_arrhenius.h5'
+            state.iceflow_model = tf.keras.models.load_model( os.path.join(dirpath, file) )
+ 
             state.iceflow_model.compile()
 
     if not params.type_iceflow == "emulated":
@@ -725,21 +727,21 @@ def fieldin_to_X(params,fieldin):
     
     X = []
      
-    fieldin_dim=[0,0,1.0*params.z_dept_arrhenius,0,0]
-    
+    fieldin_dim=[0,0,1*(params.dim_arrhenius==3),0,0]
+
     for f,s in zip(fieldin,fieldin_dim):
         if s==0:
             X.append( tf.expand_dims(f,  axis=-1) )
         else:
             X.append( tf.experimental.numpy.moveaxis(f, [0], [-1]) )
               
-    return tf.expand_dims( tf.concat(X, axis=-1), axis=0) 
+    return  tf.expand_dims( tf.concat(X, axis=-1), axis=0)  
 
 def X_to_fieldin(params, X):
 
     i = 0
     
-    fieldin_dim=[0,0,1.0*params.z_dept_arrhenius,0,0]
+    fieldin_dim=[0,0,1*(params.dim_arrhenius==3),0,0]
     
     fieldin = []
     
@@ -970,7 +972,8 @@ def computemisfit(state, thk, U):
     vbar = tf.reduce_sum(state.vert_weight * U[1], axis=0)
 
     VEL = tf.stack([ubar, vbar], axis=0)
-    MA = tf.where(state.thk > 1, tf.ones_like(VEL), 0)
+    MA = tf.where(thk > 1, tf.ones_like(VEL), 0)
+    #MA = tf.where(state.thk > 1, tf.ones_like(VEL), 0)
 
     nl1diff = tf.reduce_sum(MA * tf.abs(VEL)) / tf.reduce_sum(MA)
     nl2diff = tf.reduce_sum(MA * tf.abs(VEL) ** 2) / tf.reduce_sum(MA)
@@ -1069,11 +1072,13 @@ def save_iceflow_model(params, state):
 
     state.iceflow_model.save(os.path.join(directory, "model.h5"))
     
-    fieldin_dim=[0,0,1.0*params.z_dept_arrhenius,0,0]
+#    fieldin_dim=[0,0,1*(params.dim_arrhenius==3),0,0]
 
     fid = open(os.path.join(directory, "fieldin.dat"), "w")
-    for key,gg in zip(params.fieldin,fieldin_dim):
-        fid.write("%s %.1f \n" % (key, gg))
+#    for key,gg in zip(params.fieldin,fieldin_dim):
+#        fid.write("%s %.1f \n" % (key, gg))
+    for key in params.fieldin:
+        fid.write("%s %.1f \n" % (key))
     fid.close()
 
     fid = open(os.path.join(directory, "vert_grid.dat"), "w")

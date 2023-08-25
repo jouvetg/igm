@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
  
 import numpy as np
-import importlib,os
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import igm

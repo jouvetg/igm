@@ -32,6 +32,5 @@
   "opti_regu_param_thk": 10,
   "frequency_seeding": 500,
   "tracking_method": "simple",
-  "density_seeding": 1,
-  "geology_file": "geology.nc"
+  "density_seeding": 1
 }

@@ -15,10 +15,10 @@ from igm.modules.utils import *
 
 def params_load_ncdf_data(parser):
     parser.add_argument(
-        "--geology_file",
+        "--input_file",
         type=str,
-        default="geology.nc",
-        help="Input data file (default: geology.nc)",
+        default="input.nc",
+        help="Input data file",
     )
     parser.add_argument(
         "--resample",
@@ -61,7 +61,7 @@ def init_load_ncdf_data(params, state):
     if hasattr(state,'logger'):
         state.logger.info("LOAD NCDF file")
 
-    nc = Dataset(os.path.join(params.working_dir, params.geology_file), "r")
+    nc = Dataset(os.path.join(params.working_dir, params.input_file), "r")
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")

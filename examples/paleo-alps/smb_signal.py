@@ -45,7 +45,7 @@ def init_smb_signal(params,state):
         Retrieve the Temperature difference from the EPICA signal
     """
     # load the EPICA signal from theparams,state official data
-    ss = np.loadtxt('data-for-paleo-tuto/EDC_dD_temp_estim.tab',dtype=np.float32,skiprows=31)
+    ss = np.loadtxt('data/EDC_dD_temp_estim.tab',dtype=np.float32,skiprows=31)
     time = ss[:,1] * -1000  # extract time BP, chnage unit to yeat
     dT   = ss[:,3]          # extract the dT, i.e. global temp. difference
     state.dT =  interp1d(time,dT, fill_value=(dT[0], dT[-1]),bounds_error=False)

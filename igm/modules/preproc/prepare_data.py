@@ -54,18 +54,11 @@ def params_prepare_data(parser):
               to redownload it at any use of the script",
     )
     parser.add_argument(
-        "--output_geology",
+        "--save_input_ncdf",
         type=str2bool,
         default=True,
         help="Write prepared data into a geology file",
     )
-    # parser.add_argument(
-    #     "--geology_file",
-    #     type=str,
-    #     default="geology.nc",
-    #     help="Name of the geology file"
-    # )
-
 
 def init_prepare_data(params, state):
 
@@ -143,7 +136,7 @@ def init_prepare_data(params, state):
 
     ########################################################
 
-    if params.output_geology:
+    if params.save_input_ncdf:
 
         var_info = {}
         var_info["thk"] = ["Ice Thickness", "m"]
@@ -156,7 +149,7 @@ def init_prepare_data(params, state):
         var_info["vvelsurfobs"] = ["y surface velocity of ice", "m/y"]
         var_info["icemask"] = ["Ice mask", "no unit"]
 
-        nc = Dataset(os.path.join(params.working_dir, "geology.nc"), "w", format="NETCDF4")
+        nc = Dataset(os.path.join(params.working_dir, "input_saved.nc"), "w", format="NETCDF4")
 
         nc.createDimension("y", len(y))
         yn = nc.createVariable("y", np.dtype("float32").char, ("y",))

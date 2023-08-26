@@ -20,6 +20,8 @@ This IGM module wraps up module iceflow, time_step and thk (check for each modul
 ||`--regu_weertman`|`1e-10`|Regularization parameter for Weertman's sliding law|
 ||`--exp_glen`|`3`|Glen's flow law exponent|
 ||`--exp_weertman`|`3`|Weertman's law exponent|
+||`--gravity_cst`|`9.81`|Gravitational constant|
+||`--ice_density`|`910`|Density of ice|
 ||`--Nz`|`10`|Nz for the vertical discretization|
 ||`--vert_spacing`|`4.0`|1.0 for equal vertical spacing, 4.0 otherwise (4.0)|
 ||`--thr_ice_thk`|`0.1`|Threshold Ice thickness for computing strain rate|
@@ -27,7 +29,7 @@ This IGM module wraps up module iceflow, time_step and thk (check for each modul
 ||`--solve_iceflow_nbitmax`|`100`|solver_nbitmax|
 ||`--stop_if_no_decrease`||stop_if_no_decrease for the solver|
 ||`--fieldin`|`['thk', 'usurf', 'arrhenius', 'slidingco', 'dX']`|Input parameter of the iceflow emulator|
-||`--z_dept_arrhenius`||dimension of each field in z|
+||`--dim_arrhenius`|`2`|dimension of the arrhenius factor (horizontal 2D or 3D)|
 ||`--retrain_iceflow_emulator_freq`|`10`|retrain_iceflow_emulator_freq|
 ||`--retrain_iceflow_emulator_lr`|`2e-05`|retrain_iceflow_emulator_lr|
 ||`--retrain_iceflow_emulator_nbit`|`1`|retrain_iceflow_emulator_nbit|

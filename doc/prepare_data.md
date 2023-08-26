@@ -13,7 +13,7 @@ The script returns the geology.nc file as necessary for run
 IGM for a forward glacier evolution run, and optionaly 
 observation.nc that permit to do a first step of data assimilation & inversion. 
 Data are currently based on COPERNIUS DEM 90 
-the RGI, and the ice thckness and velocity from (Millan, 2022) 
+the RGI, and the ice thckness and velocity from (MIllan, 2022) 
 For the ice thickness in geology.nc, the use can choose 
 between consensus_ice_thickness (farinotti2019) or
 millan_ice_thickness (millan2022) dataset 
@@ -22,29 +22,7 @@ downloaded from the GlaThiDa depo (https://gitlab.com/wgms/glathida)
 and are rasterized on working grids 
 Script written by G. Jouvet & F. Maussion & E. Welty
 
-The module takes all input variable fields needed to run IGM inverse and/or forward
-
-# Installing OGGM for IGM
-
-OGGM is used to fetch pre-processed data from the OGGM servers. For this 
-functionality, the following minimal conda/mamba environment should be enough:
-
-```
-name: oggm_igm_minimal
-channels:
-  - conda-forge
-dependencies:
-  - numpy
-  - geopandas
-  - salem
-  - matplotlib
-  - configobj
-  - netcdf4
-  - xarray
-  - oggm
-```
-
-You'll need to add the packages required by IGM of course.
+The module takes all input variable fields neede to run IGM inverse and/or forward
  
 # Parameters: 
 
@@ -59,4 +37,4 @@ You'll need to add the packages required by IGM of course.
 ||`--thk_source`|`consensus_ice_thickness`|millan_ice_thickness or consensus_ice_thickness in geology.nc|
 ||`--include_glathida`||Make observation file (for IGM inverse)|
 ||`--path_glathida`|`/home/gjouvet/`|Path where the Glathida Folder is store, so that you don't need               to redownload it at any use of the script|
-||`--output_geology`||Write prepared data into a geology file|
+||`--save_input_ncdf`||Write prepared data into a geology file|

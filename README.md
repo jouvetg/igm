@@ -3,15 +3,15 @@
 
 # Overview    
 
-The Instructed Glacier Model (IGM) is an **open-source Python package** and a **3D glacier evolution model**, which can simulate the coupling between ice thermo-dynamics, surface mass balance, mass concervation amon others. IGM features:
+The Instructed Glacier Model (IGM) is an **open-source Python package** and a **3D glacier evolution model**, which can simulate the coupling between ice thermo-dynamics, surface mass balance, mass conservation amon others. IGM features:
 
 - **State-of-the-art physics:** IGM implements **high-order** 3D ice flow mechanics, an **Enthalpy** model, **melt/accumulation surface mass balance** model, and an increasing number of other glaciological processes.
 
-- **Computational high efficiency:** Thanks to the **TensorFlow library**, mathematial operations are **vectorized**, and therefore run in parrallel. This permits tremendous **speed-ups on GPU**. **Physics-informed deep learning** is used as an alternative to solver for modelling ice flow physics in a parrallelized way. While GPU are highly recommended for large modelled domain, IGM runs fairly-well on CPU for individual glaciers.
+- **Computational high efficiency:** Thanks to the **TensorFlow library**, mathematical operations are **vectorized**. This permits tremendous **speed-ups on GPU**. **Physics-informed deep learning** is used as an alternative to solver for modelling ice flow physics in a parrallelized way. While GPU are highly-recommended for large modelled domain, IGM runs fairly well on CPU for individual glaciers.
 
-- **Automatic differentiation:** TensorFlow operations permits Automatic Differentiaion, which strongly facilitate and speed-up inverse modelling / data assimilation, as well training of the ice flo neural network.
+- **Automatic differentiation:** TensorFlow operations permits automatic differentiaion, which strongly facilitates and speeds-up inverse modelling / data assimilation, as well training of the ice flow neural network.
 
-- **Simplicity and modularity:** IGM uses the most popular programming language -- Python -- at a relative low level of abstractivity. IGM is organized **module-wise** to facilitate coupling, user-customization and commmunity development. For simplicity, IGM assumes horizontal regular gridded discrtuzation and deals with **2D gridded input and output data**.
+- **Simplicity and modularity:** IGM uses the most popular programming language -- Python -- at a relative low level of abstractivity. IGM is organized **module-wise** to facilitate coupling, user-customization and commmunity development. For simplicity, IGM assumes horizontal regular gridded discretization and deals with **2D gridded input and output data**.
 
 
 # Documentation

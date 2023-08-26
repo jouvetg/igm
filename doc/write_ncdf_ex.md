@@ -3,10 +3,10 @@
 # Description:
 
 This IGM modules write 2D field variables defined in the list 
-params.vars_to_save_ncdf_ex into the ncdf output file ex.nc
+params.vars_to_save_ncdf_ex into the ncdf output file output.nc
 
 The module takes variables defined in params.vars_to_save_ncdf_ex
-as input and return ex.nc
+as input and return output.nc
  
 # Parameters: 
 

@@ -2,9 +2,9 @@
 
 # Description:
 
-This IGM modules makes a 3D animated plot using mayavi library from the ex.nc 
+This IGM modules makes a 3D animated plot using mayavi library from the output.nc 
 netcdf file over time. It only implements the 'final' function, the rest 
 ('init', 'update') doing nothing.
 
-The module takes ncdf file ex.nc of transient 2d gridded data and return
+The module takes ncdf file output.nc of transient 2d gridded data and return
 interactive 3D plot.

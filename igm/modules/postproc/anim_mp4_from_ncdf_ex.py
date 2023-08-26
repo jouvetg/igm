@@ -24,7 +24,7 @@ def final_anim_mp4_from_ncdf_ex(params, state):
     import xarray as xr
     from matplotlib import animation
 
-    ds = xr.open_dataset(os.path.join(params.working_dir, "ex.nc"), engine="netcdf4")
+    ds = xr.open_dataset(os.path.join(params.working_dir, "output.nc"), engine="netcdf4")
 
     tas = ds.thk
 

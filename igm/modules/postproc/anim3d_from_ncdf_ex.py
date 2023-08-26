@@ -28,7 +28,7 @@ def final_anim3d_from_ncdf_ex(params, state):
 
     plt.close("all")
 
-    ds = xr.open_dataset(os.path.join(params.working_dir, "ex.nc"), engine="netcdf4")
+    ds = xr.open_dataset(os.path.join(params.working_dir, "output.nc"), engine="netcdf4")
 
     X, Y = np.meshgrid(ds.x, ds.y)
 

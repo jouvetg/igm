@@ -3,8 +3,8 @@
 # Description:
 
 This IGM module makes an animated mp4 video of ice thickness overt tim from 
-the netcdf ex.nc file produced by module write_ncdf_ex. It only implements the
+the netcdf output.nc file produced by module write_ncdf_ex. It only implements the
 'final' function, the rest ('init', 'update') doing nothing.
 
-The module takes ncdf file ex.nc of transient 2d gridded data as input and 
+The module takes ncdf file output.nc of transient 2d gridded data as input and 
 producs a mp4 animation of the ice thickness over time.

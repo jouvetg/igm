@@ -10,11 +10,16 @@ import tensorflow as tf
 from netCDF4 import Dataset
 
 def params_write_ncdf_ts(state):
-    pass
+    parser.add_argument(
+        "--output_file_ncdf_ts",
+        type=str,
+        default="output_ts.nc",
+        help="Output ncdf data file (time serie)",
+    )
 
 
 def init_write_ncdf_ts(params, state):
-    os.system("echo rm " + os.path.join(params.working_dir, "ts.nc") + " >> clean.sh")
+    os.system("echo rm " + os.path.join(params.working_dir, params.output_file_ncdf_ts) + " >> clean.sh")
 
     state.var_info_ncdf_ts = {}
     state.var_info_ncdf_ts["vol"] = ["Ice volume", "km^3"]
@@ -34,7 +39,7 @@ def update_write_ncdf_ts(params, state):
                 state.logger.info("Initialize NCDF ts output Files")
 
             nc = Dataset(
-                os.path.join(params.working_dir, "ts.nc"),
+                os.path.join(params.working_dir, params.output_file_ncdf_ts),
                 "w",
                 format="NETCDF4",
             )
@@ -53,14 +58,12 @@ def update_write_ncdf_ts(params, state):
                 E.units = state.var_info_ncdf_ts[var][1]
             nc.close()
 
-            # os.system('echo rm '+ os.path.join(params.working_dir, "ts.nc") + ' >> clean.sh')
-
         else:
             if hasattr(state,'logger'):
                 state.logger.info("Write NCDF ts file at time : " + str(state.t.numpy()))
 
             nc = Dataset(
-                os.path.join(params.working_dir, "ts.nc"),
+                os.path.join(params.working_dir, params.output_file_ncdf_ts),
                 "a",
                 format="NETCDF4",
             )

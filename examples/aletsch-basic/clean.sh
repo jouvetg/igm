@@ -3,3 +3,8 @@ rm ex.nc
 rm velbar_mag*.png
 rm computational-statistics.txt
 rm computational-pie.png
+rm params_saved.json
+rm output.nc
+rm velbar_mag*.png
+rm computational-statistics.txt
+rm computational-pie.png

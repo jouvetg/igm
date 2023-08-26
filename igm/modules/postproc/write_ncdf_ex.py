@@ -14,6 +14,14 @@ from netCDF4 import Dataset
 from igm.modules.utils import getmag
 
 def params_write_ncdf_ex(parser):
+    
+    parser.add_argument(
+        "--output_file_ncdf_ex",
+        type=str,
+        default="output.nc",
+        help="Output ncdf data file",
+    )
+    
     parser.add_argument(
         "--vars_to_save_ncdf_ex",
         type=list,
@@ -35,7 +43,7 @@ def params_write_ncdf_ex(parser):
 def init_write_ncdf_ex(params, state):
     state.tcomp_write_ncdf_ex = []
 
-    os.system("echo rm " + os.path.join(params.working_dir, "ex.nc") + " >> clean.sh")
+    os.system("echo rm " + os.path.join(params.working_dir, params.output_file_ncdf_ex) + " >> clean.sh")
 
     # give information on variables for output ncdf, TODO: IMPROVE
     state.var_info_ncdf_ex = {}
@@ -92,7 +100,7 @@ def update_write_ncdf_ex(params, state):
                 state.logger.info("Initialize NCDF ex output Files")
 
             nc = Dataset(
-                os.path.join(params.working_dir, "ex.nc"),
+                os.path.join(params.working_dir, params.output_file_ncdf_ex),
                 "w",
                 format="NETCDF4",
             )
@@ -132,7 +140,7 @@ def update_write_ncdf_ex(params, state):
                 state.logger.info("Write NCDF ex file at time : " + str(state.t.numpy()))
 
             nc = Dataset(
-                os.path.join(params.working_dir, "ex.nc"),
+                os.path.join(params.working_dir, params.output_file_ncdf_ex),
                 "a",
                 format="NETCDF4",
             )

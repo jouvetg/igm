@@ -29,7 +29,7 @@ Don't forget to clean behind you:
 
 # Vizualize results
 
-After any run, you may plot some results with companion python scripts (plot-result.py), or vizualize results with `ncview ex.nc`.
+After any run, you may plot some results with companion python scripts (plot-result.py), or vizualize results with `ncview output.nc`.
 
 # References
 

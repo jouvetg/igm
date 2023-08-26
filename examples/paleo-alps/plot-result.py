@@ -13,7 +13,7 @@ dist = np.cumsum( np.sqrt( np.diff(fl[:,0])**2 + np.diff(fl[:,1])**2 ) )
 dist = np.insert(dist,0,0) / 1000
 
 # open IGM's output
-nc      = Dataset('ex.nc', 'r')        
+nc      = Dataset('output.nc', 'r')        
 time    = nc.variables['time'][:] ;
 x       = np.squeeze(nc.variables['x']) ;
 y       = np.squeeze(nc.variables['y']) ;

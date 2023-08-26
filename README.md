@@ -3,16 +3,21 @@
 
 # Overview    
 
-IGM simulates the ice dynamics, surface mass balance, and its coupling through mass conservation to predict the **evolution of glaciers, icefields, or ice sheets**. The specificity of IGM is that it models the ice flow by a **Neural Network**, which is trained from ice flow physics. Doing so permits to **speed-up** and **facilitate** considerably the implementation of the **forward model** and the **inverse model** required to assimilate data. As a result, IGM permits **user-friendly**, **highly-efficient**, and **mechanically state-of-the-art** glacier simulations with **data assimilation / inversion** capability. IGM is a **modular** open-source **Python** package, which runs across both **CPU and GPU** and deals with **two-dimensional gridded** input and output data. 
-  
+The Instructed Glacier Model (IGM) is an **open-source Python package** and a **3D glacier evolution model**, which can simulate the coupling between ice thermo-dynamics, surface mass balance, mass concervation amon others. IGM features:
+
+- **State-of-the-art physics:** IGM implements **high-order** 3D ice flow mechanics, an **Enthalpy** model, **melt/accumulation surface mass balance** model, and an increasing number of other glaciological processes.
+
+- **Computational high efficiency:** Thanks to the **TensorFlow library**, mathematial operations are **vectorized**, and therefore run in parrallel. This permits tremendous **speed-ups on GPU**. **Physics-informed deep learning** is used as an alternative to solver for modelling ice flow physics in a parrallelized way. While GPU are highly recommended for large modelled domain, IGM runs fairly-well on CPU for individual glaciers.
+
+- **Automatic differentiation:** TensorFlow operations permits Automatic Differentiaion, which strongly facilitate and speed-up inverse modelling / data assimilation, as well training of the ice flo neural network.
+
+- **Simplicity and modularity:** IGM uses the most popular programming language -- Python -- at a relative low level of abstractivity. IGM is organized **module-wise** to facilitate coupling, user-customization and commmunity development. For simplicity, IGM assumes horizontal regular gridded discrtuzation and deals with **2D gridded input and output data**.
+
+
 # Documentation
 
 IGM's documentation can be found on the dedicated [wiki](https://github.com/jouvetg/igm2/wiki).
   
-# Quick start
-
-The easiest and quickest way is to get to know IGM is to run notebooks in [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jouvetg/igm2/), which offers free access to GPU, or to install IGM on your machine, and start with examples.
-
 # Contact
 
 Feel free to drop me an email for any questions, bug reports, or ideas of model extension: guillaume.jouvet at unil.ch

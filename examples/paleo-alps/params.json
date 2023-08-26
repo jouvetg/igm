@@ -1,0 +1,20 @@
+{
+  "modules_preproc": ["load_tif_data"],
+  "modules_process": ["smb_signal",
+                      "flow_dt_thk"
+                     ],
+  "modules_postproc": ["write_ncdf_ex",
+                       "write_plot2d",
+                       "print_info",
+                       "print_all_comp_info"],
+  "tstart": -30000.0,
+  "tend": -25000.0,
+  "tsave": 100.0,
+  "plot_live": true,
+  "pdela": 3000,
+  "deladt": 200,
+  "gradabl": 0.0067,
+  "gradacc": 0.0005,
+  "maxacc": 1.0,
+  "resample": 2
+}

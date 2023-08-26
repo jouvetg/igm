@@ -11,6 +11,12 @@ from igm.modules.utils import *
 
 def params_load_tif_data(parser):
     parser.add_argument(
+        "--resample",
+        type=int,
+        default=1,
+        help="Resample the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points",
+    )
+    parser.add_argument(
         "--crop_data",
         type=str2bool,
         default="False",
@@ -44,9 +50,6 @@ def init_load_tif_data(params, state):
 
     files = glob.glob(os.path.join(params.working_dir, "*.tif"))
 
-    if params.crop_data:
-        i0,i1,j0,j1 = crop_field(params, state)
-
     for file in files:
         var = os.path.split(file)[-1].split(".")[0]
         if os.path.exists(file):
@@ -60,15 +63,34 @@ def init_load_tif_data(params, state):
                 x = np.array(x)[0, :]
                 y = np.flip(np.array(y)[:, 0])
             del src
-
-        if params.crop_data: 
-            vars()[var] = vars()[var][j0:j1,i0:i1] 
+            
+    # resample if requested
+    if params.resample > 1:
+        xx = x[:: params.resample]
+        yy = y[:: params.resample]
+        for file in files:
+            var = os.path.split(file)[-1].split(".")[0]
+            if (not var in ["x", "y"]) & (vars()[var].ndim==2):
+                vars()[var] = vars()[var][:: params.resample,:: params.resample]
+#                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
+        x = xx
+        y = yy
  
-        vars(state)[var] = tf.Variable(vars()[var].astype("float32"))
- 
-    if params.crop_data: 
+    # crop if requested
+    if params.crop_data:
+        i0,i1 = int((params.crop_xmin-x[0])/(x[1]-x[0])),int((params.crop_xmax-x[0])/(x[1]-x[0]))
+        j0,j1 = int((params.crop_ymin-y[0])/(y[1]-y[0])),int((params.crop_ymax-y[0])/(y[1]-y[0]))
+        for file in files:
+            var = os.path.split(file)[-1].split(".")[0]
+            if not var in ["x", "y"]:
+                vars()[var] = vars()[var][j0:j1,i0:i1]
         y = y[j0:j1]
         x = x[i0:i1]
+ 
+    # transform from numpy to tensorflow
+    for file in files:
+        var = os.path.split(file)[-1].split(".")[0]
+        vars(state)[var] = tf.Variable(vars()[var].astype("float32"))
 
     state.x = tf.constant(x.astype("float32"))
     state.y = tf.constant(y.astype("float32"))

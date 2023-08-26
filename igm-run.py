@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
+# Published under the GNU GPL (Version 3), check at the LICENSE file 
  
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,7 +10,7 @@ import igm
 
 # Collect defaults, overide from json file, and parse all core parameters 
 parser = igm.params_core()
-igm.overide_from_json_file(parser)
+igm.overide_from_json_file(parser,check_if_params_exist=False)
 params = parser.parse_args(args=[])
 
 # get the list of all modules in order
@@ -20,7 +23,7 @@ for module in modules:
 # Collect defaults, overide from json file, and parse all specific module parameters 
 for module in modules:
     getattr(igm, "params_" + module)(parser)
-igm.overide_from_json_file(parser)
+igm.overide_from_json_file(parser,check_if_params_exist=True)
 params = parser.parse_args(args=[])
 
 # print definive parameters in a file for record

@@ -80,16 +80,18 @@ def init_load_ncdf_data(params, state):
         xx = x[:: params.resample]
         yy = y[:: params.resample]
         for var in nc.variables:
-            if not var in ["x", "y"]:
-                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx)
+            if (not var in ["x", "y"]) & (vars()[var].ndim==2):
+                vars()[var] = vars()[var][:: params.resample,:: params.resample]
+#                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
         x = xx
         y = yy
 
     # crop if requested
     if params.crop_data:
-        i0,i1,j0,j1 = crop_field(params, state)
+        i0,i1 = int((params.crop_xmin-x[0])/(x[1]-x[0])),int((params.crop_xmax-x[0])/(x[1]-x[0]))
+        j0,j1 = int((params.crop_ymin-y[0])/(y[1]-y[0])),int((params.crop_ymax-y[0])/(y[1]-y[0]))
         for var in nc.variables:
-            if not var in ["x", "y"]:
+            if (not var in ["x", "y"]) & (vars()[var].ndim==2):
                 vars()[var] = vars()[var][j0:j1,i0:i1]
         y = y[j0:j1]
         x = x[i0:i1]

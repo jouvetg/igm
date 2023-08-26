@@ -31,6 +31,8 @@ def update_write_tif_ex(params, state):
                 params.working_dir, var + "-" + str(int(state.t)).zfill(6) + ".tif"
             )
             
+            os.system("echo rm " + file + " >> clean.sh")
+            
             if hasattr(state, "profile_tif_file"):
                 
                 with rasterio.open(file, mode="w", **state.profile_tif_file) as src:

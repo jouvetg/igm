@@ -66,17 +66,24 @@ def params_core():
  
     return parser
 
-def overide_from_json_file(parser):    
+def overide_from_json_file(parser,check_if_params_exist=True):    
     
+    # get the path of the json file    
     param_file = os.path.join(parser.parse_args(args=[]).working_dir, "params.json")
 
-    # load the given parameters
+    # load the given parameters from the json file
     with open(param_file) as json_file:
         dic_params = json.load(json_file)
     
     # list only the parameters registered so far
     LIST = list(vars(parser.parse_args(args=[])).keys())
     
+    if check_if_params_exist:
+        for key in dic_params.keys():
+            if not key in LIST:
+                print("WARNING: the following parameters of the json file do not exist in igm: ", key)
+                sys.exit(0)
+
     # keep only the parameters to overide hat were registerd so far
     filtered_dict = {key: value for key, value in dic_params.items() if key in LIST}
         

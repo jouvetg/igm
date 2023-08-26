@@ -14,10 +14,10 @@ def params_flow_dt_thk(parser):
     params_thk(parser)
 
 
-def init_flow_dt_thk(params, state):
-    init_iceflow(params, state)
-    init_time_step(params, state)
-    init_thk(params, state)
+def initialize_flow_dt_thk(params, state):
+    initialize_iceflow(params, state)
+    initialize_time_step(params, state)
+    initialize_thk(params, state)
 
 
 def update_flow_dt_thk(params, state):
@@ -26,7 +26,7 @@ def update_flow_dt_thk(params, state):
     update_thk(params, state) 
 
 
-def final_flow_dt_thk(params, state):
-    final_iceflow(params, state)
-    final_time_step(params, state)
-    final_thk(params, state) 
+def finalize_flow_dt_thk(params, state):
+    finalize_iceflow(params, state)
+    finalize_time_step(params, state)
+    finalize_thk(params, state) 

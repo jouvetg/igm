@@ -33,7 +33,7 @@ def params_particles_v1(parser):
     )
 
 
-def init_particles_v1(params, state):
+def initialize_particles_v1(params, state):
     state.tlast_seeding = -1.0e5000
     state.tcomp_particles = []
 
@@ -227,7 +227,7 @@ def update_particles_v1(params, state):
     state.tcomp_particles[-1] *= -1
 
 
-def final_particles_v1(params, state):
+def finalize_particles_v1(params, state):
     pass
     
 

@@ -55,7 +55,7 @@ def params_iceflow_v1(parser):
     )
 
 
-def init_iceflow_v1(params, state):
+def initialize_iceflow_v1(params, state):
 
     state.tcomp_iceflow = []
 
@@ -152,7 +152,7 @@ def update_iceflow_v1(params, state):
     state.tcomp_iceflow[-1] *= -1
 
 
-def final_iceflow_v1(params, state):
+def finalize_iceflow_v1(params, state):
     pass 
     
 

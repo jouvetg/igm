@@ -40,7 +40,7 @@ def params_smb_signal(parser):
         help="Maximum accumulation",
     )
 
-def init_smb_signal(params,state):
+def initialize_smb_signal(params,state):
     """
         Retrieve the Temperature difference from the EPICA signal
     """
@@ -65,5 +65,5 @@ def update_smb_signal(params,state):
     state.smb  *= tf.where(tf.less(state.smb , 0), params.gradabl, params.gradacc)
     state.smb  = tf.clip_by_value(state.smb , -100, params.maxacc)
 
-def final_smb_signal(params, state):
+def finalize_smb_signal(params, state):
     pass

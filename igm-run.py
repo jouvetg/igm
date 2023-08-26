@@ -34,7 +34,7 @@ if params.print_params:
 state = igm.State()
 
 # if logging is activated, add a logger to the state
-if params.log:
+if params.logging:
     igm.add_logger(params, state) 
 
 # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
@@ -42,7 +42,7 @@ with tf.device("/GPU:0"):
 
     # Initialize all the model components in turn
     for module in modules:
-        getattr(igm, "init_" + module)(params, state)
+        getattr(igm, "initialize_" + module)(params, state)
 
     # Time loop, perform the simulation until reaching the defined end time
     if hasattr(state, "t"):
@@ -53,4 +53,4 @@ with tf.device("/GPU:0"):
             
     # Finalize each module in turn
     for module in modules:
-        getattr(igm, "final_" + module)(params, state)
+        getattr(igm, "finalize_" + module)(params, state)

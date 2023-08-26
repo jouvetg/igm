@@ -14,7 +14,7 @@ def params_make_synthetic(parser):
     pass
 
 
-def init_make_synthetic(params, state):
+def initialize_make_synthetic(params, state):
 
     x = np.arange(0, 100) * 100  # make x-axis, lenght 10 km, resolution 100 m
     y = np.arange(0, 200) * 100  # make y-axis, lenght 20 km, resolution 100 m
@@ -37,6 +37,6 @@ def update_make_synthetic(params, state):
     pass
 
 
-def final_make_synthetic(params, state):
+def finalize_make_synthetic(params, state):
     pass
     

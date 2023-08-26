@@ -25,7 +25,7 @@ def params_smb_simple(parser):
     )
 
 
-def init_smb_simple(params, state):
+def initialize_smb_simple(params, state):
 
     state.smbpar = np.loadtxt(
         os.path.join(params.working_dir, params.mb_simple_file),
@@ -68,6 +68,6 @@ def update_smb_simple(params, state):
         state.tcomp_smb_simple[-1] *= -1
 
 
-def final_smb_simple(params, state):
+def finalize_smb_simple(params, state):
     pass
 

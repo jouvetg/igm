@@ -40,7 +40,7 @@ def params_write_ncdf_ex(parser):
     )
 
 
-def init_write_ncdf_ex(params, state):
+def initialize_write_ncdf_ex(params, state):
     state.tcomp_write_ncdf_ex = []
 
     os.system("echo rm " + os.path.join(params.working_dir, params.output_file_ncdf_ex) + " >> clean.sh")
@@ -158,5 +158,5 @@ def update_write_ncdf_ex(params, state):
         state.tcomp_write_ncdf_ex[-1] *= -1
  
  
-def final_write_ncdf_ex(params, state):
+def finalize_write_ncdf_ex(params, state):
     pass

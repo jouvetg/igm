@@ -19,7 +19,7 @@ def params_write_particles(parser):
     )
 
 
-def init_write_particles(params, state):
+def initialize_write_particles(params, state):
     state.tcomp_write_particles = []
  
     directory = os.path.join(params.working_dir, "trajectories")
@@ -89,5 +89,5 @@ def update_write_particles(params, state):
         state.tcomp_write_particles[-1] *= -1
 
 
-def final_write_particles(params, state):
+def finalize_write_particles(params, state):
     pass

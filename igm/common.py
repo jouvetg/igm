@@ -46,7 +46,7 @@ def params_core():
         help="List of post-processing modules",
     )
     parser.add_argument(
-        "--log",
+        "--logging",
         type=str2bool,
         default=False,
         help="Activate the looging",
@@ -54,7 +54,7 @@ def params_core():
     parser.add_argument(
         "--logging_file",
         type=str,
-        default=False,
+        default="",
         help="Logging file name, if empty it prints in the screen",
     )
     parser.add_argument(

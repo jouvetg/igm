@@ -4,7 +4,7 @@ import tensorflow as tf
 from netCDF4 import Dataset
 import os
 
-def init_particles(params, state):
+def initialize_particles(params, state):
     state.tlast_seeding = -1.0e5000
     state.tcomp_particles = []
 

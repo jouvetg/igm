@@ -56,7 +56,7 @@ def params_load_ncdf_data(parser):
 
 
 
-def init_load_ncdf_data(params, state):
+def initialize_load_ncdf_data(params, state):
 
     if hasattr(state,'logger'):
         state.logger.info("LOAD NCDF file")
@@ -112,5 +112,5 @@ def update_load_ncdf_data(params, state):
     pass
 
 
-def final_load_ncdf_data(params, state):
+def finalize_load_ncdf_data(params, state):
     pass 

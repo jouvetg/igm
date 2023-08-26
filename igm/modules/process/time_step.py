@@ -37,7 +37,7 @@ def params_time_step(parser):
     )
 
 
-def init_time_step(params, state):
+def initialize_time_step(params, state):
     state.tcomp_time_step = []
 
     # Initialize the time with starting time
@@ -99,5 +99,5 @@ def update_time_step(params, state):
     state.tcomp_time_step[-1] *= -1
 
 
-def final_time_step(params, state):
+def finalize_time_step(params, state):
     pass

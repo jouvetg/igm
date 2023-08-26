@@ -13,13 +13,13 @@ import matplotlib.pyplot as plt
 def params_print_all_comp_info(parser):
     pass
 
-def init_print_all_comp_info(params, state):
+def initialize_print_all_comp_info(params, state):
     pass
 
 def update_print_all_comp_info(params, state):
     pass
 
-def final_print_all_comp_info(params, state):
+def finalize_print_all_comp_info(params, state):
  
     modules = [A for A in state.__dict__.keys() if 'tcomp_' in A]
 

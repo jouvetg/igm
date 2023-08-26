@@ -25,7 +25,7 @@ def params_clim_aletsch(parser):
         help="Give the resolution the climate forcing should be (monthly=12, daily=365)",
     ) 
 
-def  init_clim_aletsch(params,state):
+def  initialize_clim_aletsch(params,state):
     """
         load climate data to run the Aletsch Glacier simulation
     """
@@ -124,6 +124,6 @@ def update_clim_aletsch(params,state):
         state.tcomp_clim_aletsch[-1] *= -1
 
 
-def  final_clim_aletsch(params,state):
+def  finalize_clim_aletsch(params,state):
     pass
  

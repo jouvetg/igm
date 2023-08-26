@@ -20,7 +20,7 @@ def params_rockflow(parser):
         help="speed rock flow",
     )
 
-def init_rockflow(params,state):
+def initialize_rockflow(params,state):
     pass
 
 def update_rockflow(params,state):
@@ -37,12 +37,6 @@ def update_rockflow(params,state):
     state.U[0].assign( tf.where( thkexp > 0, state.U[0], dirx ) )
     state.U[1].assign( tf.where( thkexp > 0, state.U[1], diry ) )    
 
-def  final_rockflow(params,state):
+def  finalize_rockflow(params,state):
     pass
 
-# make sure to make these function new attributes of the igm module
-igm.params_rockflow  = params_rockflow  
-igm.init_rockflow    = init_rockflow  
-igm.update_rockflow  = update_rockflow
-igm.final_rockflow   = final_rockflow
-    

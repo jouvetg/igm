@@ -45,7 +45,7 @@ def params_write_plot2d(parser):
     )
 
 
-def init_write_plot2d(params, state):
+def initialize_write_plot2d(params, state):
     state.extent = [np.min(state.x), np.max(state.x), np.min(state.y), np.max(state.y)]
 
     if params.editor_plot2d == "vs":
@@ -132,5 +132,5 @@ def update_write_plot2d(params, state):
         state.tcomp_write_plot2d[-1] *= -1
 
 
-def final_write_plot2d(params, state):
+def finalize_write_plot2d(params, state):
     pass

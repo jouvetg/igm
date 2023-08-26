@@ -169,9 +169,9 @@ def params_optimize_v1(parser):
     )
 
 
-def init_optimize_v1(params, state):
+def initialize_optimize_v1(params, state):
 
-    init_iceflow_v1(params, state)
+    initialize_iceflow_v1(params, state)
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
 
@@ -690,7 +690,7 @@ def update_optimize_v1(params, state):
     pass
 
 
-def final_optimize_v1(params, state):
+def finalize_optimize_v1(params, state):
     pass
 
 

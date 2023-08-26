@@ -75,5 +75,5 @@ def update_write_ncdf_ts(params, state):
             nc.close()
 
     
-def final_write_ncdf_ts(params, state):
+def finalize_write_ncdf_ts(params, state):
     pass

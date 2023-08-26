@@ -18,7 +18,7 @@ def params_write_tif_ex(parser):
         help="List of variables to be recorded in the ncdf file",
     )
 
-def init_write_tif_ex(params, state):
+def initialize_write_tif_ex(params, state):
     pass
 
 def update_write_tif_ex(params, state):
@@ -52,6 +52,6 @@ def update_write_tif_ex(params, state):
             del src
             
             
-def final_write_tif_ex(params, state):
+def finalize_write_tif_ex(params, state):
     pass
 

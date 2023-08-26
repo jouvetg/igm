@@ -60,7 +60,7 @@ def params_prepare_data(parser):
         help="Write prepared data into a geology file",
     )
 
-def init_prepare_data(params, state):
+def initialize_prepare_data(params, state):
 
     import json
 
@@ -184,7 +184,7 @@ def update_prepare_data(params, state):
     pass
 
 
-def final_prepare_data(params, state):
+def finalize_prepare_data(params, state):
     pass
 
 

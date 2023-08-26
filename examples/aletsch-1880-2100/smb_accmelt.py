@@ -84,7 +84,7 @@ def params_smb_accmelt(parser):
         default=1.0, 
     )
 
-def init_smb_accmelt(params,state):
+def initialize_smb_accmelt(params,state):
     """
         load smb data to run the Aletsch Glacier simulation 
     """
@@ -243,5 +243,5 @@ def update_smb_accmelt(params,state):
         state.tcomp_smb[-1] *= -1
 
 
-def final_smb_accmelt(params,state):
+def finalize_smb_accmelt(params,state):
     pass

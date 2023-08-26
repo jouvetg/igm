@@ -12,7 +12,7 @@ from igm.modules.utils import compute_divflux
 def params_thk(state):
     pass
 
-def init_thk(params, state):
+def initialize_thk(params, state):
     state.tcomp_thk = []
 
 
@@ -44,5 +44,5 @@ def update_thk(params, state):
     state.tcomp_thk[-1] *= -1
 
 
-def final_thk(params, state):
+def finalize_thk(params, state):
     pass

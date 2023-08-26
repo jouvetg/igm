@@ -13,7 +13,7 @@ def params_print_info(state):
     pass
 
 
-def init_print_info(params, state):
+def initialize_print_info(params, state):
 
     print(
         "IGM %s :         Iterations   |         Time (y)     |     Time Step (y)   |   Ice Volume (km^3) "
@@ -37,6 +37,6 @@ def update_print_info(params, state):
         )
         
         
-def final_print_info(params, state):
+def finalize_print_info(params, state):
     pass
 

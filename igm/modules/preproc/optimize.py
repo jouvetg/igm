@@ -155,13 +155,13 @@ def params_optimize(parser):
     )
 
 
-def init_optimize(params, state):
+def initialize_optimize(params, state):
     """
     This function does the data assimilation (inverse modelling) to optimize thk, strflowctrl ans usurf from data
     Check at this [page](https://github.com/jouvetg/igm/blob/main/doc/Inverse-modeling.md)
     """
 
-    init_iceflow(params, state)
+    initialize_iceflow(params, state)
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
 
@@ -554,7 +554,7 @@ def update_optimize(params, state):
     pass
 
     
-def final_optimize(params, state):
+def finalize_optimize(params, state):
     pass
 
 

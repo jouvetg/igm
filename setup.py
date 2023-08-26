@@ -36,7 +36,7 @@ setup(
 	'netCDF4',
 	'numpy',
 	'scipy',
-	'tensorflow==2.12.0',
+	'tensorflow',
 	'tensorflow_addons',
 	'xarray',
 	'importlib_resources',

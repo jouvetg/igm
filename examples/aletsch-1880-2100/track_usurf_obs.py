@@ -25,7 +25,7 @@ from netCDF4 import Dataset
 def params_track_usurf_obs(parser):
     pass
 
-def init_track_usurf_obs(params,state):
+def initialize_track_usurf_obs(params,state):
     
     nc = Dataset( os.path.join(params.working_dir, 'past_surf.nc'), "r" )
 #    for y in [1880,1926,1957,1980,1999,2009,2017]:
@@ -53,5 +53,5 @@ def update_track_usurf_obs(params,state):
                 % (state.t, mean, std, vol) )
 
 
-def  final_track_usurf_obs(params,state):
+def  finalize_track_usurf_obs(params,state):
     pass

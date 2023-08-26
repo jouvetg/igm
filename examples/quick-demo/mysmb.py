@@ -8,7 +8,7 @@ import math
 def params_mysmb(parser):  
     parser.add_argument("--meanela", type=float, default=3000 )
 
-def init_mysmb(params,state):
+def initialize_mysmb(params,state):
     params.meanela = np.quantile(state.usurf[state.thk>10],0.2)
 
 def update_mysmb(params,state):
@@ -23,5 +23,5 @@ def update_mysmb(params,state):
     if hasattr(state, "icemask"):
         state.smb  = tf.where((state.smb<0)|(state.icemask>0.5),state.smb,-10)
     
-def final_mysmb(params,state):
+def finalize_mysmb(params,state):
     pass

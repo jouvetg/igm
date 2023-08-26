@@ -13,13 +13,13 @@ import matplotlib.pyplot as plt
 def params_anim3d_from_ncdf_ex(parser):
     pass
 
-def init_anim3d_from_ncdf_ex(params, state):
+def initialize_anim3d_from_ncdf_ex(params, state):
     pass
 
 def update_anim3d_from_ncdf_ex(params, state):
     pass
 
-def final_anim3d_from_ncdf_ex(params, state):
+def finalize_anim3d_from_ncdf_ex(params, state):
  
     from mayavi import mlab
     import xarray as xr

@@ -14,7 +14,7 @@ def params_vertical_iceflow(parser):
     pass
 
 
-def init_vertical_iceflow(params, state):
+def initialize_vertical_iceflow(params, state):
     state.tcomp_vertical_iceflow=[]
 
 #    state.W = tf.zeros_like(state.U[0])
@@ -36,7 +36,7 @@ def update_vertical_iceflow(params, state):
     state.tcomp_vertical_iceflow[-1] *= -1
     
 
-def final_vertical_iceflow(params, state):
+def finalize_vertical_iceflow(params, state):
     pass
 
 

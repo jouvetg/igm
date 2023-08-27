@@ -18,7 +18,7 @@ def params_prepare_data(parser):
     # brady    RGI60-01.20796
     # ethan    RGI60-01.00709
 
-    parser.add_argument("--RGI", type=str, default="RGI60-11.01450", help="RGI ID")
+    parser.add_argument("--RGI_ID", type=str, default="RGI60-11.01450", help="RGI ID")
     parser.add_argument(
         "--preprocess", type=str2bool, default=True, help="Use preprocessing"
     )
@@ -64,7 +64,7 @@ def initialize_prepare_data(params, state):
 
     import json
 
-    gdirs, paths_ncdf = _oggm_util([params.RGI], params)
+    gdirs, paths_ncdf = _oggm_util([params.RGI_ID], params)
 
     if hasattr(state,'logger'):
         state.logger.info("Prepare data using oggm and glathida")

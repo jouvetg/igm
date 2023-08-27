@@ -75,7 +75,7 @@ def  initialize_clim_aletsch(params,state):
         dtype="float32",
     )
 
-    state.tlast_clim_aletsch = tf.Variable(params.tstart)
+    state.tlast_clim_aletsch = tf.Variable(params.time_start)
     state.tcomp_clim_aletsch = []
 
 

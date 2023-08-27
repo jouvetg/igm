@@ -7,14 +7,14 @@
                        "write_plot2d",
                        "print_info",
                        "print_all_comp_info"],
-  "tstart": -30000.0,
-  "tend": -25000.0,
-  "tsave": 100.0,
+  "time_start": -30000.0,
+  "time_end": -25000.0,
+  "time_save": 100.0,
   "plot_live": true,
   "pdela": 3000,
   "deladt": 200,
   "gradabl": 0.0067,
   "gradacc": 0.0005,
   "maxacc": 1.0,
-  "resample": 2
+  "coarsen": 2
 }

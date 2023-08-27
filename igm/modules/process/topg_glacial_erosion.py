@@ -37,7 +37,7 @@ def params_topg_glacial_erosion(parser):
 def initialize_topg_glacial_erosion(params, state):
 
     state.tcomp_topg_glacial_erosion = []
-    state.tlast_erosion = tf.Variable(params.tstart)
+    state.tlast_erosion = tf.Variable(params.time_start)
 
 
 def update_topg_glacial_erosion(params, state):

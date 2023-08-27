@@ -11,16 +11,16 @@ import tensorflow as tf
 
 def params_time_step(parser):
     parser.add_argument(
-        "--tstart",
+        "--time_start",
         type=float,
         default=2000.0,
         help="Start modelling time (default 2000)",
     )
     parser.add_argument(
-        "--tend", type=float, default=2100.0, help="End modelling time (default: 2100)"
+        "--time_end", type=float, default=2100.0, help="End modelling time (default: 2100)"
     )
     parser.add_argument(
-        "--tsave", type=float, default=10, help="Save result each X years (default: 10)"
+        "--time_save", type=float, default=10, help="Save result each X years (default: 10)"
     )
     parser.add_argument(
         "--cfl",
@@ -30,7 +30,7 @@ def params_time_step(parser):
         it must be below 1 (Default: 0.3)",
     )
     parser.add_argument(
-        "--dtmax",
+        "--time_step_max",
         type=float,
         default=10.0,
         help="Maximum time step allowed, used only with slow ice (default: 10.0)",
@@ -41,19 +41,19 @@ def initialize_time_step(params, state):
     state.tcomp_time_step = []
 
     # Initialize the time with starting time
-    state.t = tf.Variable(float(params.tstart))
+    state.t = tf.Variable(float(params.time_start))
 
     state.it = 0
 
-    state.dt = tf.Variable(float(params.dtmax))
+    state.dt = tf.Variable(float(params.time_step_max))
 
-    state.dt_target = tf.Variable(float(params.dtmax))
+    state.dt_target = tf.Variable(float(params.time_step_max))
 
-    state.tsave = np.ndarray.tolist(
-        np.arange(params.tstart, params.tend, params.tsave)
-    ) + [params.tend]
+    state.time_save = np.ndarray.tolist(
+        np.arange(params.time_start, params.time_end, params.time_save)
+    ) + [params.time_end]
 
-    state.tsave = tf.constant(state.tsave,dtype="float32")
+    state.time_save = tf.constant(state.time_save,dtype="float32")
 
     state.itsave = 0
 
@@ -77,15 +77,15 @@ def update_time_step(params, state):
 
     # dt_target account for both cfl and dt_max
     if velomax > 0:
-        state.dt_target = min(params.cfl * state.dx / velomax, params.dtmax)
+        state.dt_target = min(params.cfl * state.dx / velomax, params.time_step_max)
     else:
-        state.dt_target = params.dtmax
+        state.dt_target = params.time_step_max
 
     state.dt = state.dt_target
 
     # modify dt such that times of requested savings are reached exactly
-    if state.tsave[state.itsave + 1] <= state.t + state.dt:
-        state.dt = state.tsave[state.itsave + 1] - state.t
+    if state.time_save[state.itsave + 1] <= state.t + state.dt:
+        state.dt = state.time_save[state.itsave + 1] - state.t
         state.saveresult = True
         state.itsave += 1
     else:

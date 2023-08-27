@@ -12,13 +12,13 @@ from igm.modules.utils import interp1d_tf
 
 def params_smb_simple(parser):
     parser.add_argument(
-        "--mb_update_freq",
+        "--smb_update_freq",
         type=float,
         default=1,
         help="Update the mass balance each X years (1)",
     )
     parser.add_argument(
-        "--mb_simple_file",
+        "--smb_simple_file",
         type=str,
         default="mb_simple_param.txt",
         help="Name of the imput file for the simple mass balance model",
@@ -28,7 +28,7 @@ def params_smb_simple(parser):
 def initialize_smb_simple(params, state):
 
     state.smbpar = np.loadtxt(
-        os.path.join(params.working_dir, params.mb_simple_file),
+        os.path.join(params.working_dir, params.smb_simple_file),
         skiprows=1,
         dtype=np.float32,
     )
@@ -40,7 +40,7 @@ def initialize_smb_simple(params, state):
 def update_smb_simple(params, state):
 
     # update smb each X years
-    if (state.t - state.tlast_mb) >= params.mb_update_freq:
+    if (state.t - state.tlast_mb) >= params.smb_update_freq:
 
         if hasattr(state,'logger'):
             state.logger.info("Construct mass balance at time : " + str(state.t.numpy()))

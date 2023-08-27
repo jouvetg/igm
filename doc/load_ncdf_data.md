@@ -13,7 +13,7 @@ The module takes an input ncdf file and return variables contained inside as ten
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
 ||`--input_file`|`input.nc`|Input data file|
-||`--resample`|`1`|Resample the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points|
+||`--coarsen`|`1`|coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points|
 ||`--crop_data`|`False`|Crop the data with xmin, xmax, ymin, ymax (default: False)|
 ||`--crop_xmin`|`None`|X left coordinate for cropping|
 ||`--crop_xmax`|`None`|X right coordinate for cropping|

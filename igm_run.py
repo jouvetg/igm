@@ -51,7 +51,7 @@ def main():
 
         # Time loop, perform the simulation until reaching the defined end time
         if hasattr(state, "t"):
-            while state.t < params.tend:
+            while state.t < params.time_end:
                 # Update each model components in turn
                 for module in modules:
                     getattr(igm, "update_" + module)(params, state)

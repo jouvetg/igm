@@ -157,7 +157,7 @@ def initialize_smb_accmelt(params,state):
         )[0]
     state.IMB = tf.Variable(state.IMB)
 
-    state.tlast_smb = tf.Variable(params.tstart)
+    state.tlast_smb = tf.Variable(params.time_start)
     state.tcomp_smb = []
 
 # Warning: The decorator permits to take full benefit from efficient TensorFlow operation (especially on GPU)

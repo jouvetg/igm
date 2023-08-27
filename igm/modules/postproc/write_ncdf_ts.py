@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from netCDF4 import Dataset
 
-def params_write_ncdf_ts(state):
+def params_write_ncdf_ts(parser):
     parser.add_argument(
         "--output_file_ncdf_ts",
         type=str,

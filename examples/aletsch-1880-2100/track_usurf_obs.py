@@ -37,7 +37,7 @@ def initialize_track_usurf_obs(params,state):
 
  
     # load the surface toporgaphy available at given year
-    state.usurf = vars(state)['surf_'+str(int(params.tstart))]
+    state.usurf = vars(state)['surf_'+str(int(params.time_start))]
     state.thk   = state.usurf-state.topg
 
 def update_track_usurf_obs(params,state):

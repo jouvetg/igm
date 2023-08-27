@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 ### <h1 align="center" id="title">IGM module smb_simple </h1>
 

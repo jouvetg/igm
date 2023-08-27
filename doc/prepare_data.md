@@ -1,4 +1,4 @@
-### <h1 align="center" id="title">IGM module make_synthetic </h1>
+### <h1 align="center" id="title">IGM module prepare_data </h1>
 
 # Description:
 
@@ -30,7 +30,7 @@ The module takes all input variable fields neede to run IGM inverse and/or forwa
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
-||`--RGI`|`RGI60-11.01450`|RGI ID|
+||`--RGI_ID`|`RGI60-11.01450`|RGI ID|
 ||`--preprocess`||Use preprocessing|
 ||`--dx`|`100`|Spatial resolution (need preprocess false to change it)|
 ||`--border`|`30`|Safe border margin  (need preprocess false to change it)|

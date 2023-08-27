@@ -11,10 +11,10 @@ from igm.modules.utils import *
 
 def params_load_tif_data(parser):
     parser.add_argument(
-        "--resample",
+        "--coarsen",
         type=int,
         default=1,
-        help="Resample the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points",
+        help="coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points",
     )
     parser.add_argument(
         "--crop_data",
@@ -64,14 +64,14 @@ def initialize_load_tif_data(params, state):
                 y = np.flip(np.array(y)[:, 0])
             del src
             
-    # resample if requested
-    if params.resample > 1:
-        xx = x[:: params.resample]
-        yy = y[:: params.resample]
+    # coarsen if requested
+    if params.coarsen > 1:
+        xx = x[:: params.coarsen]
+        yy = y[:: params.coarsen]
         for file in files:
             var = os.path.split(file)[-1].split(".")[0]
             if (not var in ["x", "y"]) & (vars()[var].ndim==2):
-                vars()[var] = vars()[var][:: params.resample,:: params.resample]
+                vars()[var] = vars()[var][:: params.coarsen,:: params.coarsen]
 #                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
         x = xx
         y = yy

@@ -1,4 +1,4 @@
-### <h1 align="center" id="title">IGM module make_synthetic </h1>
+### <h1 align="center" id="title">IGM module prepare_data </h1>
 
 # Description:
 

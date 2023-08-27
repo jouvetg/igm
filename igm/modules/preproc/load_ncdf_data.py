@@ -21,10 +21,10 @@ def params_load_ncdf_data(parser):
         help="Input data file",
     )
     parser.add_argument(
-        "--resample",
+        "--coarsen",
         type=int,
         default=1,
-        help="Resample the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points",
+        help="coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points",
     )
     parser.add_argument(
         "--crop_data",
@@ -75,13 +75,13 @@ def initialize_load_ncdf_data(params, state):
             vars()[var] = np.squeeze(nc.variables[var]).astype("float32")
             vars()[var] = np.where(vars()[var] > 10**35, np.nan, vars()[var])
 
-    # resample if requested
-    if params.resample > 1:
-        xx = x[:: params.resample]
-        yy = y[:: params.resample]
+    # coarsen if requested
+    if params.coarsen > 1:
+        xx = x[:: params.coarsen]
+        yy = y[:: params.coarsen]
         for var in nc.variables:
             if (not var in ["x", "y"]) & (vars()[var].ndim==2):
-                vars()[var] = vars()[var][:: params.resample,:: params.resample]
+                vars()[var] = vars()[var][:: params.coarsen,:: params.coarsen]
 #                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
         x = xx
         y = yy

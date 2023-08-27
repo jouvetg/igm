@@ -43,8 +43,8 @@ This IGM module wraps up module iceflow, time_step and thk (check for each modul
 ||`--nb_out_filter`|`32`|nb_out_filter|
 ||`--conv_ker_size`|`3`|conv_ker_size|
 ||`--dropout_rate`|`0`|dropout_rate|
-||`--tstart`|`2000.0`|Start modelling time (default 2000)|
-||`--tend`|`2100.0`|End modelling time (default: 2100)|
-||`--tsave`|`10`|Save result each X years (default: 10)|
+||`--time_start`|`2000.0`|Start modelling time (default 2000)|
+||`--time_end`|`2100.0`|End modelling time (default: 2100)|
+||`--time_save`|`10`|Save result each X years (default: 10)|
 ||`--cfl`|`0.3`|CFL number for the stability of the mass conservation scheme,         it must be below 1 (Default: 0.3)|
-||`--dtmax`|`10.0`|Maximum time step allowed, used only with slow ice (default: 10.0)|
+||`--time_step_max`|`10.0`|Maximum time step allowed, used only with slow ice (default: 10.0)|

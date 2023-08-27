@@ -8,8 +8,8 @@
                        "write_plot2d",
                        "print_info",
                        "print_all_comp_info"],
-  "RGI": "RGI60-11.01238",
-  "tstart": 2000.0,
-  "tend": 2100.0,
+  "RGI_ID": "RGI60-11.01238",
+  "time_start": 2000.0,
+  "time_end": 2100.0,
   "plot_live": true
 }

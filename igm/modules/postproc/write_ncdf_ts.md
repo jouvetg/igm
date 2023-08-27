@@ -2,7 +2,6 @@
 
 # Description:
 
-This IGM module write time serie variables (ice glaciated area and volume)
-into the ncdf output file ts.nc
+This IGM module write time serie variables (ice glaciated area and volume) into the ncdf output file ts.nc
 
 The module takes IG variables (state.thk, state.dx,  ...) and produce a ts.nc file.

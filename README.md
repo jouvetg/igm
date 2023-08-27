@@ -3,20 +3,17 @@
 
 # Overview    
 
-The Instructed Glacier Model (IGM) is an **open-source Python package** and a **3D glacier evolution model**, which can simulate the coupling between ice thermo-dynamics, surface mass balance, mass conservation amon others. IGM features:
+The Instructed Glacier Model (IGM) is an **open-source Python package**, which permits to simulate **3D glacier evolution** accounting for the coupling between ice thermo-dynamics, surface mass balance, and mass conservation. IGM features:
 
-- **State-of-the-art physics:** IGM implements **high-order** 3D ice flow mechanics, an **Enthalpy** model, **melt/accumulation surface mass balance** model, and an increasing number of other glaciological processes.
+- **Simplicity and modularity:** IGM is implemente in the most popular programming language -- Python -- at a low level of abstractivity. IGM is organized **module-wise** for clarity and to facilitate coupling, customization and commmunity development. For simplicity, IGM assumes a horizontal regular grid for numerical discretization and therefore deals with **2D gridded input and output data**.
 
-- **Computational high efficiency:** Thanks to the **TensorFlow library**, mathematical operations are **vectorized**. This permits tremendous **speed-ups on GPU**. **Physics-informed deep learning** is used as an alternative to solver for modelling ice flow physics in a parrallelized way. While GPU are highly-recommended for large modelled domain, IGM runs fairly well on CPU for individual glaciers.
+- **State-of-the-art physics:** IGM implements mass conservation, **high-order** 3D ice flow mechanics, an **Enthalpy** model for the thermic regime of ice, **melt/accumulation surface mass balance** model, and other glaciological processes.
 
-- **Automatic differentiation:** TensorFlow operations permits automatic differentiaion, which strongly facilitates and speeds-up inverse modelling / data assimilation, as well training of the ice flow neural network.
+- **Computational high efficiency:** Thanks to the **TensorFlow library**, mathematical operations are **fully-vectorized**. This permits tremendous **speed-ups on GPU**. **Physics-informed deep learning** is used as an alternative to numerical solvers for modelling ice flow physics in a vectorized way. While GPU are highly-recommended for modelling large domain / high resolution, IGM runs fairly well on CPU for individual glaciers.
 
-- **Simplicity and modularity:** IGM uses the most popular programming language -- Python -- at a relative low level of abstractivity. IGM is organized **module-wise** to facilitate coupling, user-customization and commmunity development. For simplicity, IGM assumes horizontal regular gridded discretization and deals with **2D gridded input and output data**.
-
-
-# Documentation
-
-IGM's documentation can be found on the dedicated [wiki](https://github.com/jouvetg/igm2/wiki).
+- **Automatic differentiation:** TensorFlow operations are differentiable. Therefore, automatic differentiation strongly facilitates and speeds-up inverse modelling / data assimilation.
+  
+**IGM's documentation can be found on the dedicated [wiki](https://github.com/jouvetg/igm2/wiki).**
   
 # Contact
 

@@ -13,9 +13,9 @@ The module takes an input ncdf file and return variables contained inside as ten
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
 ||`--input_file`|`input.nc`|Input data file|
-||`--coarsen`|`1`|coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points|
-||`--crop_data`|`False`|Crop the data with xmin, xmax, ymin, ymax (default: False)|
-||`--crop_xmin`|`None`|X left coordinate for cropping|
-||`--crop_xmax`|`None`|X right coordinate for cropping|
-||`--crop_ymin`|`None`|Y bottom coordinate fro cropping|
-||`--crop_ymax`|`None`|Y top coordinate for cropping|
+||`--coarsen_ncdf`|`1`|coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points|
+||`--crop_ncdf`|`False`|Crop the data with xmin, xmax, ymin, ymax (default: False)|
+||`--crop_ncdf_xmin`|`None`|X left coordinate for cropping|
+||`--crop_ncdf_xmax`|`None`|X right coordinate for cropping|
+||`--crop_ncdf_ymin`|`None`|Y bottom coordinate fro cropping|
+||`--crop_ncdf_ymax`|`None`|Y top coordinate for cropping|

@@ -21,34 +21,34 @@ def params_load_ncdf_data(parser):
         help="Input data file",
     )
     parser.add_argument(
-        "--coarsen",
+        "--coarsen_ncdf",
         type=int,
         default=1,
         help="coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points",
     )
     parser.add_argument(
-        "--crop_data",
+        "--crop_ncdf",
         type=str2bool,
         default="False",
         help="Crop the data with xmin, xmax, ymin, ymax (default: False)",
     )
     parser.add_argument(
-        "--crop_xmin",
+        "--crop_ncdf_xmin",
         type=float, 
         help="X left coordinate for cropping",
     )
     parser.add_argument(
-        "--crop_xmax",
+        "--crop_ncdf_xmax",
         type=float, 
         help="X right coordinate for cropping",
     )
     parser.add_argument(
-        "--crop_ymin",
+        "--crop_ncdf_ymin",
         type=float, 
         help="Y bottom coordinate fro cropping",
     )
     parser.add_argument(
-        "--crop_ymax",
+        "--crop_ncdf_ymax",
         type=float, 
         help="Y top coordinate for cropping"
     )
@@ -76,20 +76,20 @@ def initialize_load_ncdf_data(params, state):
             vars()[var] = np.where(vars()[var] > 10**35, np.nan, vars()[var])
 
     # coarsen if requested
-    if params.coarsen > 1:
-        xx = x[:: params.coarsen]
-        yy = y[:: params.coarsen]
+    if params.coarsen_ncdf> 1:
+        xx = x[:: params.coarsen_ncdf]
+        yy = y[:: params.coarsen_ncdf]
         for var in nc.variables:
             if (not var in ["x", "y"]) & (vars()[var].ndim==2):
-                vars()[var] = vars()[var][:: params.coarsen,:: params.coarsen]
+                vars()[var] = vars()[var][:: params.coarsen_ncdf,:: params.coarsen_ncdf]
 #                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
         x = xx
         y = yy
 
     # crop if requested
-    if params.crop_data:
-        i0,i1 = int((params.crop_xmin-x[0])/(x[1]-x[0])),int((params.crop_xmax-x[0])/(x[1]-x[0]))
-        j0,j1 = int((params.crop_ymin-y[0])/(y[1]-y[0])),int((params.crop_ymax-y[0])/(y[1]-y[0]))
+    if params.crop_ncdf:
+        i0,i1 = int((params.crop_ncdf_xmin-x[0])/(x[1]-x[0])),int((params.crop_ncdf_xmax-x[0])/(x[1]-x[0]))
+        j0,j1 = int((params.crop_ncdf_ymin-y[0])/(y[1]-y[0])),int((params.crop_ncdf_ymax-y[0])/(y[1]-y[0]))
         for var in nc.variables:
             if (not var in ["x", "y"]) & (vars()[var].ndim==2):
                 vars()[var] = vars()[var][j0:j1,i0:i1]

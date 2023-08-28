@@ -11,8 +11,6 @@ import igm
 
 def main():
     
-    print("IGM - a glacier evolution model")
-
     # Collect defaults, overide from json file, and parse all core parameters 
     parser = igm.params_core()
     igm.overide_from_json_file(parser,check_if_params_exist=False)

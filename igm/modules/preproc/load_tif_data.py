@@ -11,34 +11,34 @@ from igm.modules.utils import *
 
 def params_load_tif_data(parser):
     parser.add_argument(
-        "--coarsen",
+        "--coarsen_tif",
         type=int,
         default=1,
         help="coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points",
     )
     parser.add_argument(
-        "--crop_data",
+        "--crop_tif",
         type=str2bool,
         default="False",
         help="Crop the data with xmin, xmax, ymin, ymax (default: False)",
     )
     parser.add_argument(
-        "--crop_xmin",
+        "--crop_tif_xmin",
         type=float, 
         help="crop_xmin",
     )
     parser.add_argument(
-        "--crop_xmax",
+        "--crop_tif_xmax",
         type=float, 
         help="crop_xmax",
     )
     parser.add_argument(
-        "--crop_ymin",
+        "--crop_tif_ymin",
         type=float, 
         help="crop_ymin",
     )
     parser.add_argument(
-        "--crop_ymax",
+        "--crop_tif_ymax",
         type=float, 
         help="crop_ymax"
     )
@@ -65,21 +65,21 @@ def initialize_load_tif_data(params, state):
             del src
             
     # coarsen if requested
-    if params.coarsen > 1:
-        xx = x[:: params.coarsen]
-        yy = y[:: params.coarsen]
+    if params.coarsen_tif > 1:
+        xx = x[:: params.coarsen_tif]
+        yy = y[:: params.coarsen_tif]
         for file in files:
             var = os.path.split(file)[-1].split(".")[0]
             if (not var in ["x", "y"]) & (vars()[var].ndim==2):
-                vars()[var] = vars()[var][:: params.coarsen,:: params.coarsen]
+                vars()[var] = vars()[var][:: params.coarsen_tif,:: params.coarsen_tif]
 #                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
         x = xx
         y = yy
  
     # crop if requested
-    if params.crop_data:
-        i0,i1 = int((params.crop_xmin-x[0])/(x[1]-x[0])),int((params.crop_xmax-x[0])/(x[1]-x[0]))
-        j0,j1 = int((params.crop_ymin-y[0])/(y[1]-y[0])),int((params.crop_ymax-y[0])/(y[1]-y[0]))
+    if params.crop_tif:
+        i0,i1 = int((params.crop_tif_xmin-x[0])/(x[1]-x[0])),int((params.crop_tif_xmax-x[0])/(x[1]-x[0]))
+        j0,j1 = int((params.crop_tif_ymin-y[0])/(y[1]-y[0])),int((params.crop_tif_ymax-y[0])/(y[1]-y[0]))
         for file in files:
             var = os.path.split(file)[-1].split(".")[0]
             if not var in ["x", "y"]:

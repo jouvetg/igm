@@ -56,7 +56,7 @@ with open('igm-run.py', "w") as f:
     print("sys.path.append('../')", file=f)
     print("import argparse", file=f)
     print("import igm", file=f)
-    print("parser = argparse.ArgumentParser()", file=f)
+    print("parser = igm.params_core()", file=f)
     for l in L:
         print("igm.params_"+l+"(parser)", file=f)
     print("params = parser.parse_args()", file=f)

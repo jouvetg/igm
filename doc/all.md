@@ -2,14 +2,21 @@
 argmark
 =======
 
+# Description
+
+
+IGM
 # Usage:
 
 
 ```bash
-usage: argmark [-h] [--coarsen_tif COARSEN_TIF] [--crop_tif CROP_TIF]
-               [--crop_tif_xmin CROP_TIF_XMIN] [--crop_tif_xmax CROP_TIF_XMAX]
-               [--crop_tif_ymin CROP_TIF_YMIN] [--crop_tif_ymax CROP_TIF_YMAX] [--RGI_ID RGI_ID]
-               [--preprocess PREPROCESS] [--dx DX] [--border BORDER] [--thk_source THK_SOURCE]
+usage: argmark [-h] [--working_dir WORKING_DIR] [--modules_preproc MODULES_PREPROC]
+               [--modules_process MODULES_PROCESS] [--modules_postproc MODULES_POSTPROC]
+               [--logging LOGGING] [--logging_file LOGGING_FILE] [--print_params PRINT_PARAMS]
+               [--coarsen_tif COARSEN_TIF] [--crop_tif CROP_TIF] [--crop_tif_xmin CROP_TIF_XMIN]
+               [--crop_tif_xmax CROP_TIF_XMAX] [--crop_tif_ymin CROP_TIF_YMIN]
+               [--crop_tif_ymax CROP_TIF_YMAX] [--RGI_ID RGI_ID] [--preprocess PREPROCESS]
+               [--dx DX] [--border BORDER] [--thk_source THK_SOURCE]
                [--include_glathida INCLUDE_GLATHIDA] [--path_glathida PATH_GLATHIDA]
                [--save_input_ncdf SAVE_INPUT_NCDF] [--input_file INPUT_FILE]
                [--coarsen_ncdf COARSEN_NCDF] [--crop_ncdf CROP_NCDF]
@@ -66,6 +73,13 @@ usage: argmark [-h] [--coarsen_tif COARSEN_TIF] [--crop_tif CROP_TIF]
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+||`--working_dir`|``|Working directory (default empty string)|
+||`--modules_preproc`|`['prepare_data']`|List of pre-processing modules|
+||`--modules_process`|`['flow_dt_thk']`|List of processing modules|
+||`--modules_postproc`|`['write_ncdf_ex', 'write_plot2d', 'print_info']`|List of post-processing modules|
+||`--logging`||Activate the looging|
+||`--logging_file`|``|Logging file name, if empty it prints in the screen|
+||`--print_params`||Print definitive parameters in a file for record|
 ||`--coarsen_tif`|`1`|coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points|
 ||`--crop_tif`|`False`|Crop the data with xmin, xmax, ymin, ymax (default: False)|
 ||`--crop_tif_xmin`|`None`|crop_xmin|

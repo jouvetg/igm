@@ -17,7 +17,7 @@ with open('README.md', 'r') as f:
     readme = f.read()
     
 setup(
-    name="igm",
+    name="igm_model",
     version="2.0.0",
     author="Guillaume Jouvet",
     author_email="guillaume.jouvet@unil.ch",
@@ -29,16 +29,15 @@ setup(
     description='IGM - a glacier evolution model',
     long_description=readme,
     long_description_content_type='text/markdown',
-    extras_require={
-        'doc': ['numpydoc', 'sphinx', 'sphinx_rtd_theme', 'sphinx_mdinclude'],
-    },    
+#    extras_require={
+#        'doc': ['numpydoc', 'sphinx', 'sphinx_rtd_theme', 'sphinx_mdinclude'],
+#    },    
     install_requires=[
     'matplotlib',
 	'netCDF4',
 	'numpy',
 	'scipy',
 	'tensorflow',
-	'tensorflow_addons',
 	'xarray',
 	'importlib_resources',
 	'tables',

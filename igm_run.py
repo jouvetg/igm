@@ -14,12 +14,12 @@ def main():
     # Collect defaults, overide from json file, and parse all core parameters 
     parser = igm.params_core()
     igm.overide_from_json_file(parser,check_if_params_exist=False)
-    params = parser.parse_args(args=[])
+    params, __ = parser.parse_known_args() # args=[] add this for jupyter notebook
 
     # get the list of all modules in order
     modules = params.modules_preproc + params.modules_process + params.modules_postproc
 
-    # add custom modules from file (must be called my_module_name.py) to igm
+    # load custom modules from file (must be called my_module_name.py) to igm
     for module in modules:
         igm.load_custom_module(params, module)
 
@@ -27,7 +27,7 @@ def main():
     for module in modules:
         getattr(igm, "params_" + module)(parser)
     igm.overide_from_json_file(parser,check_if_params_exist=True)
-    params = parser.parse_args(args=[])
+    params = parser.parse_args() # args=[] add this for jupyter notebook
 
     # print definive parameters in a file for record
     if params.print_params:

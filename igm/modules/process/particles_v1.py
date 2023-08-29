@@ -54,8 +54,6 @@ def initialize_particles_v1(params, state):
 
 def update_particles_v1(params, state):
 
-    import tensorflow_addons as tfa
-
     if hasattr(state,'logger'):
         state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
 
@@ -85,43 +83,43 @@ def update_particles_v1(params, state):
         axis=0,
     )
 
-    uvelbase = tfa.image.interpolate_bilinear(
+    uvelbase = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(state.uvelbase, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
-    vvelbase = tfa.image.interpolate_bilinear(
+    vvelbase = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(state.vvelbase, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
-    uvelsurf = tfa.image.interpolate_bilinear(
+    uvelsurf = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(state.uvelsurf, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
-    vvelsurf = tfa.image.interpolate_bilinear(
+    vvelsurf = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(state.vvelsurf, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
-    othk = tfa.image.interpolate_bilinear(
+    othk = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(state.thk, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
-    topg = tfa.image.interpolate_bilinear(
+    topg = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(state.topg, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
-    smb = tfa.image.interpolate_bilinear(
+    smb = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(state.smb, axis=0), axis=-1),
         indices,
         indexing="ij",
@@ -166,13 +164,13 @@ def update_particles_v1(params, state):
             state.uvelsurf * slopsurfx + state.vvelsurf * slopsurfy - state.divflux
         )
 
-        wvelbase = tfa.image.interpolate_bilinear(
+        wvelbase = interpolate_bilinear_tf(
             tf.expand_dims(tf.expand_dims(state.wvelbase, axis=0), axis=-1),
             indices,
             indexing="ij",
         )[0, :, 0]
 
-        wvelsurf = tfa.image.interpolate_bilinear(
+        wvelsurf = interpolate_bilinear_tf(
             tf.expand_dims(tf.expand_dims(state.wvelsurf, axis=0), axis=-1),
             indices,
             indexing="ij",
@@ -248,10 +246,8 @@ def seeding_particles(params, state):
     #                       [tf.expand_dims((state.ypos - state.y[0]) / state.dx, axis=-1),
     #                        tf.expand_dims((state.xpos - state.x[0]) / state.dx, axis=-1)],
     #                       axis=-1 ), axis=0)
-
-    #        import tensorflow_addons as tfa
-
-    #        thk = tfa.image.interpolate_bilinear(
+ 
+    #        thk = interpolate_bilinear_tf(
     #                    tf.expand_dims(tf.expand_dims(state.thk, axis=0), axis=-1),
     #                    indices,indexing="ij",      )[0, :, 0]
 

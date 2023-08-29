@@ -55,8 +55,6 @@ def initialize_particles(params, state):
 
 def update_particles(params, state):
  
-    import tensorflow_addons as tfa
-
     if hasattr(state,'logger'):
         state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
 
@@ -86,31 +84,31 @@ def update_particles(params, state):
         axis=0,
     )
 
-    u = tfa.image.interpolate_bilinear(
+    u = interpolate_bilinear_tf(
         tf.expand_dims(state.U[0], axis=-1),
         indices,
         indexing="ij",
     )[:, :, 0]
 
-    v = tfa.image.interpolate_bilinear(
+    v = interpolate_bilinear_tf(
         tf.expand_dims(state.U[1], axis=-1),
         indices,
         indexing="ij",
     )[:, :, 0]
 
-    thk = tfa.image.interpolate_bilinear(
+    thk = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(state.thk, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
-    topg = tfa.image.interpolate_bilinear(
+    topg = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(state.topg, axis=0), axis=-1),
         indices,
         indexing="ij",
     )[0, :, 0]
 
-    smb = tfa.image.interpolate_bilinear(
+    smb = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(state.smb, axis=0), axis=-1),
         indices,
         indexing="ij",
@@ -152,7 +150,7 @@ def update_particles(params, state):
 
         state.rhpos = (state.zpos - topg) / thk
 
-        w = tfa.image.interpolate_bilinear(
+        w = interpolate_bilinear_tf(
                 tf.expand_dims(state.W, axis=-1),
                 indices,
                 indexing="ij",
@@ -227,10 +225,8 @@ def seeding_particles(params, state):
     #                       [tf.expand_dims((state.ypos - state.y[0]) / state.dx, axis=-1),
     #                        tf.expand_dims((state.xpos - state.x[0]) / state.dx, axis=-1)],
     #                       axis=-1 ), axis=0)
-
-    #        import tensorflow_addons as tfa
-
-    #        thk = tfa.image.interpolate_bilinear(
+ 
+    #        thk = interpolate_bilinear_tf(
     #                    tf.expand_dims(tf.expand_dims(state.thk, axis=0), axis=-1),
     #                    indices,indexing="ij",      )[0, :, 0]
 

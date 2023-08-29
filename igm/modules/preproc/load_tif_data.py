@@ -78,8 +78,8 @@ def initialize_load_tif_data(params, state):
  
     # crop if requested
     if params.crop_tif:
-        i0,i1 = int((params.crop_tif_xmin-x[0])/(x[1]-x[0])),int((params.crop_tif_xmax-x[0])/(x[1]-x[0]))
-        j0,j1 = int((params.crop_tif_ymin-y[0])/(y[1]-y[0])),int((params.crop_tif_ymax-y[0])/(y[1]-y[0]))
+        i0,i1 = np.clip(int((params.crop_tif_xmin-x[0])/(x[1]-x[0])),int((params.crop_tif_xmax-x[0])/(x[1]-x[0])), 0, x.shape[0]-1)
+        j0,j1 = np.clip(int((params.crop_tif_ymin-y[0])/(y[1]-y[0])),int((params.crop_tif_ymax-y[0])/(y[1]-y[0])), 0, y.shape[0]-1)
         for file in files:
             var = os.path.split(file)[-1].split(".")[0]
             if not var in ["x", "y"]:

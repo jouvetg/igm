@@ -85,20 +85,26 @@ def initialize_prepare_data(params, state):
     icemaskobs = np.flipud(
         np.squeeze(nc.variables["glacier_mask"]).astype("float32")
     )
-    uvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vx"]).astype("float32"))
-    vvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vy"]).astype("float32"))
-    thkinit = np.flipud(
+    
+    vars_to_save =  ["usurf", "thk", "icemask", "usurfobs", "thkobs", "icemaskobs"]
+    
+    if "millan_vx" in nc.variables:
+        uvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vx"]).astype("float32"))
+        uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
+        uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
+        vars_to_save += ["uvelsurfobs"]
+    if "millan_vy" in nc.variables:
+        vvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vy"]).astype("float32"))
+        vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
+        vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
+        vars_to_save += ["vvelsurfobs"] 
+    if "millan_ice_thickness" in nc.variables:
+        thkinit = np.flipud(
         np.squeeze(nc.variables["millan_ice_thickness"]).astype("float32")
-    )
-
-    uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
-    uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
-
-    vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
-    vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
-
-    thkinit = np.where(np.isnan(thkinit), 0, thkinit)
-    thkinit = np.where(icemaskobs, thkinit, 0)
+        )
+        thkinit = np.where(np.isnan(thkinit), 0, thkinit)
+        thkinit = np.where(icemaskobs, thkinit, 0)
+        vars_to_save += ["thkinit"]
 
     thkobs = np.zeros_like(thk)*np.nan
 
@@ -115,12 +121,6 @@ def initialize_prepare_data(params, state):
             thkobs = np.zeros_like(thk)*np.nan
 
     nc.close()
-
-    #########################################################
-
-    vars_to_save =  [ "usurf", "thk", "icemask"]
-    vars_to_save += [ "usurfobs", "thkobs", "icemaskobs", "uvelsurfobs", "vvelsurfobs" ] 
-    vars_to_save += [ "thkinit" ]
 
     ########################################################
 

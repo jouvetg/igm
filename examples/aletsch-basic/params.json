@@ -10,8 +10,14 @@
                        "print_info",
                        "print_all_comp_info",
                        "anim3d_from_ncdf_ex"],
-  "time_start": 100.0,
-  "time_end": 200.0,
+  "smb_simple_array": [ 
+                        ["time", "gradabl", "gradacc", "ela", "accmax"],
+                        [ 1900,      0.009,     0.005,  2800,      2.0],
+                        [ 2000,      0.009,     0.005,  2900,      2.0],
+                        [ 2100,      0.009,     0.005,  3300,      2.0]
+                      ],
+  "time_start": 1900.0,
+  "time_end": 2000.0,
   "time_save": 10.0,
   "plot_live": true
 }

@@ -20,18 +20,26 @@ def params_smb_simple(parser):
     parser.add_argument(
         "--smb_simple_file",
         type=str,
-        default="mb_simple_param.txt",
+        default="smb_simple_param.txt",
         help="Name of the imput file for the simple mass balance model",
     )
-
+    parser.add_argument(
+        "--smb_simple_array",
+        type=list,
+        default=[],
+        help="Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)",
+    )
 
 def initialize_smb_simple(params, state):
-
-    state.smbpar = np.loadtxt(
-        os.path.join(params.working_dir, params.smb_simple_file),
-        skiprows=1,
-        dtype=np.float32,
-    )
+    
+    if params.smb_simple_array==[]:
+        state.smbpar = np.loadtxt(
+            os.path.join(params.working_dir, params.smb_simple_file),
+            skiprows=1,
+            dtype=np.float32,
+        )
+    else:
+        state.smbpar = np.array(params.smb_simple_array[1:]).astype(np.float32)
 
     state.tcomp_smb_simple = []
     state.tlast_mb = tf.Variable(-1.0e5000)

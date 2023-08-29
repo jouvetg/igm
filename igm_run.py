@@ -10,6 +10,10 @@ import igm
 
 
 def main():
+
+    print(" ------------------------- IGM START -----------------------------")
+
+    print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
     
     # Collect defaults, overide from json file, and parse all core parameters 
     parser = igm.params_core()
@@ -57,6 +61,8 @@ def main():
         # Finalize each module in turn
         for module in modules:
             getattr(igm, "finalize_" + module)(params, state)
+
+    print(" ------------------------- IGM END  -----------------------------")
 
 if __name__ == '__main__':
     main()

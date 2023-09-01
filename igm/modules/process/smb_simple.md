@@ -5,8 +5,8 @@
 
 This IGM modules models a simple surface mass balance model parametrized by time-evolving ELA $z_{ELA}$, ablation $\beta_{abl}$ and accumulation $\beta_{acc}$ gradients, and max accumulation $m_{acc}$ parameters:
 
-$$SMB(z) = min(\beta_{acc}*(z-z_{ELA}),m_{acc}) \quad \textrm{if} \; z> z_{ELA},$$
-$$SMB(z) = \beta_{abl}*(z-z_{ELA}) \quad \textrm{else}.$$
+$$SMB(z)=min(\beta_{acc} (z-z_{ELA}),m_{acc})\quad\textrm{if}\;z>z_{ELA},$$
+$$SMB(z)=\beta_{abl} (z-z_{ELA})\quad\textrm{else}.$$
 
  These parameters may be given in file (file name given in `smb_simple_file` parameter), which look like this
 

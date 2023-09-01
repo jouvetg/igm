@@ -42,7 +42,7 @@ setup(
 	'importlib_resources',
 #	'tables',
 	'oggm',
-#	'geopandas',
+	'pyproj',
 	'rasterio',
 	'mayavi',
 	'pyqt5'

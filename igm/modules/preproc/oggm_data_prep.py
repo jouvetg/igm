@@ -5,7 +5,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import os, glob
+import os, glob, shutil
 from netCDF4 import Dataset
 import tensorflow as tf
 from igm.modules.utils import str2bool
@@ -49,9 +49,9 @@ def params_oggm_data_prep(parser):
     parser.add_argument(
         "--path_glathida",
         type=str,
-        default="/home/gjouvet/",
+        default="",
         help="Path where the Glathida Folder is store, so that you don't need \
-              to redownload it at any use of the script",
+              to redownload it at any use of the script, if empty it will be in the home directory",
     )
     parser.add_argument(
         "--save_input_ncdf",
@@ -64,14 +64,12 @@ def initialize_oggm_data_prep(params, state):
 
     import json
     
-    gdirs, paths_ncdf = _oggm_util([params.RGI_ID], params)
-    
-    print('Temporarly files dowloaded with the OGGM preparator :',paths_ncdf)
-
+    _oggm_util([params.RGI_ID], params)
+     
     if hasattr(state,'logger'):
         state.logger.info("Prepare data using oggm and glathida")
 
-    nc = Dataset(paths_ncdf[0], "r+")
+    nc = Dataset(os.path.join("oggm_data","gridded_data.nc"), "r+")
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.flip(np.squeeze(nc.variables["y"]).astype("float32"))
@@ -111,8 +109,7 @@ def initialize_oggm_data_prep(params, state):
     thkobs = np.zeros_like(thk)*np.nan
 
     if params.include_glathida:
-        fff = paths_ncdf[0].split("gridded_data.nc")[0] + "glacier_grid.json"
-        with open(fff, "r") as f:
+        with open(os.path.join("oggm_data","glacier_grid.json"), "r") as f:
             data = json.load(f)
         proj = data["proj"]
 
@@ -282,31 +279,35 @@ def _oggm_util(RGIs, params):
             compile_millan_statistics,
             compile_millan_statistics,
         )
+
+        try:
+            workflow.execute_entity_task(thickness_to_gdir, gdirs)
+            workflow.execute_entity_task(velocity_to_gdir, gdirs)
+        except ValueError:
+            print("No millan22 velocity & thk data available!")
         
-            
-        # This applies a task to a list of gdirs
-        workflow.execute_entity_task(thickness_to_gdir, gdirs)
-        workflow.execute_entity_task(velocity_to_gdir, gdirs)
-        
-#        from oggm.shop.its_live import velocity_to_gdir
-#        workflow.execute_entity_task(velocity_to_gdir, gdirs)
-
-        from oggm.shop import bedtopo
-
-        workflow.execute_entity_task(bedtopo.add_consensus_thickness, gdirs)
-
         # We also have some diagnostics if you want
         df = compile_millan_statistics(gdirs)
     #        print(df.T)
-
-    path_ncdf = []
-    for gdir in gdirs:
-        path_ncdf.append(gdir.get_filepath("gridded_data"))
-        path_ncdf.append(gdir.get_filepath("climate_historical"))
         
-        print('GGGGGGG :',gdir.get_filepath("climate_historical"))
+        from oggm.shop.its_live import velocity_to_gdir
 
-    return gdirs, path_ncdf
+        try:
+            workflow.execute_entity_task(velocity_to_gdir, gdirs)
+        except ValueError:
+            print("No its_live velocity data available!")
+
+        from oggm.shop import bedtopo
+        workflow.execute_entity_task(bedtopo.add_consensus_thickness, gdirs)
+ 
+    source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
+    destination_folder = os.path.join(params.working_dir, "oggm_data")
+    
+    if os.path.exists(destination_folder):
+        shutil.rmtree(destination_folder)    
+    shutil.copytree(source_folder, destination_folder)
+    
+    os.system( "echo rm -r " + os.path.join(params.working_dir, "oggm_data") + " >> clean.sh" )
 
 
 def _read_glathida(x, y, usurf, proj, path_glathida):
@@ -317,6 +318,9 @@ def _read_glathida(x, y, usurf, proj, path_glathida):
     from pyproj import Transformer
     from scipy.interpolate import RectBivariateSpline
     import pandas as pd
+    
+    if path_glathida == "":
+        path_glathida = os.path.expanduser("~")
 
     if not os.path.exists(os.path.join(path_glathida, "glathida")):
         os.system("git clone https://gitlab.com/wgms/glathida " + path_glathida)
@@ -327,6 +331,8 @@ def _read_glathida(x, y, usurf, proj, path_glathida):
     files += glob.glob(
         os.path.join(path_glathida, "glathida", "submissions", "*", "point.csv")
     )
+    
+    os.path.expanduser
 
     transformer = Transformer.from_crs(proj, "epsg:4326", always_xy=True)
 

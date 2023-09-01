@@ -1,42 +1,21 @@
 
-### <h1 align="center" id="title">IGM module particles </h1>
+### <h1 align="center" id="title">IGM module `particles` </h1>
 
 # Description:
 
-This IGM module implments a particle tracking routine, which can compute 
-a large number of trajectories (as it is implemented with TensorFlow to 
-run in parallel) in live time during the forward model run. The routine 
-produces some seeding of particles (by default in the accumulation area
- at regular intervals), and computes the time trajectory of the resulting 
- particle in time advected by the velocity field in 3D. 
- There are currently 2 implementations:
-* 'simple', Horizontal and vertical directions are treated differently: 
-i) In the horizontal plan, particles are advected with the horizontal velocity 
-field (interpolated bi-linearly). The positions are recorded in vector 
-(glacier.xpos,glacier.ypos). ii) In the vertical direction, particles are 
-tracked along the ice column scaled between 0 and 1 (0 at the bed, 1 at 
-the top surface). The relative position along the ice column is recorded 
-in vector glacier.rhpos (same dimension as glacier.xpos and iglaciergm.ypos). 
-Particles are always initialized at 1 (assumed to be on the surface). 
-The evolution of the particle within the ice column through time is 
-computed according to the surface mass balance: the particle deepens when 
-the surface mass balance is positive (then igm.rhpos decreases), 
-and re-emerge when the surface mass balance is negative.
-* '3d', The vertical velocity is reconsructed by integrating the divergence 
-of the horizontal velocity, this permits in turn to perform 3D particle tracking. 
-state.zpos is the z- position within the ice.
-Note that in both case, the velocity in the ice layer is reconstructed from 
-bottom and surface one assuming 4rth order polynomial profile (SIA-like)
+This IGM module implements a particle tracking routine, which computes trajectory of virtual particles advected by the ice flow. The specificity is that it runs in live time during the forward mdodel run and a large number of particles can be computed tanks to the parrallel implementation with TensorFlow. The routine includes particle seeding (by default in the accumulation area at regular intervals, but this can be customized), and tracking (advection by the velocity field in 3D). There is currently no strategy for removing particles, therefore, there is risk of overloading the memory when using this routine as it is for long time and/or with intense seeding.
 
-To include this feature, make sure:
-* To adapt the seeding to your need. You may keep the default seeding in the 
-accumulation area setting the seeding frequency with igm.config.frequency_seeding 
-and the seeding density glacier.config.density_seeding. Alternatively, you may 
-define your own seeding strategy (e.g. seeding close to rock walls/nunataks). 
-To do so, you may redefine the function seeding_particles.
+ There are currently 2 implementations (switch with parameter `tracking_method`:
 
-* At each time step, the weight of surface debris contains in each cell the 2D
- horizontal grid is computed, and stored in variable igm.weight_particles.
+- `'simple'`: Horizontal and vertical directions are treated differently: i) In the horizontal plan, particles are advected with the horizontal velocity field (interpolated bi-linearly) ii) In the vertical direction, particles are tracked along the ice column scaled between 0 and 1 (0 at the bed, 1 at the top surface) with the  relative position along the ice column. Particles are always initialized at 1 relative height (assumed to be on the surface). The evolution of the particle within the ice column through time is computed according to the surface mass balance: the particle deepens when the surface mass balance is positive (the relative height decreases), and re-emerge when the surface mass balance is negative (the relative height increases).
 
-The module needs horizontal velocities (state.U), as well as vertical speeds (state.W)
-that ice computed with the vertical_iceflow module. 
+- `'3d'`: requires to activate module `vertical_iceflow`, which computes the vertical velocity by integrating the divergence of the horizontal velocity. This permits in turn to perform 3D particle tracking.
+
+For now, `tracking_method` is by default set to  `'simple'`, as the  `'3d'` method (and the dependence `vertical_iceflow`) needs to further tested.
+
+Note that you my adapt the seeding to your need. You may keep the default seeding in the accumulation area setting the seeding frequency with `frequency_seeding` parameter and the seeding density `density_seeding` parameter. Alternatively, you may define your own seeding strategy (e.g. seeding close to rock walls/nunataks). To do so, you may redefine the function `seeding_particles()` in a file `particles.py` provided in the working directory (check the example aletsch-1880-2100). When excuted, `igm_run` will overide the original function `seeding_particles()` with the new user-defined one.
+
+The module needs horizontal velocities (state.U), as well as vertical speeds (state.W) that ice computed with the vertical_iceflow module when `tracking_method` is set to `3d`. 
+
+**Note:** in the code, positions of particles are recorded within a vector of lenght te number of traked particels state.xpos, state.ypos, state.zpos. Variable state.rhpos provide the relative height within the ice column (1 at the surface, 0 at the bed). At each time step, the weight of surface debris contains in each cell the 2D
+ horizontal grid is computed, and stored in variable state.weight_particles.

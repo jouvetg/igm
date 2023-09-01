@@ -18,19 +18,19 @@ def params_particles(parser):
         "--tracking_method",
         type=str,
         default="simple",
-        help="Method for tracking particles (3d or simple)",
+        help="Method for tracking particles (simple or 3d)",
     )
     parser.add_argument(
         "--frequency_seeding",
         type=int,
         default=50,
-        help="Frequency of seeding (default: 10)",
+        help="Frequency of seeding (unit : year)",
     )
     parser.add_argument(
         "--density_seeding",
         type=int,
         default=0.2,
-        help="Density of seeding (default: 0.2)",
+        help="Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)",
     )
 
 
@@ -45,9 +45,9 @@ def initialize_particles(params, state):
     state.rhpos = tf.Variable([])
     state.wpos = tf.Variable([])  # this is to give a weight to the particle
     state.tpos = tf.Variable([])
-    state.englt = tf.Variable([])
+    state.englt = tf.Variable([]) # this copute the englacial time
 
-    # build the gridseed
+    # build the gridseed, we don't want to seed all pixels!
     state.gridseed = np.zeros_like(state.thk) == 1
     rr = int(1.0 / params.density_seeding)
     state.gridseed[::rr, ::rr] = True

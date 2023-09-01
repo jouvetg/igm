@@ -17,7 +17,7 @@ def params_rockflow(parser):
         "--speed_rockflow",
         type=float,
         default=1,
-        help="speed rock flow",
+        help="Speed of rock flow along the slope in m/y",
     )
 
 def initialize_rockflow(params,state):

@@ -30,7 +30,7 @@ def params_core():
     parser.add_argument(
         "--modules_preproc",
         type=list,
-        default=["prepare_data"],
+        default=["oggm_data_prep"],
         help="List of pre-processing modules",
     )
     parser.add_argument(

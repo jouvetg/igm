@@ -1,13 +1,15 @@
 
-### <h1 align="center" id="title">IGM module optimize </h1>
+### <h1 align="center" id="title">IGM module `optimize` </h1>
 
 # Description:
 
-A data assimilation module of IGM permits to seek optimal ice thickness, top ice surface, and ice flow parametrization (red variables in the following figure), that best explains observational data such as surface ice speeds, ice thickness profiles, top ice surface (blue variables in the following figure) while being consistent with the ice flow emulator used in forwrd modelling. This page explains how to use the data assimilation module as a preliminary step in IGM of a forward/prognostic model run with module 'optimize'.
+A data assimilation module of IGM permits to seek optimal ice thickness, top ice surface, and ice flow parametrization, that best explains observational data such as surface ice speeds, ice thickness profiles, top ice surface while being consistent with the ice flow emulator used in forwrd modelling. This page explains how to use the data assimilation module as a preliminary step in IGM of a forward/prognostic model run with module `optimize`.
+
+**Note that the optimization currently requires some experience, and some parameter tunning may be needed before getting a meanigfully results. Use it with care, and with a certain dose of parameter exploration. Do not hesitate to get in contact with us for chcecking the consistency of results.**
 
 # Getting the data 
 
-The first thing you need to do is to get as much data as possible, this includes:
+The first thing you need to do is to get as much data as possible. Data list includes:
 
 * Observed surface ice velocities ${\bf u}^{s,obs}$, e.g. from Millan and al. (2022).
 * Surface top elevation $s^{obs}$, e.g. SRTM, ESA GLO-30, ...
@@ -16,9 +18,9 @@ The first thing you need to do is to get as much data as possible, this includes
 
 Of course, you may not have all these data, which is fine. You work with a reduced amount of data, however, you will have make assumptions to reduce the number of variables to optimize (controls) to keep the optimization problem well-posed (i.e., with a unique solution).
 
-All the data need to be assemblied in 2D raster grid in an netcdf file (called by default observation.nc) using convention variable names but ending with 'obs'. E.g. observation.nc contains fields 'usurfobs' (observed top surface elevation), 'thkobs' (observed thickness profiles, use nan or novalue where no data is available), 'icemaskobs' (this mask from RGI outline serve to enforce zero ice thickness outside the mask), 'uvelsurfobs' and 'vvelsurfobs' (x- and y- components of the horizontal surface ice velocity, use nan or novalue where no data is available), 'thkinit' (this may be a formerly-inferred ice thickness field to initalize the inverse model, otherwise it would start from thk=0).
+Thes data can be obtained using the IGM module `oggm_data_prep`, or loading these 2D gridded variables using module `load_ncdf_data` or `load_tif_data` using convention variable names but ending with `obs`. E.g. `usurfobs` (observed top surface elevation), `thkobs` (observed thickness profiles, use nan or novalue where no data is available), `icemaskobs` (this mask from RGI outline serve to enforce zero ice thickness outside the mask), `uvelsurfobs` and `vvelsurfobs` (x- and y- components of the horizontal surface ice velocity, use nan or novalue where no data is available), `thkinit` (this may be a formerly-inferred ice thickness field to initalize the inverse model, otherwise it would start from thk=0).
 
-**Use the IGM 'preprare_data' to download all the data you need using OGGM and the GlaThiDa database**
+**Use the IGM `oggm_data_prep` to download all the data you need using OGGM and the GlaThiDa database.**
  
 # General optimization setting
 
@@ -53,18 +55,19 @@ Check at the reference paper given below for more explanation on the regularizat
 
 The above optimization problem is given in the most general case, however, you may select only some components according to your data as follows: 
 
-* the list of control variables you wish to optimize, e.g.
-```python
-params.opti_control=['thk','slidingco','usurf'] # this is the most general case  
-params.opti_control=['thk','usurf'] # this will only optimize ice thickness and top surface elevation
-params.opti_control=['thk'] # this will only optimize ice thickness 
+* the list of control variables you wish to optimize, e.g., 
+```json
+"opti_control": ['thk','slidingco','usurf'] # this is the most general case  
+"opti_control": ['thk','usurf'] # this will only optimize ice thk and top surf 
+"opti_control": ['thk'] # this will only optimize ice thickness 
 ```
 * the list of cost components you wish to minimize, e.g.
-```python
-params.opti_cost=['velsurf','thk','usurf','divfluxfcz','icemask']  # this is the most general case  
-params.opti_cost=['velsurf','icemask']  # In this case, you only fit surface velocity and ice mask.
+```json
+"opti_cost": ['velsurf','thk','usurf','divfluxfcz','icemask']  # most general case  
+"opti_cost": ['velsurf','icemask'] # Here only fit surface velocity and ice mask.
 ```
-*Make sure you have a balance between controls and constraints to ensure the problem to have a unique solution.*
+
+**I recomend to start with a simple optimization, starting with one single control (typically `thk`), and a few target/cost component (typically `velsurf` and `icemask`), and then to increase the complexity of the optimization (adding controls and cost components) once the the most simple give meaningfull results. Make sure to keep a balance between controls and constraints to ensure the problem to keep the problem well-posed, and prevents against multiple solutions.**
 
 # Exploring parameters
 
@@ -72,28 +75,28 @@ There are parameters that may need to tune for each application.
 
 First, you may change your expected confidence levels (i.e. tolerance to fit the data) $\sigma^u, \sigma^h, \sigma^s, \sigma^d$ to fit surface ice velocity, ice thickness, surface top elevation, or divergence of the flux as follows:
 
-```python
-params.opti_velsurfobs_std = 5 # unit m/y
-params.opti_thkobs_std     = 5 # unit m
-params.opti_usurfobs_std   = 5 # unit m
-params.opti_divfluxobs_std = 1 # unit m/y
+```json
+"opti_velsurfobs_std": 5 # unit m/y
+"opti_thkobs_std" : 5 # unit m
+"opti_usurfobs_std" : 5 # unit m
+"opti_divfluxobs_std": 1 # unit m/y
 ```
 
 Second, you may change regularization parameters such as i) $\alpha^h, \alpha^A$, which control the regularization weights for the ice thickness and strflowctrl (increasing $\alpha^h, \alpha^A$ will make thse fields spatially smoother), or ii) parameters beta and gamma involved for regularizing the ice thickness h. Taking beta=1 occurs to enforce isotropic smoothing, reducing beta will make the smoothing more and more anisotropic to enforce further smoothing along ice flow directions than accross directions (as expected for the topography of a glacier bedrock, which was eroded over long times). Setting parameter gamma to a small value may be usefull to add a bit of convexity in the system. This may help when initializing the inverse modelled with zero thickness, or to treat margin regions with no data available. These parameters may be changed as follows:
 
-```python 
-params.opti_regu_param_thk = 10.0            # weight for the regul. of thk
-params.opti_regu_param_strflowctrl = 1.0     # weight for the regul. of strflowctrl
-params.opti_smooth_anisotropy_factor = 0.2
-params.opti_convexity_weight = 0.002
+```json 
+"opti_regu_param_thk": 10.0            # weight for the regul. of thk
+"opti_regu_param_slidingco": 1.0     # weight for the regul. of slidingco
+"opti_smooth_anisotropy_factor": 0.2
+"opti_convexity_weight":  0.002
 ```
 
 Lastly, there are a couple of other parameters we may be interest to change e.g.
 
-```python 
-params.opti_nbitmax       = 1000   # Number of it. for the optimization
-params.opti_step_size     = 0.001  # step size in the optimization iterative algorithm
-params.opti_init_zero_thk = True   # Force inializing with zero ice thickness (otherwise take thkinit)
+```json
+"opti_nbitmax": 1000   # Number of it. for the optimization
+"opti_step_size": 0.001  # step size in the optimization iterative algorithm
+"opti_init_zero_thk": True   # Force init zero ice thk (otherwise take thkinit)
 ```
 
 # Monitoring the optimization
@@ -101,11 +104,24 @@ params.opti_init_zero_thk = True   # Force inializing with zero ice thickness (o
 You may monitor the data assimilation during the inverse modelling in several ways:
 
 * Check that the components of the costs decrease over time, the value of cost are printed during the optimization, and a graph is produced at the end.
-* Set up glacier.config.plot_result = True and glacier.config.plot_live = True to monitor in live time the evolution of the field your are optimizing such as the ice thickness, the surface ice speeds, ect ... You may also check (hopefully decreasing) STD given in the figure.
-* You may do the same monitoring after the run looking at optimize.nc
-* If you asked divfluxfcz to be in glacier.config.opti_cost, you should check what look like the divergence of the fluc (divflux)
+* Set up parameter `plot_result` to  True and `plot_live` to True to monitor in live time the evolution of the field your are optimizing such as the ice thickness, the surface ice speeds, ect ... You may also check (hopefully decreasing) STD given in the figure.
+* You may do the same monitoring after the run looking at optimize.nc reuesting this file to be written.
+* If you asked divfluxfcz to be in the parameter list `opti_cost`, you should check what look like the divergence of the flux (divflux).
 
-# Reference
+# References
+
+```
+@article{jouvet2023inversion,
+  author =        {Jouvet, Guillaume},
+  journal =       {Journal of Glaciology},
+  number =        {273},
+  pages =         {13--26},
+  publisher =     {Cambridge University Press},
+  title =         {{Inversion of a Stokes glacier flow model emulated by deep learning}},
+  volume =        {69},
+  year =          {2023},
+  doi =           {10.1017/jog.2022.41},
+}
 
 @article{jouvet2023ice,
   title={Ice flow model emulator based on physics-informed deep learning},
@@ -113,6 +129,6 @@ You may monitor the data assimilation during the inverse modelling in several wa
   year={2023},
   publisher={EarthArXiv}
 }
-
+```
 
  

@@ -1,5 +1,5 @@
 
-### <h1 align="center" id="title">IGM module particle_v1 </h1>
+### <h1 align="center" id="title">IGM module `particle_v1` </h1>
 
 # Description:
 

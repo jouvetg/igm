@@ -21,7 +21,7 @@ def params_smb_simple(parser):
         "--smb_simple_file",
         type=str,
         default="smb_simple_param.txt",
-        help="Name of the imput file for the simple mass balance model",
+        help="Name of the imput file for the simple mass balance model (time, gradabl, gradacc, ela, accmax)",
     )
     parser.add_argument(
         "--smb_simple_array",
@@ -68,7 +68,7 @@ def update_smb_simple(params, state):
 
         # if an icemask exists, then force negative smb aside to prevent leaks
         if hasattr(state, "icemask"):
-            state.smb = tf.where(state.icemask > 0.5, state.smb, -10)
+            state.smb = tf.where((state.smb<0)|(state.icemask>0.5),state.smb,-10)
 
         state.tlast_mb.assign(state.t)
 

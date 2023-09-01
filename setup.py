@@ -40,11 +40,11 @@ setup(
 	'tensorflow',
 	'xarray',
 	'importlib_resources',
-	'tables',
+#	'tables',
 	'oggm',
-	'geopandas',
+#	'geopandas',
 	'rasterio',
 	'mayavi',
-	'pyqt5'	
+	'pyqt5'
     ]
 )

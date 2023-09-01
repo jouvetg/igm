@@ -24,15 +24,14 @@ def params_iceflow(parser):
         "--type_iceflow",
         type=str,
         default="emulated",
-        help="emulated, solved, diagnostic",
+        help="Type of iceflow: it can emulated (default), solved, or in diagnostic mode to investigate the fidelity of the emulator towads the solver",
     )
 
     parser.add_argument(
         "--emulator",
         type=str,
         default="f21_pinnbp_GJ_23_a",
-        help="Directory path of the deep-learning ice flow model, \
-              create a new if empty string",
+        help="Directory path of the deep-learning ice flow model, create a new if empty string",
     )
 
     # type of ice flow model
@@ -40,7 +39,7 @@ def params_iceflow(parser):
         "--iceflow_physics", 
         type=int, 
         default=2,
-        help="2 for blatter, 4 for stokes, this is also the number of DOF"
+        help="2 for blatter, 4 for stokes, this is also the number of DOF (STOKES DOES NOT WORK YET, KEEP IT TO 2)"
     )
 
     # physical parameters
@@ -48,13 +47,13 @@ def params_iceflow(parser):
         "--init_slidingco",
         type=float,
         default=10000,
-        help="Initial sliding coeeficient slidingco (default: 0)",
+        help="Initial sliding coefficient slidingco",
     )
     parser.add_argument(
         "--init_arrhenius",
         type=float,
         default=78,
-        help="Initial arrhenius factor arrhenuis (default: 78)",
+        help="Initial arrhenius factor arrhenuis",
     )
     parser.add_argument(
         "--regu_glen",
@@ -75,7 +74,10 @@ def params_iceflow(parser):
         help="Glen's flow law exponent",
     )
     parser.add_argument(
-        "--exp_weertman", type=float, default=3, help="Weertman's law exponent"
+        "--exp_weertman", 
+        type=float, 
+        default=3, 
+        help="Weertman's law exponent"
     )
     parser.add_argument(
         "--gravity_cst",
@@ -95,13 +97,13 @@ def params_iceflow(parser):
         "--Nz",
         type=int,
         default=10,
-        help="Nz for the vertical discretization",
+        help="Number of grid point for the vertical discretization",
     )
     parser.add_argument(
         "--vert_spacing",
         type=float,
         default=4.0,
-        help="1.0 for equal vertical spacing, 4.0 otherwise (4.0)",
+        help="Parameter controlling the discrtuzation density to get more point near the bed than near the the surface. 1.0 means equal vertical spacing.",
     )
     parser.add_argument(
         "--thr_ice_thk",
@@ -115,19 +117,19 @@ def params_iceflow(parser):
         "--solve_iceflow_step_size",
         type=float,
         default=1,
-        help="solver_step_size",
+        help="Step size for the optimizer using when solving Blatter-Pattyn in solver mode",
     )
     parser.add_argument(
         "--solve_iceflow_nbitmax",
         type=int,
         default=100,
-        help="solver_nbitmax",
+        help="Maximum number of iteration for the optimizer using when solving Blatter-Pattyn in solver mode",
     )
     parser.add_argument(
         "--stop_if_no_decrease",
         type=str2bool,
         default=True,
-        help="stop_if_no_decrease for the solver",
+        help="This permits to stop the solver if the energy does not decrease",
     )
 
     # emualtion parameters
@@ -135,13 +137,13 @@ def params_iceflow(parser):
         "--fieldin",
         type=list,
         default=["thk", "usurf", "arrhenius", "slidingco", "dX"],
-        help="Input parameter of the iceflow emulator",
+        help="Input fields of the iceflow emulator",
     )    
     parser.add_argument(
         "--dim_arrhenius",
         type=int,
         default=2,
-        help="dimension of the arrhenius factor (horizontal 2D or 3D)",
+        help="Dimension of the arrhenius factor (horizontal 2D or 3D)",
     )
 
 
@@ -149,37 +151,37 @@ def params_iceflow(parser):
         "--retrain_iceflow_emulator_freq",
         type=int,
         default=10,
-        help="retrain_iceflow_emulator_freq",
+        help="Frequency at which the emulator is retrained, 0 means never, 1 means at each time step, 2 means every two time steps, etc.",
     )
     parser.add_argument(
         "--retrain_iceflow_emulator_lr",
         type=float,
         default=0.00002,
-        help="retrain_iceflow_emulator_lr",
+        help="Learning rate for the retraining of the emulator",
     )
     parser.add_argument(
         "--retrain_iceflow_emulator_nbit",
         type=float,
         default=1,
-        help="retrain_iceflow_emulator_nbit",
+        help="Number of iterations done at each time step for the retraining of the emulator",
     )
     parser.add_argument(
         "--retrain_iceflow_emulator_framesizemax",
         type=float,
         default=750,
-        help="retrain_iceflow_emulator_framesizemax",
+        help="Size of the patch used for retraining the emulator, this is usefull for large size arrays, otherwise the GPU memory can be overloaded",
     )
     parser.add_argument(
         "--multiple_window_size",
         type=int,
         default=0,
-        help="If a U-net, this force window size a multiple of 2**N (default: 0)",
+        help="If a U-net, this force window size a multiple of 2**N",
     )
     parser.add_argument(
         "--force_max_velbar",
         type=float,
         default=0,
-        help="This permits to artif. upper-bound velocities, active if > 0 (default: 0)",
+        help="This permits to artifically upper-bound velocities, active if > 0",
     )
 
     # CNN parameters
@@ -193,13 +195,13 @@ def params_iceflow(parser):
         "--activation",
         type=str,
         default="lrelu",
-        help="lrelu",
+        help="Activation function, it can be lrelu, relu, tanh, sigmoid, etc.",
     )
     parser.add_argument(
         "--nb_layers",
         type=int,
         default=16,
-        help="nb_layers",
+        help="Number of layers in the CNN",
     )
     parser.add_argument(
         "--nb_blocks",
@@ -211,19 +213,19 @@ def params_iceflow(parser):
         "--nb_out_filter",
         type=int,
         default=32,
-        help="nb_out_filter",
+        help="Number of output filters in the CNN",
     )
     parser.add_argument(
         "--conv_ker_size",
         type=int,
         default=3,
-        help="conv_ker_size",
+        help="Size of the convolution kernel",
     )
     parser.add_argument(
         "--dropout_rate",
         type=float,
         default=0,
-        help="dropout_rate",
+        help="Dropout rate in the CNN",
     )
 
 

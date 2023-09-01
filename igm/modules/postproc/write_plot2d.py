@@ -17,31 +17,31 @@ def params_write_plot2d(parser):
         "--editor_plot2d",
         type=str,
         default="vs",
-        help="optimized for VS code (vs) or spyder (sp) for live plot",
+        help="Optimized for VS code (vs) or spyder (sp) for live plot",
     )
     parser.add_argument(
         "--plot_live",
         type=str2bool,
         default=False,
-        help="Display plots live the results during computation (Default: False)",
+        help="Display plots live the results during computation instead of making png",
     )
     parser.add_argument(
         "--plot_particles",
         type=str2bool,
         default=True,
-        help="Display particles (Default: True)",
+        help="Display particles is True, does not display if False",
     )
     parser.add_argument(
         "--varplot",
         type=str,
         default="velbar_mag",
-        help="variable to plot",
+        help="Name of the variable to plot",
     )
     parser.add_argument(
         "--varplot_max",
         type=float,
         default=250,
-        help="maximum value of the varplot variable used to adjust the scaling of the colorbar",
+        help="Maximum value of the varplot variable used to adjust the scaling of the colorbar",
     )
 
 

@@ -9,13 +9,13 @@ import tensorflow as tf
 
 def params_write_tif_ex(parser):
     parser.add_argument(
-        "--vars_to_save",
+        "--vars_to_save_tif_ex",
         type=list,
         default=[
             "usurf",
             "thk",
         ],
-        help="List of variables to be recorded in the ncdf file",
+        help="List of variables to be recorded in the NetCDF file",
     )
 
 def initialize_write_tif_ex(params, state):
@@ -26,7 +26,7 @@ def update_write_tif_ex(params, state):
     import rasterio
 
     if state.saveresult:
-        for var in params.vars_to_save:
+        for var in params.vars_to_save_tif_ex:
             file = os.path.join(
                 params.working_dir, var + "-" + str(int(state.t)).zfill(6) + ".tif"
             )

@@ -12,7 +12,7 @@ from igm.modules.utils import str2bool
 
 from igm.modules.utils import complete_data
 
-def params_prepare_data(parser):
+def params_oggm_data_prep(parser):
     # aletsch  RGI60-11.01450
     # malspina RGI60-01.13696
     # brady    RGI60-01.20796
@@ -60,11 +60,13 @@ def params_prepare_data(parser):
         help="Write prepared data into a geology file",
     )
 
-def initialize_prepare_data(params, state):
+def initialize_oggm_data_prep(params, state):
 
     import json
-
+    
     gdirs, paths_ncdf = _oggm_util([params.RGI_ID], params)
+    
+    print('Temporarly files dowloaded with the OGGM preparator :',paths_ncdf)
 
     if hasattr(state,'logger'):
         state.logger.info("Prepare data using oggm and glathida")
@@ -180,11 +182,11 @@ def initialize_prepare_data(params, state):
             state.logger.setLevel(params.logging_level)
 
 
-def update_prepare_data(params, state):
+def update_oggm_data_prep(params, state):
     pass
 
 
-def finalize_prepare_data(params, state):
+def finalize_oggm_data_prep(params, state):
     pass
 
 
@@ -231,7 +233,7 @@ def _oggm_util(RGIs, params):
         )
         gdirs = workflow.init_glacier_directories(
             # Start from level 3 if you want some climate data in them
-            rgi_ids, prepro_border=40, from_prepro_level=2, prepro_base_url=base_url
+            rgi_ids, prepro_border=40, from_prepro_level=3, prepro_base_url=base_url
         )
 
     else:
@@ -246,6 +248,7 @@ def _oggm_util(RGIs, params):
 
         cfg.PARAMS["continue_on_error"] = False
         cfg.PARAMS["use_multiprocessing"] = False
+        cfg.PARAMS['use_intersects'] = False
 
         # Map resolution parameters
         cfg.PARAMS["grid_dx_method"] = "fixed"
@@ -277,11 +280,16 @@ def _oggm_util(RGIs, params):
             thickness_to_gdir,
             velocity_to_gdir,
             compile_millan_statistics,
+            compile_millan_statistics,
         )
-
+        
+            
         # This applies a task to a list of gdirs
         workflow.execute_entity_task(thickness_to_gdir, gdirs)
         workflow.execute_entity_task(velocity_to_gdir, gdirs)
+        
+#        from oggm.shop.its_live import velocity_to_gdir
+#        workflow.execute_entity_task(velocity_to_gdir, gdirs)
 
         from oggm.shop import bedtopo
 
@@ -294,6 +302,9 @@ def _oggm_util(RGIs, params):
     path_ncdf = []
     for gdir in gdirs:
         path_ncdf.append(gdir.get_filepath("gridded_data"))
+        path_ncdf.append(gdir.get_filepath("climate_historical"))
+        
+        print('GGGGGGG :',gdir.get_filepath("climate_historical"))
 
     return gdirs, path_ncdf
 

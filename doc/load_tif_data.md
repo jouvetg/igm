@@ -2,11 +2,9 @@
 
 # Description:
 
-This IGM module loads input spatial fields from tiff file. You may select
-available fields in variables you need at least topg or usurf, and thk,
-filed e.g. topg.tif, thk.tif must be present in the working forlder.
+This IGM module loads spatial 2D raster data from any tif file present in the working directory folder, and transform each of them into tensorflow variables, the name of the file becoming the name of the variable, e.g. the file topg.tif will yield variable topg, ect... It is expected here to import at least basal topography (variable `topg`). It also complete the data, e.g. the basal topography from ice thickness and surface topography. Note that all these variables will therefore be available in the code with `state.myvar` from myvar.tif (e.g. variable `icemask` can be provided, and served to define an accumulation area -- this is usefull for modelling an individual glaciers, and prevent overflowing in neighbouring catchements). The module also contains two functions for resampling (parameter `coarsen_tif` should be increased to 2,3,4 ..., default 1 value means no coarsening) and cropping the data (parameter `crop_tif` should be set to True, and the bounds must be definined as wished).
 
-The module takes tiff files input and return variables contained inside as tensorflow objects
+This module depends on `rasterio`.
  
 # Parameters: 
 

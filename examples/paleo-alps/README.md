@@ -3,6 +3,8 @@
 
 This set-up gives a simple set-up to run a paleo glacier model in the European Alps in paleo times with different catchements (lyon, ticino, rhine, linth glaciers) with IGM (the Instructed Glacier Model) e.g. around the last glacial maximum (LGM, 24 BP in the Alps).
 
+Try to take different topography (copy from forlder data into topg.tif in the current directory) to experience diferent catchements.
+
 # Inputs files
 
 Input files are found in the folder data. There is:

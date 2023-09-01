@@ -31,7 +31,7 @@ def update_thk(params, state):
         state.smb = tf.zeros_like(state.thk)
 
     # Forward Euler with projection to keep ice thickness non-negative    
-    state.thk = tf.maximum(state.thk + state.dt * (state.smb - state.divflux), 0)
+    state.thk.assign( tf.maximum(state.thk + state.dt * (state.smb - state.divflux), 0) )
 
     # TODO: replace 0.9 by physical constant, and add SL value
     # define the lower ice surface

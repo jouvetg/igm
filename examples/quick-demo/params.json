@@ -1,5 +1,5 @@
 {
-  "modules_preproc": ["prepare_data"],
+  "modules_preproc": ["oggm_data_prep"],
   "modules_process": ["mysmb",
                       "flow_dt_thk",
                       "vertical_iceflow",

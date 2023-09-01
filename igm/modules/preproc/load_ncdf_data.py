@@ -8,7 +8,7 @@ import os
 import datetime, time
 import tensorflow as tf
 from netCDF4 import Dataset
-from scipy.interpolate import RectBivariateSpline
+# from scipy.interpolate import RectBivariateSpline
 
 from igm.modules.utils import *
 
@@ -18,39 +18,39 @@ def params_load_ncdf_data(parser):
         "--input_file",
         type=str,
         default="input.nc",
-        help="Input data file",
+        help="NetCDF input data file",
     )
     parser.add_argument(
         "--coarsen_ncdf",
         type=int,
         default=1,
-        help="coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points",
+        help="Coarsen the data from NetCDF file by a certain (integer) number: 2 would be twice coarser ignore data each 2 grid points",
     )
     parser.add_argument(
         "--crop_ncdf",
         type=str2bool,
         default="False",
-        help="Crop the data with xmin, xmax, ymin, ymax (default: False)",
+        help="Crop the data from NetCDF file with given top/down/left/right bounds",
     )
     parser.add_argument(
         "--crop_ncdf_xmin",
         type=float, 
-        help="X left coordinate for cropping",
+        help="X left coordinate for cropping the NetCDF data",
     )
     parser.add_argument(
         "--crop_ncdf_xmax",
         type=float, 
-        help="X right coordinate for cropping",
+        help="X right coordinate for cropping the NetCDF data",
     )
     parser.add_argument(
         "--crop_ncdf_ymin",
         type=float, 
-        help="Y bottom coordinate fro cropping",
+        help="Y bottom coordinate fro cropping the NetCDF data",
     )
     parser.add_argument(
         "--crop_ncdf_ymax",
         type=float, 
-        help="Y top coordinate for cropping"
+        help="Y top coordinate for cropping the NetCDF data"
     )
 
 

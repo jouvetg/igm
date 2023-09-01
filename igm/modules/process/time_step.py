@@ -14,26 +14,31 @@ def params_time_step(parser):
         "--time_start",
         type=float,
         default=2000.0,
-        help="Start modelling time (default 2000)",
+        help="Start modelling time",
     )
     parser.add_argument(
-        "--time_end", type=float, default=2100.0, help="End modelling time (default: 2100)"
+        "--time_end", 
+        type=float, 
+        default=2100.0, 
+        help="End modelling time"
     )
     parser.add_argument(
-        "--time_save", type=float, default=10, help="Save result each X years (default: 10)"
+        "--time_save", 
+        type=float, 
+        default=10, 
+        help="Save result frequency for many modules (in year)"
     )
     parser.add_argument(
         "--cfl",
         type=float,
         default=0.3,
-        help="CFL number for the stability of the mass conservation scheme, \
-        it must be below 1 (Default: 0.3)",
+        help="CFL number for the stability of the mass conservation scheme, it must be below 1",
     )
     parser.add_argument(
         "--time_step_max",
         type=float,
-        default=10.0,
-        help="Maximum time step allowed, used only with slow ice (default: 10.0)",
+        default=1.0,
+        help="Maximum time step allowed, used only with slow ice",
     )
 
 

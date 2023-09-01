@@ -1,6 +1,6 @@
 
 
-### <h1 align="center" id="title">IGM module ice_flow_v1 </h1>
+### <h1 align="center" id="title">IGM module `ice_flow_v1` </h1>
 
 # Description:
 

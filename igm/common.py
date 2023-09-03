@@ -5,7 +5,7 @@ Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
 Published under the GNU GPL (Version 3), check at the LICENSE file
 """
 
-import os, glob, json, sys, inspect
+import os, glob, json, sys, inspect, re
 import importlib
 import argparse
 from igm.modules.utils import *
@@ -66,14 +66,30 @@ def params_core():
  
     return parser
 
+
+# Function to remove comments from a JSON string
+def remove_comments(json_str):
+    lines = json_str.split('\n')
+    cleaned_lines = [line for line in lines if not line.strip().startswith('#')]
+    return '\n'.join(cleaned_lines)
+
 def overide_from_json_file(parser,check_if_params_exist=True):    
     
     # get the path of the json file    
     param_file = os.path.join(parser.parse_args(args=[]).working_dir, "params.json")
 
     # load the given parameters from the json file
-    with open(param_file) as json_file:
-        dic_params = json.load(json_file)
+    with open(param_file, 'r') as json_file:
+        json_text = json_file.read()
+            
+    # Remove comments from the JSON string
+    json_without_comments = remove_comments(json_text)
+    
+    # Parse the modified JSON string
+    try:
+        dic_params = json.loads(json_without_comments) 
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
     
     # list only the parameters registered so far
     LIST = list(vars(parser.parse_args(args=[])).keys())
@@ -82,7 +98,6 @@ def overide_from_json_file(parser,check_if_params_exist=True):
         for key in dic_params.keys():
             if not key in LIST:
                 print("WARNING: the following parameters of the json file do not exist in igm: ", key)
-                sys.exit(0)
 
     # keep only the parameters to overide hat were registerd so far
     filtered_dict = {key: value for key, value in dic_params.items() if key in LIST}

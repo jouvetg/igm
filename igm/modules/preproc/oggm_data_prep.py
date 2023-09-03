@@ -299,6 +299,7 @@ def _oggm_util(RGIs, params):
 
         from oggm.shop import bedtopo
         workflow.execute_entity_task(bedtopo.add_consensus_thickness, gdirs)
+        
  
     source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
     destination_folder = os.path.join(params.working_dir, "oggm_data")

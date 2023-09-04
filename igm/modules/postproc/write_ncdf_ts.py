@@ -18,7 +18,7 @@ def params_write_ncdf_ts(parser):
     )
 
 
-def init_write_ncdf_ts(params, state):
+def initialize_write_ncdf_ts(params, state):
     os.system("echo rm " + os.path.join(params.working_dir, params.output_file_ncdf_ts) + " >> clean.sh")
 
     state.var_info_ncdf_ts = {}

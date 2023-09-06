@@ -125,13 +125,14 @@ def update_write_ncdf_ex(params, state):
             E.long_name = "x"
             E.axis = "X"
             E[:] = state.x.numpy()
-        
-            nc.createDimension('z',params.Nz)
-            E = nc.createVariable("z", np.dtype("float32").char, ("z",))
-            E.units = 'm'
-            E.long_name = 'z'
-            E.axis = 'Z'
-            E[:] = np.arange(params.Nz)  # TODO: fix this, that's not what we want
+            
+            if hasattr(params,'Nz'):
+                nc.createDimension('z',params.Nz)
+                E = nc.createVariable("z", np.dtype("float32").char, ("z",))
+                E.units = 'm'
+                E.long_name = 'z'
+                E.axis = 'Z'
+                E[:] = np.arange(params.Nz)  # TODO: fix this, that's not what we want
 
             for var in params.vars_to_save_ncdf_ex:
                 if hasattr(state, var):

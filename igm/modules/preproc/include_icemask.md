@@ -10,12 +10,12 @@ Input: Shapefile (.shp) exported from any GIS program (e.g. QGIS).
 Output: state.icemask
 
 This module can be used with any igm setup that calculates the new glacier surface via the `state.smb` variable.
-    Add to `smb_simple.py`:
-    ```python
-        # if an icemask exists, then force negative smb
-        if hasattr(state, "icemask")
-            state.smb = tf.where((state.smb<0)|(state.icemask>0.5),state.smb,-10)
-    ```
+    For example add to `smb_simple.py`:
+```python
+    # if an icemask exists, then force negative smb
+    if hasattr(state, "icemask")
+        state.smb = tf.where((state.smb<0)|(state.icemask>0.5),state.smb,-10)
+```
 
 The input can be one or more polygon features. Sometimes it is easier to select the valley where the glacier should be (`mask_invert` = True)
 or draw polygons where the glacier should not be (e.g. side valleys with no further interest).

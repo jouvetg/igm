@@ -30,7 +30,7 @@ def params_smb_signal(parser):
     parser.add_argument(
         "--gradacc",
         type=float,
-        default=30000,
+        default=0.0005,
         help="Accumulation gradient",
     )
     parser.add_argument(

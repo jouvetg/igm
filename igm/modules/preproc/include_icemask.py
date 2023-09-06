@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Author: Andreas Henz, andreas.henz@geo.uzh.ch
-# Date: 12.07.2023
+# Date: 06.09.2023
 
 """
 This IGM module loads an icemask shapefile (ESRI Shapefile) and creates a ice mask out of it.
@@ -98,7 +98,7 @@ def read_shapefile(filepath):
         print("-----------------------")
         print("Icemask Shapefile information:")
         print("Number of features (polygons):", len(gdf))
-        print("Coordinate Reference System (CRS): ", gdf.crs)
+        print("EPSG code: ", gdf.crs.to_epsg())
         print("Geometry type:", gdf.geometry.type.unique()[0])
         print("-----------------------")
         

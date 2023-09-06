@@ -125,14 +125,25 @@ def update_write_ncdf_ex(params, state):
             E.long_name = "x"
             E.axis = "X"
             E[:] = state.x.numpy()
+        
+            nc.createDimension('z',params.Nz)
+            E = nc.createVariable("z", np.dtype("float32").char, ("z",))
+            E.units = 'm'
+            E.long_name = 'z'
+            E.axis = 'Z'
+            E[:] = np.arange(params.Nz)  # TODO: fix this, that's not what we want
 
             for var in params.vars_to_save_ncdf_ex:
                 if hasattr(state, var):
-                    E = nc.createVariable(var, np.dtype("float32").char, ("time", "y", "x"))
-                    E.long_name = state.var_info_ncdf_ex[var][0]
-                    E.units = state.var_info_ncdf_ex[var][1]
-                    E[0, :, :] = vars(state)[var].numpy()
-
+                    if vars(state)[var].numpy().ndim==2:
+                        E = nc.createVariable(var, np.dtype("float32").char, ("time", "y", "x"))
+                        E[0, :, :] = vars(state)[var].numpy()
+                    elif vars(state)[var].numpy().ndim==3:
+                        E = nc.createVariable(var, np.dtype("float32").char, ("time", "z", "y", "x"))
+                        E[0, :, :, :] = vars(state)[var].numpy()
+                    if var in state.var_info_ncdf_ex.keys():
+                        E.long_name = state.var_info_ncdf_ex[var][0]
+                        E.units = state.var_info_ncdf_ex[var][1]
             nc.close()
 
         else:
@@ -150,7 +161,10 @@ def update_write_ncdf_ex(params, state):
 
             for var in params.vars_to_save_ncdf_ex:
                 if hasattr(state, var):
-                    nc.variables[var][d, :, :] = vars(state)[var].numpy()
+                    if vars(state)[var].numpy().ndim==2:
+                        nc.variables[var][d, :, :] = vars(state)[var].numpy()
+                    elif vars(state)[var].numpy().ndim==3:
+                        nc.variables[var][d, :, :, :] = vars(state)[var].numpy()
 
             nc.close()
 

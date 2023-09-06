@@ -18,6 +18,7 @@ from igm.modules.process.iceflow import *
 
 
 def params_optimize(parser):
+    
     parser.add_argument(
         "--opti_vars_to_save",
         type=list,
@@ -170,7 +171,8 @@ def initialize_optimize(params, state):
 
     # make sure that there are lease some profiles in thkobs
     if tf.reduce_all(tf.math.is_nan(state.thkobs)):
-        params.opti_cost.remove("thk")
+        if "thk" in params.opti_cost:
+            params.opti_cost.remove("thk")
 
     ###### PREPARE DATA PRIOR OPTIMIZATIONS
 

@@ -40,7 +40,7 @@ setup(
 	'tensorflow',
 	'xarray',
 	'importlib_resources',
-#	'tables',
+	'geopandas',
 	'oggm',
 	'pyproj',
 	'rasterio',

@@ -830,10 +830,10 @@ def _update_iceflow_solved(params, state):
 
     state.COST_Glen = Cost_Glen[-1].numpy()
 
-    _update_2d_iceflow_variables(params, state)
+    update_2d_iceflow_variables(params, state)
 
 
-def _update_2d_iceflow_variables(params, state):
+def update_2d_iceflow_variables(params, state):
 
     state.uvelbase = state.U[0, 0, :, :]
     state.vvelbase = state.U[1, 0, :, :]
@@ -870,12 +870,15 @@ def _update_iceflow_emulated(params, state):
     state.U.assign(U)
 
     # If requested, the speeds are artifically upper-bounded
-    if not params.force_max_velbar == 0:
-        state.U = tf.clip_by_value(
-            state.U, -params.force_max_velbar, params.force_max_velbar
-        )
+    if params.force_max_velbar > 0:
+        velbar_mag = tf.norm(state.U, axis=0)          
+        for i in range(2):
+                state.U[i].assign( 
+                    tf.where( velbar_mag >= params.force_max_velbar,
+                              params.force_max_velbar * (state.U[i] / velbar_mag),
+                              state.U[i] ) )
 
-    _update_2d_iceflow_variables(params, state)
+    update_2d_iceflow_variables(params, state)
 
 
 def _update_iceflow_emulator(params, state):

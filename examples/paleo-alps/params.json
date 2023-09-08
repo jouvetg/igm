@@ -16,5 +16,5 @@
   "gradabl": 0.0067,
   "gradacc": 0.0005,
   "maxacc": 1.0,
-  "coarsen": 2
+  "coarsen_tif": 2
 }

@@ -27,5 +27,5 @@ The module depends (of course) of `oggm` library.
 ||`--border`|`30`|Safe border margin  (need preprocess false to change it)|
 ||`--thk_source`|`consensus_ice_thickness`|millan_ice_thickness or consensus_ice_thickness in geology.nc|
 ||`--include_glathida`||Make observation file (for IGM inverse)|
-||`--path_glathida`|`/home/gjouvet/`|Path where the Glathida Folder is store, so that you don't need               to redownload it at any use of the script|
+||`--path_glathida`|``|Path where the Glathida Folder is store, so that you don't need               to redownload it at any use of the script, if empty it will be in the home directory|
 ||`--save_input_ncdf`||Write prepared data into a geology file|

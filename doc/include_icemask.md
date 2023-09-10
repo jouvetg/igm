@@ -35,3 +35,12 @@ IMPORTANT: Be aware of the coordinate system used in the nc file and the shapefi
 -------
 Author: Andreas Henz, andreas.henz@geo.uzh.ch 
 (06.09.2023)
+ 
+# Parameters: 
+
+
+|short|long|default|help|
+| :--- | :--- | :--- | :--- |
+|`-h`|`--help`||show this help message and exit|
+||`--mask_shapefile`|`icemask.shp`|Icemask input file (default: icemask.shp)|
+||`--mask_invert`||Invert ice mask if the mask is where the ice should be (default: False)|

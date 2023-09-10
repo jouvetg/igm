@@ -72,6 +72,7 @@ When treating ery large arrays, retraining must be done sequentially patch-wise 
 ||`--exp_weertman`|`3`|Weertman's law exponent|
 ||`--gravity_cst`|`9.81`|Gravitational constant|
 ||`--ice_density`|`910`|Density of ice|
+||`--new_friction_param`||ExperimentaL: this describe slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco|
 ||`--Nz`|`10`|Number of grid point for the vertical discretization|
 ||`--vert_spacing`|`4.0`|Parameter controlling the discrtuzation density to get more point near the bed than near the the surface. 1.0 means equal vertical spacing.|
 ||`--thr_ice_thk`|`0.1`|Threshold Ice thickness for computing strain rate|

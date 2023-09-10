@@ -91,6 +91,12 @@ def params_iceflow(parser):
         default=910,
         help="Density of ice",
     )
+    parser.add_argument(
+        "--new_friction_param",
+        type=str2bool,
+        default=False,
+        help="ExperimentaL: this describe slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco",
+    )
 
     # vertical discretization
     parser.add_argument(
@@ -545,13 +551,15 @@ def iceflow_energy(params, U, fieldin):
                            params.exp_glen, params.exp_weertman, 
                            params.regu_glen, params.regu_weertman,
                            params.thr_ice_thk, params.iceflow_physics,
-                           params.ice_density, params.gravity_cst)
+                           params.ice_density, params.gravity_cst, 
+                           params.new_friction_param)
      
 @tf.function(experimental_relax_shapes=True)
 def _iceflow_energy(U, thk, usurf, arrhenius, slidingco, dX,
                     Nz, vert_spacing, exp_glen, exp_weertman, 
                     regu_glen, regu_weertman, thr_ice_thk, 
-                    iceflow_physics, ice_density, gravity_cst):
+                    iceflow_physics, ice_density, gravity_cst, 
+                    new_friction_param):
     
     # warning, the energy is here normalized dividing by int_Omega
 
@@ -575,11 +583,14 @@ def _iceflow_energy(U, thk, usurf, arrhenius, slidingco, dX,
     # B has Unit Mpa y^(1/n)
     B = 2.0 * arrhenius ** (-1.0 / exp_glen)
 
-    if exp_weertman == 1:
-        # C has unit Mpa y^m m^(-m)
-        C = slidingco
+    if new_friction_param:
+        C = slidingco # C has unit Mpa y^m m^(-m)
     else:
-        C = (slidingco + 10 ** (-12)) ** -(1.0 / exp_weertman)
+        if exp_weertman == 1:
+            # C has unit Mpa y^m m^(-m)
+            C = slidingco
+        else:
+            C = (slidingco + 10 ** (-12)) ** -(1.0 / exp_weertman)
 
     p = 1.0 + 1.0 / exp_glen
     s = 1.0 + 1.0 / exp_weertman

@@ -22,13 +22,16 @@ def main():
 
     # get the list of all modules in order
     modules = params.modules_preproc + params.modules_process + params.modules_postproc
-
+           
     # load custom modules from file (must be called my_module_name.py) to igm
     for module in modules:
         igm.load_custom_module(params, module)
 
+    # get the list of all dependent modules, which parameters must be called too
+    dependent_modules = sum([getattr(igm, "dependency_" + m)() for m in modules if hasattr(igm, "dependency_" + m)], [])
+
     # Collect defaults, overide from json file, and parse all specific module parameters 
-    for module in modules:
+    for module in list(set(modules + dependent_modules)):
         getattr(igm, "params_" + module)(parser)
     igm.overide_from_json_file(parser,check_if_params_exist=True)
     params = parser.parse_args() # args=[] add this for jupyter notebook
@@ -42,7 +45,7 @@ def main():
 
     # if logging is activated, add a logger to the state
     if params.logging:
-        igm.add_logger(params, state) 
+        igm.add_logger(params, state)
 
     # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
     with tf.device("/GPU:0"):

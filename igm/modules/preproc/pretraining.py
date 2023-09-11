@@ -13,10 +13,11 @@ import xarray
 from igm.modules.process.iceflow import *
 from igm.modules.utils import *
 
+def dependency_pretraining():
+    return ['iceflow']
+
 def params_pretraining(parser):
-    
-    params_iceflow(parser)
-    
+ 
     parser.add_argument(
         "--data_dir",
         type=str,
@@ -94,6 +95,14 @@ def params_pretraining(parser):
     )
 
 def initialize_pretraining(params, state):
+    
+    state.direct_name  = 'pinnbp'+'_'+str(params.Nz)+'_'+str(int(params.vert_spacing))+'_'
+    state.direct_name +=  params.network+'_'+str(params.nb_layers)+'_'
+    state.direct_name +=  str(params.dim_arrhenius)+'_'+str(int(params.new_friction_param))
+    
+    os.makedirs(os.path.join(params.working_dir,state.direct_name), exist_ok=True)
+  
+    os.system( "echo rm -r " + os.path.join(params.working_dir,state.direct_name)+ " >> clean.sh" )
     
     subdatasetname_train, subdatasetpath_train = \
         _findsubdata(  os.path.join(params.data_dir, "train") )
@@ -186,11 +195,9 @@ def compute_solutions(params,state):
         code = p.split('/')[-1] + "_" + str(it) + '_A' + str(int(val_A)) + '_C' + str(int(val_C*100)/100) + '_R' + str(int(val_R))
         
         # define path
-        path = os.path.join(params.working_dir,code)
+        path = os.path.join(params.working_dir,state.direct_name,code)
         os.makedirs(path, exist_ok=True)
         
-        os.system( "echo rm -r " + path + " >> clean.sh" )
-
         fig = plt.figure(figsize=(10, 10))
         plt.plot(MISFIT, "--k", label="COST")
         plt.legend()            
@@ -309,9 +316,8 @@ def train_iceflow_emulator(params,state,trainingset,augmentation=True):
             optimizer.lr = params.retrain_iceflow_emulator_lr * (0.9**(epoch/100))
         
         if epoch % (params.epochs//5) == 0:
-            pp = os.path.join(params.working_dir,"model-"+str(epoch)+".h5")
+            pp = os.path.join(params.working_dir,state.direct_name,"model-"+str(epoch)+".h5")
             state.iceflow_model.save(pp)
-            os.system( "echo rm " + pp + " >> clean.sh" )
 
         if epoch % params.freq_test == 0:
             
@@ -328,7 +334,7 @@ def train_iceflow_emulator(params,state,trainingset,augmentation=True):
                 
                 code = p.split('/')[-1] + "_" + str(par[1]) + '_A' + str(int(par[2])) + '_C' + str(int(par[3]*100)/100) + '_R' + str(int(par[4]))
                 
-                path = os.path.join(params.working_dir,code)
+                path = os.path.join(params.working_dir,state.direct_name,code)
                 
                 YP = state.iceflow_model(X)
                 
@@ -364,7 +370,7 @@ def train_iceflow_emulator(params,state,trainingset,augmentation=True):
     plt.ylim(0, 1)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(params.working_dir, "MISFIT.png"), pad_inches=0 )
+    plt.savefig(os.path.join(params.working_dir, state.direct_name, "MISFIT.png"), pad_inches=0 )
     plt.close("all")
     
     fig = plt.figure(figsize=(10, 10))
@@ -375,13 +381,10 @@ def train_iceflow_emulator(params,state,trainingset,augmentation=True):
     plt.ylim(0, 1)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(params.working_dir, "MISFIT_CO.png"), pad_inches=0 )
+    plt.savefig(os.path.join(params.working_dir, state.direct_name, "MISFIT_CO.png"), pad_inches=0 )
     plt.close("all")
-    
-    os.system( "echo rm " + os.path.join(params.working_dir, "MISFIT_CO.png") + " >> clean.sh" )
-    os.system( "echo rm " + os.path.join(params.working_dir, "MISFIT.png") + " >> clean.sh" )
-    
-    state.iceflow_model.save('model.h5')  
+         
+    state.iceflow_model.save(os.path.join(params.working_dir,state.direct_name,'model.h5'))
      
 def _computenormp( dz, u, p):
     

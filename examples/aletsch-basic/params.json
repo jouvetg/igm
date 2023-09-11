@@ -1,7 +1,9 @@
 {
   "modules_preproc": ["load_ncdf_data"],
   "modules_process": ["smb_simple",
-                      "flow_dt_thk",
+                      "iceflow",
+                      "time_step",
+                      "thk",
                       "vertical_iceflow",
                       "particles"
                     ],
@@ -10,7 +12,7 @@
                        "print_info",
                        "print_all_comp_info",
                        "anim3d_from_ncdf_ex"],
-  "smb_simple_array": [ 
+  "smb_simple_array": [
                         ["time", "gradabl", "gradacc", "ela", "accmax"],
                         [ 1900,      0.009,     0.005,  2800,      2.0],
                         [ 2000,      0.009,     0.005,  2900,      2.0],

@@ -1,7 +1,9 @@
 {
   "modules_preproc": ["load_tif_data"],
   "modules_process": ["smb_signal",
-                      "flow_dt_thk"
+                      "iceflow",
+                      "time_step",
+                      "thk"
                      ],
   "modules_postproc": ["write_ncdf_ex",
                        "write_plot2d",

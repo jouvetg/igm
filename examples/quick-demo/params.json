@@ -1,7 +1,9 @@
 {
   "modules_preproc": ["oggm_data_prep"],
   "modules_process": ["mysmb",
-                      "flow_dt_thk",
+                      "iceflow",
+                      "time_step",
+                      "thk",
                       "vertical_iceflow",
                       "particles"],
   "modules_postproc": ["write_ncdf_ex",

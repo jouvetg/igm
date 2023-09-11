@@ -1,7 +1,9 @@
 {
   "modules_preproc": ["make_synthetic"],
   "modules_process": ["smb_simple",
-                      "flow_dt_thk",
+                      "iceflow",
+                      "time_step",
+                      "thk",
                       "vertical_iceflow",
                       "particles"
                     ],

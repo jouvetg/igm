@@ -15,34 +15,37 @@ usage: argmark [-h] [--working_dir WORKING_DIR] [--modules_preproc MODULES_PREPR
                [--logging LOGGING] [--logging_file LOGGING_FILE] [--print_params PRINT_PARAMS]
                [--coarsen_tif COARSEN_TIF] [--crop_tif CROP_TIF] [--crop_tif_xmin CROP_TIF_XMIN]
                [--crop_tif_xmax CROP_TIF_XMAX] [--crop_tif_ymin CROP_TIF_YMIN]
-               [--crop_tif_ymax CROP_TIF_YMAX] [--RGI_ID RGI_ID] [--preprocess PREPROCESS]
-               [--dx DX] [--border BORDER] [--thk_source THK_SOURCE]
+               [--crop_tif_ymax CROP_TIF_YMAX] [--data_dir DATA_DIR] [--batch_size BATCH_SIZE]
+               [--freq_test FREQ_TEST]
+               [--train_iceflow_emulator_restart_lr TRAIN_ICEFLOW_EMULATOR_RESTART_LR]
+               [--epochs EPOCHS] [--min_arrhenius MIN_ARRHENIUS] [--max_arrhenius MAX_ARRHENIUS]
+               [--min_slidingco MIN_SLIDINGCO] [--max_slidingco MAX_SLIDINGCO]
+               [--min_coarsen MIN_COARSEN] [--max_coarsen MAX_COARSEN] [--soft_begining SOFT_BEGINING]
+               [--mask_shapefile MASK_SHAPEFILE] [--mask_invert MASK_INVERT] [--RGI_ID RGI_ID]
+               [--preprocess PREPROCESS] [--dx DX] [--border BORDER] [--thk_source THK_SOURCE]
                [--include_glathida INCLUDE_GLATHIDA] [--path_glathida PATH_GLATHIDA]
                [--save_input_ncdf SAVE_INPUT_NCDF] [--input_file INPUT_FILE]
-               [--coarsen_ncdf COARSEN_NCDF] [--crop_ncdf CROP_NCDF]
-               [--crop_ncdf_xmin CROP_NCDF_XMIN] [--crop_ncdf_xmax CROP_NCDF_XMAX]
-               [--crop_ncdf_ymin CROP_NCDF_YMIN] [--crop_ncdf_ymax CROP_NCDF_YMAX]
-               [--opti_vars_to_save OPTI_VARS_TO_SAVE] [--opti_init_zero_thk OPTI_INIT_ZERO_THK]
-               [--opti_regu_param_thk OPTI_REGU_PARAM_THK]
+               [--coarsen_ncdf COARSEN_NCDF] [--crop_ncdf CROP_NCDF] [--crop_ncdf_xmin CROP_NCDF_XMIN]
+               [--crop_ncdf_xmax CROP_NCDF_XMAX] [--crop_ncdf_ymin CROP_NCDF_YMIN]
+               [--crop_ncdf_ymax CROP_NCDF_YMAX] [--opti_vars_to_save OPTI_VARS_TO_SAVE]
+               [--opti_init_zero_thk OPTI_INIT_ZERO_THK] [--opti_regu_param_thk OPTI_REGU_PARAM_THK]
                [--opti_regu_param_slidingco OPTI_REGU_PARAM_SLIDINGCO]
                [--opti_smooth_anisotropy_factor OPTI_SMOOTH_ANISOTROPY_FACTOR]
-               [--opti_convexity_weight OPTI_CONVEXITY_WEIGHT]
-               [--opti_usurfobs_std OPTI_USURFOBS_STD] [--opti_velsurfobs_std OPTI_VELSURFOBS_STD]
-               [--opti_thkobs_std OPTI_THKOBS_STD] [--opti_divfluxobs_std OPTI_DIVFLUXOBS_STD]
-               [--opti_control OPTI_CONTROL] [--opti_cost OPTI_COST] [--opti_nbitmin OPTI_NBITMIN]
-               [--opti_nbitmax OPTI_NBITMAX] [--opti_step_size OPTI_STEP_SIZE]
-               [--opti_output_freq OPTI_OUTPUT_FREQ]
+               [--opti_convexity_weight OPTI_CONVEXITY_WEIGHT] [--opti_usurfobs_std OPTI_USURFOBS_STD]
+               [--opti_velsurfobs_std OPTI_VELSURFOBS_STD] [--opti_thkobs_std OPTI_THKOBS_STD]
+               [--opti_divfluxobs_std OPTI_DIVFLUXOBS_STD] [--opti_control OPTI_CONTROL]
+               [--opti_cost OPTI_COST] [--opti_nbitmin OPTI_NBITMIN] [--opti_nbitmax OPTI_NBITMAX]
+               [--opti_step_size OPTI_STEP_SIZE] [--opti_output_freq OPTI_OUTPUT_FREQ]
                [--geology_optimized_file GEOLOGY_OPTIMIZED_FILE]
-               [--plot2d_live_inversion PLOT2D_LIVE_INVERSION]
-               [--plot2d_inversion PLOT2D_INVERSION] [--write_ncdf_optimize WRITE_NCDF_OPTIMIZE]
-               [--editor_plot2d_optimize EDITOR_PLOT2D_OPTIMIZE]
-               [--smb_update_freq SMB_UPDATE_FREQ] [--smb_simple_file SMB_SIMPLE_FILE]
-               [--smb_simple_array SMB_SIMPLE_ARRAY] [--type_iceflow TYPE_ICEFLOW]
-               [--emulator EMULATOR] [--iceflow_physics ICEFLOW_PHYSICS]
+               [--plot2d_live_inversion PLOT2D_LIVE_INVERSION] [--plot2d_inversion PLOT2D_INVERSION]
+               [--write_ncdf_optimize WRITE_NCDF_OPTIMIZE]
+               [--editor_plot2d_optimize EDITOR_PLOT2D_OPTIMIZE] [--smb_update_freq SMB_UPDATE_FREQ]
+               [--smb_simple_file SMB_SIMPLE_FILE] [--smb_simple_array SMB_SIMPLE_ARRAY]
+               [--type_iceflow TYPE_ICEFLOW] [--emulator EMULATOR] [--iceflow_physics ICEFLOW_PHYSICS]
                [--init_slidingco INIT_SLIDINGCO] [--init_arrhenius INIT_ARRHENIUS]
                [--regu_glen REGU_GLEN] [--regu_weertman REGU_WEERTMAN] [--exp_glen EXP_GLEN]
-               [--exp_weertman EXP_WEERTMAN] [--gravity_cst GRAVITY_CST]
-               [--ice_density ICE_DENSITY] [--Nz NZ] [--vert_spacing VERT_SPACING]
+               [--exp_weertman EXP_WEERTMAN] [--gravity_cst GRAVITY_CST] [--ice_density ICE_DENSITY]
+               [--new_friction_param NEW_FRICTION_PARAM] [--Nz NZ] [--vert_spacing VERT_SPACING]
                [--thr_ice_thk THR_ICE_THK] [--solve_iceflow_step_size SOLVE_ICEFLOW_STEP_SIZE]
                [--solve_iceflow_nbitmax SOLVE_ICEFLOW_NBITMAX]
                [--stop_if_no_decrease STOP_IF_NO_DECREASE] [--fieldin FIELDIN]
@@ -53,14 +56,13 @@ usage: argmark [-h] [--working_dir WORKING_DIR] [--modules_preproc MODULES_PREPR
                [--retrain_iceflow_emulator_framesizemax RETRAIN_ICEFLOW_EMULATOR_FRAMESIZEMAX]
                [--multiple_window_size MULTIPLE_WINDOW_SIZE] [--force_max_velbar FORCE_MAX_VELBAR]
                [--network NETWORK] [--activation ACTIVATION] [--nb_layers NB_LAYERS]
-               [--nb_blocks NB_BLOCKS] [--nb_out_filter NB_OUT_FILTER]
-               [--conv_ker_size CONV_KER_SIZE] [--dropout_rate DROPOUT_RATE]
-               [--time_start TIME_START] [--time_end TIME_END] [--time_save TIME_SAVE] [--cfl CFL]
-               [--time_step_max TIME_STEP_MAX] [--erosion_cst EROSION_CST]
-               [--erosion_exp EROSION_EXP] [--erosion_update_freq EROSION_UPDATE_FREQ]
-               [--tracking_method TRACKING_METHOD] [--frequency_seeding FREQUENCY_SEEDING]
-               [--density_seeding DENSITY_SEEDING] [--speed_rockflow SPEED_ROCKFLOW]
-               [--vars_to_save_tif_ex VARS_TO_SAVE_TIF_EX]
+               [--nb_blocks NB_BLOCKS] [--nb_out_filter NB_OUT_FILTER] [--conv_ker_size CONV_KER_SIZE]
+               [--dropout_rate DROPOUT_RATE] [--time_start TIME_START] [--time_end TIME_END]
+               [--time_save TIME_SAVE] [--cfl CFL] [--time_step_max TIME_STEP_MAX]
+               [--erosion_cst EROSION_CST] [--erosion_exp EROSION_EXP]
+               [--erosion_update_freq EROSION_UPDATE_FREQ] [--tracking_method TRACKING_METHOD]
+               [--frequency_seeding FREQUENCY_SEEDING] [--density_seeding DENSITY_SEEDING]
+               [--speed_rockflow SPEED_ROCKFLOW] [--vars_to_save_tif_ex VARS_TO_SAVE_TIF_EX]
                [--output_file_ncdf_ex OUTPUT_FILE_NCDF_EX]
                [--vars_to_save_ncdf_ex VARS_TO_SAVE_NCDF_EX]
                [--output_file_ncdf_ts OUTPUT_FILE_NCDF_TS]
@@ -87,13 +89,27 @@ usage: argmark [-h] [--working_dir WORKING_DIR] [--modules_preproc MODULES_PREPR
 ||`--crop_tif_xmax`|`None`|crop_xmax|
 ||`--crop_tif_ymin`|`None`|crop_ymin|
 ||`--crop_tif_ymax`|`None`|crop_ymax|
+||`--data_dir`|`surflib3d_shape_100`|Directory of the data of the glacier catalogu|
+||`--batch_size`|`1`|Batch size|
+||`--freq_test`|`20`|Frequence of the test|
+||`--train_iceflow_emulator_restart_lr`|`3000`|Restart frequency for the learning rate|
+||`--epochs`|`6000`|Number of epochs|
+||`--min_arrhenius`|`5`|Minium Arrhenius factor|
+||`--max_arrhenius`|`151`|Maximum Arrhenius factor|
+||`--min_slidingco`|`0`|Minimum sliding coefficient|
+||`--max_slidingco`|`20000`|Maximum sliding coefficient|
+||`--min_coarsen`|`0`|Minimum coarsening factor|
+||`--max_coarsen`|`2`|Maximum coarsening factor|
+||`--soft_begining`|`500`|soft_begining, if 0 explore all parameters btwe min and max, otherwise,               only explore from this iteration while keeping mid-value fir the first it.|
+||`--mask_shapefile`|`icemask.shp`|Icemask input file (default: icemask.shp)|
+||`--mask_invert`||Invert ice mask if the mask is where the ice should be (default: False)|
 ||`--RGI_ID`|`RGI60-11.01450`|RGI ID|
 ||`--preprocess`||Use preprocessing|
 ||`--dx`|`100`|Spatial resolution (need preprocess false to change it)|
 ||`--border`|`30`|Safe border margin  (need preprocess false to change it)|
 ||`--thk_source`|`consensus_ice_thickness`|millan_ice_thickness or consensus_ice_thickness in geology.nc|
 ||`--include_glathida`||Make observation file (for IGM inverse)|
-||`--path_glathida`|`/home/gjouvet/`|Path where the Glathida Folder is store, so that you don't need               to redownload it at any use of the script|
+||`--path_glathida`|``|Path where the Glathida Folder is store, so that you don't need               to redownload it at any use of the script, if empty it will be in the home directory|
 ||`--save_input_ncdf`||Write prepared data into a geology file|
 ||`--input_file`|`input.nc`|NetCDF input data file|
 ||`--coarsen_ncdf`|`1`|Coarsen the data from NetCDF file by a certain (integer) number: 2 would be twice coarser ignore data each 2 grid points|
@@ -137,6 +153,7 @@ usage: argmark [-h] [--working_dir WORKING_DIR] [--modules_preproc MODULES_PREPR
 ||`--exp_weertman`|`3`|Weertman's law exponent|
 ||`--gravity_cst`|`9.81`|Gravitational constant|
 ||`--ice_density`|`910`|Density of ice|
+||`--new_friction_param`||ExperimentaL: this describe slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco|
 ||`--Nz`|`10`|Number of grid point for the vertical discretization|
 ||`--vert_spacing`|`4.0`|Parameter controlling the discrtuzation density to get more point near the bed than near the the surface. 1.0 means equal vertical spacing.|
 ||`--thr_ice_thk`|`0.1`|Threshold Ice thickness for computing strain rate|

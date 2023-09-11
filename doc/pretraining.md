@@ -46,26 +46,15 @@ The path (or name of the data folder) must be pass in parameter `data_dir`.
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
-||`--opti_vars_to_save`|`['usurf', 'thk', 'strflowctrl', 'arrhenius', 'slidingco', 'velsurf_mag', 'velsurfobs_mag', 'divflux']`|List of variables to be recorded in the ncdef file|
-||`--opti_thr_strflowctrl`|`78.0`|threshold value for strflowctrl|
-||`--opti_init_zero_thk`|`False`|Initialize the optimization with zero ice thickness|
-||`--opti_regu_param_thk`|`10.0`|Regularization weight for the ice thickness in the optimization|
-||`--opti_regu_param_strflowctrl`|`1.0`|Regularization weight for the strflowctrl field in the optimization|
-||`--opti_smooth_anisotropy_factor`|`0.2`|Smooth anisotropy factor for the ice thickness regularization in the optimization|
-||`--opti_convexity_weight`|`0.002`|Convexity weight for the ice thickness regularization in the optimization|
-||`--opti_usurfobs_std`|`5.0`|Confidence/STD of the top ice surface as input data for the optimization|
-||`--opti_strflowctrl_std`|`5.0`|Confidence/STD of strflowctrl|
-||`--opti_velsurfobs_std`|`3.0`|Confidence/STD of the surface ice velocities as input data for the optimization (if 0, velsurfobs_std field must be given)|
-||`--opti_thkobs_std`|`5.0`|Confidence/STD of the ice thickness profiles (unless given)|
-||`--opti_divfluxobs_std`|`1.0`|Confidence/STD of the flux divergence as input data for the optimization (if 0, divfluxobs_std field must be given)|
-||`--opti_control`|`['thk', 'strflowctrl', 'usurf']`|List of optimized variables for the optimization|
-||`--opti_cost`|`['velsurf', 'thk', 'usurf', 'divfluxfcz', 'icemask']`|List of cost components for the optimization|
-||`--opti_nbitmin`|`50`|Min iterations for the optimization|
-||`--opti_nbitmax`|`1000`|Max iterations for the optimization|
-||`--opti_step_size`|`0.001`|Step size for the optimization|
-||`--opti_output_freq`|`50`|Frequency of the output for the optimization|
-||`--geology_optimized_file`|`geology-optimized.nc`|Geology input file|
-||`--plot2d_live_inversion`||plot2d_live_inversion|
-||`--plot2d_inversion`||plot 2d inversion|
-||`--write_ncdf_optimize`||write_ncdf_optimize|
-||`--editor_plot2d_optimize`|`vs`|optimized for VS code (vs) or spyder (sp) for live plot|
+||`--data_dir`|`surflib3d_shape_100`|Directory of the data of the glacier catalogu|
+||`--batch_size`|`1`|Batch size|
+||`--freq_test`|`20`|Frequence of the test|
+||`--train_iceflow_emulator_restart_lr`|`3000`|Restart frequency for the learning rate|
+||`--epochs`|`6000`|Number of epochs|
+||`--min_arrhenius`|`5`|Minium Arrhenius factor|
+||`--max_arrhenius`|`151`|Maximum Arrhenius factor|
+||`--min_slidingco`|`0`|Minimum sliding coefficient|
+||`--max_slidingco`|`20000`|Maximum sliding coefficient|
+||`--min_coarsen`|`0`|Minimum coarsening factor|
+||`--max_coarsen`|`2`|Maximum coarsening factor|
+||`--soft_begining`|`500`|soft_begining, if 0 explore all parameters btwe min and max, otherwise,               only explore from this iteration while keeping mid-value fir the first it.|

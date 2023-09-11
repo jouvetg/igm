@@ -16,9 +16,12 @@ from netCDF4 import Dataset
 from igm.modules.utils import *
 from igm.modules.process.iceflow import *
 
+def dependency_optimize():
+    return ['iceflow']
+
 
 def params_optimize(parser):
-    
+ 
     parser.add_argument(
         "--opti_vars_to_save",
         type=list,
@@ -212,7 +215,11 @@ def initialize_optimize(params, state):
     sc = {}
     sc["thk"] = 1
     sc["usurf"] = 1
-    sc["slidingco"] = 20
+
+    if params.new_friction_param:
+        sc["slidingco"] = 1
+    else:
+        sc["slidingco"] = 20
 
     for f in params.opti_control:
         vars()[f] = tf.Variable(vars(state)[f] / sc[f])
@@ -230,13 +237,17 @@ def initialize_optimize(params, state):
                 vars(state)[f] = vars()[f] * sc[f]
 
             # build input of the emulator
-            X = tf.expand_dims(
-                tf.stack(
-                    [tf.pad(vars(state)[f], state.PAD, "CONSTANT") for f in params.fieldin],
-                    axis=-1,
-                ),
-                axis=0,
-            )
+            # X = tf.expand_dims(
+            #     tf.stack(
+            #         [tf.pad(vars(state)[f], state.PAD, "CONSTANT") for f in params.fieldin],
+            #         axis=-1,
+            #     ),
+            #     axis=0,
+            # )
+            
+            fieldin = [ vars(state)[f] for f in params.fieldin ]
+            
+            X = fieldin_to_X(params, fieldin)
 
             # evalutae th ice flow emulator
             Y = state.iceflow_model(X)
@@ -384,10 +395,16 @@ def initialize_optimize(params, state):
                 # REGU_S = (params.opti_regu_param_slidingco / (10000**2)) * (
                 #     tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
                 # )
+
+                if params.new_friction_param:
+                     scale = 1.0
+                else:
+                     scale = 10000.0
+
                 if not hasattr(state,'flowdirx'):
                     dadx = state.slidingco[:, 1:] - state.slidingco[:, :-1]
                     dady = state.slidingco[1:, :] - state.slidingco[:-1, :]
-                    REGU_S = (params.opti_regu_param_slidingco / (10000**2)) * (
+                    REGU_S = (params.opti_regu_param_slidingco / (scale**2)) * (
                         tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
                     )
                 else:
@@ -395,7 +412,7 @@ def initialize_optimize(params, state):
                     dadx = (dadx[1:, :] + dadx[:-1, :]) / 2.0
                     dady = state.slidingco[1:, :] - state.slidingco[:-1, :]
                     dady = (dady[:, 1:] + dady[:, :-1]) / 2.0
-                    REGU_S = (params.opti_regu_param_slidingco / (10000**2)) * (
+                    REGU_S = (params.opti_regu_param_slidingco / (scale**2)) * (
                         tf.nn.l2_loss((dadx * state.flowdirx + dady * state.flowdiry))
                         + params.opti_smooth_anisotropy_factor
                         * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx))
@@ -815,11 +832,16 @@ def _update_plot_inversion(params, state, i):
 
     ax2 = state.axes[0, 1]
 
+    if params.new_friction_param:
+        scale = 0.5
+    else:
+        scale = 20000.0
+
     im1 = ax2.imshow(
         np.ma.masked_where(state.thk == 0, state.slidingco),
         origin="lower",
         vmin=0,
-        vmax=20000,
+        vmax=scale,
         cmap=cmap,
     )
     if i == 0:

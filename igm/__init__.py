@@ -14,6 +14,7 @@ from igm.modules.preproc.load_tif_data import *
 from igm.modules.preproc.optimize_v1 import *
 from igm.modules.preproc.optimize import *
 from igm.modules.preproc.include_icemask import *
+from igm.modules.preproc.pretraining import *
 
 from igm.modules.process.iceflow_v1 import *
 from igm.modules.process.iceflow import *

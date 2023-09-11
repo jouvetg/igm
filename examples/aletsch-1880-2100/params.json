@@ -6,7 +6,9 @@
   "modules_process": [
     "clim_aletsch",
     "smb_accmelt",
-    "flow_dt_thk",
+    "iceflow",
+    "time_step",
+    "thk",
     "rockflow",
     "vertical_iceflow",
     "particles"

@@ -18,7 +18,6 @@ from igm.modules.preproc.pretraining import *
 
 from igm.modules.process.iceflow_v1 import *
 from igm.modules.process.iceflow import *
-from igm.modules.process.flow_dt_thk import *
 from igm.modules.process.vertical_iceflow import *
 from igm.modules.process.smb_simple import *
 from igm.modules.process.thk import *

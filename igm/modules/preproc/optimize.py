@@ -836,12 +836,13 @@ def _update_plot_inversion(params, state, i):
         scale = 0.5
     else:
         scale = 20000.0
+        
+    from matplotlib import colors
 
     im1 = ax2.imshow(
         np.ma.masked_where(state.thk == 0, state.slidingco),
         origin="lower",
-        vmin=0,
-        vmax=scale,
+        norm=colors.LogNorm(),
         cmap=cmap,
     )
     if i == 0:

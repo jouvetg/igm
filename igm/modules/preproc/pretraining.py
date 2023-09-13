@@ -39,13 +39,13 @@ def params_pretraining(parser):
     parser.add_argument(
         "--train_iceflow_emulator_restart_lr",
         type=int,
-        default=3000,
+        default=2500,
         help="Restart frequency for the learning rate",
     )  
     parser.add_argument(
         "--epochs",
         type=int,
-        default=6000,
+        default=5000,
         help="Number of epochs",
     )  
     

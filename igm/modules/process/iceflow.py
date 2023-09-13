@@ -31,7 +31,7 @@ def params_iceflow(parser):
     parser.add_argument(
         "--emulator",
         type=str,
-        default="f21_pinnbp_GJ_23_a",
+        default="myemulator",
         help="Directory path of the deep-learning ice flow model, create a new if empty string",
     )
 
@@ -276,55 +276,40 @@ def initialize_iceflow(params, state):
                 learning_rate=params.retrain_iceflow_emulator_lr
             )
 
-        # if empty string, we create a deel learning emaultor from scratch
-        if params.emulator == "":
-            nb_inputs  = len(params.fieldin) + (params.dim_arrhenius==3)*(params.Nz-1)
-            nb_outputs = params.iceflow_physics * params.Nz
-            state.iceflow_model = getattr(igm, params.network)(params, nb_inputs, nb_outputs)
-
-        # otherwise we load it
+        direct_name  = 'pinnbp'+'_'+str(params.Nz)+'_'+str(int(params.vert_spacing))+'_'
+        direct_name +=  params.network+'_'+str(params.nb_layers)+'_'
+        direct_name +=  str(params.dim_arrhenius)+'_'+str(int(params.new_friction_param))
+        
+        existing_emulator = True
+        
+        # first check if it finds a pretrained emulator in the igm package
+        if os.path.exists(importlib_resources.files(emulators).joinpath(direct_name)):
+            dirpath = importlib_resources.files(emulators).joinpath(direct_name)
+            print("Found pretrained emulator in the igm package: ",direct_name)
         else:
-                        
-            if os.path.exists(importlib_resources.files(emulators).joinpath(params.emulator)):
-                dirpath = importlib_resources.files(emulators).joinpath(params.emulator)
-            else:
+            # if not, check if it finds a pretrained emulator in the current directory
+            if os.path.exists(params.emulator):
                 dirpath = params.emulator
- 
+                print("Found pretrained emulator: ",params.emulator)
+            # if not, create a new one from scratch
+            else:
+                existing_emulator = False
+                print("No pretrained emulator found, creating a new one from scratch")
+
+        if existing_emulator:
             fieldin = []
-#            fieldin_dim = []
             fid = open(os.path.join(dirpath, "fieldin.dat"), "r")
             for fileline in fid:
                 part = fileline.split()
                 fieldin.append(part[0])
-#                fieldin_dim.append(int(part[1]))
             fid.close()
-            
-            params.fieldin      = fieldin           
-#            if (fieldin_dim[2]==1):
-#                params.dim_arrhenius = 3
-#            else:
-#                params.dim_arrhenius = 2
-
-            fid = open(os.path.join(dirpath, "vert_grid.dat"), "r")
-            for i, fileline in enumerate(fid):
-                part = fileline.split()
-                if i == 0:
-                    if not int(part[0]) == params.Nz:
-                        params.Nz = int(part[0])
-                        print("Warning : change config.Nz to ", params.Nz)
-                if i == 1:
-                    if not float(part[0]) == params.vert_spacing:
-                        params.vert_spacing = int(part[0])
-                        print(
-                            "Warning : change config.vert_spacing to ",
-                            params.vert_spacing,
-                        )
-            fid.close()
-            
-            file = 'model_'+str(params.dim_arrhenius)+'D_arrhenius.h5'
-            state.iceflow_model = tf.keras.models.load_model( os.path.join(dirpath, file) )
- 
+            assert params.fieldin == fieldin 
+            state.iceflow_model = tf.keras.models.load_model( os.path.join(dirpath, "model.h5") )
             state.iceflow_model.compile()
+        else:
+            nb_inputs  = len(params.fieldin) + (params.dim_arrhenius==3)*(params.Nz-1)
+            nb_outputs = params.iceflow_physics * params.Nz
+            state.iceflow_model = getattr(igm, params.network)(params, nb_inputs, nb_outputs)
 
     if not params.type_iceflow == "emulated":
         if int(tf.__version__.split(".")[1]) <= 10:
@@ -362,7 +347,8 @@ def initialize_iceflow(params, state):
         state.PAD = [[0, NNy - Ny], [0, NNx - Nx]]
     else:
         state.PAD = [[0, 0], [0, 0]]
-
+        
+    _update_iceflow_emulated(params, state)
 
 def update_iceflow(params, state):
 

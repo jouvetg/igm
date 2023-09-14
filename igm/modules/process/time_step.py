@@ -48,7 +48,9 @@ def initialize_time_step(params, state):
     # Initialize the time with starting time
     state.t = tf.Variable(float(params.time_start))
 
-    state.it = 0
+    # the first loop is not advancing
+    state.it = -1      
+    state.itsave = -1
 
     state.dt = tf.Variable(float(params.time_step_max))
 
@@ -59,8 +61,6 @@ def initialize_time_step(params, state):
     ) + [params.time_end]
 
     state.time_save = tf.constant(state.time_save,dtype="float32")
-
-    state.itsave = 0
 
     state.saveresult = True
 
@@ -96,7 +96,9 @@ def update_time_step(params, state):
     else:
         state.saveresult = False
 
-    state.t.assign(state.t + state.dt)
+    # the first loop is not advancing
+    if state.it>=0:
+        state.t.assign(state.t + state.dt)
 
     state.it += 1
 

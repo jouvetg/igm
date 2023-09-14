@@ -167,6 +167,12 @@ def params_iceflow(parser):
         help="Learning rate for the retraining of the emulator",
     )
     parser.add_argument(
+        "--retrain_iceflow_emulator_nbit_init",
+        type=float,
+        default=1,
+        help="Number of iterations done at the first time step for the retraining of the emulator",
+    )
+    parser.add_argument(
         "--retrain_iceflow_emulator_nbit",
         type=float,
         default=1,
@@ -881,7 +887,7 @@ def _update_iceflow_emulated(params, state):
 
 def _update_iceflow_emulator(params, state):
 
-    if state.it % params.retrain_iceflow_emulator_freq == 0:
+    if (state.it<0) | (state.it%params.retrain_iceflow_emulator_freq==0):
          
         fieldin = [ vars(state)[f] for f in params.fieldin ]
         
@@ -890,8 +896,11 @@ def _update_iceflow_emulator(params, state):
         X = _split_into_patches(XX, params.retrain_iceflow_emulator_framesizemax)
          
         state.COST_EMULATOR = []
+        
+        nbit = (state.it>=0)*params.retrain_iceflow_emulator_nbit \
+             + (state.it<0)*params.retrain_iceflow_emulator_nbit_init
 
-        for epoch in range(params.retrain_iceflow_emulator_nbit):
+        for epoch in range(nbit):
             cost_emulator = tf.Variable(0.0)
 
             for i in range(X.shape[0]):

@@ -114,7 +114,7 @@ def initialize_oggm_data_prep(params, state):
         proj = data["proj"]
 
         try:
-            thkobs = _read_glathida(x, y, usurfobs, proj, params.path_glathida)
+            thkobs = _read_glathida(x, y, usurfobs, proj, params.path_glathida,state)
             thkobs = np.where(icemaskobs, thkobs, np.nan)
         except:
             thkobs = np.zeros_like(thk)*np.nan
@@ -311,7 +311,7 @@ def _oggm_util(RGIs, params):
     os.system( "echo rm -r " + os.path.join(params.working_dir, "oggm_data") + " >> clean.sh" )
 
 
-def _read_glathida(x, y, usurf, proj, path_glathida):
+def _read_glathida(x, y, usurf, proj, path_glathida,state):
     """
     Function written by Ethan Welthy & Guillaume Jouvet
     """
@@ -326,7 +326,8 @@ def _read_glathida(x, y, usurf, proj, path_glathida):
     if not os.path.exists(os.path.join(path_glathida, "glathida")):
         os.system("git clone https://gitlab.com/wgms/glathida " + path_glathida)
     else:
-        print("glathida data already at " + path_glathida)
+        if hasattr(state,'logger'):
+            state.logger.info("glathida data already at " + path_glathida)
 
     files = [os.path.join(path_glathida, "glathida", "data", "point.csv")]
     files += glob.glob(
@@ -377,8 +378,8 @@ def _read_glathida(x, y, usurf, proj, path_glathida):
         thkobs[:] = np.nan
 
     else:
-        # Compute thickness relative to prescribed surface
-        print("Nb of profiles found : ", df.index.shape[0])
+        if hasattr(state,'logger'):
+            state.logger.info("Nb of profiles found : " + str(df.index.shape[0]))
 
         xx, yy = transformer.transform(df["lon"], df["lat"])
         bedrock = df["elevation"] - df["thickness"]

@@ -291,16 +291,19 @@ def initialize_iceflow(params, state):
         # first check if it finds a pretrained emulator in the igm package
         if os.path.exists(importlib_resources.files(emulators).joinpath(direct_name)):
             dirpath = importlib_resources.files(emulators).joinpath(direct_name)
-            print("Found pretrained emulator in the igm package: ",direct_name)
+            if hasattr(state,'logger'):
+                state.logger.info("Found pretrained emulator in the igm package: "+direct_name)
         else:
             # if not, check if it finds a pretrained emulator in the current directory
             if os.path.exists(params.emulator):
                 dirpath = params.emulator
-                print("Found pretrained emulator: ",params.emulator)
+                if hasattr(state,'logger'):
+                    state.logger.info("Found pretrained emulator: "+params.emulator)
             # if not, create a new one from scratch
             else:
                 existing_emulator = False
-                print("No pretrained emulator found, creating a new one from scratch")
+                if hasattr(state,'logger'):
+                    state.logger.info("No pretrained emulator found, creating a new one from scratch")
 
         if existing_emulator:
             fieldin = []
@@ -310,7 +313,7 @@ def initialize_iceflow(params, state):
                 fieldin.append(part[0])
             fid.close()
             assert params.fieldin == fieldin 
-            state.iceflow_model = tf.keras.models.load_model( os.path.join(dirpath, "model.h5") )
+            state.iceflow_model = tf.keras.models.load_model( os.path.join(dirpath, "model.h5") , compile=False)
             state.iceflow_model.compile()
         else:
             nb_inputs  = len(params.fieldin) + (params.dim_arrhenius==3)*(params.Nz-1)

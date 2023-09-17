@@ -6,14 +6,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import os
 import igm
 
-
 def main():
-
-    print(" ------------------------- IGM START -----------------------------")
-
-    print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
     
     # Collect defaults, overide from json file, and parse all core parameters 
     parser = igm.params_core()
@@ -22,16 +18,16 @@ def main():
 
     # get the list of all modules in order
     modules = params.modules_preproc + params.modules_process + params.modules_postproc
-           
+
     # load custom modules from file (must be called my_module_name.py) to igm
     for module in modules:
         igm.load_custom_module(params, module)
 
     # get the list of all dependent modules, which parameters must be called too
-    dependent_modules = sum([getattr(igm, "dependency_" + m)() for m in modules if hasattr(igm, "dependency_" + m)], [])
-
+    dependent_modules = igm.find_dependent_modules(modules)
+    
     # Collect defaults, overide from json file, and parse all specific module parameters 
-    for module in list(set(modules + dependent_modules)):
+    for module in modules + dependent_modules:
         getattr(igm, "params_" + module)(parser)
     igm.overide_from_json_file(parser,check_if_params_exist=True)
     params = parser.parse_args() # args=[] add this for jupyter notebook
@@ -46,6 +42,9 @@ def main():
     # if logging is activated, add a logger to the state
     if params.logging:
         igm.add_logger(params, state)
+        state.logger.info("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+    else:
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
     # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
     with tf.device("/GPU:0"):
@@ -64,8 +63,6 @@ def main():
         # Finalize each module in turn
         for module in modules:
             getattr(igm, "finalize_" + module)(params, state)
-
-    print(" ------------------------- IGM END  -----------------------------")
 
 if __name__ == '__main__':
     main()

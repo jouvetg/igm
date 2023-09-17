@@ -119,6 +119,14 @@ def load_custom_module(params, module):
         
         for st in LIST:
            vars(igm)[st] = vars(custmod)[st]
+    
+# this function checks if there dependency modules that are not in the module list already
+# dependent modules are listed by function dependency_MODULENAME, and exist only if this function exists.
+def find_dependent_modules(modules):
+    
+    dm = sum([getattr(igm, "dependency_" + m)() for m in modules if hasattr(igm, "dependency_" + m)], [])
+    
+    return [m for m in dm if m not in modules]
      
 # this add a logger to the state
 def add_logger(params, state, logging_level="INFO"):

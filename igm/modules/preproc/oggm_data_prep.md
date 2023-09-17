@@ -1,4 +1,4 @@
-### <h1 align="center" id="title">IGM module prepare_data </h1>
+### <h1 align="center" id="title">IGM module oggm_data_prep </h1>
 
 # Description:
 

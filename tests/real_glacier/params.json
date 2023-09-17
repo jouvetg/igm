@@ -1,0 +1,22 @@
+{
+  "modules_preproc": ["oggm_data_prep"],
+  "modules_process": ["smb_simple",
+                      "iceflow",
+                      "time_step",
+                      "thk",
+                      "vertical_iceflow",
+                      "particles"],
+  "modules_postproc": ["check"],
+  "RGI_ID": "RGI60-11.01238",
+  "time_start": 2000.0,
+  "time_end": 2100.0,
+  "time_save": 5.0,
+  "smb_simple_array": [ 
+                        ["time", "gradabl", "gradacc", "ela", "accmax"],
+                        [ 2000,      0.009,     0.005,  2700,      2.0],
+                        [ 2100,      0.009,     0.005,  2600,      2.0]
+                      ],
+  "new_friction_param": true,
+  "dim_arrhenius": 2,
+  "init_slidingco": 0.1
+}

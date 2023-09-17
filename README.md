@@ -15,7 +15,7 @@ The Instructed Glacier Model (IGM) is an **open-source Python package**, which p
   
 # Documentation    
 
-**IGM's documentation can be found on the dedicated [wiki](https://github.com/jouvetg/igm2/wiki).**
+**IGM's documentation can be found on the dedicated [wiki](https://github.com/jouvetg/igm/wiki).**
   
 # Contact
 

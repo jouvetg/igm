@@ -36,7 +36,7 @@ def params_core():
     parser.add_argument(
         "--modules_process",
         type=list,
-        default=["flow_dt_thk"],
+        default=["iceflow","time_step","thk"],
         help="List of processing modules",
     )
     parser.add_argument(

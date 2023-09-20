@@ -24,7 +24,7 @@ setup(
     url="https://github.com/jouvetg/igm",
     license="gpl-3.0",
     packages=find_packages(),
-    entry_points={'console_scripts': [ 'igm_run = igm_run:main' ]},
+    entry_points={'console_scripts': [ 'igm_run = igm.igm_run:main' ]},
     package_data={"igm": package_files("igm/emulators")},
     description='IGM - a glacier evolution model',
     long_description=readme,

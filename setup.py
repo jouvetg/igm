@@ -17,7 +17,7 @@ with open('README.md', 'r') as f:
     readme = f.read()
     
 setup(
-    name="igm_model",
+    name="igm-model",
     version="2.0.1",
     author="Guillaume Jouvet",
     author_email="guillaume.jouvet@unil.ch",

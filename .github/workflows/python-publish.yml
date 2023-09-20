@@ -36,5 +36,5 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.IGM_TOKEN }}
-        repository-url: https://pypi.org/legacy/
+        repository-url: https://upload.pypi.org/legacy/
 

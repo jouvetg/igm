@@ -29,6 +29,7 @@ setup(
     description='IGM - a glacier evolution model',
     long_description=readme,
     long_description_content_type='text/markdown',
+    python_requires='<3.11',
 #    extras_require={
 #        'doc': ['numpydoc', 'sphinx', 'sphinx_rtd_theme', 'sphinx_mdinclude'],
 #    },    

@@ -9,7 +9,7 @@ import tensorflow as tf
 from igm.modules.utils import compute_divflux
 
 
-def params_thk(state):
+def params_thk(parser):
     pass
 
 def initialize_thk(params, state):

@@ -69,7 +69,7 @@ def initialize_oggm_data_prep(params, state):
     if hasattr(state,'logger'):
         state.logger.info("Prepare data using oggm and glathida")
 
-    nc = Dataset(os.path.join("oggm_data","gridded_data.nc"), "r+")
+    nc = Dataset(os.path.join(params.RGI_ID,"gridded_data.nc"), "r+")
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.flip(np.squeeze(nc.variables["y"]).astype("float32"))
@@ -109,7 +109,7 @@ def initialize_oggm_data_prep(params, state):
     thkobs = np.zeros_like(thk)*np.nan
 
     if params.include_glathida:
-        with open(os.path.join("oggm_data","glacier_grid.json"), "r") as f:
+        with open(os.path.join(params.RGI_ID,"glacier_grid.json"), "r") as f:
             data = json.load(f)
         proj = data["proj"]
 
@@ -302,13 +302,13 @@ def _oggm_util(RGIs, params):
         
  
     source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
-    destination_folder = os.path.join(params.working_dir, "oggm_data")
+    destination_folder = os.path.join(params.working_dir, params.RGI_ID)
     
     if os.path.exists(destination_folder):
         shutil.rmtree(destination_folder)    
     shutil.copytree(source_folder, destination_folder)
     
-    os.system( "echo rm -r " + os.path.join(params.working_dir, "oggm_data") + " >> clean.sh" )
+    os.system( "echo rm -r " + os.path.join(params.working_dir, params.RGI_ID) + " >> clean.sh" )
 
 
 def _read_glathida(x, y, usurf, proj, path_glathida,state):

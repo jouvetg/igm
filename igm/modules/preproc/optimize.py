@@ -579,7 +579,7 @@ def finalize_optimize(params, state):
 
 def _compute_rms_std_optimization(state, i):
 
-    I = state.icemaskobs == 1
+    I = state.icemaskobs > 0 #== 1
 
     if i == 0:
         state.rmsthk = []

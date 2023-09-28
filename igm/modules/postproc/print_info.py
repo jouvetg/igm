@@ -9,7 +9,7 @@ import datetime
 import matplotlib.pyplot as plt
 
 
-def params_print_info(state):
+def params_print_info(parser):
     pass
 
 

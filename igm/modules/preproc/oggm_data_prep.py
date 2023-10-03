@@ -38,7 +38,13 @@ def params_oggm_data_prep(parser):
         "--thk_source",
         type=str,
         default="consensus_ice_thickness",
-        help="millan_ice_thickness or consensus_ice_thickness in geology.nc",
+        help="millan_ice_thickness or consensus_ice_thickness",
+    )
+    parser.add_argument(
+        "--vel_source",
+        type=str,
+        default="millan_ice_velocity",
+        help="Source of the surface velocities (millan_ice_velocity or its_live)",
     )
     parser.add_argument(
         "--include_glathida",
@@ -87,17 +93,30 @@ def initialize_oggm_data_prep(params, state):
     )
     
     vars_to_save =  ["usurf", "thk", "icemask", "usurfobs", "thkobs", "icemaskobs"]
-    
-    if "millan_vx" in nc.variables:
-        uvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vx"]).astype("float32"))
-        uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
-        uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
-        vars_to_save += ["uvelsurfobs"]
-    if "millan_vy" in nc.variables:
-        vvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vy"]).astype("float32"))
-        vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
-        vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
-        vars_to_save += ["vvelsurfobs"] 
+     
+    if params.vel_source == "millan_ice_velocity":
+        if "millan_vx" in nc.variables:
+            uvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vx"]).astype("float32"))
+            uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
+            uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
+            vars_to_save += ["uvelsurfobs"]
+        if "millan_vy" in nc.variables:
+            vvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vy"]).astype("float32"))
+            vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
+            vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
+            vars_to_save += ["vvelsurfobs"] 
+    else:
+        if "itslive_vx" in nc.variables: 
+            uvelsurfobs = np.flipud(np.squeeze(nc.variables["itslive_vx"]).astype("float32"))
+            uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
+            uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
+            vars_to_save += ["uvelsurfobs"]
+        if "itslive_vy" in nc.variables: 
+            vvelsurfobs = np.flipud(np.squeeze(nc.variables["itslive_vy"]).astype("float32"))
+            vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
+            vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
+            vars_to_save += ["vvelsurfobs"]   
+            
     if "millan_ice_thickness" in nc.variables:
         thkinit = np.flipud(
         np.squeeze(nc.variables["millan_ice_thickness"]).astype("float32")

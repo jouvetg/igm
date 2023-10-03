@@ -240,7 +240,12 @@ def params_iceflow(parser):
         default=0,
         help="Dropout rate in the CNN",
     )
-
+    parser.add_argument(
+        "--exclude_borders_from_iceflow",
+        type=str2bool,
+        default=False,
+        help="This is a quick fix of the border issue, other the physics informed emaulator shows zero velocity at the border",
+    )  
 
 def initialize_iceflow(params, state):
 
@@ -864,8 +869,14 @@ def _update_iceflow_emulated(params, state):
     fieldin = [ vars(state)[f] for f in params.fieldin ]
     
     X = fieldin_to_X(params, fieldin)
+     
+    if params.exclude_borders_from_iceflow:
+        X = tf.pad(X, [[0,0],[1,1], [1,1],[0,0]], "SYMMETRIC")
 
     Y = state.iceflow_model(X)
+    
+    if params.exclude_borders_from_iceflow:
+        Y = Y[:,1:-1,1:-1,:]
 
     Ny, Nx = state.thk.shape
     N = params.Nz

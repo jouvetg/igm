@@ -45,7 +45,6 @@ setup(
 	'oggm',
 	'pyproj',
 	'rasterio',
-	'mayavi',
 	'pyqt5'
     ]
 )

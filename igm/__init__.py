@@ -8,7 +8,6 @@ from igm.common import *
 from igm.modules.utils import *
 
 from igm.modules.preproc.oggm_data_prep import *
-from igm.modules.preproc.make_synthetic import *
 from igm.modules.preproc.load_ncdf_data import *
 from igm.modules.preproc.load_tif_data import *
 from igm.modules.preproc.optimize_v1 import *

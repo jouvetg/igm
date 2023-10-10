@@ -70,9 +70,21 @@ def initialize_load_ncdf_data(params, state):
     assert x[1] - x[0] == y[1] - y[0]
 
     # load any field contained in the ncdf file, replace missing entries by nan
+
+    if 'time' in nc.variables:
+        TIME = np.squeeze(nc.variables['time']).astype("float32")
+        I=np.where(TIME==params.time_start)[0][0]
+        istheretime = True
+    else:
+        istheretime = False
+
     for var in nc.variables:
-        if not var in ["x", "y"]:
-            vars()[var] = np.squeeze(nc.variables[var]).astype("float32")
+        if not var in ["x", "y", "z", "time"]:
+            if istheretime:
+                vars()[var] = np.squeeze(nc.variables[var][I]).astype("float32")
+                print(var,vars()[var].shape)
+            else:
+                vars()[var] = np.squeeze(nc.variables[var]).astype("float32")
             vars()[var] = np.where(vars()[var] > 10**35, np.nan, vars()[var])
 
     # coarsen if requested
@@ -98,10 +110,11 @@ def initialize_load_ncdf_data(params, state):
 
     # transform from numpy to tensorflow
     for var in nc.variables:
-        if var in ["x", "y"]:
-            vars(state)[var] = tf.constant(vars()[var].astype("float32"))
-        else:
-            vars(state)[var] = tf.Variable(vars()[var].astype("float32"))
+        if not var in ["z", "time"]:
+            if var in ["x", "y"]:
+                vars(state)[var] = tf.constant(vars()[var].astype("float32"))
+            else:
+                vars(state)[var] = tf.Variable(vars()[var].astype("float32"))
  
     nc.close()
 

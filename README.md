@@ -21,7 +21,7 @@ The Instructed Glacier Model (IGM) is an **open-source Python package**, which p
   
 # Discord channel
 
-IGM has a [discord channel](https://discord.com/) for quick support, getting latest infos, exchanges with other users. To get in, please send me your discord user name at guillaume.jouvet at unil.ch, and I will add you the group.
+IGM has a [discord channel](https://discord.com/) for quick support, getting latest infos, exchanges with other users. To get in, please send me your discord user name at guillaume.jouvet at unil.ch, and I will add you to the group.
 
 # Contact
 

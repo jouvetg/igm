@@ -17,7 +17,7 @@ app.layout = html.Div([
              style={'width': '100%', 'display': 'inline-block'}),
     # 3D surface plot
     dcc.Graph(id='mnt_surface', figure=fig),
-])
+], style={'font-family': 'monospace', 'font-size': 'x-large'})
 
 
 def params_anim_plotly_from_ncdf_ex(parser):
@@ -165,3 +165,7 @@ def updata_graph(property):
     # create figure
     fig = go.Figure(fig_dict)
     return fig
+
+if __name__ == '__main__':
+
+    finalize_anim_plotly_from_ncdf_ex(None, None)

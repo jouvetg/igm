@@ -8,6 +8,7 @@ from igm.common import *
 from igm.modules.utils import *
 
 from igm.modules.preproc.oggm_data_prep import *
+from igm.modules.preproc.make_synthetic import *
 from igm.modules.preproc.load_ncdf_data import *
 from igm.modules.preproc.load_tif_data import *
 from igm.modules.preproc.optimize_v1 import *
@@ -36,4 +37,4 @@ from igm.modules.postproc.write_plot2d  import *
 from igm.modules.postproc.write_particles import *
 from igm.modules.postproc.anim3d_from_ncdf_ex import *
 from igm.modules.postproc.anim_mp4_from_ncdf_ex import *
-
+from igm.modules.postproc.anim_plotly_from_ncdf_ex import *

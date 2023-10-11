@@ -15,10 +15,14 @@ The Instructed Glacier Model (IGM) is an **open-source Python package**, which p
 
 - **Automatic differentiation:** TensorFlow operations are differentiable. Therefore, automatic differentiation strongly facilitates and speeds-up inverse modelling / data assimilation.
   
-# Documentation    
+# Documentation
 
 **IGM's documentation can be found on the dedicated [wiki](https://github.com/jouvetg/igm/wiki).**
   
+# Discord channel
+
+IGM has a [discord channel](https://discord.com/) for quick support, and exchanges with other users. To get in, please send me your discord user name at guillaume.jouvet at unil.ch, and I will add you the group.
+
 # Contact
 
 Feel free to drop me an email for any questions, bug reports, or ideas of model extension: guillaume.jouvet at unil.ch

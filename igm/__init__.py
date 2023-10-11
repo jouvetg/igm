@@ -36,4 +36,4 @@ from igm.modules.postproc.write_plot2d  import *
 from igm.modules.postproc.write_particles import *
 from igm.modules.postproc.anim3d_from_ncdf_ex import *
 from igm.modules.postproc.anim_mp4_from_ncdf_ex import *
-
+from igm.modules.postproc.anim_plotly_from_ncdf_ex import *

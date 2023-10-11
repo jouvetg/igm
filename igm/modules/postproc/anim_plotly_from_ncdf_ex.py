@@ -19,24 +19,6 @@ app.layout = html.Div([
     dcc.Graph(id='mnt_surface', figure=fig),
 ], style={'font-family': 'monospace', 'font-size': 'x-large'})
 
-
-def params_anim_plotly_from_ncdf_ex(parser):
-    pass
-
-
-def initialize_anim_plotly_from_ncdf_ex(params, state):
-    pass
-
-
-def update_anim_plotly_from_ncdf_ex(params, state):
-    pass
-
-
-def finalize_anim_plotly_from_ncdf_ex(params, state):
-    # start dash app
-    app.run_server(debug=True)
-
-
 @app.callback(
     Output('mnt_surface', 'figure'),
     Input('property', 'value'))
@@ -165,6 +147,24 @@ def updata_graph(property):
     # create figure
     fig = go.Figure(fig_dict)
     return fig
+
+def params_anim_plotly_from_ncdf_ex(parser):
+    pass
+
+
+def initialize_anim_plotly_from_ncdf_ex(params, state):
+    pass
+
+
+def update_anim_plotly_from_ncdf_ex(params, state):
+    pass
+
+
+def finalize_anim_plotly_from_ncdf_ex(params, state):
+    # start dash app
+    app.run_server(debug=False)
+
+
 
 if __name__ == '__main__':
 

@@ -49,8 +49,8 @@ The path (or name of the data folder) must be pass in parameter `data_dir`.
 ||`--data_dir`|`surflib3d_shape_100`|Directory of the data of the glacier catalogu|
 ||`--batch_size`|`1`|Batch size|
 ||`--freq_test`|`20`|Frequence of the test|
-||`--train_iceflow_emulator_restart_lr`|`3000`|Restart frequency for the learning rate|
-||`--epochs`|`6000`|Number of epochs|
+||`--train_iceflow_emulator_restart_lr`|`2500`|Restart frequency for the learning rate|
+||`--epochs`|`5000`|Number of epochs|
 ||`--min_arrhenius`|`5`|Minium Arrhenius factor|
 ||`--max_arrhenius`|`151`|Maximum Arrhenius factor|
 ||`--min_slidingco`|`0`|Minimum sliding coefficient|

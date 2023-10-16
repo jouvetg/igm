@@ -62,7 +62,7 @@ When treating ery large arrays, retraining must be done sequentially patch-wise 
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
 ||`--type_iceflow`|`emulated`|Type of iceflow: it can emulated (default), solved, or in diagnostic mode to investigate the fidelity of the emulator towads the solver|
-||`--emulator`|`f21_pinnbp_GJ_23_a`|Directory path of the deep-learning ice flow model, create a new if empty string|
+||`--emulator`|`myemulator`|Directory path of the deep-learning ice flow model, create a new if empty string|
 ||`--iceflow_physics`|`2`|2 for blatter, 4 for stokes, this is also the number of DOF (STOKES DOES NOT WORK YET, KEEP IT TO 2)|
 ||`--init_slidingco`|`10000`|Initial sliding coefficient slidingco|
 ||`--init_arrhenius`|`78`|Initial arrhenius factor arrhenuis|
@@ -83,6 +83,7 @@ When treating ery large arrays, retraining must be done sequentially patch-wise 
 ||`--dim_arrhenius`|`2`|Dimension of the arrhenius factor (horizontal 2D or 3D)|
 ||`--retrain_iceflow_emulator_freq`|`10`|Frequency at which the emulator is retrained, 0 means never, 1 means at each time step, 2 means every two time steps, etc.|
 ||`--retrain_iceflow_emulator_lr`|`2e-05`|Learning rate for the retraining of the emulator|
+||`--retrain_iceflow_emulator_nbit_init`|`1`|Number of iterations done at the first time step for the retraining of the emulator|
 ||`--retrain_iceflow_emulator_nbit`|`1`|Number of iterations done at each time step for the retraining of the emulator|
 ||`--retrain_iceflow_emulator_framesizemax`|`750`|Size of the patch used for retraining the emulator, this is usefull for large size arrays, otherwise the GPU memory can be overloaded|
 ||`--multiple_window_size`|`0`|If a U-net, this force window size a multiple of 2**N|
@@ -94,3 +95,4 @@ When treating ery large arrays, retraining must be done sequentially patch-wise 
 ||`--nb_out_filter`|`32`|Number of output filters in the CNN|
 ||`--conv_ker_size`|`3`|Size of the convolution kernel|
 ||`--dropout_rate`|`0`|Dropout rate in the CNN|
+||`--exclude_borders_from_iceflow`||This is a quick fix of the border issue, other the physics informed emaulator shows zero velocity at the border|

@@ -10,4 +10,10 @@ The app also includes a slider at the bottom, which defines the displayed timest
 
 This module depends on the `dash` library.
 
-This module was implemented by [Oskar Herrmann](https://github.com/ho11laqe).
+This module was implemented by [Oskar Herrmann](https://github.com/ho11laqe). 
+# Parameters: 
+
+
+|short|long|default|help|
+| :--- | :--- | :--- | :--- |
+|`-h`|`--help`||show this help message and exit|

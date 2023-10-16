@@ -1,4 +1,4 @@
-### <h1 align="center" id="title">IGM module prepare_data </h1>
+### <h1 align="center" id="title">IGM module oggm_data_prep </h1>
 
 # Description:
 
@@ -25,7 +25,8 @@ The module depends (of course) of `oggm` library.
 ||`--preprocess`||Use preprocessing|
 ||`--dx`|`100`|Spatial resolution (need preprocess false to change it)|
 ||`--border`|`30`|Safe border margin  (need preprocess false to change it)|
-||`--thk_source`|`consensus_ice_thickness`|millan_ice_thickness or consensus_ice_thickness in geology.nc|
+||`--thk_source`|`consensus_ice_thickness`|millan_ice_thickness or consensus_ice_thickness|
+||`--vel_source`|`millan_ice_velocity`|Source of the surface velocities (millan_ice_velocity or its_live)|
 ||`--include_glathida`||Make observation file (for IGM inverse)|
 ||`--path_glathida`|``|Path where the Glathida Folder is store, so that you don't need               to redownload it at any use of the script, if empty it will be in the home directory|
 ||`--save_input_ncdf`||Write prepared data into a geology file|

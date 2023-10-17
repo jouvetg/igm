@@ -26,6 +26,8 @@ from igm.modules.process.particles import *
 from igm.modules.process.topg_glacial_erosion import *
 from igm.modules.process.rockflow import *
 from igm.modules.process.flow_dt_thk import *
+from igm.modules.process.avalanche import *
+from igm.modules.process.gflex import *
 
 from igm.modules.postproc.print_info import *
 from igm.modules.postproc.print_all_comp_info import *

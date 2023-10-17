@@ -63,7 +63,6 @@ When treating ery large arrays, retraining must be done sequentially patch-wise 
 |`-h`|`--help`||show this help message and exit|
 ||`--type_iceflow`|`emulated`|Type of iceflow: it can emulated (default), solved, or in diagnostic mode to investigate the fidelity of the emulator towads the solver|
 ||`--emulator`|`myemulator`|Directory path of the deep-learning ice flow model, create a new if empty string|
-||`--iceflow_physics`|`2`|2 for blatter, 4 for stokes, this is also the number of DOF (STOKES DOES NOT WORK YET, KEEP IT TO 2)|
 ||`--init_slidingco`|`10000`|Initial sliding coefficient slidingco|
 ||`--init_arrhenius`|`78`|Initial arrhenius factor arrhenuis|
 ||`--regu_glen`|`1e-05`|Regularization parameter for Glen's flow law|

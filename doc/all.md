@@ -10,73 +10,36 @@ IGM
 
 
 ```bash
-usage: argmark [-h] [--working_dir WORKING_DIR] [--modules_preproc MODULES_PREPROC]
-               [--modules_process MODULES_PROCESS] [--modules_postproc MODULES_POSTPROC]
-               [--logging LOGGING] [--logging_file LOGGING_FILE] [--print_params PRINT_PARAMS]
-               [--coarsen_tif COARSEN_TIF] [--crop_tif CROP_TIF] [--crop_tif_xmin CROP_TIF_XMIN]
-               [--crop_tif_xmax CROP_TIF_XMAX] [--crop_tif_ymin CROP_TIF_YMIN]
-               [--crop_tif_ymax CROP_TIF_YMAX] [--data_dir DATA_DIR] [--batch_size BATCH_SIZE]
-               [--freq_test FREQ_TEST]
-               [--train_iceflow_emulator_restart_lr TRAIN_ICEFLOW_EMULATOR_RESTART_LR]
-               [--epochs EPOCHS] [--min_arrhenius MIN_ARRHENIUS] [--max_arrhenius MAX_ARRHENIUS]
-               [--min_slidingco MIN_SLIDINGCO] [--max_slidingco MAX_SLIDINGCO]
-               [--min_coarsen MIN_COARSEN] [--max_coarsen MAX_COARSEN]
-               [--soft_begining SOFT_BEGINING] [--mask_shapefile MASK_SHAPEFILE]
-               [--mask_invert MASK_INVERT] [--RGI_ID RGI_ID] [--preprocess PREPROCESS] [--dx DX]
-               [--border BORDER] [--thk_source THK_SOURCE] [--vel_source VEL_SOURCE]
-               [--include_glathida INCLUDE_GLATHIDA] [--path_glathida PATH_GLATHIDA]
-               [--save_input_ncdf SAVE_INPUT_NCDF] [--input_file INPUT_FILE]
-               [--coarsen_ncdf COARSEN_NCDF] [--crop_ncdf CROP_NCDF]
-               [--crop_ncdf_xmin CROP_NCDF_XMIN] [--crop_ncdf_xmax CROP_NCDF_XMAX]
-               [--crop_ncdf_ymin CROP_NCDF_YMIN] [--crop_ncdf_ymax CROP_NCDF_YMAX]
-               [--opti_vars_to_save OPTI_VARS_TO_SAVE] [--opti_init_zero_thk OPTI_INIT_ZERO_THK]
-               [--opti_regu_param_thk OPTI_REGU_PARAM_THK]
-               [--opti_regu_param_slidingco OPTI_REGU_PARAM_SLIDINGCO]
-               [--opti_smooth_anisotropy_factor OPTI_SMOOTH_ANISOTROPY_FACTOR]
-               [--opti_convexity_weight OPTI_CONVEXITY_WEIGHT]
-               [--opti_usurfobs_std OPTI_USURFOBS_STD] [--opti_velsurfobs_std OPTI_VELSURFOBS_STD]
-               [--opti_thkobs_std OPTI_THKOBS_STD] [--opti_divfluxobs_std OPTI_DIVFLUXOBS_STD]
-               [--opti_control OPTI_CONTROL] [--opti_cost OPTI_COST] [--opti_nbitmin OPTI_NBITMIN]
-               [--opti_nbitmax OPTI_NBITMAX] [--opti_step_size OPTI_STEP_SIZE]
-               [--opti_output_freq OPTI_OUTPUT_FREQ]
-               [--geology_optimized_file GEOLOGY_OPTIMIZED_FILE]
-               [--plot2d_live_inversion PLOT2D_LIVE_INVERSION]
-               [--plot2d_inversion PLOT2D_INVERSION] [--write_ncdf_optimize WRITE_NCDF_OPTIMIZE]
-               [--editor_plot2d_optimize EDITOR_PLOT2D_OPTIMIZE]
-               [--smb_update_freq SMB_UPDATE_FREQ] [--smb_simple_file SMB_SIMPLE_FILE]
-               [--smb_simple_array SMB_SIMPLE_ARRAY] [--type_iceflow TYPE_ICEFLOW]
-               [--emulator EMULATOR] [--iceflow_physics ICEFLOW_PHYSICS]
-               [--init_slidingco INIT_SLIDINGCO] [--init_arrhenius INIT_ARRHENIUS]
-               [--regu_glen REGU_GLEN] [--regu_weertman REGU_WEERTMAN] [--exp_glen EXP_GLEN]
-               [--exp_weertman EXP_WEERTMAN] [--gravity_cst GRAVITY_CST]
-               [--ice_density ICE_DENSITY] [--new_friction_param NEW_FRICTION_PARAM] [--Nz NZ]
-               [--vert_spacing VERT_SPACING] [--thr_ice_thk THR_ICE_THK]
-               [--solve_iceflow_step_size SOLVE_ICEFLOW_STEP_SIZE]
-               [--solve_iceflow_nbitmax SOLVE_ICEFLOW_NBITMAX]
-               [--stop_if_no_decrease STOP_IF_NO_DECREASE] [--fieldin FIELDIN]
-               [--dim_arrhenius DIM_ARRHENIUS]
-               [--retrain_iceflow_emulator_freq RETRAIN_ICEFLOW_EMULATOR_FREQ]
-               [--retrain_iceflow_emulator_lr RETRAIN_ICEFLOW_EMULATOR_LR]
-               [--retrain_iceflow_emulator_nbit_init RETRAIN_ICEFLOW_EMULATOR_NBIT_INIT]
-               [--retrain_iceflow_emulator_nbit RETRAIN_ICEFLOW_EMULATOR_NBIT]
-               [--retrain_iceflow_emulator_framesizemax RETRAIN_ICEFLOW_EMULATOR_FRAMESIZEMAX]
-               [--multiple_window_size MULTIPLE_WINDOW_SIZE] [--force_max_velbar FORCE_MAX_VELBAR]
-               [--network NETWORK] [--activation ACTIVATION] [--nb_layers NB_LAYERS]
-               [--nb_blocks NB_BLOCKS] [--nb_out_filter NB_OUT_FILTER]
-               [--conv_ker_size CONV_KER_SIZE] [--dropout_rate DROPOUT_RATE]
-               [--exclude_borders_from_iceflow EXCLUDE_BORDERS_FROM_ICEFLOW]
-               [--time_start TIME_START] [--time_end TIME_END] [--time_save TIME_SAVE] [--cfl CFL]
-               [--time_step_max TIME_STEP_MAX] [--erosion_cst EROSION_CST]
-               [--erosion_exp EROSION_EXP] [--erosion_update_freq EROSION_UPDATE_FREQ]
-               [--tracking_method TRACKING_METHOD] [--frequency_seeding FREQUENCY_SEEDING]
-               [--density_seeding DENSITY_SEEDING] [--speed_rockflow SPEED_ROCKFLOW]
-               [--vars_to_save_tif_ex VARS_TO_SAVE_TIF_EX]
-               [--output_file_ncdf_ex OUTPUT_FILE_NCDF_EX]
-               [--vars_to_save_ncdf_ex VARS_TO_SAVE_NCDF_EX]
-               [--output_file_ncdf_ts OUTPUT_FILE_NCDF_TS]
-               [--add_topography_to_particles ADD_TOPOGRAPHY_TO_PARTICLES]
-               [--editor_plot2d EDITOR_PLOT2D] [--plot_live PLOT_LIVE]
-               [--plot_particles PLOT_PARTICLES] [--varplot VARPLOT] [--varplot_max VARPLOT_MAX]
+usage: argmark [-h] [--working_dir WORKING_DIR] [--modules_preproc MODULES_PREPROC] [--modules_process MODULES_PROCESS] [--modules_postproc MODULES_POSTPROC] [--logging LOGGING]
+               [--logging_file LOGGING_FILE] [--print_params PRINT_PARAMS] [--coarsen_tif COARSEN_TIF] [--crop_tif CROP_TIF] [--crop_tif_xmin CROP_TIF_XMIN]
+               [--crop_tif_xmax CROP_TIF_XMAX] [--crop_tif_ymin CROP_TIF_YMIN] [--crop_tif_ymax CROP_TIF_YMAX] [--data_dir DATA_DIR] [--batch_size BATCH_SIZE]
+               [--freq_test FREQ_TEST] [--train_iceflow_emulator_restart_lr TRAIN_ICEFLOW_EMULATOR_RESTART_LR] [--epochs EPOCHS] [--min_arrhenius MIN_ARRHENIUS]
+               [--max_arrhenius MAX_ARRHENIUS] [--min_slidingco MIN_SLIDINGCO] [--max_slidingco MAX_SLIDINGCO] [--min_coarsen MIN_COARSEN] [--max_coarsen MAX_COARSEN]
+               [--soft_begining SOFT_BEGINING] [--mask_shapefile MASK_SHAPEFILE] [--mask_invert MASK_INVERT] [--RGI_ID RGI_ID] [--preprocess PREPROCESS] [--dx DX] [--border BORDER]
+               [--thk_source THK_SOURCE] [--vel_source VEL_SOURCE] [--include_glathida INCLUDE_GLATHIDA] [--path_glathida PATH_GLATHIDA] [--save_input_ncdf SAVE_INPUT_NCDF]
+               [--input_file INPUT_FILE] [--coarsen_ncdf COARSEN_NCDF] [--crop_ncdf CROP_NCDF] [--crop_ncdf_xmin CROP_NCDF_XMIN] [--crop_ncdf_xmax CROP_NCDF_XMAX]
+               [--crop_ncdf_ymin CROP_NCDF_YMIN] [--crop_ncdf_ymax CROP_NCDF_YMAX] [--opti_vars_to_save OPTI_VARS_TO_SAVE] [--opti_init_zero_thk OPTI_INIT_ZERO_THK]
+               [--opti_regu_param_thk OPTI_REGU_PARAM_THK] [--opti_regu_param_slidingco OPTI_REGU_PARAM_SLIDINGCO] [--opti_smooth_anisotropy_factor OPTI_SMOOTH_ANISOTROPY_FACTOR]
+               [--opti_convexity_weight OPTI_CONVEXITY_WEIGHT] [--opti_usurfobs_std OPTI_USURFOBS_STD] [--opti_velsurfobs_std OPTI_VELSURFOBS_STD]
+               [--opti_thkobs_std OPTI_THKOBS_STD] [--opti_divfluxobs_std OPTI_DIVFLUXOBS_STD] [--opti_control OPTI_CONTROL] [--opti_cost OPTI_COST] [--opti_nbitmin OPTI_NBITMIN]
+               [--opti_nbitmax OPTI_NBITMAX] [--opti_step_size OPTI_STEP_SIZE] [--opti_output_freq OPTI_OUTPUT_FREQ] [--geology_optimized_file GEOLOGY_OPTIMIZED_FILE]
+               [--plot2d_live_inversion PLOT2D_LIVE_INVERSION] [--plot2d_inversion PLOT2D_INVERSION] [--write_ncdf_optimize WRITE_NCDF_OPTIMIZE]
+               [--editor_plot2d_optimize EDITOR_PLOT2D_OPTIMIZE] [--smb_update_freq SMB_UPDATE_FREQ] [--smb_simple_file SMB_SIMPLE_FILE] [--smb_simple_array SMB_SIMPLE_ARRAY]
+               [--type_iceflow TYPE_ICEFLOW] [--emulator EMULATOR] [--init_slidingco INIT_SLIDINGCO] [--init_arrhenius INIT_ARRHENIUS] [--regu_glen REGU_GLEN]
+               [--regu_weertman REGU_WEERTMAN] [--exp_glen EXP_GLEN] [--exp_weertman EXP_WEERTMAN] [--gravity_cst GRAVITY_CST] [--ice_density ICE_DENSITY]
+               [--new_friction_param NEW_FRICTION_PARAM] [--Nz NZ] [--vert_spacing VERT_SPACING] [--thr_ice_thk THR_ICE_THK] [--solve_iceflow_step_size SOLVE_ICEFLOW_STEP_SIZE]
+               [--solve_iceflow_nbitmax SOLVE_ICEFLOW_NBITMAX] [--stop_if_no_decrease STOP_IF_NO_DECREASE] [--fieldin FIELDIN] [--dim_arrhenius DIM_ARRHENIUS]
+               [--retrain_iceflow_emulator_freq RETRAIN_ICEFLOW_EMULATOR_FREQ] [--retrain_iceflow_emulator_lr RETRAIN_ICEFLOW_EMULATOR_LR]
+               [--retrain_iceflow_emulator_nbit_init RETRAIN_ICEFLOW_EMULATOR_NBIT_INIT] [--retrain_iceflow_emulator_nbit RETRAIN_ICEFLOW_EMULATOR_NBIT]
+               [--retrain_iceflow_emulator_framesizemax RETRAIN_ICEFLOW_EMULATOR_FRAMESIZEMAX] [--multiple_window_size MULTIPLE_WINDOW_SIZE] [--force_max_velbar FORCE_MAX_VELBAR]
+               [--network NETWORK] [--activation ACTIVATION] [--nb_layers NB_LAYERS] [--nb_blocks NB_BLOCKS] [--nb_out_filter NB_OUT_FILTER] [--conv_ker_size CONV_KER_SIZE]
+               [--dropout_rate DROPOUT_RATE] [--exclude_borders_from_iceflow EXCLUDE_BORDERS_FROM_ICEFLOW] [--avalanche_update_freq AVALANCHE_UPDATE_FREQ]
+               [--avalanche_angleOfRepose AVALANCHE_ANGLEOFREPOSE] [--time_start TIME_START] [--time_end TIME_END] [--time_save TIME_SAVE] [--cfl CFL]
+               [--time_step_max TIME_STEP_MAX] [--erosion_cst EROSION_CST] [--erosion_exp EROSION_EXP] [--erosion_update_freq EROSION_UPDATE_FREQ]
+               [--gflex_update_freq GFLEX_UPDATE_FREQ] [--gflex_default_Te GFLEX_DEFAULT_TE] [--tracking_method TRACKING_METHOD] [--frequency_seeding FREQUENCY_SEEDING]
+               [--density_seeding DENSITY_SEEDING] [--speed_rockflow SPEED_ROCKFLOW] [--vars_to_save_tif_ex VARS_TO_SAVE_TIF_EX] [--output_file_ncdf_ex OUTPUT_FILE_NCDF_EX]
+               [--vars_to_save_ncdf_ex VARS_TO_SAVE_NCDF_EX] [--output_file_ncdf_ts OUTPUT_FILE_NCDF_TS] [--add_topography_to_particles ADD_TOPOGRAPHY_TO_PARTICLES]
+               [--editor_plot2d EDITOR_PLOT2D] [--plot_live PLOT_LIVE] [--plot_particles PLOT_PARTICLES] [--varplot VARPLOT] [--varplot_max VARPLOT_MAX]
 
 ```
 # Arguments
@@ -153,7 +116,6 @@ usage: argmark [-h] [--working_dir WORKING_DIR] [--modules_preproc MODULES_PREPR
 ||`--smb_simple_array`|`[]`|Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)|
 ||`--type_iceflow`|`emulated`|Type of iceflow: it can emulated (default), solved, or in diagnostic mode to investigate the fidelity of the emulator towads the solver|
 ||`--emulator`|`myemulator`|Directory path of the deep-learning ice flow model, create a new if empty string|
-||`--iceflow_physics`|`2`|2 for blatter, 4 for stokes, this is also the number of DOF (STOKES DOES NOT WORK YET, KEEP IT TO 2)|
 ||`--init_slidingco`|`10000`|Initial sliding coefficient slidingco|
 ||`--init_arrhenius`|`78`|Initial arrhenius factor arrhenuis|
 ||`--regu_glen`|`1e-05`|Regularization parameter for Glen's flow law|
@@ -186,6 +148,8 @@ usage: argmark [-h] [--working_dir WORKING_DIR] [--modules_preproc MODULES_PREPR
 ||`--conv_ker_size`|`3`|Size of the convolution kernel|
 ||`--dropout_rate`|`0`|Dropout rate in the CNN|
 ||`--exclude_borders_from_iceflow`||This is a quick fix of the border issue, other the physics informed emaulator shows zero velocity at the border|
+||`--avalanche_update_freq`|`1`|Update avalanche each X years (1)|
+||`--avalanche_angleOfRepose`|`30`|Angle of repose (30°)|
 ||`--time_start`|`2000.0`|Start modelling time|
 ||`--time_end`|`2100.0`|End modelling time|
 ||`--time_save`|`10`|Save result frequency for many modules (in year)|
@@ -194,6 +158,8 @@ usage: argmark [-h] [--working_dir WORKING_DIR] [--modules_preproc MODULES_PREPR
 ||`--erosion_cst`|`2.7e-07`|Erosion multiplicative factor, here taken from Herman, F. et al.               Erosion by an Alpine glacier. Science 350, 193–195 (2015)|
 ||`--erosion_exp`|`2`|Erosion exponent factor, here taken from Herman, F. et al.                Erosion by an Alpine glacier. Science 350, 193–195 (2015)|
 ||`--erosion_update_freq`|`1`|Update the erosion only each X years (Default: 100)|
+||`--gflex_update_freq`|`20.0`|Update gflex each X years (1)|
+||`--gflex_default_Te`|`50000`|Default value for Te (Elastic thickness [m]) if not given as ncdf file|
 ||`--tracking_method`|`simple`|Method for tracking particles (simple or 3d)|
 ||`--frequency_seeding`|`50`|Frequency of seeding (unit : year)|
 ||`--density_seeding`|`0.2`|Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)|

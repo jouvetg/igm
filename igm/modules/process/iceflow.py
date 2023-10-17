@@ -35,14 +35,6 @@ def params_iceflow(parser):
         help="Directory path of the deep-learning ice flow model, create a new if empty string",
     )
 
-    # type of ice flow model
-    parser.add_argument(
-        "--iceflow_physics", 
-        type=int, 
-        default=2,
-        help="2 for blatter, 4 for stokes, this is also the number of DOF (STOKES DOES NOT WORK YET, KEEP IT TO 2)"
-    )
-
     # physical parameters
     parser.add_argument(
         "--init_slidingco",
@@ -269,7 +261,7 @@ def initialize_iceflow(params, state):
         state.U = tf.Variable(
             tf.zeros(
                 (
-                    params.iceflow_physics,
+                    2,
                     params.Nz,
                     state.thk.shape[0],
                     state.thk.shape[1],
@@ -322,7 +314,7 @@ def initialize_iceflow(params, state):
             state.iceflow_model.compile()
         else:
             nb_inputs  = len(params.fieldin) + (params.dim_arrhenius==3)*(params.Nz-1)
-            nb_outputs = params.iceflow_physics * params.Nz
+            nb_outputs = 2 * params.Nz
             state.iceflow_model = getattr(igm, params.network)(params, nb_inputs, nb_outputs)
 
     if not params.type_iceflow == "emulated":
@@ -340,7 +332,7 @@ def initialize_iceflow(params, state):
         state.UT = tf.Variable(
             tf.zeros(
                 (
-                    params.iceflow_physics,
+                    2,
                     params.Nz,
                     state.thk.shape[0],
                     state.thk.shape[1],
@@ -551,7 +543,7 @@ def iceflow_energy(params, U, fieldin):
                            params.Nz, params.vert_spacing, 
                            params.exp_glen, params.exp_weertman, 
                            params.regu_glen, params.regu_weertman,
-                           params.thr_ice_thk, params.iceflow_physics,
+                           params.thr_ice_thk,
                            params.ice_density, params.gravity_cst, 
                            params.new_friction_param)
      
@@ -559,7 +551,7 @@ def iceflow_energy(params, U, fieldin):
 def _iceflow_energy(U, thk, usurf, arrhenius, slidingco, dX,
                     Nz, vert_spacing, exp_glen, exp_weertman, 
                     regu_glen, regu_weertman, thr_ice_thk, 
-                    iceflow_physics, ice_density, gravity_cst, 
+                    ice_density, gravity_cst, 
                     new_friction_param):
     
     # warning, the energy is here normalized dividing by int_Omega
@@ -636,41 +628,19 @@ def _iceflow_energy(U, thk, usurf, arrhenius, slidingco, dX,
         ** 2
     )
     C_slid = tf.reduce_mean(_stag4(C) * N ** (s / 2), axis=(-1, -2)) / s
+ 
+    slopsurfx, slopsurfy = _compute_gradient_stag(usurf, dX, dX)
+    slopsurfx = tf.expand_dims(slopsurfx, axis=1)
+    slopsurfy = tf.expand_dims(slopsurfy, axis=1)
 
-    if iceflow_physics == 2:
-        slopsurfx, slopsurfy = _compute_gradient_stag(usurf, dX, dX)
-        slopsurfx = tf.expand_dims(slopsurfx, axis=1)
-        slopsurfy = tf.expand_dims(slopsurfy, axis=1)
-
-        uds = _stag8(U[:, 0]) * slopsurfx + _stag8(U[:, 1]) * slopsurfy
-        uds = tf.where(COND, uds, 0.0)
-        C_grav = (
-            ice_density
-            * gravity_cst
-            * 10 ** (-6)
-            * tf.reduce_mean(tf.reduce_sum(dz * uds, axis=1), axis=(-1, -2))
-        )
-
-    elif iceflow_physics == 4:
-        # THIS IS NOT WORKING YET
-        w = _stag8(U[:, 2])
-        w = tf.where(COND, w, 0.0)
-        p = _stag8(U[:, 3])
-        p = tf.where(COND, p, 0.0)
-        C_grav = (
-            ice_density
-            * gravity_cst
-            * 10 ** (-6)
-            * tf.reduce_mean(tf.reduce_sum(dz * w, axis=1), axis=(-1, -2))
-            - 10 ** (-6)
-            * tf.reduce_mean(tf.reduce_sum(dz * p * div, axis=1), axis=(-1, -2))
-            + 10 ** (1) * tf.reduce_mean(div**2)
-        )
-
-        # here one must add a penalization term form the imcompressibility condition
-        # -> [CHECK AT "Theoretical and Numerical Issues of Incompressible Fluid Flows", Frey, slide 53 from the course Sorbonne Uni.]
-        # -> [CHECK AT eq. (2.45)- (2.48) of my PhD thesis ]
-        # -> [CHECK AT cme358_lecture_notes_3-2.pdf, eq. (3.18)]
+    uds = _stag8(U[:, 0]) * slopsurfx + _stag8(U[:, 1]) * slopsurfy
+    uds = tf.where(COND, uds, 0.0)
+    C_grav = (
+        ice_density
+        * gravity_cst
+        * 10 ** (-6)
+        * tf.reduce_mean(tf.reduce_sum(dz * uds, axis=1), axis=(-1, -2))
+    )
 
     #        print(C_shear[0].numpy(),C_slid[0].numpy(),C_grav[0].numpy(),C_front[0].numpy())
 
@@ -688,52 +658,29 @@ def iceflow_energy_XY(params, X, Y):
 
 def Y_to_U(params, Y):
     N = params.Nz
-
-    if params.iceflow_physics == 2:
-        U = tf.stack(
-            [
-                tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1]),
-                tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1]),
-            ],
-            axis=1,
-        )
-    elif params.iceflow_physics == 4:
-        U = tf.stack(
-            [
-                tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1]),
-                tf.experimental.numpy.moveaxis(Y[:, :, :, N : 2 * N], [-1], [1]),
-                tf.experimental.numpy.moveaxis(Y[:, :, :, 2 * N : 3 * N], [-1], [1]),
-                tf.experimental.numpy.moveaxis(Y[:, :, :, 3 * N :], [-1], [1]),
-            ],
-            axis=1,
-        )
+ 
+    U = tf.stack(
+        [
+            tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1]),
+            tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1]),
+        ],
+        axis=1,
+    )
 
     return U
 
 
 def U_to_Y(params, U):
-    if params.iceflow_physics == 2:
-        UU = tf.experimental.numpy.moveaxis(U[0], [0], [-1])
-        VV = tf.experimental.numpy.moveaxis(U[1], [0], [-1])
-        RR = tf.expand_dims(
-            tf.concat(
-                [UU, VV],
-                axis=-1,
-            ),
-            axis=0,
-        )
-    elif params.iceflow_physics == 4:
-        UU = tf.experimental.numpy.moveaxis(U[0], [0], [-1])
-        VV = tf.experimental.numpy.moveaxis(U[1], [0], [-1])
-        WW = tf.experimental.numpy.moveaxis(U[2], [0], [-1])
-        PP = tf.experimental.numpy.moveaxis(U[3], [0], [-1])
-        RR = tf.expand_dims(
-            tf.concat(
-                [UU, VV, WW, PP],
-                axis=-1,
-            ),
-            axis=0,
-        )
+ 
+    UU = tf.experimental.numpy.moveaxis(U[0], [0], [-1])
+    VV = tf.experimental.numpy.moveaxis(U[1], [0], [-1])
+    RR = tf.expand_dims(
+        tf.concat(
+            [UU, VV],
+            axis=-1,
+        ),
+        axis=0,
+    )
 
     return RR
 

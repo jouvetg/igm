@@ -2,7 +2,7 @@
   "modules_preproc": ["make_synthetic"],
   "modules_process": ["smb_simple",
                       "iceflow",
-                      "time_step",
+                      "time",
                       "thk"
                     ],
   "modules_postproc": ["check"],

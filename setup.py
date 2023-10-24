@@ -12,7 +12,6 @@ def package_files(directory):
             paths.append(os.path.join('..', path, filename))
     return paths
 
-
 with open('README.md', 'r') as f:
     readme = f.read()
     

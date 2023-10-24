@@ -2,21 +2,19 @@
 
 """
 This utility script is used to update the names of the modules and parameters of igm
-after a major update of the code done on Oct 24, 2023.
-
-Procedure:
-
-- Go to the folder where you have your igm parameter file and user-defined modules
-- Run the script with the name of the parameter file and the name of the modules as arguments:
-
-        python patch_reform_names.py params.json 
-        python patch_reform_names.py mymodule.py 
-        
-- Both will produce a copy of the former (params_old.json, mymodule_old.py) and the new 
-(reformed) ones (params.json, mymodule.py), check the code run with the new files. If yes, 
-you can delete the old files. If not, you must investigate the differences between the old,
-possibly correct manually. You can also look manually the correspondance table below between
-alod and new parameters and modules names.
+after a major update of the code done on Oct 24, 2023. Follow the following procedure: 
+1) Go to the folder where you have your igm parameter file and user-defined modules, 
+2) Run the script below with the name of the parameter file and the name of the 
+modules as arguments. 3) Both will produce a copy of the former (params_old.json, 
+mymodule_old.py) and the new (reformed) ones (params.json, mymodule.py), check the 
+code runs with the new files. If yes, you can delete the old files. If not, you must 
+investigate the differences between the old, possibly correct manually. You can 
+also look manually the correspondence table in patch_reform_names.py between 
+old and new parameters and modules names.
+```bash
+              python patch_reform_names.py params.json 
+              python patch_reform_names.py mymodule.py 
+```
 """
 
 import os, shutil, glob, re, sys, json
@@ -126,13 +124,6 @@ param_changes = {
     "default_bheatflx": "enth_default_bheatflx",
     "Lh": "enth_Lh",
     "water_density": "enth_water_density",
-    "mb_update_freq": "smb_accpdd_update_freq",
-    "refreeze_factor": "smb_accpdd_refreeze_factor",
-    "thr_temp_snow": "smb_accpdd_thr_temp_snow",
-    "thr_temp_rain": "smb_accpdd_thr_temp_rain",
-    "melt_factor_snow": "smb_accpdd_melt_factor_snow",
-    "melt_factor_ice": "smb_accpdd_melt_factor_ice",
-    "shift_hydro_year": "smb_accpdd_shift_hydro_year",
     "output_file_ncdf_ex": "wncd_output_file",
     "vars_to_save_ncdf_ex": "wncd_vars_to_save",
     "vars_to_save_tif_ex": "wtif_vars_to_save",

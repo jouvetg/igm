@@ -752,7 +752,7 @@ def _plot_cost_functions(params, state, costs):
 
     for i in range(costs.shape[1]):
         costs[:, i] -= np.min(costs[:, i])
-        costs[:, i] /= np.max(costs[:, i])
+        costs[:, i] /= np.where(np.max(costs[:, i])==0,1.0,np.max(costs[:, i]))
 
     fig = plt.figure(figsize=(10, 10))
     plt.plot(costs[:, 0], "-k", label="COST U")

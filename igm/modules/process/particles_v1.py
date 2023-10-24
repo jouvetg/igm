@@ -14,19 +14,19 @@ from igm.modules.utils import *
 
 def params_particles_v1(parser):
     parser.add_argument(
-        "--tracking_method",
+        "--part_tracking_method",
         type=str,
         default="3d",
         help="Method for tracking particles (3d or simple)",
     )
     parser.add_argument(
-        "--frequency_seeding",
+        "--part_frequency_seeding",
         type=int,
         default=10,
         help="Frequency of seeding (default: 10)",
     )
     parser.add_argument(
-        "--density_seeding",
+        "--part_density_seeding",
         type=int,
         default=0.2,
         help="Density of seeding (default: 0.2)",
@@ -48,7 +48,7 @@ def initialize_particles_v1(params, state):
 
     # build the gridseed
     state.gridseed = np.zeros_like(state.thk) == 1
-    rr = int(1.0 / params.density_seeding)
+    rr = int(1.0 / params.part_density_seeding)
     state.gridseed[::rr, ::rr] = True
 
 
@@ -57,7 +57,7 @@ def update_particles_v1(params, state):
     if hasattr(state,'logger'):
         state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
 
-    if (state.t.numpy() - state.tlast_seeding) >= params.frequency_seeding:
+    if (state.t.numpy() - state.tlast_seeding) >= params.part_frequency_seeding:
         seeding_particles(params, state)
 
         # merge the new seeding points with the former ones
@@ -125,7 +125,7 @@ def update_particles_v1(params, state):
         indexing="ij",
     )[0, :, 0]
 
-    if params.tracking_method == "simple":
+    if params.part_tracking_method == "simple":
         nthk = othk + smb * state.dt  # new ice thicnkess after smb update
 
         # adjust the relative height within the ice column with smb
@@ -145,7 +145,7 @@ def update_particles_v1(params, state):
 
         state.zpos = topg + nthk * state.rhpos
 
-    elif params.tracking_method == "3d":
+    elif params.part_tracking_method == "3d":
         # This was a test of smoothing the surface topography to regaluraze the vertical velocitiy.
         #                import tensorflow_addons as tfa
         #                susurf = tfa.image.gaussian_filter2d(state.usurf, sigma=5, filter_shape=5, padding="CONSTANT")

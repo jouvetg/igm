@@ -1,22 +1,22 @@
 {
-  "modules_preproc": ["load_tif_data"],
+  "modules_preproc": ["load_tif"],
   "modules_process": ["smb_signal",
                       "iceflow",
-                      "time_step",
+                      "time",
                       "thk"
                      ],
-  "modules_postproc": ["write_ncdf_ex",
-                       "write_plot2d",
+  "modules_postproc": ["write_ncdf",
+                       "plot2d",
                        "print_info",
-                       "print_all_comp_info"],
+                       "print_comp"],
   "time_start": -30000.0,
   "time_end": -25000.0,
   "time_save": 100.0,
-  "plot_live": true,
+  "plt2d_live": true,
   "pdela": 3000,
   "deladt": 200,
   "gradabl": 0.0067,
   "gradacc": 0.0005,
   "maxacc": 1.0,
-  "coarsen_tif": 2
+  "ltif_coarsen": 2
 }

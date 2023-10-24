@@ -12,6 +12,6 @@ associated with iceflow_v1 (check at the doc of particles).
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
-||`--tracking_method`|`3d`|Method for tracking particles (3d or simple)|
-||`--frequency_seeding`|`10`|Frequency of seeding (default: 10)|
-||`--density_seeding`|`0.2`|Density of seeding (default: 0.2)|
+||`--part_tracking_method`|`3d`|Method for tracking particles (3d or simple)|
+||`--part_frequency_seeding`|`10`|Frequency of seeding (default: 10)|
+||`--part_density_seeding`|`0.2`|Density of seeding (default: 0.2)|

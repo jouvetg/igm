@@ -19,7 +19,7 @@ def initialize_particles(params, state):
 
     # build the gridseed
     state.gridseed = np.zeros_like(state.thk) == 1
-    rr = int(1.0 / params.density_seeding)
+    rr = int(1.0 / params.part_density_seeding)
     state.gridseed[::rr, ::rr] = True
     
     nc = Dataset( os.path.join(params.working_dir, 'seeding.nc'), "r" ) 

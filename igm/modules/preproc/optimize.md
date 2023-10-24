@@ -3,7 +3,7 @@
 
 # Description:
 
-A data assimilation module of IGM permits to seek optimal ice thickness, top ice surface, and ice flow parametrization, that best explains observational data such as surface ice speeds, ice thickness profiles, top ice surface while being consistent with the ice flow emulator used in forwrd modelling. This page explains how to use the data assimilation module as a preliminary step in IGM of a forward/prognostic model run with module `optimize`.
+A data assimilation module of IGM permits to seek optimal ice thickness, top ice surface, and ice flow parametrization, that best explains observational data such as surface ice speeds, ice thickness profiles, top ice surface while being consistent with the ice flow iflo_emulator used in forwrd modelling. This page explains how to use the data assimilation module as a preliminary step in IGM of a forward/prognostic model run with module `optimize`.
 
 **Note that the optimization currently requires some experience, and some parameter tunning may be needed before getting a meanigfully results. Use it with care, and with a certain dose of parameter exploration. Do not hesitate to get in contact with us for chcecking the consistency of results.**
 
@@ -18,16 +18,16 @@ The first thing you need to do is to get as much data as possible. Data list inc
 
 Of course, you may not have all these data, which is fine. You work with a reduced amount of data, however, you will have make assumptions to reduce the number of variables to optimize (controls) to keep the optimization problem well-posed (i.e., with a unique solution).
 
-Thes data can be obtained using the IGM module `oggm_data_prep`, or loading these 2D gridded variables using module `load_ncdf_data` or `load_tif_data` using convention variable names but ending with `obs`. E.g. `usurfobs` (observed top surface elevation), `thkobs` (observed thickness profiles, use nan or novalue where no data is available), `icemaskobs` (this mask from RGI outline serve to enforce zero ice thickness outside the mask), `uvelsurfobs` and `vvelsurfobs` (x- and y- components of the horizontal surface ice velocity, use nan or novalue where no data is available), `thkinit` (this may be a formerly-inferred ice thickness field to initalize the inverse model, otherwise it would start from thk=0).
+Thes data can be obtained using the IGM module `oggm_shop`, or loading these 2D gridded variables using module `load_ncdf` or `load_tif` using convention variable names but ending with `obs`. E.g. `usurfobs` (observed top surface elevation), `thkobs` (observed thickness profiles, use nan or novalue where no data is available), `icemaskobs` (this mask from RGI outline serve to enforce zero ice thickness outside the mask), `uvelsurfobs` and `vvelsurfobs` (x- and y- components of the horizontal surface ice velocity, use nan or novalue where no data is available), `thkinit` (this may be a formerly-inferred ice thickness field to initalize the inverse model, otherwise it would start from thk=0).
 
-**Use the IGM `oggm_data_prep` to download all the data you need using OGGM and the GlaThiDa database.**
+**Use the IGM `oggm_shop` to download all the data you need using OGGM and the GlaThiDa database.**
  
 # General optimization setting
 
 The optimization problem consists of finding spatially varying fields ($h$, $c$, $s$) that minimize the cost function
 $$\mathcal{J}(h,c,s)=\mathcal{C}^u+\mathcal{C}^h+\mathcal{C}^s+\mathcal{C}^{d}+\mathcal{R}^h+\mathcal{R}^{c}+\mathcal{P}^h,$$
 
-where $\mathcal{C}^u$ is the misfit between modeled and observed surface ice velocities ($\mathcal{F}$ is the output of the ice flow emulator/neural network):
+where $\mathcal{C}^u$ is the misfit between modeled and observed surface ice velocities ($\mathcal{F}$ is the output of the ice flow iflo_emulator/neural iflo_network):
 $$\mathcal{C}^u=\int_{\Omega}\frac{1}{2\sigma_u^2}\left|{\bf u}^{s,obs}-\mathcal{F}(h,\frac{\partial s}{\partial x},\frac{\partial s}{\partial y},c)\right|^2,$$
 
 where $\mathcal{C}^h$ is the misfit between modeled and observed ice thickness profiles:
@@ -104,7 +104,7 @@ Lastly, there are a couple of other parameters we may be interest to change e.g.
 You may monitor the data assimilation during the inverse modelling in several ways:
 
 * Check that the components of the costs decrease over time, the value of cost are printed during the optimization, and a graph is produced at the end.
-* Set up parameter `plot_result` to  True and `plot_live` to True to monitor in live time the evolution of the field your are optimizing such as the ice thickness, the surface ice speeds, ect ... You may also check (hopefully decreasing) STD given in the figure.
+* Set up parameter `plot_result` to  True and `plt2d_live` to True to monitor in live time the evolution of the field your are optimizing such as the ice thickness, the surface ice speeds, ect ... You may also check (hopefully decreasing) STD given in the figure.
 * You may do the same monitoring after the run looking at optimize.nc reuesting this file to be written.
 * If you asked divfluxfcz to be in the parameter list `opti_cost`, you should check what look like the divergence of the flux (divflux).
 

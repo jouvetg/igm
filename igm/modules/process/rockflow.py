@@ -14,7 +14,7 @@ from igm.modules.utils import *
 
 def params_rockflow(parser):
     parser.add_argument(
-        "--speed_rockflow",
+        "--rock_flow_speed",
         type=float,
         default=1,
         help="Speed of rock flow along the slope in m/y",
@@ -29,8 +29,8 @@ def update_rockflow(params,state):
     
     slop = getmag(slopsurfx, slopsurfy)
     
-    dirx = -params.speed_rockflow * tf.where(tf.not_equal(slop,0), slopsurfx/slop,1)
-    diry = -params.speed_rockflow * tf.where(tf.not_equal(slop,0), slopsurfy/slop,1)
+    dirx = -params.rock_flow_speed * tf.where(tf.not_equal(slop,0), slopsurfx/slop,1)
+    diry = -params.rock_flow_speed * tf.where(tf.not_equal(slop,0), slopsurfy/slop,1)
 
     thkexp = tf.repeat( tf.expand_dims(state.thk, axis=0), state.U.shape[1], axis=0)
     

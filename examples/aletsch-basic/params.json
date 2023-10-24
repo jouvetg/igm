@@ -1,16 +1,16 @@
 {
-  "modules_preproc": ["load_ncdf_data"],
+  "modules_preproc": ["load_ncdf"],
   "modules_process": ["smb_simple",
                       "iceflow",
-                      "time_step",
+                      "time",
                       "thk",
-                      "vertical_iceflow",
+                      "vert_flow",
                       "particles"
                     ],
-  "modules_postproc": ["write_ncdf_ex",
-                       "write_plot2d",
+  "modules_postproc": ["write_ncdf",
+                       "plot2d",
                        "print_info",
-                       "print_all_comp_info"],
+                       "print_comp"],
   "smb_simple_array": [
                         ["time", "gradabl", "gradacc", "ela", "accmax"],
                         [ 1900,      0.009,     0.005,  2800,      2.0],
@@ -19,6 +19,6 @@
                       ],
   "time_start": 1900.0,
   "time_end": 2000.0,
-  "time_save": 10.0,
-  "plot_live": true
+  "plt2d_live": true,
+  "time_save": 10.0
 }

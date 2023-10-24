@@ -30,7 +30,7 @@ time   gradabl  gradacc    ela   accmax
 
 If parameter `smb_simple_array` is set to empty list `[]`, then it will read the file `smb_simple_file`, otherwise it read the array `smb_simple_array` (which is here in fact a list of list).
 
-The module will compute surface mass balance at a frequency given by parameter `smb_update_freq` (default is 1 year), and interpolate linearly the 4 parameters in time.
+The module will compute surface mass balance at a frequency given by parameter `smb_simple_update_freq` (default is 1 year), and interpolate linearly the 4 parameters in time.
 
 If one has provided in input an "icemask" field, then this module will compute negative surface mass balance (-10 m/y) in place where posstive surface mass balance outside the mask were originally computed. The goal here is to prevent against overflowing in neibourghing catchements. 
 # Parameters: 
@@ -39,6 +39,6 @@ If one has provided in input an "icemask" field, then this module will compute n
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
-||`--smb_update_freq`|`1`|Update the mass balance each X years (1)|
+||`--smb_simple_update_freq`|`1`|Update the mass balance each X years (1)|
 ||`--smb_simple_file`|`smb_simple_param.txt`|Name of the imput file for the simple mass balance model (time, gradabl, gradacc, ela, accmax)|
 ||`--smb_simple_array`|`[]`|Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)|

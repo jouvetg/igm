@@ -3,4 +3,4 @@
 
 # Description:
 
-This IGM module wraps up module iceflow, time_step and thk (check for each modules for the documentation).
+This IGM module wraps up module iceflow, time and thk (check for each modules for the documentation).

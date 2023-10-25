@@ -13,7 +13,7 @@ def params_gflex(parser):
     parser.add_argument(
         "--gflex_update_freq",
         type=float,
-        default=20.0,
+        default=100.0,
         help="Update gflex each X years (1)",
     )
     parser.add_argument(
@@ -29,7 +29,7 @@ def initialize_gflex(params, state):
     import gflex
  
     state.tcomp_gflex = []
-    state.tlast_gflex = tf.Variable(params.tstart,dtype=tf.float32)
+    state.tlast_gflex = tf.Variable(params.time_start,dtype=tf.float32)
     
     state.flex = gflex.F2D()
     

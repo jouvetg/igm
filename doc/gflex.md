@@ -23,5 +23,5 @@ On the other hand, we do not expect a frequent update, therefore, this module sh
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
-||`--gflex_update_freq`|`20.0`|Update gflex each X years (1)|
+||`--gflex_update_freq`|`100.0`|Update gflex each X years (1)|
 ||`--gflex_default_Te`|`50000`|Default value for Te (Elastic thickness [m]) if not given as ncdf file|

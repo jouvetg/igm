@@ -13,8 +13,8 @@ $$SMB(z)=\beta_{abl} (z-z_{ELA})\quad\textrm{else}.$$
 ```dat
 time   gradabl  gradacc    ela   accmax
 1900     0.009    0.005   2800      2.0
-1900     0.009    0.005   2900      2.0
-1900     0.009    0.005   3300      2.0
+2000     0.009    0.005   2900      2.0
+2100     0.009    0.005   3300      2.0
 ```
 
  or directly as parameter in the cconfig `params.json` file:

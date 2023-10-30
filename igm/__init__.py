@@ -28,6 +28,9 @@ from igm.modules.process.rockflow import *
 from igm.modules.process.flow_dt_thk import *
 from igm.modules.process.avalanche import *
 from igm.modules.process.gflex import *
+from igm.modules.process.enthalpy import *
+from igm.modules.process.clim_oggm import *
+from igm.modules.process.smb_oggm import *
 
 from igm.modules.postproc.print_info import *
 from igm.modules.postproc.print_comp import *

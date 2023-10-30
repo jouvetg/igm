@@ -194,8 +194,8 @@ def initialize_oggm_shop(params, state):
 
         nc.close()
 
-        if hasattr(state,'logger'):
-            state.logger.setLevel(params.logging_level)
+#        if hasattr(state,'logger'):
+#            state.logger.setLevel(params.logging_level)
 
 
 def update_oggm_shop(params, state):

@@ -28,7 +28,7 @@ setup(
     description='IGM - a glacier evolution model',
     long_description=readme,
     long_description_content_type='text/markdown',
-    python_requires='<3.11',
+    python_requires='<3.12',
 #    extras_require={
 #        'doc': ['numpydoc', 'sphinx', 'sphinx_rtd_theme', 'sphinx_mdinclude'],
 #    },    
@@ -37,13 +37,12 @@ setup(
 	'netCDF4',
 	'numpy',
 	'scipy',
-	'tensorflow',
+	'tensorflow==2.12.0',
 	'xarray',
 	'importlib_resources',
 	'geopandas',
 	'oggm',
 	'pyproj',
-	'rasterio',
-	'pyqt5'
+	'rasterio'
     ]
 )

@@ -48,18 +48,19 @@ $$ E_{\rm pmp}(p) = c_i (T_{\rm pmp}(p) - T_{\rm ref}), $$
 where $L$ is the latent heat of fusion. According to the above defintion of enthalpy, we have two possible modes: i) the ice is cold, i.e. below the melting point, and the Enthalpy is simply proportional to the temperature minus a reference temperature ii) the ice is temperate and the Enthalpy continue to grow, the additional component $L \omega$ corresponding to the creation of water content by energy transfer. Therefore, it is straightforward to deduce $E$ from $T$ and $\omega$.
 
 The enthalpy model consists of the following advection-diffusion equation (the horizontal diffusion being neglected):
+
 $$ 
 \begin{align}
 & \rho_i \left( \frac{\partial E}{ \partial t}
 + u_x \frac{\partial E}{ \partial x}
 + u_y \frac{\partial E}{ \partial y} 
-+ u_z \frac{\partial E}{ \partial z} 
-\right) 
++ u_z \frac{\partial E}{ \partial z} \right) 
  - \frac{\partial }{\partial z} \left(
 K_{c,t} \frac{\partial E}{ \partial z} \right)
 = \phi - \rho_w L D_w(\omega),
 \end{align}
 $$
+
 where $\rho_i$ is the ice density, $K_{c,t}$ equals $K_c = k_i/c_i$ if the ice is cold ($E<E_{pmp}$) or $K_t = \epsilon k_i/c_i$ otherwise, $\phi$ is the strain heating defined by (using Glen's flow law)
 
 $$ \phi = D({\bf U}) \tau = A^{-1/n} | D({\bf u}) |^{1+1/n}, $$

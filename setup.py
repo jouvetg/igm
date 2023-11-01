@@ -33,16 +33,16 @@ setup(
 #        'doc': ['numpydoc', 'sphinx', 'sphinx_rtd_theme', 'sphinx_mdinclude'],
 #    },    
     install_requires=[
-    'matplotlib',
-	'netCDF4',
+        'matplotlib',
 	'numpy',
 	'scipy',
 	'tensorflow==2.12.0',
+	'netCDF4',
 	'xarray',
-	'importlib_resources',
+	'rasterio',
+	'pyproj',
 	'geopandas',
 	'oggm',
-	'pyproj',
-	'rasterio'
+	'importlib_resources'
     ]
 )

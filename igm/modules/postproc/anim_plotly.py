@@ -22,6 +22,8 @@ def finalize_anim_plotly(params, state):
 
     import plotly.graph_objects as go
     from dash import Dash, dcc, html, Input, Output
+    
+    import matplotlib.cm as cm  # Import the Matplotlib colormap library
 
     # create HTML layout for app
     fig = go.Figure()
@@ -86,6 +88,16 @@ def finalize_anim_plotly(params, state):
         bedrock[-1, :] = min_bedrock
         bedrock[:, 0] = min_bedrock
         bedrock[:, -1] = min_bedrock
+                
+        # aim to mimic the matplotlib terrain
+        custom_colorscale = [
+            [0.0, 'rgb(224,205,169)'],
+            [0.2, 'rgb(180,170,150)'],
+            [0.4, 'rgb(135,135,135)'],
+            [0.6, 'rgb(130,90,50)'],
+            [0.8, 'rgb(120,80,40)'],
+            [1.0, 'rgb(100,70,30)']
+        ]
 
         # create time frames for slider
         res = 1
@@ -97,7 +109,7 @@ def finalize_anim_plotly(params, state):
             property_map = property_maps[i]
             glacier_surface = glacier_surfaces[i]
             glacier_surface[thicknesses[i] < 1] = None
-
+             
             # create 3D surface plots with property as surface color
             surface_fig = go.Surface(z=glacier_surface[::res, ::res], x=lat_range[::res], y=lon_range[::res],
                                     colorscale=color_scale, cmax=max_property_map, cmin=min_property_map,
@@ -105,7 +117,7 @@ def finalize_anim_plotly(params, state):
                                     colorbar=dict(title=property, titleside='right'), )
 
             # create 3D bedrock plots
-            bedrock_fig = go.Surface(z=bedrock[::res, ::res], x=lat_range[::res], y=lon_range[::res], colorscale='gray',
+            bedrock_fig = go.Surface(z=bedrock[::res, ::res], x=lat_range[::res], y=lon_range[::res], colorscale=custom_colorscale,
                                     opacity=1, showlegend=True, name='bedrock', cmax=max_bedrock, cmin=0,
                                     colorbar=dict(x=-.2, title="elevation [m]", titleside='right'))
 
@@ -133,7 +145,7 @@ def finalize_anim_plotly(params, state):
 
         fig_dict = dict(data=frames[0]['data'],
                         frames=frames,
-                        layout=dict(width=1000, height=800,
+                        layout=dict(width=1250, height=800,
                                     sliders=[sliders_dict],
                                     title= title,
                                     legend={"orientation": "h", "yanchor": "bottom", "xanchor": "left"},

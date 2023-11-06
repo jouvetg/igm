@@ -36,7 +36,7 @@ setup(
         'matplotlib',
 	'numpy',
 	'scipy',
-	'tensorflow==2.12.0',
+#	'tensorflow',
 	'netCDF4',
 	'xarray',
 	'rasterio',

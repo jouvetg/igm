@@ -1,18 +1,25 @@
 {
-  "modules_preproc": ["oggm_data_prep"],
-  "modules_process": ["mysmb",
+  "modules_preproc": ["oggm_shop"],
+  "modules_process": ["clim_oggm",
+                      "smb_oggm",
                       "iceflow",
-                      "time_step",
-                      "thk",
-                      "vertical_iceflow",
-                      "particles"],
-  "modules_postproc": ["write_ncdf_ex",
-                       "write_plot2d",
+                      "time",
+                      "thk"
+                      ],
+  "modules_postproc": ["write_ncdf",
+                       "plot2d",
                        "print_info",
-                       "print_all_comp_info",
-                       "anim3d_from_ncdf_ex"],
-  "RGI_ID": "RGI60-11.01238",
-  "time_start": 2000.0,
+                       "print_comp"],
+  "clim_oggm_clim_trend_array": [
+                        ["time", "delta_temp", "prec_scal"],
+                        [ 1900,           0.0,         1.0],
+                        [ 2020,           0.0,         1.0],
+                        [ 2100,           4.0,         1.0]
+                                 ],
+  "oggm_RGI_ID": "RGI60-11.01238",
+  "time_start": 1800.0,
   "time_end": 2100.0,
-  "plot_live": true
+  "plt2d_live": true,
+  "iflo_new_friction_param": true,
+  "iflo_init_slidingco": 0.25
 }

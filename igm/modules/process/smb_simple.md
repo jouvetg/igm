@@ -13,8 +13,8 @@ $$SMB(z)=\beta_{abl} (z-z_{ELA})\quad\textrm{else}.$$
 ```dat
 time   gradabl  gradacc    ela   accmax
 1900     0.009    0.005   2800      2.0
-1900     0.009    0.005   2900      2.0
-1900     0.009    0.005   3300      2.0
+2000     0.009    0.005   2900      2.0
+2100     0.009    0.005   3300      2.0
 ```
 
  or directly as parameter in the cconfig `params.json` file:
@@ -30,6 +30,6 @@ time   gradabl  gradacc    ela   accmax
 
 If parameter `smb_simple_array` is set to empty list `[]`, then it will read the file `smb_simple_file`, otherwise it read the array `smb_simple_array` (which is here in fact a list of list).
 
-The module will compute surface mass balance at a frequency given by parameter `smb_update_freq` (default is 1 year), and interpolate linearly the 4 parameters in time.
+The module will compute surface mass balance at a frequency given by parameter `smb_simple_update_freq` (default is 1 year), and interpolate linearly the 4 parameters in time.
 
 If one has provided in input an "icemask" field, then this module will compute negative surface mass balance (-10 m/y) in place where posstive surface mass balance outside the mask were originally computed. The goal here is to prevent against overflowing in neibourghing catchements.

@@ -15,19 +15,19 @@ from igm.modules.utils import *
 
 def params_particles(parser):
     parser.add_argument(
-        "--tracking_method",
+        "--part_tracking_method",
         type=str,
         default="simple",
         help="Method for tracking particles (simple or 3d)",
     )
     parser.add_argument(
-        "--frequency_seeding",
+        "--part_frequency_seeding",
         type=int,
         default=50,
         help="Frequency of seeding (unit : year)",
     )
     parser.add_argument(
-        "--density_seeding",
+        "--part_density_seeding",
         type=int,
         default=0.2,
         help="Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)",
@@ -49,7 +49,7 @@ def initialize_particles(params, state):
 
     # build the gridseed, we don't want to seed all pixels!
     state.gridseed = np.zeros_like(state.thk) == 1
-    rr = int(1.0 / params.density_seeding)
+    rr = int(1.0 / params.part_density_seeding)
     state.gridseed[::rr, ::rr] = True
 
 
@@ -58,7 +58,7 @@ def update_particles(params, state):
     if hasattr(state,'logger'):
         state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
 
-    if (state.t.numpy() - state.tlast_seeding) >= params.frequency_seeding:
+    if (state.t.numpy() - state.tlast_seeding) >= params.part_frequency_seeding:
         igm.seeding_particles(params, state)
 
         # merge the new seeding points with the former ones
@@ -117,11 +117,11 @@ def update_particles(params, state):
         )[0, :, 0]
 
         zeta = _rhs_to_zeta(params, state.rhpos)  # get the position in the column
-        I0 = tf.cast(tf.math.floor(zeta * (params.Nz - 1)), dtype="int32")
-        I0 = tf.minimum(I0, params.Nz - 2)  # make sure to not reach the upper-most pt
+        I0 = tf.cast(tf.math.floor(zeta * (params.iflo_Nz - 1)), dtype="int32")
+        I0 = tf.minimum(I0, params.iflo_Nz - 2)  # make sure to not reach the upper-most pt
         I1 = I0 + 1
-        zeta0 = tf.cast(I0 / (params.Nz - 1), dtype="float32")
-        zeta1 = tf.cast(I1 / (params.Nz - 1), dtype="float32")
+        zeta0 = tf.cast(I0 / (params.iflo_Nz - 1), dtype="float32")
+        zeta1 = tf.cast(I1 / (params.iflo_Nz - 1), dtype="float32")
 
         lamb = (zeta - zeta0) / (zeta1 - zeta0)
 
@@ -132,7 +132,7 @@ def update_particles(params, state):
         wei = tf.tensor_scatter_nd_add(wei, indices=ind0, updates=1 - lamb)
         wei = tf.tensor_scatter_nd_add(wei, indices=ind1, updates=lamb)
     
-        if params.tracking_method == "simple":
+        if params.part_tracking_method == "simple":
 
             # adjust the relative height within the ice column with smb
             state.rhpos = tf.where(
@@ -145,7 +145,7 @@ def update_particles(params, state):
             state.ypos = state.ypos + state.dt * tf.reduce_sum( wei * v, axis=0 ) 
             state.zpos = topg + thk * state.rhpos
 
-        elif params.tracking_method == "3d":
+        elif params.part_tracking_method == "3d":
             
             # make sure the particle remian withi the ice body
             state.zpos = tf.clip_by_value(state.zpos, topg, topg + thk)
@@ -197,18 +197,18 @@ def finalize_particles(params, state):
 
 
 def _zeta_to_rhs(state, zeta):
-    return (zeta / params.vert_spacing) * (1.0 + (params.vert_spacing - 1.0) * zeta)
+    return (zeta / params.iflo_vert_spacing) * (1.0 + (params.iflo_vert_spacing - 1.0) * zeta)
 
 
 def _rhs_to_zeta(params, rhs):
-    if params.vert_spacing == 1:
+    if params.iflo_vert_spacing == 1:
         rhs = zeta
     else:
-        DET = tf.sqrt(1 + 4 * (params.vert_spacing - 1) * params.vert_spacing * rhs)
-        zeta = (DET - 1) / (2 * (params.vert_spacing - 1))
+        DET = tf.sqrt(1 + 4 * (params.iflo_vert_spacing - 1) * params.iflo_vert_spacing * rhs)
+        zeta = (DET - 1) / (2 * (params.iflo_vert_spacing - 1))
 
-    #           temp = params.Nz*(DET-1)/(2*(params.vert_spacing-1))
-    #           I=tf.cast(tf.minimum(temp-1,params.Nz-1),dtype='int32')
+    #           temp = params.iflo_Nz*(DET-1)/(2*(params.iflo_vert_spacing-1))
+    #           I=tf.cast(tf.minimum(temp-1,params.iflo_Nz-1),dtype='int32')
 
     return zeta
 

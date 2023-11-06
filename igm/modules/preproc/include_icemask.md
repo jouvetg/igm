@@ -23,15 +23,5 @@ The input can be one or more polygon features. Sometimes it is easier to select 
 or draw polygons where the glacier should not be (e.g. side valleys with no further interest).
 
 IMPORTANT: Be aware of the coordinate system used in the nc file and the shapefile.
- 
-# Parameters: 
 
-|short|long|default|help|
-| :--- | :--- | :--- | :--- |
-|`-h`|`--help`||show this help message and exit|
-||`--mask_shapefile`|`icemask.shp`|Icemask input shapefile|
-||`--mask_invert`|`False`|Invert ice mask if the mask is where the ice should be|
-
--------
-Author: Andreas Henz, andreas.henz@geo.uzh.ch 
-(06.09.2023)
+Author: Andreas Henz, andreas.henz@geo.uzh.ch  (06.09.2023)

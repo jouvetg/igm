@@ -30,19 +30,19 @@ def params_core():
     parser.add_argument(
         "--modules_preproc",
         type=list,
-        default=["oggm_data_prep"],
+        default=["oggm_shop"],
         help="List of pre-processing modules",
     )
     parser.add_argument(
         "--modules_process",
         type=list,
-        default=["iceflow","time_step","thk"],
+        default=["iceflow","time","thk"],
         help="List of processing modules",
     )
     parser.add_argument(
         "--modules_postproc",
         type=list,
-        default=["write_ncdf_ex","write_plot2d","print_info"],
+        default=["write_ncdf","plot2d","print_info"],
         help="List of post-processing modules",
     )
     parser.add_argument(
@@ -94,6 +94,11 @@ def overide_from_json_file(parser,check_if_params_exist=True):
     # list only the parameters registered so far
     LIST = list(vars(parser.parse_args(args=[])).keys())
     
+    if 'time_step' in dic_params["modules_process"]:
+        import sys
+        print(" ------- CHECK THE WIKI TO CHANGE YOUR PARAM FILE AND USER MODULES -------------")
+        sys.exit("WARNING: the parameter time_step is deprecated, UPDATE you params.json file")
+          
     if check_if_params_exist:
         for key in dic_params.keys():
             if not key in LIST:

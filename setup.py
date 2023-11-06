@@ -12,13 +12,12 @@ def package_files(directory):
             paths.append(os.path.join('..', path, filename))
     return paths
 
-
 with open('README.md', 'r') as f:
     readme = f.read()
     
 setup(
     name="igm-model",
-    version="2.0.3",
+    version="2.0.4",
     author="Guillaume Jouvet",
     author_email="guillaume.jouvet@unil.ch",
     url="https://github.com/jouvetg/igm",
@@ -29,22 +28,21 @@ setup(
     description='IGM - a glacier evolution model',
     long_description=readme,
     long_description_content_type='text/markdown',
-    python_requires='<3.11',
+    python_requires='<3.12',
 #    extras_require={
 #        'doc': ['numpydoc', 'sphinx', 'sphinx_rtd_theme', 'sphinx_mdinclude'],
 #    },    
     install_requires=[
-    'matplotlib',
-	'netCDF4',
+        'matplotlib',
 	'numpy',
 	'scipy',
-	'tensorflow',
+#	'tensorflow',
+	'netCDF4',
 	'xarray',
-	'importlib_resources',
+	'rasterio',
+	'pyproj',
 	'geopandas',
 	'oggm',
-	'pyproj',
-	'rasterio',
-	'pyqt5'
+	'importlib_resources'
     ]
 )

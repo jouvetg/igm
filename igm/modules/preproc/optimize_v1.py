@@ -136,32 +136,32 @@ def params_optimize_v1(parser):
         help="Frequency of the output for the optimization",
     )
     parser.add_argument(
-        "--geology_optimized_file",
+        "--opti_save_result_in_ncdf",
         type=str,
         default="geology-optimized.nc",
         help="Geology input file",
     )
 
     parser.add_argument(
-        "--plot2d_live_inversion",
+        "--opti_plot2d_live",
         type=str2bool,
         default=True,
         help="plot2d_live_inversion",
     )
     parser.add_argument(
-        "--plot2d_inversion",
+        "--opti_plot2d",
         type=str2bool,
         default=True,
         help="plot 2d inversion",
     )
     parser.add_argument(
-        "--write_ncdf_optimize",
+        "--opti_save_iterat_in_ncdf",
         type=str2bool,
         default=True,
         help="write_ncdf_optimize",
     )
     parser.add_argument(
-        "--editor_plot2d_optimize",
+        "--opti_editor_plot2d",
         type=str,
         default="vs",
         help="optimized for VS code (vs) or spyder (sp) for live plot",
@@ -625,9 +625,9 @@ def initialize_optimize_v1(params, state):
             state.tcomp_optimize[-1] *= -1
 
             if i % params.opti_output_freq == 0:
-                if params.plot2d_inversion:
+                if params.opti_plot2d:
                     _update_plot_inversion(params, state, i)
-                if params.write_ncdf_optimize:
+                if params.opti_save_iterat_in_ncdf:
                     _update_ncdf_optimize(params, state, i)
 
             # stopping criterion: stop if the cost no longer decrease
@@ -842,7 +842,7 @@ def _output_ncdf_optimize_final(params, state):
     """
 
     nc = Dataset(
-        os.path.join(params.working_dir, params.geology_optimized_file),
+        os.path.join(params.working_dir, params.opti_save_result_in_ncdf),
         "w",
         format="NETCDF4",
     )
@@ -871,7 +871,7 @@ def _output_ncdf_optimize_final(params, state):
 
     os.system(
         "echo rm "
-        + os.path.join(params.working_dir, params.geology_optimized_file)
+        + os.path.join(params.working_dir, params.opti_save_result_in_ncdf)
         + " >> clean.sh"
     )
 
@@ -893,7 +893,7 @@ def _plot_cost_functions(params, state, costs):
     plt.ylim(0, 1)
     plt.legend()
 
-    if params.plot2d_live_inversion:
+    if params.opti_plot2d_live:
         plt.show()
     else:
         plt.savefig(os.path.join(params.working_dir, "convergence.png"), pad_inches=0)
@@ -925,7 +925,7 @@ def _update_plot_inversion(params, state, i):
     #########################################################
 
     if i == 0:
-        if params.editor_plot2d_optimize == "vs":
+        if params.opti_editor_plot2d == "vs":
             plt.ion()  # enable interactive mode
 
         # state.fig = plt.figure()
@@ -1064,8 +1064,8 @@ def _update_plot_inversion(params, state, i):
 
     #########################################################
 
-    if params.plot2d_live_inversion:
-        if params.editor_plot2d_optimize == "vs":
+    if params.opti_plot2d_live:
+        if params.opti_editor_plot2d == "vs":
             state.fig.canvas.draw()  # re-drawing the figure
             state.fig.canvas.flush_events()  # to flush the GUI events
         else:

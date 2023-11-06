@@ -32,7 +32,7 @@ import time
 def params_smb_accmelt(parser):  
 
     parser.add_argument(
-        "--smb_update_freq",
+        "--smb_simple_update_freq",
         type=float,
         default=1,
         help="Update the mass balance each X years (1)",
@@ -50,19 +50,19 @@ def params_smb_accmelt(parser):
         help="Weight for accumulation",
     )
     parser.add_argument(
-        "--thr_temp_snow",
+        "--smb_accpdd_thr_temp_snow",
         type=float,
         default=0.5,
         help="Threshold temperature for solid precipitation (0.0)",
     )
     parser.add_argument(
-        "--thr_temp_rain",
+        "--smb_accpdd_thr_temp_rain",
         type=float,
         default=2.5,
         help="Threshold temperature for liquid precipitation (2.0)",
     )
     parser.add_argument(
-        "--shift_hydro_year",
+        "--smb_accpdd_shift_hydro_year",
         type=float,
         default=0.75,
         help="This serves to start Oct 1. the acc/melt computation (0.75)",
@@ -166,7 +166,7 @@ def initialize_smb_accmelt(params,state):
 # @tf.function()
 def update_smb_accmelt(params,state):
 
-    if ((state.t - state.tlast_smb) >= params.smb_update_freq):
+    if ((state.t - state.tlast_smb) >= params.smb_simple_update_freq):
 
         if hasattr(state, "logger"):
             state.logger.info("update smb at time : " + str(state.t.numpy()))
@@ -178,17 +178,17 @@ def update_smb_accmelt(params,state):
         ri = state.mb_parameters[state.IMB[int(state.t) - 1880], 3] * 10 ** (-5)
         rs = state.mb_parameters[state.IMB[int(state.t) - 1880], 4] * 10 ** (-5)
 
-        # keep solid precipitation when temperature < thr_temp_snow
-        # with linear transition to 0 between thr_temp_snow and thr_temp_rain
+        # keep solid precipitation when temperature < smb_accpdd_thr_temp_snow
+        # with linear transition to 0 between smb_accpdd_thr_temp_snow and smb_accpdd_thr_temp_rain
         accumulation = tf.where(
-            state.air_temp <= params.thr_temp_snow,
+            state.air_temp <= params.smb_accpdd_thr_temp_snow,
             state.precipitation,
             tf.where(
-                state.air_temp >= params.thr_temp_rain,
+                state.air_temp >= params.smb_accpdd_thr_temp_rain,
                 0.0,
                 state.precipitation
-                * (params.thr_temp_rain - state.air_temp)
-                / (params.thr_temp_rain - params.thr_temp_snow),
+                * (params.smb_accpdd_thr_temp_rain - state.air_temp)
+                / (params.smb_accpdd_thr_temp_rain - params.smb_accpdd_thr_temp_snow),
             ),
         )
 
@@ -210,7 +210,7 @@ def update_smb_accmelt(params,state):
         for kk in range(state.air_temp.shape[0]):
                 
             # shift to hydro year, i.e. start Oct. 1
-            k = (kk+int(state.air_temp.shape[0]*params.shift_hydro_year))%(state.air_temp.shape[0]) 
+            k = (kk+int(state.air_temp.shape[0]*params.smb_accpdd_shift_hydro_year))%(state.air_temp.shape[0]) 
 
             # add accumulation to the snow depth
             snow_depth += accumulation[k]

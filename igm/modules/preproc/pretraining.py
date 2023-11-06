@@ -96,9 +96,9 @@ def params_pretraining(parser):
 
 def initialize_pretraining(params, state):
     
-    state.direct_name  = 'pinnbp'+'_'+str(params.Nz)+'_'+str(int(params.vert_spacing))+'_'
-    state.direct_name +=  params.network+'_'+str(params.nb_layers)+'_'
-    state.direct_name +=  str(params.dim_arrhenius)+'_'+str(int(params.new_friction_param))
+    state.direct_name  = 'pinnbp'+'_'+str(params.iflo_Nz)+'_'+str(int(params.iflo_vert_spacing))+'_'
+    state.direct_name +=  params.iflo_network+'_'+str(params.iflo_nb_layers)+'_'
+    state.direct_name +=  str(params.iflo_dim_arrhenius)+'_'+str(int(params.iflo_new_friction_param))
     
     os.makedirs(os.path.join(params.working_dir,state.direct_name), exist_ok=True)
   
@@ -150,11 +150,11 @@ def compute_solutions(params,state):
     
     if int(tf.__version__.split(".")[1]) <= 10:
         state.optimizer = tf.keras.optimizers.Adam(
-            learning_rate=params.solve_iceflow_step_size
+            learning_rate=params.iflo_solve_step_size
         )
     else:
         state.optimizer = tf.keras.optimizers.legacy.Adam(
-            learning_rate=params.solve_iceflow_step_size
+            learning_rate=params.iflo_solve_step_size
         )
  
     for par in state.PAR:
@@ -171,22 +171,21 @@ def compute_solutions(params,state):
         resol     = float((x[1] - x[0])*co)
         dX        = tf.ones_like(thk)*resol
         
-        if params.dim_arrhenius==3: 
-            arrhenius = tf.ones((params.Nz,thk.shape[0],thk.shape[1]))*val_A 
+        if params.iflo_dim_arrhenius==3: 
+            arrhenius = tf.ones((params.iflo_Nz,thk.shape[0],thk.shape[1]))*val_A 
         else:
             arrhenius = tf.ones_like(thk)*val_A
             
         slidingco = tf.ones_like(thk)*val_C
         
-        for f in params.fieldin:
+        for f in params.iflo_fieldin:
             vars(state)[f] = vars()[f]
             
         fieldin = [thk, usurf, arrhenius, slidingco, dX]
             
         X = fieldin_to_X(params,fieldin)
             
-        U = tf.Variable(tf.zeros((params.iceflow_physics,params.Nz, \
-                                  state.thk.shape[0], state.thk.shape[1]))) 
+        U = tf.Variable(tf.zeros((2,params.iflo_Nz,state.thk.shape[0], state.thk.shape[1]))) 
              
         U, MISFIT = solve_iceflow(params, state, U)
                     
@@ -224,21 +223,21 @@ def train_iceflow_emulator(params,state,trainingset,augmentation=True):
     
     import random
     
-    nb_inputs  = len(params.fieldin) + (params.dim_arrhenius==3)*(params.Nz-1)
-    nb_outputs = params.iceflow_physics*params.Nz     
+    nb_inputs  = len(params.iflo_fieldin) + (params.iflo_dim_arrhenius==3)*(params.iflo_Nz-1)
+    nb_outputs = 2*params.iflo_Nz     
     
     if os.path.exists("model0.h5"):
         state.iceflow_model = tf.keras.models.load_model( "model0.h5" ,compile=False)
     else:
-        state.iceflow_model = getattr(igm, params.network)(params,nb_inputs, nb_outputs)
+        state.iceflow_model = getattr(igm, params.iflo_network)(params,nb_inputs, nb_outputs)
         
     state.iceflow_model.summary(line_length=130)
     
     # fix change in TF btw version <=10 and version >=11
     if int(tf.__version__.split('.')[1])<=10:
-        optimizer = tf.keras.optimizers.Adam(learning_rate=params.retrain_iceflow_emulator_lr)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=params.iflo_retrain_emulator_lr)
     else:
-        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=params.retrain_iceflow_emulator_lr)        
+        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=params.iflo_retrain_emulator_lr)        
     
     state.MISFIT    = []
     state.MISFIT_CO = []
@@ -285,8 +284,8 @@ def train_iceflow_emulator(params,state,trainingset,augmentation=True):
             
             nn,ny,nx = thk.shape
             
-            if (params.dim_arrhenius==3):
-                arrhenius = tf.ones((1,params.Nz,ny,nx))*val_A 
+            if (params.iflo_dim_arrhenius==3):
+                arrhenius = tf.ones((1,params.iflo_Nz,ny,nx))*val_A 
             else:
                 arrhenius = tf.ones_like(thk)*val_A 
 
@@ -311,9 +310,9 @@ def train_iceflow_emulator(params,state,trainingset,augmentation=True):
             ds.close()
    
         if params.train_iceflow_emulator_restart_lr>0:
-            optimizer.lr = params.retrain_iceflow_emulator_lr * (0.9**((epoch % params.train_iceflow_emulator_restart_lr)/100))
+            optimizer.lr = params.iflo_retrain_emulator_lr * (0.9**((epoch % params.train_iceflow_emulator_restart_lr)/100))
         else:
-            optimizer.lr = params.retrain_iceflow_emulator_lr * (0.9**(epoch/100))
+            optimizer.lr = params.iflo_retrain_emulator_lr * (0.9**(epoch/100))
         
         if epoch % (params.epochs//5) == 0:
             pp = os.path.join(params.working_dir,state.direct_name,"model-"+str(epoch)+".h5")
@@ -394,12 +393,12 @@ def _computenormp( dz, u, p):
 
 def _computemisfitall(params, state, X,Y,YP):
     
-    N    = params.Nz  
+    N    = params.iflo_Nz  
     thk  = X[0,:,:,0]
 
     # Vertical discretization     
-    zeta    = np.arange(params.Nz) / (params.Nz-1)
-    temp    = ((zeta / params.vert_spacing) * (1.0 + (params.vert_spacing - 1.0) * zeta))
+    zeta    = np.arange(params.iflo_Nz) / (params.iflo_Nz-1)
+    temp    = ((zeta / params.iflo_vert_spacing) * (1.0 + (params.iflo_vert_spacing - 1.0) * zeta))
     temp    = temp[1:] - temp[:-1]
     dz      = tf.stack([thk*z for z in temp])  
     
@@ -448,7 +447,7 @@ def _plot_one_Glen(params,X,Y,path):
     from matplotlib import cm
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     
-#    N    = params.Nz  
+#    N    = params.iflo_Nz  
 #    ut   = Y[0,:,:,N-1] ; #tf.reduce_mean( Y[0,:,:,:N] , axis=-1)
 #    vt   = Y[0,:,:,2*N-1]  ; #tf.reduce_mean( Y[0,:,:,N:] , axis=-1) 
     
@@ -488,7 +487,7 @@ def _plot_iceflow_Glen(params, state,X,Y,YP,tit,path):
     from matplotlib import cm
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     
-#    N    = params.Nz
+#    N    = params.iflo_Nz
 
 #    ut   = Y[0,:,:,N-1] ; #tf.reduce_mean( Y[0,:,:,:N] , axis=-1)
 #    vt   = Y[0,:,:,2*N-1]  ; #tf.reduce_mean( Y[0,:,:,N:] , axis=-1) 
@@ -560,7 +559,7 @@ def _plot_iceflow_Glen(params, state,X,Y,YP,tit,path):
       
 # def iceflow_model_generic(state,X):
  
-#     if params.network == "unet":
+#     if params.iflo_network == "unet":
 #         Ny = X.shape[1]
 #         Nx = X.shape[2]
 #         multiple_window_size = 8  # maybe this 2**(nb_layers-1)

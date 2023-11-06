@@ -12,7 +12,7 @@ from igm.modules.utils import interp1d_tf
 
 def params_smb_simple(parser):
     parser.add_argument(
-        "--smb_update_freq",
+        "--smb_simple_update_freq",
         type=float,
         default=1,
         help="Update the mass balance each X years (1)",
@@ -48,7 +48,7 @@ def initialize_smb_simple(params, state):
 def update_smb_simple(params, state):
 
     # update smb each X years
-    if (state.t - state.tlast_mb) >= params.smb_update_freq:
+    if (state.t - state.tlast_mb) >= params.smb_simple_update_freq:
 
         if hasattr(state,'logger'):
             state.logger.info("Construct mass balance at time : " + str(state.t.numpy()))

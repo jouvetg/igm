@@ -12,7 +12,7 @@ from igm.modules.utils import *
 
 def params_write_particles(parser):
     parser.add_argument(
-        "--add_topography_to_particles",
+        "--wpar_add_topography",
         type=str2bool,
         default=False,
         help="Add topg",
@@ -33,7 +33,7 @@ def initialize_write_particles(params, state):
         + " >> clean.sh"
     )
 
-    if params.add_topography_to_particles:
+    if params.wpar_add_topography:
         ftt = os.path.join(params.working_dir, "trajectories", "topg.csv")
         array = tf.transpose(
             tf.stack([state.X[state.X > 0], state.Y[state.X > 0], state.topg[state.X > 0]])
@@ -72,7 +72,7 @@ def update_write_particles(params, state):
         with open(ft, "a") as f:
             print(state.t.numpy(), file=f)
 
-        if params.add_topography_to_particles:
+        if params.wpar_add_topography:
             ftt = os.path.join(
                 params.working_dir,
                 "trajectories",

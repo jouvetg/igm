@@ -2,7 +2,7 @@
 
 # Description:
 
-This IGM module writes particle time-position in csv files computed by module `particles`. The saving frequency is given by parameter `time_save` defined in module `time_step`.
+This IGM module writes particle time-position in csv files computed by module `particles`. The saving frequency is given by parameter `time_save` defined in module `time`.
 
 The data are stored in folder 'trajectory' (created if does not exist). Files 'traj-TIME.csv' reports the space-time position of the particles at time TIME with the following structure:
 
@@ -21,4 +21,4 @@ providing in turn the particle ID, x,y,z positions, the relative height within t
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
-||`--add_topography_to_particles`||Add topg|
+||`--wpar_add_topography`||Add topg|

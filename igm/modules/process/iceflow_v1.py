@@ -23,32 +23,32 @@ def params_iceflow_v1(parser):
     )
 
     parser.add_argument(
-        "--emulator",
+        "--iflo_emulator",
         type=str,
         default="f15_cfsflow_GJ_22_a",
         help="Directory path of the deep-learning ice flow model, \
               create a new if empty string",
     )
     parser.add_argument(
-        "--init_slidingco",
+        "--iflo_init_slidingco",
         type=float,
         default=0,
         help="Initial sliding coeeficient slidingco (default: 0)",
     )
     parser.add_argument(
-        "--init_arrhenius",
+        "--iflo_init_arrhenius",
         type=float,
         default=78,
         help="Initial arrhenius factor arrhenuis (default: 78)",
     )
     parser.add_argument(
-        "--multiple_window_size",
+        "--iflo_multiple_window_size",
         type=int,
         default=0,
         help="If a U-net, this force window size a multiple of 2**N (default: 0)",
     )
     parser.add_argument(
-        "--force_max_velbar",
+        "--iflo_force_max_velbar",
         type=float,
         default=0,
         help="This permits to artif. upper-bound velocities, active if > 0 (default: 0)",
@@ -64,15 +64,15 @@ def initialize_iceflow_v1(params, state):
         state.strflowctrl = tf.Variable(tf.ones_like(state.thk) * params.init_strflowctrl)
 
     if not hasattr(state, "arrhenius"):
-        state.arrhenius = tf.Variable(tf.ones_like(state.thk) * params.init_arrhenius)
+        state.arrhenius = tf.Variable(tf.ones_like(state.thk) * params.iflo_init_arrhenius)
 
     if not hasattr(state, "slidingco"):
-        state.slidingco = tf.Variable(tf.ones_like(state.thk) * params.init_slidingco)
+        state.slidingco = tf.Variable(tf.ones_like(state.thk) * params.iflo_init_slidingco)
         
-    if os.path.exists(importlib_resources.files(emulators).joinpath(params.emulator)):
-        dirpath = importlib_resources.files(emulators).joinpath(params.emulator)
+    if os.path.exists(importlib_resources.files(emulators).joinpath(params.iflo_emulator)):
+        dirpath = importlib_resources.files(emulators).joinpath(params.iflo_emulator)
     else:
-        dirpath = params.emulator
+        dirpath = params.iflo_emulator
 
     dirpath = os.path.join(dirpath, str(int(state.dx)))
 
@@ -92,9 +92,9 @@ def initialize_iceflow_v1(params, state):
     Nx = state.thk.shape[1]
 
     # In case of a U-net, must make sure the I/O size is multiple of 2**N
-    if params.multiple_window_size > 0:
-        NNy = params.multiple_window_size * math.ceil(Ny / params.multiple_window_size)
-        NNx = params.multiple_window_size * math.ceil(Nx / params.multiple_window_size)
+    if params.iflo_multiple_window_size > 0:
+        NNy = params.iflo_multiple_window_size * math.ceil(Ny / params.iflo_multiple_window_size)
+        NNx = params.iflo_multiple_window_size * math.ceil(Nx / params.iflo_multiple_window_size)
         state.PAD = [[0, NNy - Ny], [0, NNx - Nx]]
     else:
         state.PAD = [[0, 0], [0, 0]]
@@ -134,17 +134,17 @@ def update_iceflow_v1(params, state):
         )
 
     # If requested, the speeds are artifically upper-bounded
-    if params.force_max_velbar > 0:
+    if params.iflo_force_max_velbar > 0:
         state.velbar_mag = state.getmag(state.ubar, state.vbar)
 
         state.ubar = tf.where(
-            state.velbar_mag >= params.force_max_velbar,
-            params.force_max_velbar * (state.ubar / state.velbar_mag),
+            state.velbar_mag >= params.iflo_force_max_velbar,
+            params.iflo_force_max_velbar * (state.ubar / state.velbar_mag),
             state.ubar,
         )
         state.vbar = tf.where(
-            state.velbar_mag >= params.force_max_velbar,
-            params.force_max_velbar * (state.vbar / state.velbar_mag),
+            state.velbar_mag >= params.iflo_force_max_velbar,
+            params.iflo_force_max_velbar * (state.vbar / state.velbar_mag),
             state.vbar,
         )
 

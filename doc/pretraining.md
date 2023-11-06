@@ -3,7 +3,7 @@
 
 # Description:
 
-This module performs a pretraining of the ice flow emulator on a glacier catalogue to improve the performance of the emaulator when used in glacier forward run. The pretraining can be relatively computationally demanding task (a couple of hours). This module should be called alone independently of any other igm module. Here is an example of paramter file:
+This module performs a pretraining of the ice flow iflo_emulator on a glacier catalogue to improve the performance of the emaulator when used in glacier forward run. The pretraining can be relatively computationally demanding task (a couple of hours). This module should be called alone independently of any other igm module. Here is an example of paramter file:
 
 ```json
 {
@@ -11,10 +11,10 @@ This module performs a pretraining of the ice flow emulator on a glacier catalog
   "modules_process": [],
   "modules_postproc": [],
   "data_dir": "surflib3d_shape_100",
-  "solve_iceflow_nbitmax": 2000,
-  "stop_if_no_decrease": false,
-  "retrain_iceflow_emulator_lr": 0.0001,
-  "dim_arrhenius": 3,
+  "iflo_solve_nbitmax": 2000,
+  "iflo_solve_stop_if_no_decrease": false,
+  "iflo_retrain_emulator_lr": 0.0001,
+  "iflo_dim_arrhenius": 3,
   "soft_begining": 500
 }
 ```
@@ -49,8 +49,8 @@ The path (or name of the data folder) must be pass in parameter `data_dir`.
 ||`--data_dir`|`surflib3d_shape_100`|Directory of the data of the glacier catalogu|
 ||`--batch_size`|`1`|Batch size|
 ||`--freq_test`|`20`|Frequence of the test|
-||`--train_iceflow_emulator_restart_lr`|`3000`|Restart frequency for the learning rate|
-||`--epochs`|`6000`|Number of epochs|
+||`--train_iceflow_emulator_restart_lr`|`2500`|Restart frequency for the learning rate|
+||`--epochs`|`5000`|Number of epochs|
 ||`--min_arrhenius`|`5`|Minium Arrhenius factor|
 ||`--max_arrhenius`|`151`|Maximum Arrhenius factor|
 ||`--min_slidingco`|`0`|Minimum sliding coefficient|

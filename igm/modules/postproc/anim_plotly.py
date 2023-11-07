@@ -222,7 +222,7 @@ def finalize_anim_plotly(params, state):
         return fig
 
     # start dash app
-    app.run_server(debug=True, port=8050)
+    app.run_server(debug=False, port=8050)
 
 
 if __name__ == '__main__':

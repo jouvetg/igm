@@ -13,7 +13,7 @@ When activating `oggm_include_glathida` to True, ice thickness profiles are down
 
 The OGGM script was written by Fabien Maussion. The GlaThiDa script was written by Ethan Welty & Guillaume Jouvet.
 
-The module depends (of course) of `oggm` library.
+The module depends (of course) of `oggm` library. Unfortunatly the module works on linux and Max, but not on windows (unless using WSL).
  
 # Parameters: 
 

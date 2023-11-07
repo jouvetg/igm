@@ -13,7 +13,7 @@ This IGM module wraps up module iceflow, time and thk (check for each modules fo
 |`-h`|`--help`||show this help message and exit|
 ||`--iflo_type`|`emulated`|Type of iceflow: it can emulated (default), solved, or in diagnostic mode to investigate the fidelity of the emulator towads the solver|
 ||`--iflo_emulator`|`myemulator`|Directory path of the deep-learning ice flow model, create a new if empty string|
-||`--iflo_init_slidingco`|`10000`|Initial sliding coefficient slidingco|
+||`--iflo_init_slidingco`|`0.0464`|Initial sliding coefficient slidingco|
 ||`--iflo_init_arrhenius`|`78`|Initial arrhenius factor arrhenuis|
 ||`--iflo_regu_glen`|`1e-05`|Regularization parameter for Glen's flow law|
 ||`--iflo_regu_weertman`|`1e-10`|Regularization parameter for Weertman's sliding law|
@@ -21,7 +21,7 @@ This IGM module wraps up module iceflow, time and thk (check for each modules fo
 ||`--iflo_exp_weertman`|`3`|Weertman's law exponent|
 ||`--iflo_gravity_cst`|`9.81`|Gravitational constant|
 ||`--iflo_ice_density`|`910`|Density of ice|
-||`--iflo_new_friction_param`||ExperimentaL: this describe slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco|
+||`--iflo_new_friction_param`||Sliding coeeficient (this describe slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco as before)|
 ||`--iflo_Nz`|`10`|Number of grid point for the vertical discretization|
 ||`--iflo_vert_spacing`|`4.0`|Parameter controlling the discrtuzation density to get more point near the bed than near the the surface. 1.0 means equal vertical spacing.|
 ||`--iflo_thr_ice_thk`|`0.1`|Threshold Ice thickness for computing strain rate|

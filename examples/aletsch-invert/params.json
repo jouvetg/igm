@@ -1,0 +1,15 @@
+{
+  "modules_preproc": ["load_ncdf","optimize"],
+  "modules_process": [],
+  "modules_postproc": [],
+  "lncd_input_file": "input.nc",
+  "opti_control": ["thk"],
+  "opti_cost": ["velsurf","icemask","thk"],
+  "opti_velsurfobs_std" 	        : 1,
+  "opti_thkobs_std"			: 3,
+  "opti_regu_param_thk"			: 10.0,
+  "opti_smooth_anisotropy_factor"	: 0.2,
+  "opti_convexity_weight"		: 0.0,
+  "opti_nbitmax"			: 500,
+  "iflo_init_slidingco"      		: 0.045
+}

@@ -39,7 +39,7 @@ def params_iceflow(parser):
     parser.add_argument(
         "--iflo_init_slidingco",
         type=float,
-        default=10000,
+        default=0.0464,
         help="Initial sliding coefficient slidingco",
     )
     parser.add_argument(
@@ -87,8 +87,8 @@ def params_iceflow(parser):
     parser.add_argument(
         "--iflo_new_friction_param",
         type=str2bool,
-        default=False,
-        help="ExperimentaL: this describe slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco",
+        default=True,
+        help="Sliding coeeficient (this describe slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco as before)",
     )
 
     # vertical discretization

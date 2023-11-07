@@ -20,6 +20,5 @@
   "time_start": 1800.0,
   "time_end": 2100.0,
   "plt2d_live": true,
-  "iflo_new_friction_param": true,
   "iflo_init_slidingco": 0.25
 }

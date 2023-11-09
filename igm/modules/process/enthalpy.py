@@ -181,13 +181,14 @@ def update_enthalpy(params, state):
 
     # compute the strainheat is in [W m-3]
     state.strainheat = compute_strainheat_tf(
-        state.U / params.enth_spy, state.arrhenius, state.dx, dz, 
-        params.iflo_exp_glen, params.iflo_thr_ice_thk
+        state.U / params.enth_spy, state.V / params.enth_spy,
+        state.arrhenius, state.dx, dz, params.iflo_exp_glen, params.iflo_thr_ice_thk
     )
 
     # compute the frictheat is in [W m-2]
     state.frictheat = compute_frictheat_tf(
-        state.U / params.enth_spy, state.slidingco, state.topg, state.dx, params.iflo_exp_weertman, params.iflo_new_friction_param
+        state.U / params.enth_spy, state.V / params.enth_spy,
+        state.slidingco, state.topg, state.dx, params.iflo_exp_weertman, params.iflo_new_friction_param
     )
     
     # compute the surface enthalpy
@@ -196,7 +197,7 @@ def update_enthalpy(params, state):
     )
  
     # one explicit step for the horizonal advection
-    state.E = state.E - state.dt * compute_upwind_tf( state.U[0], state.U[1], state.E, state.dx )
+    state.E = state.E - state.dt * compute_upwind_tf( state.U, state.V, state.E, state.dx )
 
     # update the enthalpy and the basal melt rate (implicit scheme)
     state.E, state.basalMeltRate = compute_enthalpy_basalmeltrate(
@@ -337,18 +338,18 @@ def compute_slidingco_tf(thk, tillwat, ice_density, gravity_cst, tillwatmax,
 
 
 @tf.function()
-def compute_strainheat_tf(U, arrhenius, dx, dz, exp_glen, thr):
+def compute_strainheat_tf(U, V, arrhenius, dx, dz, exp_glen, thr):
     # input U [m s^{-1} ]
     # input arrhenius [MPa^{-3} y^{-1} ]
     # return strainheat in [W m^{-3}]
 
-    Ui = tf.pad(U[0, :, :, :], [[0, 0], [0, 0], [1, 1]], "SYMMETRIC")
-    Uj = tf.pad(U[0, :, :, :], [[0, 0], [1, 1], [0, 0]], "SYMMETRIC")
-    Uk = tf.pad(U[0, :, :, :], [[1, 1], [0, 0], [0, 0]], "SYMMETRIC")
+    Ui = tf.pad(U[:, :, :], [[0, 0], [0, 0], [1, 1]], "SYMMETRIC")
+    Uj = tf.pad(U[:, :, :], [[0, 0], [1, 1], [0, 0]], "SYMMETRIC")
+    Uk = tf.pad(U[:, :, :], [[1, 1], [0, 0], [0, 0]], "SYMMETRIC")
 
-    Vi = tf.pad(U[1, :, :, :], [[0, 0], [0, 0], [1, 1]], "SYMMETRIC")
-    Vj = tf.pad(U[1, :, :, :], [[0, 0], [1, 1], [0, 0]], "SYMMETRIC")
-    Vk = tf.pad(U[1, :, :, :], [[1, 1], [0, 0], [0, 0]], "SYMMETRIC")
+    Vi = tf.pad(V[:, :, :], [[0, 0], [0, 0], [1, 1]], "SYMMETRIC")
+    Vj = tf.pad(V[:, :, :], [[0, 0], [1, 1], [0, 0]], "SYMMETRIC")
+    Vk = tf.pad(V[:, :, :], [[1, 1], [0, 0], [0, 0]], "SYMMETRIC")
 
     DZ2 = tf.concat([dz[0:1], dz[:-1] + dz[1:], dz[-1:]], axis=0)
 
@@ -387,14 +388,14 @@ def compute_strainheat_tf(U, arrhenius, dx, dz, exp_glen, thr):
 
 
 @tf.function()
-def compute_frictheat_tf(U, slidingco, topg, dx, exp_weertman, new_friction_param):
+def compute_frictheat_tf(U, V, slidingco, topg, dx, exp_weertman, new_friction_param):
     # input U [m s^{-1} ]
     # input slidingo [m MPa^{-3} y^{-1} ]
     # return frictheat in [W m^{-2}]
 
     sloptopgx, sloptopgy = compute_gradient_tf(topg, dx, dx)
-    wvelbase = U[0, 0] * sloptopgx + U[1, 0] * sloptopgy
-    ub = (U[0, 0, :, :] ** 2 + U[1, 0, :, :] ** 2 + wvelbase**2) ** 0.5
+    wvelbase = U[0] * sloptopgx + V[0] * sloptopgy
+    ub = (U[0, :, :] ** 2 + V[0, :, :] ** 2 + wvelbase**2) ** 0.5
 
     if new_friction_param:
         # slidingco is in Mpa m^{-1/3} y^{1/3}
@@ -447,7 +448,7 @@ def drainageFunc(omega):
 
 
 @tf.function()
-def compute_upwind_tf(u, v, E, dx):
+def compute_upwind_tf(U, V, E, dx):
     #  upwind computation of u dE/dx + v dE/dy, unit are [E s^{-1}]
 
     # Extend E with constant value at the domain boundaries
@@ -455,13 +456,13 @@ def compute_upwind_tf(u, v, E, dx):
     Ey = tf.pad(E, [[0, 0], [1, 1], [0, 0]], "SYMMETRIC")  # has shape (nz,ny+2,nx)
 
     ## Compute the product selcting the upwind quantities  :-2, 1:-1 , 2:
-    Rx = u * tf.where(
-        u > 0,
+    Rx = U * tf.where(
+        U > 0,
         (Ex[:, :, 1:-1] - Ex[:, :, :-2]) / dx,
         (Ex[:, :, 2:] - Ex[:, :, 1:-1]) / dx,
     )  # has shape (nz,ny,nx+1)
-    Ry = v * tf.where(
-        v > 0,
+    Ry = V * tf.where(
+        V > 0,
         (Ey[:, 1:-1:, :] - Ey[:, :-2, :]) / dx,
         (Ey[:, 2:, :] - Ey[:, 1:-1, :]) / dx,
     )  # has shape (nz,ny+1,nx)

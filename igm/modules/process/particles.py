@@ -87,13 +87,13 @@ def update_particles(params, state):
         )
 
         u = interpolate_bilinear_tf(
-            tf.expand_dims(state.U[0], axis=-1),
+            tf.expand_dims(state.U, axis=-1),
             indices,
             indexing="ij",
         )[:, :, 0]
 
         v = interpolate_bilinear_tf(
-            tf.expand_dims(state.U[1], axis=-1),
+            tf.expand_dims(state.V, axis=-1),
             indices,
             indexing="ij",
         )[:, :, 0]

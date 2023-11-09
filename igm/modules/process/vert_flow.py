@@ -27,7 +27,7 @@ def update_vert_flow(params, state):
 
     state.tcomp_vert_flow.append(time.time())
 
-    state.W = _compute_vertical_velocity_tf(params, state, state.U, state.thk, state.dX)
+    state.W = _compute_vertical_velocity_tf(params, state, state.U, state.V, state.thk, state.dX)
     
     state.wvelbase = state.W[0]
     state.wvelsurf = state.W[-1]
@@ -41,11 +41,11 @@ def finalize_vert_flow(params, state):
 
 
 # @tf.function(experimental_relax_shapes=True)
-def _compute_vertical_velocity_tf(params, state, U, thk, dX):
+def _compute_vertical_velocity_tf(params, state, U, V, thk, dX):
 
     # Compute horinzontal derivatives
-    dUdx = (U[0, :, :, 2:] - U[0, :, :, :-2]) / (2 * dX[0, 0])
-    dVdy = (U[1, :, 2:, :] - U[1, :, :-2, :]) / (2 * dX[0, 0])
+    dUdx = (U[:, :, 2:] - U[:, :, :-2]) / (2 * dX[0, 0])
+    dVdy = (V[:, 2:, :] - V[:, :-2, :]) / (2 * dX[0, 0])
 
     dUdx = tf.pad(dUdx, [[0, 0], [0, 0], [1, 1]], "CONSTANT")
     dVdy = tf.pad(dVdy, [[0, 0], [1, 1], [0, 0]], "CONSTANT")
@@ -58,7 +58,7 @@ def _compute_vertical_velocity_tf(params, state, U, thk, dX):
 
     # get the basal vertical velocities
     sloptopgx, sloptopgy = compute_gradient_tf(state.topg, state.dx, state.dx)
-    wvelbase = state.U[0, 0] * sloptopgx + state.U[1, 0] * sloptopgy
+    wvelbase = state.U[0] * sloptopgx + state.V[0] * sloptopgy
 
     # get the vertical thickness layers
     zeta = np.arange(params.iflo_Nz) / (params.iflo_Nz - 1)

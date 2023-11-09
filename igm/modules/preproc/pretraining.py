@@ -185,11 +185,12 @@ def compute_solutions(params,state):
             
         X = fieldin_to_X(params,fieldin)
             
-        U = tf.Variable(tf.zeros((2,params.iflo_Nz,state.thk.shape[0], state.thk.shape[1]))) 
+        U = tf.Variable(tf.zeros((params.iflo_Nz,state.thk.shape[0], state.thk.shape[1])))
+        V = tf.Variable(tf.zeros((params.iflo_Nz,state.thk.shape[0], state.thk.shape[1])))
              
-        U, MISFIT = solve_iceflow(params, state, U)
+        U, V, MISFIT = solve_iceflow(params, state, U, V)
                     
-        Y = U_to_Y(params,U)
+        Y = UV_to_Y(params,U, V)
         
         code = p.split('/')[-1] + "_" + str(it) + '_A' + str(int(val_A)) + '_C' + str(int(val_C*100)/100) + '_R' + str(int(val_R))
         
@@ -385,9 +386,9 @@ def train_iceflow_emulator(params,state,trainingset,augmentation=True):
          
     state.iceflow_model.save(os.path.join(params.working_dir,state.direct_name,'model.h5'))
      
-def _computenormp( dz, u, p):
+def _computenormp( dz, u, v, p):
     
-    temp = tf.reduce_sum( dz * (tf.abs(u[0])**p + tf.abs(u[1])**p) , axis=0) 
+    temp = tf.reduce_sum( dz * (tf.abs(u)**p + tf.abs(v)**p) , axis=0) 
     
     return (tf.reduce_sum(temp))**(1/p)
 
@@ -402,19 +403,21 @@ def _computemisfitall(params, state, X,Y,YP):
     temp    = temp[1:] - temp[:-1]
     dz      = tf.stack([thk*z for z in temp])  
     
-    ut = Y_to_U(params,Y)[0]
-    up = Y_to_U(params,YP)[0]
-    
-    nl1bardiff,nl2bardiff = computemisfit(state,thk,ut-up)
-    
-    ut = 0.5 * ( ut[:,1:,:,:] + ut[:,:-1,:,:] ) 
-    up = 0.5 * ( up[:,1:,:,:] + up[:,:-1,:,:] )
+    ut,vt = Y_to_UV(params,Y)  ; ut=ut[0] ; vt=vt[0]
+    up,vp = Y_to_UV(params,YP) ; up=up[0] ; vp=vp[0]
 
-    nl1diff = _computenormp(dz, ut-up, 1.0).numpy()
-    nl1abso = _computenormp(dz, ut   , 1.0).numpy()
+    nl1bardiff,nl2bardiff = computemisfit(state,thk,ut-up,vt-vp)
+    
+    ut = 0.5 * ( ut[1:,:,:] + ut[:-1,:,:] ) 
+    up = 0.5 * ( up[1:,:,:] + up[:-1,:,:] )
+    vt = 0.5 * ( vt[1:,:,:] + vt[:-1,:,:] ) 
+    vp = 0.5 * ( vp[1:,:,:] + vp[:-1,:,:] )
 
-    nl2diff = _computenormp(dz, ut-up, 2.0).numpy()
-    nl2abso = _computenormp(dz, ut   , 2.0).numpy()
+    nl1diff = _computenormp(dz, ut-up, vt-vp, 1.0).numpy()
+    nl1abso = _computenormp(dz, ut   , vt,    1.0).numpy()
+
+    nl2diff = _computenormp(dz, ut-up, vt-vp, 2.0).numpy()
+    nl2abso = _computenormp(dz, ut   , vt,    2.0).numpy()
     
     return (nl1diff/nl1abso),(nl2diff/nl2abso),nl1bardiff,nl1bardiff
 
@@ -451,9 +454,9 @@ def _plot_one_Glen(params,X,Y,path):
 #    ut   = Y[0,:,:,N-1] ; #tf.reduce_mean( Y[0,:,:,:N] , axis=-1)
 #    vt   = Y[0,:,:,2*N-1]  ; #tf.reduce_mean( Y[0,:,:,N:] , axis=-1) 
     
-    U = Y_to_U(params, Y)[0]
+    U,V = Y_to_UV(params, Y)
     ut   = U[0,-1]
-    vt   = U[1,-1]
+    vt   = V[0,-1]
     
     thk = X[0,:,:,0]
      
@@ -495,8 +498,8 @@ def _plot_iceflow_Glen(params, state,X,Y,YP,tit,path):
 #    up   = YP[0,:,:,N-1] ; #up   = tf.reduce_mean( YP[0,:,:,:N] , axis=-1)
 #    vp   = YP[0,:,:,2*N-1] ; #vp   = tf.reduce_mean( YP[0,:,:,N:] , axis=-1)
 
-    U  = Y_to_U(params, Y)[0]  ; ut   = U[0,-1]  ; vt   = U[1,-1]
-    UP = Y_to_U(params, YP)[0] ; up   = UP[0,-1] ; vp   = UP[1,-1]
+    U,V   = Y_to_UV(params, Y)  ; ut   = U[0,-1]  ; vt = V[0,-1]
+    UP,VP = Y_to_UV(params, YP) ; up   = UP[0,-1] ; vp = VP[0,-1]
     
     thk = X[0,:,:,0]
      

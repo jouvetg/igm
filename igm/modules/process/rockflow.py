@@ -32,10 +32,10 @@ def update_rockflow(params,state):
     dirx = -params.rock_flow_speed * tf.where(tf.not_equal(slop,0), slopsurfx/slop,1)
     diry = -params.rock_flow_speed * tf.where(tf.not_equal(slop,0), slopsurfy/slop,1)
 
-    thkexp = tf.repeat( tf.expand_dims(state.thk, axis=0), state.U.shape[1], axis=0)
+    thkexp = tf.repeat( tf.expand_dims(state.thk, axis=0), state.U.shape[0], axis=0)
     
-    state.U[0].assign( tf.where( thkexp > 0, state.U[0], dirx ) )
-    state.U[1].assign( tf.where( thkexp > 0, state.U[1], diry ) )    
+    state.U.assign( tf.where( thkexp > 0, state.U, dirx ) )
+    state.V.assign( tf.where( thkexp > 0, state.V, diry ) )    
 
 def  finalize_rockflow(params,state):
     pass

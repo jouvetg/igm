@@ -49,7 +49,7 @@ def update_glerosion(params, state):
 
         state.tcomp_glerosion.append(time.time())
 
-        velbase_mag = getmag(state.U[0, 0], state.U[1, 0])
+        velbase_mag = getmag(state.U[0], state.V[0])
 
         # apply erosion law, erosion rate is proportional to a power of basal sliding speed
         dtopgdt = params.glerosion_cst * (velbase_mag**params.glerosion_exp)

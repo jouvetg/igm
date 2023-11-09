@@ -37,7 +37,9 @@ def update_thk(params, state):
 
         # TODO: replace 0.9 by physical constant, and add SL value
         # define the lower ice surface
-        state.lsurf = tf.maximum(state.topg,-0.9*state.thk)
+        # state.lsurf = tf.maximum(state.topg,-0.9*state.thk)
+        # lower surface is not implmented yet
+        state.lsurf = state.topg
 
         # define the upper ice surface
         state.usurf = state.lsurf + state.thk

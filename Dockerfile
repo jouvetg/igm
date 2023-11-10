@@ -21,8 +21,6 @@ CMD ["bash"]
 
 RUN pip3 install -U pip
 
-# RUN pip3 install numpy
-
 USER igmuser 
 
 WORKDIR /home/igmuser/

@@ -1,6 +1,6 @@
 # docker build --no-cache -t igm --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) .
 #
-FROM tensorflow/tensorflow:latest-gpu
+FROM tensorflow:2.12.0-gpu
 
 RUN apt-get update
 

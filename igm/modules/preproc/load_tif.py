@@ -26,23 +26,26 @@ def params_load_tif(parser):
         "--ltif_xmin",
         type=float, 
         help="crop_xmin",
+        default=-10**20,
     )
     parser.add_argument(
         "--ltif_xmax",
         type=float, 
         help="crop_xmax",
+        default=10**20,
     )
     parser.add_argument(
         "--ltif_ymin",
         type=float, 
         help="crop_ymin",
+        default=-10**20,
     )
     parser.add_argument(
         "--ltif_ymax",
         type=float, 
-        help="crop_ymax"
+        help="crop_ymax",
+        default=10**20,
     )
-
 
 def initialize_load_tif(params, state):
 

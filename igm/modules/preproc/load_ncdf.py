@@ -36,21 +36,25 @@ def params_load_ncdf(parser):
         "--lncd_xmin",
         type=float, 
         help="X left coordinate for cropping the NetCDF data",
+        default=-10**20,
     )
     parser.add_argument(
         "--lncd_xmax",
         type=float, 
         help="X right coordinate for cropping the NetCDF data",
+        default=10**20,
     )
     parser.add_argument(
         "--lncd_ymin",
         type=float, 
         help="Y bottom coordinate fro cropping the NetCDF data",
+        default=-10**20,
     )
     parser.add_argument(
         "--lncd_ymax",
         type=float, 
-        help="Y top coordinate for cropping the NetCDF data"
+        help="Y top coordinate for cropping the NetCDF data",
+        default=10**20,
     )
 
 

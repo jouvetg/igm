@@ -308,7 +308,7 @@ def initialize_iceflow(params, state):
             )
 
         direct_name  = 'pinnbp'+'_'+str(params.iflo_Nz)+'_'+str(int(params.iflo_vert_spacing))+'_'
-        direct_name +=  params.iflo_network+'_'+str(params.iflo_nb_layers)+'_'
+        direct_name +=  params.iflo_network+'_'+str(params.iflo_nb_layers)+'_'+str(params.iflo_nb_out_filter)+'_'
         direct_name +=  str(params.iflo_dim_arrhenius)+'_'+str(int(params.iflo_new_friction_param))
         
         existing_emulator = True
@@ -316,19 +316,16 @@ def initialize_iceflow(params, state):
         # first check if it finds a pretrained emulator in the igm package
         if os.path.exists(importlib_resources.files(emulators).joinpath(direct_name)):
             dirpath = importlib_resources.files(emulators).joinpath(direct_name)
-            if hasattr(state,'logger'):
-                state.logger.info("Found pretrained emulator in the igm package: "+direct_name)
+            print("Found pretrained emulator in the igm package: "+direct_name)
         else:
             # if not, check if it finds a pretrained emulator in the current directory
             if os.path.exists(params.iflo_emulator):
                 dirpath = params.iflo_emulator
-                if hasattr(state,'logger'):
-                    state.logger.info("Found pretrained emulator: "+params.iflo_emulator)
+                print("Found pretrained emulator: "+params.iflo_emulator)
             # if not, create a new one from scratch
             else:
                 existing_emulator = False
-                if hasattr(state,'logger'):
-                    state.logger.info("No pretrained emulator found, creating a new one from scratch")
+                print("No pretrained emulator found, creating a new one from scratch")
 
         if existing_emulator:
             fieldin = []

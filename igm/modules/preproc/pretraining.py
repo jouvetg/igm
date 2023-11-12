@@ -97,7 +97,7 @@ def params_pretraining(parser):
 def initialize_pretraining(params, state):
     
     state.direct_name  = 'pinnbp'+'_'+str(params.iflo_Nz)+'_'+str(int(params.iflo_vert_spacing))+'_'
-    state.direct_name +=  params.iflo_network+'_'+str(params.iflo_nb_layers)+'_'
+    state.direct_name +=  params.iflo_network+'_'+str(params.iflo_nb_layers)+'_'+str(params.iflo_nb_out_filter)+'_'
     state.direct_name +=  str(params.iflo_dim_arrhenius)+'_'+str(int(params.iflo_new_friction_param))
     
     os.makedirs(os.path.join(params.working_dir,state.direct_name), exist_ok=True)

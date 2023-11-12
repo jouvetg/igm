@@ -100,8 +100,14 @@ def initialize_load_ncdf(params, state):
 
     # crop if requested
     if params.lncd_crop:
-        i0,i1 = int((params.lncd_xmin-x[0])/(x[1]-x[0])),int((params.lncd_xmax-x[0])/(x[1]-x[0]))
-        j0,j1 = int((params.lncd_ymin-y[0])/(y[1]-y[0])),int((params.lncd_ymax-y[0])/(y[1]-y[0]))
+        i0 = max(0,int((params.lncd_xmin-x[0])/(x[1]-x[0])))
+        i1 = min(int((params.lncd_xmax-x[0])/(x[1]-x[0])),x.shape[0]-1)
+        i1 = max(i0+1,i1)
+        j0 = max(0,int((params.lncd_ymin-y[0])/(y[1]-y[0])))
+        j1 = min(int((params.lncd_ymax-y[0])/(y[1]-y[0])),y.shape[0]-1)
+        j1 = max(j0+1,j1)
+#        i0,i1 = int((params.lncd_xmin-x[0])/(x[1]-x[0])),int((params.lncd_xmax-x[0])/(x[1]-x[0]))
+#        j0,j1 = int((params.lncd_ymin-y[0])/(y[1]-y[0])),int((params.lncd_ymax-y[0])/(y[1]-y[0]))
         for var in nc.variables:
             if (not var in ["x", "y"]) & (vars()[var].ndim==2):
                 vars()[var] = vars()[var][j0:j1,i0:i1]

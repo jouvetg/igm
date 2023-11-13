@@ -17,7 +17,7 @@ with open('README.md', 'r') as f:
     
 setup(
     name="igm-model",
-    version="2.0.4",
+    version="2.1.0",
     author="Guillaume Jouvet",
     author_email="guillaume.jouvet@unil.ch",
     url="https://github.com/jouvetg/igm",
@@ -33,7 +33,7 @@ setup(
 #        'doc': ['numpydoc', 'sphinx', 'sphinx_rtd_theme', 'sphinx_mdinclude'],
 #    },    
     install_requires=[
-        'matplotlib',
+    'matplotlib',
 	'numpy',
 	'scipy',
 	'tensorflow==2.12.0',

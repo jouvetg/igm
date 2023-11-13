@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os, sys, shutil
@@ -35,17 +35,16 @@ def params_glerosion(parser):
 
 
 def initialize_glerosion(params, state):
-
     state.tcomp_glerosion = []
     state.tlast_erosion = tf.Variable(params.time_start)
 
 
 def update_glerosion(params, state):
-
     if (state.t - state.tlast_erosion) >= params.glerosion_update_freq:
-
-        if hasattr(state,'logger'):
-            state.logger.info("update topg_glacial_erosion at time : " + str(state.t.numpy()))
+        if hasattr(state, "logger"):
+            state.logger.info(
+                "update topg_glacial_erosion at time : " + str(state.t.numpy())
+            )
 
         state.tcomp_glerosion.append(time.time())
 

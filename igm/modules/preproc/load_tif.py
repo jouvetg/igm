@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os, glob
 import tensorflow as tf
 
 from igm.modules.utils import *
+
 
 def params_load_tif(parser):
     parser.add_argument(
@@ -24,31 +25,31 @@ def params_load_tif(parser):
     )
     parser.add_argument(
         "--ltif_xmin",
-        type=float, 
+        type=float,
         help="crop_xmin",
-        default=-10**20,
+        default=-(10**20),
     )
     parser.add_argument(
         "--ltif_xmax",
-        type=float, 
+        type=float,
         help="crop_xmax",
         default=10**20,
     )
     parser.add_argument(
         "--ltif_ymin",
-        type=float, 
+        type=float,
         help="crop_ymin",
-        default=-10**20,
+        default=-(10**20),
     )
     parser.add_argument(
         "--ltif_ymax",
-        type=float, 
+        type=float,
         help="crop_ymax",
         default=10**20,
     )
 
-def initialize_load_tif(params, state):
 
+def initialize_load_tif(params, state):
     import rasterio
 
     files = glob.glob(os.path.join(params.working_dir, "*.tif"))
@@ -66,36 +67,38 @@ def initialize_load_tif(params, state):
                 x = np.array(x)[0, :]
                 y = np.flip(np.array(y)[:, 0])
             del src
-            
+
     # coarsen if requested
     if params.ltif_coarsen > 1:
         xx = x[:: params.ltif_coarsen]
         yy = y[:: params.ltif_coarsen]
         for file in files:
             var = os.path.split(file)[-1].split(".")[0]
-            if (not var in ["x", "y"]) & (vars()[var].ndim==2):
-                vars()[var] = vars()[var][:: params.ltif_coarsen,:: params.ltif_coarsen]
-#                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
+            if (not var in ["x", "y"]) & (vars()[var].ndim == 2):
+                vars()[var] = vars()[var][
+                    :: params.ltif_coarsen, :: params.ltif_coarsen
+                ]
+        #                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
         x = xx
         y = yy
- 
+
     # crop if requested
     if params.ltif_crop:
-        i0 = max(0,int((params.ltif_xmin-x[0])/(x[1]-x[0])))
-        i1 = min(int((params.ltif_xmax-x[0])/(x[1]-x[0])),x.shape[0]-1)
-        i1 = max(i0+1,i1)
-        j0 = max(0,int((params.ltif_ymin-y[0])/(y[1]-y[0])))
-        j1 = min(int((params.ltif_ymax-y[0])/(y[1]-y[0])),y.shape[0]-1)
-        j1 = max(j0+1,j1)
-#        i0,i1 = int((params.ltif_xmin-x[0])/(x[1]-x[0])),int((params.ltif_xmax-x[0])/(x[1]-x[0]))
-#        j0,j1 = int((params.ltif_ymin-y[0])/(y[1]-y[0])),int((params.ltif_ymax-y[0])/(y[1]-y[0]))
+        i0 = max(0, int((params.ltif_xmin - x[0]) / (x[1] - x[0])))
+        i1 = min(int((params.ltif_xmax - x[0]) / (x[1] - x[0])), x.shape[0] - 1)
+        i1 = max(i0 + 1, i1)
+        j0 = max(0, int((params.ltif_ymin - y[0]) / (y[1] - y[0])))
+        j1 = min(int((params.ltif_ymax - y[0]) / (y[1] - y[0])), y.shape[0] - 1)
+        j1 = max(j0 + 1, j1)
+        #        i0,i1 = int((params.ltif_xmin-x[0])/(x[1]-x[0])),int((params.ltif_xmax-x[0])/(x[1]-x[0]))
+        #        j0,j1 = int((params.ltif_ymin-y[0])/(y[1]-y[0])),int((params.ltif_ymax-y[0])/(y[1]-y[0]))
         for file in files:
             var = os.path.split(file)[-1].split(".")[0]
             if not var in ["x", "y"]:
-                vars()[var] = vars()[var][j0:j1,i0:i1]
+                vars()[var] = vars()[var][j0:j1, i0:i1]
         y = y[j0:j1]
         x = x[i0:i1]
- 
+
     # transform from numpy to tensorflow
     for file in files:
         var = os.path.split(file)[-1].split(".")[0]
@@ -106,12 +109,10 @@ def initialize_load_tif(params, state):
 
     complete_data(state)
 
+
 def update_load_tif(params, state):
     pass
-    
-    
+
+
 def finalize_load_tif(params, state):
     pass
-    
-
-

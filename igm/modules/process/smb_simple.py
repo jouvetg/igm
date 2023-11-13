@@ -30,9 +30,9 @@ def params_smb_simple(parser):
         help="Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)",
     )
 
+
 def initialize_smb_simple(params, state):
-    
-    if params.smb_simple_array==[]:
+    if params.smb_simple_array == []:
         state.smbpar = np.loadtxt(
             os.path.join(params.working_dir, params.smb_simple_file),
             skiprows=1,
@@ -46,12 +46,12 @@ def initialize_smb_simple(params, state):
 
 
 def update_smb_simple(params, state):
-
     # update smb each X years
     if (state.t - state.tlast_mb) >= params.smb_simple_update_freq:
-
-        if hasattr(state,'logger'):
-            state.logger.info("Construct mass balance at time : " + str(state.t.numpy()))
+        if hasattr(state, "logger"):
+            state.logger.info(
+                "Construct mass balance at time : " + str(state.t.numpy())
+            )
 
         state.tcomp_smb_simple.append(time.time())
 
@@ -68,7 +68,9 @@ def update_smb_simple(params, state):
 
         # if an icemask exists, then force negative smb aside to prevent leaks
         if hasattr(state, "icemask"):
-            state.smb = tf.where((state.smb<0)|(state.icemask>0.5),state.smb,-10)
+            state.smb = tf.where(
+                (state.smb < 0) | (state.icemask > 0.5), state.smb, -10
+            )
 
         state.tlast_mb.assign(state.t)
 
@@ -78,4 +80,3 @@ def update_smb_simple(params, state):
 
 def finalize_smb_simple(params, state):
     pass
-

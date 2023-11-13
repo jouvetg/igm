@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 """
 This util files provides a large number of usefull function for other modules
@@ -26,7 +26,8 @@ def getmag(u, v):
         tf.concat([tf.expand_dims(u, axis=-1), tf.expand_dims(v, axis=-1)], axis=2),
         axis=2,
     )
-    
+
+
 @tf.function()
 def getmag3d(u, v):
     """
@@ -170,10 +171,10 @@ def complete_data(state):
     # define usurf (or topg) from topg (or usurf) and thk
     if hasattr(state, "usurf"):
         state.lsurf = tf.Variable(state.usurf - state.thk)
-        state.topg  = tf.Variable(state.usurf - state.thk)
+        state.topg = tf.Variable(state.usurf - state.thk)
 
     else:
-        state.lsurf = tf.maximum(state.topg,-0.9*state.thk)
+        state.lsurf = tf.maximum(state.topg, -0.9 * state.thk)
         state.usurf = tf.Variable(state.lsurf + state.thk)
 
 
@@ -184,14 +185,14 @@ def interpolate_bilinear_tf(
     indexing: str = "ij",
 ) -> tf.Tensor:
     """
-    
+
     This function originally comes from tensorflow-addon library
     (https://www.tensorflow.org/addons/api_docs/python/tfa/image/interpolate_bilinear)
     but the later was deprecated, therefore we copied the function here to avoid
     being dependent on a deprecated library.
-    
+
     Similar to Matlab's interp2 function.
-    
+
     Finds values for query points on a grid using bilinear interpolation.
 
     Args:
@@ -199,7 +200,7 @@ def interpolate_bilinear_tf(
       query_points: a 3-D float `Tensor` of N points with shape
         `[batch, N, 2]`.
       indexing: whether the query points are specified as row and column (ij),
-        or Cartesian coordinates (xy). 
+        or Cartesian coordinates (xy).
 
     Returns:
       values: a 3-D `Tensor` with shape `[batch, N, channels]`
@@ -208,12 +209,12 @@ def interpolate_bilinear_tf(
       ValueError: if the indexing mode is invalid, or if the shape of the
         inputs invalid.
     """
- 
+
     grid = tf.convert_to_tensor(grid)
     query_points = tf.convert_to_tensor(query_points)
     grid_shape = tf.shape(grid)
     query_shape = tf.shape(query_points)
- 
+
     with tf.name_scope("interpolate_bilinear"):
         grid_shape = tf.shape(grid)
         query_shape = tf.shape(query_points)

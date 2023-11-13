@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os, copy
@@ -16,12 +16,12 @@ from netCDF4 import Dataset
 from igm.modules.utils import *
 from igm.modules.process.iceflow import *
 
+
 def dependency_optimize():
-    return ['iceflow']
+    return ["iceflow"]
 
 
 def params_optimize(parser):
- 
     parser.add_argument(
         "--opti_vars_to_save",
         type=list,
@@ -93,13 +93,13 @@ def params_optimize(parser):
     parser.add_argument(
         "--opti_control",
         type=list,
-        default=["thk"], # "slidingco", "usurf"
+        default=["thk"],  # "slidingco", "usurf"
         help="List of optimized variables for the optimization",
     )
     parser.add_argument(
         "--opti_cost",
         type=list,
-        default=["velsurf", "thk", "icemask"], # "divfluxfcz", ,"usurf"
+        default=["velsurf", "thk", "icemask"],  # "divfluxfcz", ,"usurf"
         help="List of cost components for the optimization",
     )
     parser.add_argument(
@@ -236,18 +236,18 @@ def initialize_optimize(params, state):
             for f in params.opti_control:
                 vars(state)[f] = vars()[f] * sc[f]
 
-            fieldin = [ vars(state)[f] for f in params.iflo_fieldin ]
-            
+            fieldin = [vars(state)[f] for f in params.iflo_fieldin]
+
             X = fieldin_to_X(params, fieldin)
 
             # evalutae th ice flow emulator
             Y = state.iceflow_model(X)
 
-            state.U,state.V = Y_to_UV(params, Y)
-            
+            state.U, state.V = Y_to_UV(params, Y)
+
             state.U = state.U[0]
             state.V = state.V[0]
-            
+
             update_2d_iceflow_variables(params, state)
 
             state.velsurf = tf.stack(
@@ -313,7 +313,10 @@ def initialize_optimize(params, state):
             if "usurf" in params.opti_cost:
                 ACT = state.icemaskobs > 0.5
                 COST_S = 0.5 * tf.reduce_mean(
-                    ((state.usurf[ACT] - state.usurfobs[ACT]) / params.opti_usurfobs_std)
+                    (
+                        (state.usurf[ACT] - state.usurfobs[ACT])
+                        / params.opti_usurfobs_std
+                    )
                     ** 2
                 )
             else:
@@ -338,7 +341,7 @@ def initialize_optimize(params, state):
             # Here one adds a regularization terms for the bed toporgraphy to the cost function
             if "thk" in params.opti_control:
                 state.topg = state.usurf - state.thk
-                if not hasattr(state,'flowdirx'):
+                if not hasattr(state, "flowdirx"):
                     dbdx = state.topg[:, 1:] - state.topg[:, :-1]
                     dbdy = state.topg[1:, :] - state.topg[:-1, :]
                     REGU_H = (params.opti_regu_param_thk / (1000**2)) * (
@@ -377,11 +380,11 @@ def initialize_optimize(params, state):
                 # )
 
                 if params.iflo_new_friction_param:
-                     scale = 1.0
+                    scale = 1.0
                 else:
-                     scale = 10000.0
+                    scale = 10000.0
 
-                if not hasattr(state,'flowdirx'):
+                if not hasattr(state, "flowdirx"):
                     dadx = state.slidingco[:, 1:] - state.slidingco[:, :-1]
                     dady = state.slidingco[1:, :] - state.slidingco[:-1, :]
                     REGU_S = (params.opti_regu_param_slidingco / (scale**2)) * (
@@ -402,14 +405,7 @@ def initialize_optimize(params, state):
 
             # sum all component into the main cost function
             COST = (
-                COST_U
-                + COST_H
-                + COST_D
-                + COST_S
-                + COST_O
-                + COST_HPO
-                + REGU_H
-                + REGU_S
+                COST_U + COST_H + COST_D + COST_S + COST_O + COST_HPO + REGU_H + REGU_S
             )
 
             vol = np.sum(state.thk) * (state.dx**2) / 10**9
@@ -426,23 +422,25 @@ def initialize_optimize(params, state):
 
             ###############
 
-            if i==0:
-                print("                   Step  |  ICE_VOL |  COST_U  |  COST_H  |  COST_D  |  COST_S  |   REGU_H |   REGU_S | COST_GLEN  ")
+            if i == 0:
+                print(
+                    "                   Step  |  ICE_VOL |  COST_U  |  COST_H  |  COST_D  |  COST_S  |   REGU_H |   REGU_S | COST_GLEN  "
+                )
 
-            if i%params.opti_output_freq==0:
+            if i % params.opti_output_freq == 0:
                 print(
                     "OPTI %s :   %6.0f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |"
                     % (
                         datetime.datetime.now().strftime("%H:%M:%S"),
-                                i,
-                                vol,
-                                COST_U.numpy(),
-                                COST_H.numpy(),
-                                COST_D.numpy(),
-                                COST_S.numpy(),
-                                REGU_H.numpy(),
-                                REGU_S.numpy(),
-                                COST_GLEN.numpy(),
+                        i,
+                        vol,
+                        COST_U.numpy(),
+                        COST_H.numpy(),
+                        COST_D.numpy(),
+                        COST_S.numpy(),
+                        REGU_H.numpy(),
+                        REGU_S.numpy(),
+                        COST_GLEN.numpy(),
                     )
                 )
 
@@ -552,14 +550,13 @@ def initialize_optimize(params, state):
 def update_optimize(params, state):
     pass
 
-    
+
 def finalize_optimize(params, state):
     pass
 
 
 def _compute_rms_std_optimization(state, i):
-
-    I = state.icemaskobs > 0 #== 1
+    I = state.icemaskobs > 0  # == 1
 
     if i == 0:
         state.rmsthk = []
@@ -619,7 +616,7 @@ def _update_ncdf_optimize(params, state, it):
     Initialize and write the ncdf optimze file
     """
 
-    if hasattr(state,'logger'):
+    if hasattr(state, "logger"):
         state.logger.info("Initialize  and write NCDF output Files")
 
     if "velsurf_mag" in params.opti_vars_to_save:
@@ -732,7 +729,7 @@ def _plot_cost_functions(params, state, costs):
 
     for i in range(costs.shape[1]):
         costs[:, i] -= np.min(costs[:, i])
-        costs[:, i] /= np.where(np.max(costs[:, i])==0,1.0,np.max(costs[:, i]))
+        costs[:, i] /= np.where(np.max(costs[:, i]) == 0, 1.0, np.max(costs[:, i]))
 
     fig = plt.figure(figsize=(10, 10))
     plt.plot(costs[:, 0], "-k", label="COST U")
@@ -816,7 +813,7 @@ def _update_plot_inversion(params, state, i):
         scale = 0.5
     else:
         scale = 20000.0
-        
+
     from matplotlib import colors
 
     im1 = ax2.imshow(
@@ -939,7 +936,6 @@ def _update_plot_inversion(params, state, i):
         )
 
 
-
 def _update_plot_inversion_simple(params, state, i):
     """
     Plot thickness, velocity, mand slidingco"""
@@ -993,7 +989,7 @@ def _update_plot_inversion_simple(params, state, i):
         size=16,
     )
     ax1.axis("off")
- 
+
     #########################################################
 
     cmap = copy.copy(matplotlib.cm.viridis)
@@ -1020,7 +1016,7 @@ def _update_plot_inversion_simple(params, state, i):
         size=16,
     )
     ax4.axis("off")
-  
+
     #########################################################
 
     if params.opti_plot2d_live:
@@ -1044,23 +1040,15 @@ def _update_plot_inversion_simple(params, state, i):
         )
 
 
-
 def _compute_flow_direction_for_anisotropic_smoothing(state):
-
     uvelsurf = tf.where(tf.math.is_nan(state.uvelsurf), 0.0, state.uvelsurf)
     vvelsurf = tf.where(tf.math.is_nan(state.vvelsurf), 0.0, state.vvelsurf)
 
     state.flowdirx = (
-        uvelsurf[1:, 1:]
-        + uvelsurf[:-1, 1:]
-        + uvelsurf[1:, :-1]
-        + uvelsurf[:-1, :-1]
+        uvelsurf[1:, 1:] + uvelsurf[:-1, 1:] + uvelsurf[1:, :-1] + uvelsurf[:-1, :-1]
     ) / 4.0
     state.flowdiry = (
-        vvelsurf[1:, 1:]
-        + vvelsurf[:-1, 1:]
-        + vvelsurf[1:, :-1]
-        + vvelsurf[:-1, :-1]
+        vvelsurf[1:, 1:] + vvelsurf[:-1, 1:] + vvelsurf[1:, :-1] + vvelsurf[:-1, :-1]
     ) / 4.0
 
     from scipy.ndimage import gaussian_filter

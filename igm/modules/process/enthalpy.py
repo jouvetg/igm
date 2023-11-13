@@ -10,25 +10,25 @@ import time
 
 from igm.modules.utils import *
 
-def params_enthalpy(parser):
 
+def params_enthalpy(parser):
     parser.add_argument(
-        "--enth_water_density", 
-        type=float, 
-        default=1000, 
-        help="Constant of the Water density [kg m-3]"
+        "--enth_water_density",
+        type=float,
+        default=1000,
+        help="Constant of the Water density [kg m-3]",
     )
     parser.add_argument(
-        "--enth_spy", 
-        type=float, 
-        default=31556926, 
-        help="Number of seconds per years [s y-1]"
+        "--enth_spy",
+        type=float,
+        default=31556926,
+        help="Number of seconds per years [s y-1]",
     )
     parser.add_argument(
-        "--enth_ki", 
-        type=float, 
-        default=2.1, 
-        help="Conductivity of cold ice [W m-1 K-1] (Aschwanden and al, JOG, 2012)"
+        "--enth_ki",
+        type=float,
+        default=2.1,
+        help="Conductivity of cold ice [W m-1 K-1] (Aschwanden and al, JOG, 2012)",
     )
     parser.add_argument(
         "--enth_ci",
@@ -61,22 +61,19 @@ def params_enthalpy(parser):
         help="Melting point at standart pressure [K] (Aschwanden and al, JOG, 2012)",
     )
     parser.add_argument(
-        "--enth_ref_temp", 
-        type=float, 
-        default=223.15, 
-        help="Reference temperature [K] (Aschwanden and al, JOG, 2012)"
+        "--enth_ref_temp",
+        type=float,
+        default=223.15,
+        help="Reference temperature [K] (Aschwanden and al, JOG, 2012)",
     )
     parser.add_argument(
-        "--enth_till_friction_angle", 
-        type=float, 
-        default=30, 
-        help="Till friction angle in the Mohr-Coulomb friction law [deg]"
+        "--enth_till_friction_angle",
+        type=float,
+        default=30,
+        help="Till friction angle in the Mohr-Coulomb friction law [deg]",
     )
     parser.add_argument(
-        "--enth_uthreshold", 
-        type=float, 
-        default=100, 
-        help="uthreshold [m/y]"
+        "--enth_uthreshold", type=float, default=100, help="uthreshold [m/y]"
     )
     parser.add_argument(
         "--enth_drain_rate",
@@ -101,8 +98,9 @@ def params_enthalpy(parser):
         "--enth_default_bheatflx",
         type=float,
         default=0.065,
-        help="Geothermal heat flux [W m-2]"
+        help="Geothermal heat flux [W m-2]",
     )
+
 
 def initialize_enthalpy(params, state):
     Ny, Nx = state.thk.shape
@@ -111,40 +109,52 @@ def initialize_enthalpy(params, state):
     state.T = tf.Variable(tf.ones((params.iflo_Nz, Ny, Nx)) * params.enth_melt_temp)
     state.omega = tf.Variable(tf.zeros_like(state.T))
     state.E = tf.Variable(
-        tf.ones_like(state.T) * (params.enth_ci * (params.enth_melt_temp - params.enth_ref_temp))
+        tf.ones_like(state.T)
+        * (params.enth_ci * (params.enth_melt_temp - params.enth_ref_temp))
     )
-    state.tillwat = 0.0*tf.Variable(tf.ones_like(state.thk))
-    
-    if not hasattr(state,'bheatflx'):
-        state.bheatflx = tf.Variable(tf.ones_like(state.thk)*params.enth_default_bheatflx)
-        
+    state.tillwat = 0.0 * tf.Variable(tf.ones_like(state.thk))
+
+    if not hasattr(state, "bheatflx"):
+        state.bheatflx = tf.Variable(
+            tf.ones_like(state.thk) * params.enth_default_bheatflx
+        )
 
     # update the sliding coefficient
-    state.slidingco = compute_slidingco_tf(state.thk, state.tillwat, params.iflo_ice_density,
-                                           params.iflo_gravity_cst, params.enth_till_wat_max,
-                                           params.enth_till_friction_angle,params.iflo_exp_weertman,
-                                           params.enth_uthreshold,params.iflo_new_friction_param)
+    state.slidingco = compute_slidingco_tf(
+        state.thk,
+        state.tillwat,
+        params.iflo_ice_density,
+        params.iflo_gravity_cst,
+        params.enth_till_wat_max,
+        params.enth_till_friction_angle,
+        params.iflo_exp_weertman,
+        params.enth_uthreshold,
+        params.iflo_new_friction_param,
+    )
 
     state.tcomp_enthalpy = []
-    
+
     # arrhenius must be 3D for the Enthlapy to work
     assert params.iflo_dim_arrhenius == 3
 
+
 def update_enthalpy(params, state):
-    
-    if hasattr(state,'logger'):
+    if hasattr(state, "logger"):
         state.logger.info("Update ENTHALPY at time : " + str(state.t.numpy()))
-        
+
     state.tcomp_enthalpy.append(time.time())
-    
+
     # compute the surface temperature taken the negative part of the mean air temperature
-    surftemp = tf.minimum(tf.math.reduce_mean(state.air_temp, axis=0),0) + params.enth_melt_temp  # [K]
+    surftemp = (
+        tf.minimum(tf.math.reduce_mean(state.air_temp, axis=0), 0)
+        + params.enth_melt_temp
+    )  # [K]
 
     # get the vertical discretization
     depth, dz = vertically_discretize_tf(
         state.thk, params.iflo_Nz, params.iflo_vert_spacing
     )
-     
+
     # compute temperature and enthalpy at the pressure melting point
     Tpmp, Epmp = TpmpEpmp_from_depth_tf(
         depth,
@@ -181,23 +191,35 @@ def update_enthalpy(params, state):
 
     # compute the strainheat is in [W m-3]
     state.strainheat = compute_strainheat_tf(
-        state.U / params.enth_spy, state.V / params.enth_spy,
-        state.arrhenius, state.dx, dz, params.iflo_exp_glen, params.iflo_thr_ice_thk
+        state.U / params.enth_spy,
+        state.V / params.enth_spy,
+        state.arrhenius,
+        state.dx,
+        dz,
+        params.iflo_exp_glen,
+        params.iflo_thr_ice_thk,
     )
 
     # compute the frictheat is in [W m-2]
     state.frictheat = compute_frictheat_tf(
-        state.U / params.enth_spy, state.V / params.enth_spy,
-        state.slidingco, state.topg, state.dx, params.iflo_exp_weertman, params.iflo_new_friction_param
+        state.U / params.enth_spy,
+        state.V / params.enth_spy,
+        state.slidingco,
+        state.topg,
+        state.dx,
+        params.iflo_exp_weertman,
+        params.iflo_new_friction_param,
     )
-    
+
     # compute the surface enthalpy
     surfenth = surf_enthalpy_from_temperature_tf(
         surftemp, params.enth_melt_temp, params.enth_ci, params.enth_ref_temp
     )
- 
+
     # one explicit step for the horizonal advection
-    state.E = state.E - state.dt * compute_upwind_tf( state.U, state.V, state.E, state.dx )
+    state.E = state.E - state.dt * compute_upwind_tf(
+        state.U, state.V, state.E, state.dx
+    )
 
     # update the enthalpy and the basal melt rate (implicit scheme)
     state.E, state.basalMeltRate = compute_enthalpy_basalmeltrate(
@@ -226,22 +248,32 @@ def update_enthalpy(params, state):
     state.basalMeltRate = tf.clip_by_value(state.basalMeltRate, 0.0, 10.0**10)
 
     # update the till water content
-    state.tillwat = state.tillwat + state.dt * (state.basalMeltRate - params.enth_drain_rate)
+    state.tillwat = state.tillwat + state.dt * (
+        state.basalMeltRate - params.enth_drain_rate
+    )
     state.tillwat = tf.clip_by_value(state.tillwat, 0.0, params.enth_till_wat_max)
-    state.tillwat = tf.where(state.thk>0, state.tillwat, 0.0)
+    state.tillwat = tf.where(state.thk > 0, state.tillwat, 0.0)
 
     # update the sliding coefficient
-    state.slidingco = compute_slidingco_tf(state.thk, state.tillwat, params.iflo_ice_density,
-                                            params.iflo_gravity_cst, params.enth_till_wat_max,
-                                            params.enth_till_friction_angle,params.iflo_exp_weertman,
-                                            params.enth_uthreshold,params.iflo_new_friction_param)
- 
+    state.slidingco = compute_slidingco_tf(
+        state.thk,
+        state.tillwat,
+        params.iflo_ice_density,
+        params.iflo_gravity_cst,
+        params.enth_till_wat_max,
+        params.enth_till_friction_angle,
+        params.iflo_exp_weertman,
+        params.enth_uthreshold,
+        params.iflo_new_friction_param,
+    )
+
     state.tcomp_enthalpy[-1] -= time.time()
     state.tcomp_enthalpy[-1] *= -1
 
 
 def finalize_enthalpy(params, state):
     pass
+
 
 #######################################################################################
 
@@ -257,9 +289,9 @@ def finalize_enthalpy(params, state):
 # tillwat in [m]
 # strainheat in [W m-3]
 
+
 @tf.function()
 def vertically_discretize_tf(thk, Nz, vert_spacing):
-
     zeta = tf.cast(tf.range(Nz) / (Nz - 1), "float32")
     levels = (zeta / vert_spacing) * (1.0 + (vert_spacing - 1.0) * zeta)
     ddz = levels[1:] - levels[:-1]
@@ -305,35 +337,45 @@ def arrhenius_from_temp_tf(T, omega, depth, gravity_cst, ice_density, claus_clap
 
 
 @tf.function()
-def compute_slidingco_tf(thk, tillwat, ice_density, gravity_cst, tillwatmax, 
-                         phi, exp_weertman, uthreshold, new_friction_param):
+def compute_slidingco_tf(
+    thk,
+    tillwat,
+    ice_density,
+    gravity_cst,
+    tillwatmax,
+    phi,
+    exp_weertman,
+    uthreshold,
+    new_friction_param,
+):
     # return the sliding coefficient in [m MPa^{-3} y^{-1}]
 
-    e0 = 0.69 # void ratio at reference
-    Cc = 0.12 # till compressibility coefficient 
+    e0 = 0.69  # void ratio at reference
+    Cc = 0.12  # till compressibility coefficient
     delta = 0.02
     N0 = 1000  # [Pa] reference effective pressure
 
-    s = tillwat / tillwatmax  # [] 
+    s = tillwat / tillwatmax  # []
 
     P = ice_density * gravity_cst * thk  # [Pa]
 
     effpress = tf.minimum(
-        P, N0 * ((delta * P / N0)**s) * 10**(e0*(1-s)/Cc) 
+        P, N0 * ((delta * P / N0) ** s) * 10 ** (e0 * (1 - s) / Cc)
     )  # [Pa]
-    
-    tauc = effpress * tf.math.tan(phi * np.math.pi / 180) # [Pa]
 
-    tauc = tf.where(thk > 0, tauc, 10**6) # high value if ice-fre
- 
-    tauc = tf.clip_by_value(tauc,10**5, 10**10)
- 
+    tauc = effpress * tf.math.tan(phi * np.math.pi / 180)  # [Pa]
+
+    tauc = tf.where(thk > 0, tauc, 10**6)  # high value if ice-fre
+
+    tauc = tf.clip_by_value(tauc, 10**5, 10**10)
+
     if new_friction_param:
-        slidingco = (tauc * 10**(-6)) * uthreshold**(-1.0/exp_weertman) # Mpa m^(-1/3) y^(1/3)
+        slidingco = (tauc * 10 ** (-6)) * uthreshold ** (
+            -1.0 / exp_weertman
+        )  # Mpa m^(-1/3) y^(1/3)
     else:
-        slidingco = (tauc * 10**(-6)) ** (-exp_weertman) * uthreshold # Mpa^-3 m y^-1
+        slidingco = (tauc * 10 ** (-6)) ** (-exp_weertman) * uthreshold  # Mpa^-3 m y^-1
 
- 
     return slidingco
 
 
@@ -378,7 +420,7 @@ def compute_strainheat_tf(U, V, arrhenius, dx, dz, exp_glen, thr):
         )
     ) ** 0.5
 
-    strainrate = tf.where(DZ2>1, strainrate, 0.0) 
+    strainrate = tf.where(DZ2 > 1, strainrate, 0.0)
 
     # here one put back arrhenius in unit  Pa^{-3} s^{-1}
     # [Pa y^1/3 y^(-4/3)] = [Pa s^{-1}] = [W m^{-3}]
@@ -400,17 +442,23 @@ def compute_frictheat_tf(U, V, slidingco, topg, dx, exp_weertman, new_friction_p
     if new_friction_param:
         # slidingco is in Mpa m^{-1/3} y^{1/3}
         # [Pa m^{-1/3} y^{1/3} s^{1/3} y^{-1/3} m^{4/3} s^{-4/3}] = [Pa m s^{-1}] = [W m^{-2}]
-        return (slidingco*10**6) * (31556926)**(1.0/exp_weertman) \
-            * ub ** ( (1.0 / exp_weertman) + 1 )
+        return (
+            (slidingco * 10**6)
+            * (31556926) ** (1.0 / exp_weertman)
+            * ub ** ((1.0 / exp_weertman) + 1)
+        )
     else:
         # slidingco is in Mpa^-3 m y-1
         # [Pa s^{1/3} m^{-1/3} m^{4/3} s^{-4/3}] = [Pa m s^{-1}] = [W m^{-2}]
-        return ((slidingco / ((10**18) * 31556926)) + 10 ** (-12)) ** -(1.0 / exp_weertman) \
-            * ub ** ( (1.0 / exp_weertman) + 1 )
+        return ((slidingco / ((10**18) * 31556926)) + 10 ** (-12)) ** -(
+            1.0 / exp_weertman
+        ) * ub ** ((1.0 / exp_weertman) + 1)
 
 
 @tf.function()
-def TpmpEpmp_from_depth_tf(depth, gravity_cst, ice_density, claus_clape_cst, melt_temp, ci, ref_temp):
+def TpmpEpmp_from_depth_tf(
+    depth, gravity_cst, ice_density, claus_clape_cst, melt_temp, ci, ref_temp
+):
     # Tmp is the pressure melting point Temperature
     # Tmp is the pressure melting point Enthalpy
     p = ice_density * gravity_cst * depth  #  [Pa]
@@ -476,7 +524,7 @@ def solve_TDMA(L, M, U, R):
     # Tridiagonal Matrix Algorithm (TDMA) or Thomas Algorithm
     # https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
     # Here L = Lower Diag, M = Main Diag, U = Upper Diag, R = Right Hand Side
-    
+
     nz = M.shape[0]
 
     w = []
@@ -559,7 +607,7 @@ def assembly_diffusion_advection_tf(E, dt, dz, w, K, f, BCB, VB, VS, L, M, U, R)
     M[0 : nz - 1].assign(M[0 : nz - 1] + s)
     L.assign(L - s)
     U.assign(U - s)
-    R.assign(R + E + dt*f)
+    R.assign(R + E + dt * f)
 
     # BOTTOM BC (BCB is either 'neumann' (1) or 'dirichlet' (0))
     M[0].assign(tf.where(BCB == 1, -tf.ones_like(BCB), tf.ones_like(BCB)))
@@ -572,15 +620,16 @@ def assembly_diffusion_advection_tf(E, dt, dz, w, K, f, BCB, VB, VS, L, M, U, R)
     R[-1].assign(VS)
 
     # UPWIND SCHEME FOR THE ADVECTION TERM (TREATED IMPLICITLY)
-    wdivdz = dt*(w[1:] + w[:-1]) / (2.0 * dz)  # this is a P0 quantity
+    wdivdz = dt * (w[1:] + w[:-1]) / (2.0 * dz)  # this is a P0 quantity
     L[:-1].assign(L[:-1] + tf.where(w[1:-1] > 0, -wdivdz[:-1], 0))
     M[1:-1].assign(M[1:-1] + tf.where(w[1:-1] > 0, wdivdz[:-1], -wdivdz[1:]))
     U[1:].assign(U[1:] + tf.where(w[1:-1] <= 0, wdivdz[1:], 0))
 
     return L, M, U, R
 
+
 def compute_enthalpy_basalmeltrate(
-    E,  # [E] or [W s kg-1] 
+    E,  # [E] or [W s kg-1]
     Epmp,  # [E] or [W s kg-1]
     dt,  # [s]
     dz,  # [m]
@@ -609,9 +658,7 @@ def compute_enthalpy_basalmeltrate(
 
     K = PKc * tf.ones_like(dz)  # P0, [m2 s-1]
 
-    K = tf.where(
-        (E[:-1] + E[1:] / 2.0) >= (Epmp[:-1] + Epmp[1:] / 2.0), K * KtdivKc, K
-    )
+    K = tf.where((E[:-1] + E[1:] / 2.0) >= (Epmp[:-1] + Epmp[1:] / 2.0), K * KtdivKc, K)
 
     VS = surfenth  # one value [K]
 
@@ -641,7 +688,9 @@ def compute_enthalpy_basalmeltrate(
 
     # fill the FD matrices to solve the boundary value problem
     # d E / d t  + w * dE /dz = K * ( d^2 E / d^2 z ) + f of unit [E s^{-1}] or [W kg-1]
-    L, M, U, R = assembly_diffusion_advection_tf(E, dt, tf.maximum(dz,thr), w, K, f, BCB, VB, VS, L, M, U, R)
+    L, M, U, R = assembly_diffusion_advection_tf(
+        E, dt, tf.maximum(dz, thr), w, K, f, BCB, VB, VS, L, M, U, R
+    )
 
     # return the results of the solving of the boundary value problem (tridiagonal pb)
     E = solve_TDMA(L, M, U, R)
@@ -669,7 +718,7 @@ def compute_enthalpy_basalmeltrate(
     )
 
     # Drain along the ice column and update basal melt rate
-    if (dt>0)&drain_ice_column:
+    if (dt > 0) & drain_ice_column:
         target_water_fraction = 0.01
 
         DZ = tf.concat([dz[0:1], dz[:-1] + dz[1:], dz[-1:]], axis=0) / 2.0
@@ -693,6 +742,8 @@ def compute_enthalpy_basalmeltrate(
         H_total_drained = tf.reduce_sum(H_drained, axis=0)  # [m]
 
         # update the basal melt rate with the drained water (basalMeltRate in [m y-1])
-        basalMeltRate = basalMeltRate + (spy / dt) * (ice_density / water_density) * H_total_drained
+        basalMeltRate = (
+            basalMeltRate + (spy / dt) * (ice_density / water_density) * H_total_drained
+        )
 
     return E, basalMeltRate

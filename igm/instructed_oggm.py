@@ -17,6 +17,7 @@ from oggm.cfg import G, SEC_IN_YEAR, SEC_IN_DAY
 import igm
 from oggm.core.sia2d import Model2D
 
+
 class IGM_Model2D(Model2D):
     def filter_ice_border(ice_thick):
         """Sets the ice thickness at the border of the domain to zero."""
@@ -74,7 +75,7 @@ class IGM_Model2D(Model2D):
         mb_filter : the mask of the glacier (2d array)
         
         """
- 
+
         parser = argparse.ArgumentParser(description="IGM")
         igm.params_iceflow(parser)
         self.params = parser.parse_args(args=[])

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
-'''
+"""
  Quick notes about the code below:
  
  The goal of this module is to compute the ice flow velocity field
@@ -33,7 +33,7 @@ Alternatively, one can solve the Blatter-Pattyn model using a solver using
 function _update_iceflow_solved. Doing so is not very different to retrain the
 emulator as we minmize the same energy, however, with different controls,
 namely directly the velocity field U and V instead of the emulator parameters.
-'''
+"""
 
 import numpy as np
 import os
@@ -50,8 +50,8 @@ import importlib_resources
 
 ############################################
 
+
 def params_iceflow(parser):
-    
     # type of ice flow computations
     parser.add_argument(
         "--iflo_type",
@@ -99,10 +99,7 @@ def params_iceflow(parser):
         help="Glen's flow law exponent",
     )
     parser.add_argument(
-        "--iflo_exp_weertman", 
-        type=float, 
-        default=3, 
-        help="Weertman's law exponent"
+        "--iflo_exp_weertman", type=float, default=3, help="Weertman's law exponent"
     )
     parser.add_argument(
         "--iflo_gravity_cst",
@@ -169,14 +166,13 @@ def params_iceflow(parser):
         type=list,
         default=["thk", "usurf", "arrhenius", "slidingco", "dX"],
         help="Input fields of the iceflow emulator",
-    )    
+    )
     parser.add_argument(
         "--iflo_dim_arrhenius",
         type=int,
         default=2,
         help="Dimension of the arrhenius factor (horizontal 2D or 3D)",
     )
-
 
     parser.add_argument(
         "--iflo_retrain_emulator_freq",
@@ -269,32 +265,36 @@ def params_iceflow(parser):
         type=str2bool,
         default=False,
         help="This is a quick fix of the border issue, other the physics informed emaulator shows zero velocity at the border",
-    )  
+    )
+
 
 def initialize_iceflow(params, state):
-
     state.tcomp_iceflow = []
 
     # here we initialize variable parmaetrizing ice flow
     if not hasattr(state, "arrhenius"):
-        
-        if params.iflo_dim_arrhenius==3:
-            state.arrhenius = tf.Variable( \
-                tf.ones((params.iflo_Nz,state.thk.shape[0],state.thk.shape[1])) \
-                                          * params.iflo_init_arrhenius )
+        if params.iflo_dim_arrhenius == 3:
+            state.arrhenius = tf.Variable(
+                tf.ones((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+                * params.iflo_init_arrhenius
+            )
         else:
-            state.arrhenius = tf.Variable(tf.ones_like(state.thk) * params.iflo_init_arrhenius)
+            state.arrhenius = tf.Variable(
+                tf.ones_like(state.thk) * params.iflo_init_arrhenius
+            )
 
     if not hasattr(state, "slidingco"):
-        state.slidingco = tf.Variable(tf.ones_like(state.thk) * params.iflo_init_slidingco)
+        state.slidingco = tf.Variable(
+            tf.ones_like(state.thk) * params.iflo_init_slidingco
+        )
 
     # here we create a new velocity field
     if not hasattr(state, "U"):
         state.U = tf.Variable(
-            tf.zeros( (params.iflo_Nz, state.thk.shape[0], state.thk.shape[1] ) )
+            tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
         )
         state.V = tf.Variable(
-            tf.zeros( (params.iflo_Nz, state.thk.shape[0], state.thk.shape[1] ) )
+            tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
         )
 
     if not params.iflo_type == "solved":
@@ -307,21 +307,39 @@ def initialize_iceflow(params, state):
                 learning_rate=params.iflo_retrain_emulator_lr
             )
 
-        direct_name  = 'pinnbp'+'_'+str(params.iflo_Nz)+'_'+str(int(params.iflo_vert_spacing))+'_'
-        direct_name +=  params.iflo_network+'_'+str(params.iflo_nb_layers)+'_'+str(params.iflo_nb_out_filter)+'_'
-        direct_name +=  str(params.iflo_dim_arrhenius)+'_'+str(int(params.iflo_new_friction_param))
-        
+        direct_name = (
+            "pinnbp"
+            + "_"
+            + str(params.iflo_Nz)
+            + "_"
+            + str(int(params.iflo_vert_spacing))
+            + "_"
+        )
+        direct_name += (
+            params.iflo_network
+            + "_"
+            + str(params.iflo_nb_layers)
+            + "_"
+            + str(params.iflo_nb_out_filter)
+            + "_"
+        )
+        direct_name += (
+            str(params.iflo_dim_arrhenius)
+            + "_"
+            + str(int(params.iflo_new_friction_param))
+        )
+
         existing_emulator = True
-        
+
         # first check if it finds a pretrained emulator in the igm package
         if os.path.exists(importlib_resources.files(emulators).joinpath(direct_name)):
             dirpath = importlib_resources.files(emulators).joinpath(direct_name)
-            print("Found pretrained emulator in the igm package: "+direct_name)
+            print("Found pretrained emulator in the igm package: " + direct_name)
         else:
             # if not, check if it finds a pretrained emulator in the current directory
             if os.path.exists(params.iflo_emulator):
                 dirpath = params.iflo_emulator
-                print("Found pretrained emulator: "+params.iflo_emulator)
+                print("Found pretrained emulator: " + params.iflo_emulator)
             # if not, create a new one from scratch
             else:
                 existing_emulator = False
@@ -334,13 +352,19 @@ def initialize_iceflow(params, state):
                 part = fileline.split()
                 fieldin.append(part[0])
             fid.close()
-            assert params.iflo_fieldin == fieldin 
-            state.iceflow_model = tf.keras.models.load_model( os.path.join(dirpath, "model.h5") , compile=False)
+            assert params.iflo_fieldin == fieldin
+            state.iceflow_model = tf.keras.models.load_model(
+                os.path.join(dirpath, "model.h5"), compile=False
+            )
             state.iceflow_model.compile()
         else:
-            nb_inputs  = len(params.iflo_fieldin) + (params.iflo_dim_arrhenius==3)*(params.iflo_Nz-1)
+            nb_inputs = len(params.iflo_fieldin) + (params.iflo_dim_arrhenius == 3) * (
+                params.iflo_Nz - 1
+            )
             nb_outputs = 2 * params.iflo_Nz
-            state.iceflow_model = getattr(igm, params.iflo_network)(params, nb_inputs, nb_outputs)
+            state.iceflow_model = getattr(igm, params.iflo_network)(
+                params, nb_inputs, nb_outputs
+            )
 
     if not params.iflo_type == "emulated":
         if int(tf.__version__.split(".")[1]) <= 10:
@@ -355,14 +379,12 @@ def initialize_iceflow(params, state):
     # if we do disoangostic, one neds to create a solved solution
     if params.iflo_type == "diagnostic":
         state.UT = tf.Variable(
-            tf.zeros(
-                ( params.iflo_Nz, state.thk.shape[0], state.thk.shape[1] ) )
+            tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
         )
         state.VT = tf.Variable(
-            tf.zeros(
-                ( params.iflo_Nz, state.thk.shape[0], state.thk.shape[1] ) )
+            tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
         )
-        
+
     # create the vertica discretization
     define_vertical_weight(params, state)
 
@@ -371,18 +393,22 @@ def initialize_iceflow(params, state):
 
     # In case of a U-net, must make sure the I/O size is multiple of 2**N
     if params.iflo_multiple_window_size > 0:
-        NNy = params.iflo_multiple_window_size * math.ceil(Ny / params.iflo_multiple_window_size)
-        NNx = params.iflo_multiple_window_size * math.ceil(Nx / params.iflo_multiple_window_size)
+        NNy = params.iflo_multiple_window_size * math.ceil(
+            Ny / params.iflo_multiple_window_size
+        )
+        NNx = params.iflo_multiple_window_size * math.ceil(
+            Nx / params.iflo_multiple_window_size
+        )
         state.PAD = [[0, NNy - Ny], [0, NNx - Nx]]
     else:
         state.PAD = [[0, 0], [0, 0]]
-        
+
     if not params.iflo_type == "solved":
         _update_iceflow_emulated(params, state)
 
-def update_iceflow(params, state):
 
-    if hasattr(state,'logger'):
+def update_iceflow(params, state):
+    if hasattr(state, "logger"):
         state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
     state.tcomp_iceflow.append(time.time())
@@ -404,7 +430,8 @@ def update_iceflow(params, state):
 
 
 def finalize_iceflow(params, state):
-    pass 
+    pass
+
 
 ########################################################################
 ########################################################################
@@ -430,7 +457,6 @@ def _compute_gradient_stag(s, dX, dY):
 
 @tf.function(experimental_relax_shapes=True)
 def _compute_strainrate_Glen_tf(U, V, thk, dX, ddz, sloptopgx, sloptopgy, thr):
-    
     # Compute horinzontal derivatives
     dUdx = (U[:, :, :, 1:] - U[:, :, :, :-1]) / dX[0, 0, 0]
     dVdx = (V[:, :, :, 1:] - V[:, :, :, :-1]) / dX[0, 0, 0]
@@ -451,8 +477,8 @@ def _compute_strainrate_Glen_tf(U, V, thk, dX, ddz, sloptopgx, sloptopgy, thr):
         dVdy = (dVdy[:, :-1, :, :] + dVdy[:, 1:, :, :]) / 2
 
     # compute the horizontal average, these quantitites will be used for vertical derivatives
-    Um = ( U[:, :, 1:, 1:] + U[:, :, 1:, :-1] + U[:, :, :-1, 1:] + U[:, :, :-1, :-1] ) / 4
-    Vm = ( V[:, :, 1:, 1:] + V[:, :, 1:, :-1] + V[:, :, :-1, 1:] + V[:, :, :-1, :-1] ) / 4
+    Um = (U[:, :, 1:, 1:] + U[:, :, 1:, :-1] + U[:, :, :-1, 1:] + U[:, :, :-1, :-1]) / 4
+    Vm = (V[:, :, 1:, 1:] + V[:, :, 1:, :-1] + V[:, :, :-1, 1:] + V[:, :, :-1, :-1]) / 4
 
     if U.shape[1] > 1:
         # vertical derivative if there is at least two layears
@@ -476,11 +502,21 @@ def _compute_strainrate_Glen_tf(U, V, thk, dX, ddz, sloptopgx, sloptopgy, thr):
     Exz = 0.5 * dUdz
     Eyz = 0.5 * dVdz
 
-    return 0.5 * ( Exx**2 + Exy**2 + Exz**2 + Exy**2 + Eyy**2 + Eyz**2 + Exz**2 + Eyz**2 + Ezz**2 )
+    return 0.5 * (
+        Exx**2
+        + Exy**2
+        + Exz**2
+        + Exy**2
+        + Eyy**2
+        + Eyz**2
+        + Exz**2
+        + Eyz**2
+        + Ezz**2
+    )
+
 
 def _stag4(B):
     return (B[:, 1:, 1:] + B[:, 1:, :-1] + B[:, :-1, 1:] + B[:, :-1, :-1]) / 4
-
 
 
 def _stag8(B):
@@ -495,25 +531,51 @@ def _stag8(B):
         + B[:, :-1, :-1, :-1]
     ) / 8
 
+
 def iceflow_energy(params, U, V, fieldin):
-    
     thk, usurf, arrhenius, slidingco, dX = fieldin
-    
-    return _iceflow_energy(U, V, thk, usurf, arrhenius, slidingco, dX,
-                           params.iflo_Nz, params.iflo_vert_spacing, 
-                           params.iflo_exp_glen, params.iflo_exp_weertman, 
-                           params.iflo_regu_glen, params.iflo_regu_weertman,
-                           params.iflo_thr_ice_thk,
-                           params.iflo_ice_density, params.iflo_gravity_cst, 
-                           params.iflo_new_friction_param)
-     
+
+    return _iceflow_energy(
+        U,
+        V,
+        thk,
+        usurf,
+        arrhenius,
+        slidingco,
+        dX,
+        params.iflo_Nz,
+        params.iflo_vert_spacing,
+        params.iflo_exp_glen,
+        params.iflo_exp_weertman,
+        params.iflo_regu_glen,
+        params.iflo_regu_weertman,
+        params.iflo_thr_ice_thk,
+        params.iflo_ice_density,
+        params.iflo_gravity_cst,
+        params.iflo_new_friction_param,
+    )
+
+
 @tf.function(experimental_relax_shapes=True)
-def _iceflow_energy(U, V, thk, usurf, arrhenius, slidingco, dX,
-                    Nz, vert_spacing, exp_glen, exp_weertman, 
-                    regu_glen, regu_weertman, thr_ice_thk, 
-                    ice_density, gravity_cst, 
-                    new_friction_param):
-    
+def _iceflow_energy(
+    U,
+    V,
+    thk,
+    usurf,
+    arrhenius,
+    slidingco,
+    dX,
+    Nz,
+    vert_spacing,
+    exp_glen,
+    exp_weertman,
+    regu_glen,
+    regu_weertman,
+    thr_ice_thk,
+    ice_density,
+    gravity_cst,
+    new_friction_param,
+):
     # warning, the energy is here normalized dividing by int_Omega
 
     COND = (
@@ -537,7 +599,7 @@ def _iceflow_energy(U, V, thk, usurf, arrhenius, slidingco, dX,
     B = 2.0 * arrhenius ** (-1.0 / exp_glen)
 
     if new_friction_param:
-        C = 1.0 * slidingco # C has unit Mpa y^m m^(-m)
+        C = 1.0 * slidingco  # C has unit Mpa y^m m^(-m)
     else:
         if exp_weertman == 1:
             # C has unit Mpa y^m m^(-m)
@@ -562,7 +624,7 @@ def _iceflow_energy(U, V, thk, usurf, arrhenius, slidingco, dX,
     sr = tf.where(COND, sr, 0.0)
 
     # C_shear is unit  Mpa y^(1/n) y^(-1-1/n) * m^3 = Mpa y^(-1) m^3
-    if len(B.shape)==3:
+    if len(B.shape) == 3:
         C_shear = (
             tf.reduce_mean(
                 _stag4(B)
@@ -574,7 +636,9 @@ def _iceflow_energy(U, V, thk, usurf, arrhenius, slidingco, dX,
     else:
         C_shear = (
             tf.reduce_mean(
-                tf.reduce_sum(_stag8(B) * dz * ((sr + regu_glen**2) ** (p / 2)), axis=1),
+                tf.reduce_sum(
+                    _stag8(B) * dz * ((sr + regu_glen**2) ** (p / 2)), axis=1
+                ),
                 axis=(-1, -2),
             )
             / p
@@ -584,11 +648,10 @@ def _iceflow_energy(U, V, thk, usurf, arrhenius, slidingco, dX,
     N = (
         _stag4(U[:, 0, :, :] ** 2 + V[:, 0, :, :] ** 2)
         + regu_weertman**2
-        + (_stag4(U[:, 0, :, :]) * sloptopgx + _stag4(V[:, 0, :, :]) * sloptopgy)
-        ** 2
+        + (_stag4(U[:, 0, :, :]) * sloptopgx + _stag4(V[:, 0, :, :]) * sloptopgy) ** 2
     )
     C_slid = tf.reduce_mean(_stag4(C) * N ** (s / 2), axis=(-1, -2)) / s
- 
+
     slopsurfx, slopsurfy = _compute_gradient_stag(usurf, dX, dX)
     slopsurfx = tf.expand_dims(slopsurfx, axis=1)
     slopsurfy = tf.expand_dims(slopsurfy, axis=1)
@@ -609,23 +672,23 @@ def _iceflow_energy(U, V, thk, usurf, arrhenius, slidingco, dX,
 
 # @tf.function(experimental_relax_shapes=True)
 def iceflow_energy_XY(params, X, Y):
+    U, V = Y_to_UV(params, Y)
 
-    U,V = Y_to_UV(params, Y)
-    
-    fieldin = X_to_fieldin(params, X) 
+    fieldin = X_to_fieldin(params, X)
 
-    return iceflow_energy( params, U, V, fieldin )
+    return iceflow_energy(params, U, V, fieldin)
+
 
 def Y_to_UV(params, Y):
     N = params.iflo_Nz
- 
+
     U = tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1])
     V = tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1])
-    
+
     return U, V
 
+
 def UV_to_Y(params, U, V):
- 
     UU = tf.experimental.numpy.moveaxis(U, [0], [-1])
     VV = tf.experimental.numpy.moveaxis(V, [0], [-1])
     RR = tf.expand_dims(
@@ -638,39 +701,42 @@ def UV_to_Y(params, U, V):
 
     return RR
 
-def fieldin_to_X(params,fieldin):
-    
-    X = []
-     
-    fieldin_dim=[0,0,1*(params.iflo_dim_arrhenius==3),0,0]
 
-    for f,s in zip(fieldin,fieldin_dim):
-        if s==0:
-            X.append( tf.expand_dims(f,  axis=-1) )
+def fieldin_to_X(params, fieldin):
+    X = []
+
+    fieldin_dim = [0, 0, 1 * (params.iflo_dim_arrhenius == 3), 0, 0]
+
+    for f, s in zip(fieldin, fieldin_dim):
+        if s == 0:
+            X.append(tf.expand_dims(f, axis=-1))
         else:
-            X.append( tf.experimental.numpy.moveaxis(f, [0], [-1]) )
-              
-    return  tf.expand_dims( tf.concat(X, axis=-1), axis=0)  
+            X.append(tf.experimental.numpy.moveaxis(f, [0], [-1]))
+
+    return tf.expand_dims(tf.concat(X, axis=-1), axis=0)
+
 
 def X_to_fieldin(params, X):
-
     i = 0
-    
-    fieldin_dim=[0,0,1*(params.iflo_dim_arrhenius==3),0,0]
-    
+
+    fieldin_dim = [0, 0, 1 * (params.iflo_dim_arrhenius == 3), 0, 0]
+
     fieldin = []
-    
-    for f,s in zip(params.iflo_fieldin,fieldin_dim):
-        if s==0:
-            fieldin.append( X[:,:,:,i] )
+
+    for f, s in zip(params.iflo_fieldin, fieldin_dim):
+        if s == 0:
+            fieldin.append(X[:, :, :, i])
             i += 1
         else:
-            fieldin.append( tf.experimental.numpy.moveaxis( 
-                                X[:,:,:,i:i+params.iflo_Nz], [-1], [1]
-                                                          ) )
+            fieldin.append(
+                tf.experimental.numpy.moveaxis(
+                    X[:, :, :, i : i + params.iflo_Nz], [-1], [1]
+                )
+            )
             i += params.iflo_Nz
-    
+
     return fieldin
+
 
 ########################################################################
 ########################################################################
@@ -685,7 +751,9 @@ def define_vertical_weight(params, state):
     """
 
     zeta = np.arange(params.iflo_Nz + 1) / params.iflo_Nz
-    weight = (zeta / params.iflo_vert_spacing) * (1.0 + (params.iflo_vert_spacing - 1.0) * zeta)
+    weight = (zeta / params.iflo_vert_spacing) * (
+        1.0 + (params.iflo_vert_spacing - 1.0) * zeta
+    )
     weight = tf.Variable(weight[1:] - weight[:-1], dtype=tf.float32)
     state.vert_weight = tf.expand_dims(tf.expand_dims(weight, axis=-1), axis=-1)
 
@@ -708,11 +776,15 @@ def solve_iceflow(params, state, U, V):
         with tf.GradientTape() as t:
             t.watch(U)
             t.watch(V)
-            
-            fieldin = [ tf.expand_dims(vars(state)[f], axis=0) for f in params.iflo_fieldin ]
 
-            COST = iceflow_energy( params, tf.expand_dims(U, axis=0), tf.expand_dims(V, axis=0), fieldin )
-            
+            fieldin = [
+                tf.expand_dims(vars(state)[f], axis=0) for f in params.iflo_fieldin
+            ]
+
+            COST = iceflow_energy(
+                params, tf.expand_dims(U, axis=0), tf.expand_dims(V, axis=0), fieldin
+            )
+
             Cost_Glen.append(COST)
 
             # Stop if the cost no longer decreases
@@ -738,7 +810,6 @@ def solve_iceflow(params, state, U, V):
 
 
 def _update_iceflow_solved(params, state):
-
     U, V, Cost_Glen = solve_iceflow(params, state, state.U, state.V)
 
     state.U.assign(U)
@@ -750,7 +821,6 @@ def _update_iceflow_solved(params, state):
 
 
 def update_2d_iceflow_variables(params, state):
-
     state.uvelbase = state.U[0, :, :]
     state.vvelbase = state.V[0, :, :]
     state.ubar = tf.reduce_sum(state.U * state.vert_weight, axis=0)
@@ -767,29 +837,28 @@ def update_2d_iceflow_variables(params, state):
 
 
 def _update_iceflow_emulated(params, state):
+    # Define the input of the NN, include scaling
 
-    # Define the input of the NN, include scaling 
-        
-    fieldin = [ vars(state)[f] for f in params.iflo_fieldin ]
-    
+    fieldin = [vars(state)[f] for f in params.iflo_fieldin]
+
     X = fieldin_to_X(params, fieldin)
-     
+
     if params.iflo_exclude_borders:
-        X = tf.pad(X, [[0,0],[1,1], [1,1],[0,0]], "SYMMETRIC")
+        X = tf.pad(X, [[0, 0], [1, 1], [1, 1], [0, 0]], "SYMMETRIC")
 
     Y = state.iceflow_model(X)
-    
+
     if params.iflo_exclude_borders:
-        Y = Y[:,1:-1,1:-1,:]
+        Y = Y[:, 1:-1, 1:-1, :]
 
     Ny, Nx = state.thk.shape
     N = params.iflo_Nz
-    
+
     U, V = Y_to_UV(params, Y[:, :Ny, :Nx, :])
-    U = U[0] 
+    U = U[0]
     V = V[0]
 
-#    U = tf.where(state.thk > 0, U, 0)
+    #    U = tf.where(state.thk > 0, U, 0)
 
     state.U.assign(U)
     state.V.assign(V)
@@ -797,30 +866,37 @@ def _update_iceflow_emulated(params, state):
     # If requested, the speeds are artifically upper-bounded
     if params.iflo_force_max_velbar > 0:
         velbar_mag = getmag3d(state.U, state.V)
-        state.U.assign( tf.where( velbar_mag >= params.iflo_force_max_velbar,
-                        params.iflo_force_max_velbar * (state.U / velbar_mag),
-                        state.U ) )
-        state.V.assign( tf.where( velbar_mag >= params.iflo_force_max_velbar,
-                        params.iflo_force_max_velbar * (state.V / velbar_mag),
-                        state.V ) )
+        state.U.assign(
+            tf.where(
+                velbar_mag >= params.iflo_force_max_velbar,
+                params.iflo_force_max_velbar * (state.U / velbar_mag),
+                state.U,
+            )
+        )
+        state.V.assign(
+            tf.where(
+                velbar_mag >= params.iflo_force_max_velbar,
+                params.iflo_force_max_velbar * (state.V / velbar_mag),
+                state.V,
+            )
+        )
 
     update_2d_iceflow_variables(params, state)
 
 
 def _update_iceflow_emulator(params, state):
+    if (state.it < 0) | (state.it % params.iflo_retrain_emulator_freq == 0):
+        fieldin = [vars(state)[f] for f in params.iflo_fieldin]
 
-    if (state.it<0) | (state.it%params.iflo_retrain_emulator_freq==0):
-         
-        fieldin = [ vars(state)[f] for f in params.iflo_fieldin ]
-        
         XX = fieldin_to_X(params, fieldin)
-         
+
         X = _split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
-         
+
         state.COST_EMULATOR = []
-        
-        nbit = (state.it>=0)*params.iflo_retrain_emulator_nbit \
-             + (state.it<0)*params.iflo_retrain_emulator_nbit_init
+
+        nbit = (state.it >= 0) * params.iflo_retrain_emulator_nbit + (
+            state.it < 0
+        ) * params.iflo_retrain_emulator_nbit_init
 
         for epoch in range(nbit):
             cost_emulator = tf.Variable(0.0)
@@ -834,7 +910,7 @@ def _update_iceflow_emulator(params, state):
                     cost_emulator = cost_emulator + COST
 
                     if (epoch + 1) % 100 == 0:
-                        U,V = Y_to_UV(params, Y)
+                        U, V = Y_to_UV(params, Y)
                         U = U[0]
                         V = V[0]
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
@@ -877,7 +953,6 @@ def _split_into_patches(X, nbmax):
 
 
 def _update_iceflow_diagnostic(params, state):
-
     if params.iflo_retrain_emulator_freq > 0:
         _update_iceflow_emulator(params, state)
         COST_Emulator = state.COST_EMULATOR[-1].numpy()
@@ -910,7 +985,7 @@ def computemisfit(state, thk, U, V):
 
     VEL = tf.stack([ubar, vbar], axis=0)
     MA = tf.where(thk > 1, tf.ones_like(VEL), 0)
-    #MA = tf.where(state.thk > 1, tf.ones_like(VEL), 0)
+    # MA = tf.where(state.thk > 1, tf.ones_like(VEL), 0)
 
     nl1diff = tf.reduce_sum(MA * tf.abs(VEL)) / tf.reduce_sum(MA)
     nl2diff = tf.reduce_sum(MA * tf.abs(VEL) ** 2) / tf.reduce_sum(MA)
@@ -1008,12 +1083,12 @@ def save_iceflow_model(params, state):
     os.mkdir(directory)
 
     state.iceflow_model.save(os.path.join(directory, "model.h5"))
-    
-#    fieldin_dim=[0,0,1*(params.iflo_dim_arrhenius==3),0,0]
+
+    #    fieldin_dim=[0,0,1*(params.iflo_dim_arrhenius==3),0,0]
 
     fid = open(os.path.join(directory, "fieldin.dat"), "w")
-#    for key,gg in zip(params.iflo_fieldin,fieldin_dim):
-#        fid.write("%s %.1f \n" % (key, gg))
+    #    for key,gg in zip(params.iflo_fieldin,fieldin_dim):
+    #        fid.write("%s %.1f \n" % (key, gg))
     for key in params.iflo_fieldin:
         fid.write("%s %.1f \n" % (key))
     fid.close()

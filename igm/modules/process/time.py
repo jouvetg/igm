@@ -17,16 +17,13 @@ def params_time(parser):
         help="Start modelling time",
     )
     parser.add_argument(
-        "--time_end", 
-        type=float, 
-        default=2100.0, 
-        help="End modelling time"
+        "--time_end", type=float, default=2100.0, help="End modelling time"
     )
     parser.add_argument(
-        "--time_save", 
-        type=float, 
-        default=10, 
-        help="Save result frequency for many modules (in year)"
+        "--time_save",
+        type=float,
+        default=10,
+        help="Save result frequency for many modules (in year)",
     )
     parser.add_argument(
         "--time_cfl",
@@ -49,7 +46,7 @@ def initialize_time(params, state):
     state.t = tf.Variable(float(params.time_start))
 
     # the first loop is not advancing
-    state.it = -1      
+    state.it = -1
     state.itsave = -1
 
     state.dt = tf.Variable(float(params.time_step_max))
@@ -60,17 +57,16 @@ def initialize_time(params, state):
         np.arange(params.time_start, params.time_end, params.time_save)
     ) + [params.time_end]
 
-    state.time_save = tf.constant(state.time_save,dtype="float32")
+    state.time_save = tf.constant(state.time_save, dtype="float32")
 
     state.saveresult = True
 
 
 def update_time(params, state):
-
-    if hasattr(state,'logger'):
+    if hasattr(state, "logger"):
         state.logger.info(
-        "Update DT from the CFL condition at time : " + str(state.t.numpy())
-                         )
+            "Update DT from the CFL condition at time : " + str(state.t.numpy())
+        )
 
     state.tcomp_time.append(time.time())
 
@@ -82,7 +78,9 @@ def update_time(params, state):
 
     # dt_target account for both cfl and dt_max
     if velomax > 0:
-        state.dt_target = min(params.time_cfl * state.dx / velomax, params.time_step_max)
+        state.dt_target = min(
+            params.time_cfl * state.dx / velomax, params.time_step_max
+        )
     else:
         state.dt_target = params.time_step_max
 
@@ -97,7 +95,7 @@ def update_time(params, state):
         state.saveresult = False
 
     # the first loop is not advancing
-    if state.it>=0:
+    if state.it >= 0:
         state.t.assign(state.t + state.dt)
 
     state.it += 1

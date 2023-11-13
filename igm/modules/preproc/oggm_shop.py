@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,13 +12,16 @@ from igm.modules.utils import str2bool
 
 from igm.modules.utils import complete_data
 
+
 def params_oggm_shop(parser):
     # aletsch  RGI60-11.01450
     # malspina RGI60-01.13696
     # brady    RGI60-01.20796
     # ethan    RGI60-01.00709
 
-    parser.add_argument("--oggm_RGI_ID", type=str, default="RGI60-11.01450", help="RGI ID")
+    parser.add_argument(
+        "--oggm_RGI_ID", type=str, default="RGI60-11.01450", help="RGI ID"
+    )
     parser.add_argument(
         "--oggm_preprocess", type=str2bool, default=True, help="Use preprocessing"
     )
@@ -66,16 +69,16 @@ def params_oggm_shop(parser):
         help="Write prepared data into a geology file",
     )
 
-def initialize_oggm_shop(params, state):
 
+def initialize_oggm_shop(params, state):
     import json
-    
+
     _oggm_util([params.oggm_RGI_ID], params)
-     
-    if hasattr(state,'logger'):
+
+    if hasattr(state, "logger"):
         state.logger.info("Prepare data using oggm and glathida")
 
-    nc = Dataset(os.path.join(params.oggm_RGI_ID,"gridded_data.nc"), "r+")
+    nc = Dataset(os.path.join(params.oggm_RGI_ID, "gridded_data.nc"), "r+")
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.flip(np.squeeze(nc.variables["y"]).astype("float32"))
@@ -88,63 +91,71 @@ def initialize_oggm_shop(params, state):
     icemask = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
 
     usurfobs = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
-    icemaskobs = np.flipud(
-        np.squeeze(nc.variables["glacier_mask"]).astype("float32")
-    )
-    
-    vars_to_save =  ["usurf", "thk", "icemask", "usurfobs", "thkobs", "icemaskobs"]
-     
+    icemaskobs = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
+
+    vars_to_save = ["usurf", "thk", "icemask", "usurfobs", "thkobs", "icemaskobs"]
+
     if params.oggm_vel_source == "millan_ice_velocity":
         if "millan_vx" in nc.variables:
-            uvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vx"]).astype("float32"))
+            uvelsurfobs = np.flipud(
+                np.squeeze(nc.variables["millan_vx"]).astype("float32")
+            )
             uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
             uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
             vars_to_save += ["uvelsurfobs"]
         if "millan_vy" in nc.variables:
-            vvelsurfobs = np.flipud(np.squeeze(nc.variables["millan_vy"]).astype("float32"))
+            vvelsurfobs = np.flipud(
+                np.squeeze(nc.variables["millan_vy"]).astype("float32")
+            )
             vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
             vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
-            vars_to_save += ["vvelsurfobs"] 
+            vars_to_save += ["vvelsurfobs"]
     else:
-        if "itslive_vx" in nc.variables: 
-            uvelsurfobs = np.flipud(np.squeeze(nc.variables["itslive_vx"]).astype("float32"))
+        if "itslive_vx" in nc.variables:
+            uvelsurfobs = np.flipud(
+                np.squeeze(nc.variables["itslive_vx"]).astype("float32")
+            )
             uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
             uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
             vars_to_save += ["uvelsurfobs"]
-        if "itslive_vy" in nc.variables: 
-            vvelsurfobs = np.flipud(np.squeeze(nc.variables["itslive_vy"]).astype("float32"))
+        if "itslive_vy" in nc.variables:
+            vvelsurfobs = np.flipud(
+                np.squeeze(nc.variables["itslive_vy"]).astype("float32")
+            )
             vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
             vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
-            vars_to_save += ["vvelsurfobs"]   
-            
+            vars_to_save += ["vvelsurfobs"]
+
     if "millan_ice_thickness" in nc.variables:
         thkinit = np.flipud(
-        np.squeeze(nc.variables["millan_ice_thickness"]).astype("float32")
+            np.squeeze(nc.variables["millan_ice_thickness"]).astype("float32")
         )
         thkinit = np.where(np.isnan(thkinit), 0, thkinit)
         thkinit = np.where(icemaskobs, thkinit, 0)
         vars_to_save += ["thkinit"]
 
-    thkobs = np.zeros_like(thk)*np.nan
+    thkobs = np.zeros_like(thk) * np.nan
 
     if params.oggm_incl_glathida:
-        with open(os.path.join(params.oggm_RGI_ID,"glacier_grid.json"), "r") as f:
+        with open(os.path.join(params.oggm_RGI_ID, "glacier_grid.json"), "r") as f:
             data = json.load(f)
         proj = data["proj"]
 
         try:
-            thkobs = _read_glathida(x, y, usurfobs, proj, params.oggm_path_glathida,state)
+            thkobs = _read_glathida(
+                x, y, usurfobs, proj, params.oggm_path_glathida, state
+            )
             thkobs = np.where(icemaskobs, thkobs, np.nan)
         except:
-            thkobs = np.zeros_like(thk)*np.nan
+            thkobs = np.zeros_like(thk) * np.nan
 
     nc.close()
 
     ########################################################
 
     # transform from numpy to tensorflow
-  
-    for var in ['x','y']:
+
+    for var in ["x", "y"]:
         vars(state)[var] = tf.constant(vars()[var].astype("float32"))
 
     for var in vars_to_save:
@@ -155,7 +166,6 @@ def initialize_oggm_shop(params, state):
     ########################################################
 
     if params.oggm_save_in_ncdf:
-
         var_info = {}
         var_info["thk"] = ["Ice Thickness", "m"]
         var_info["usurf"] = ["Surface Topography", "m"]
@@ -167,7 +177,9 @@ def initialize_oggm_shop(params, state):
         var_info["vvelsurfobs"] = ["y surface velocity of ice", "m/y"]
         var_info["icemask"] = ["Ice mask", "no unit"]
 
-        nc = Dataset(os.path.join(params.working_dir, "input_saved.nc"), "w", format="NETCDF4")
+        nc = Dataset(
+            os.path.join(params.working_dir, "input_saved.nc"), "w", format="NETCDF4"
+        )
 
         nc.createDimension("y", len(y))
         yn = nc.createVariable("y", np.dtype("float32").char, ("y",))
@@ -193,6 +205,7 @@ def initialize_oggm_shop(params, state):
             E[:] = vars()[v]
 
         nc.close()
+
 
 #        if hasattr(state,'logger'):
 #            state.logger.setLevel(params.logging_level)
@@ -249,7 +262,10 @@ def _oggm_util(RGIs, params):
         )
         gdirs = workflow.init_glacier_directories(
             # Start from level 3 if you want some climate data in them
-            rgi_ids, prepro_border=40, from_prepro_level=3, prepro_base_url=base_url
+            rgi_ids,
+            prepro_border=40,
+            from_prepro_level=3,
+            prepro_base_url=base_url,
         )
 
     else:
@@ -264,14 +280,16 @@ def _oggm_util(RGIs, params):
 
         cfg.PARAMS["continue_on_error"] = False
         cfg.PARAMS["use_multiprocessing"] = False
-        cfg.PARAMS['use_intersects'] = False
+        cfg.PARAMS["use_intersects"] = False
 
         # Map resolution parameters
         cfg.PARAMS["grid_dx_method"] = "fixed"
         cfg.PARAMS["fixed_dx"] = params.oggm_dx  # m spacing
         cfg.PARAMS[
             "border"
-        ] = params.oggm_border  # can now be set to any value since we start from scratch
+        ] = (
+            params.oggm_border
+        )  # can now be set to any value since we start from scratch
         cfg.PARAMS["map_proj"] = "utm"
 
         # Where to store the data for the run - should be somewhere you have access to
@@ -304,11 +322,11 @@ def _oggm_util(RGIs, params):
             workflow.execute_entity_task(velocity_to_gdir, gdirs)
         except ValueError:
             print("No millan22 velocity & thk data available!")
-        
+
         # We also have some diagnostics if you want
         df = compile_millan_statistics(gdirs)
-    #        print(df.T)
-        
+        #        print(df.T)
+
         from oggm.shop.its_live import velocity_to_gdir
 
         try:
@@ -317,20 +335,24 @@ def _oggm_util(RGIs, params):
             print("No its_live velocity data available!")
 
         from oggm.shop import bedtopo
+
         workflow.execute_entity_task(bedtopo.add_consensus_thickness, gdirs)
-        
- 
+
     source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
     destination_folder = os.path.join(params.working_dir, params.oggm_RGI_ID)
-    
+
     if os.path.exists(destination_folder):
-        shutil.rmtree(destination_folder)    
+        shutil.rmtree(destination_folder)
     shutil.copytree(source_folder, destination_folder)
-    
-    os.system( "echo rm -r " + os.path.join(params.working_dir, params.oggm_RGI_ID) + " >> clean.sh" )
+
+    os.system(
+        "echo rm -r "
+        + os.path.join(params.working_dir, params.oggm_RGI_ID)
+        + " >> clean.sh"
+    )
 
 
-def _read_glathida(x, y, usurf, proj, path_glathida,state):
+def _read_glathida(x, y, usurf, proj, path_glathida, state):
     """
     Function written by Ethan Welthy & Guillaume Jouvet
     """
@@ -338,21 +360,21 @@ def _read_glathida(x, y, usurf, proj, path_glathida,state):
     from pyproj import Transformer
     from scipy.interpolate import RectBivariateSpline
     import pandas as pd
-    
+
     if path_glathida == "":
         path_glathida = os.path.expanduser("~")
 
     if not os.path.exists(os.path.join(path_glathida, "glathida")):
         os.system("git clone https://gitlab.com/wgms/glathida " + path_glathida)
     else:
-        if hasattr(state,'logger'):
+        if hasattr(state, "logger"):
             state.logger.info("glathida data already at " + path_glathida)
 
     files = [os.path.join(path_glathida, "glathida", "data", "point.csv")]
     files += glob.glob(
         os.path.join(path_glathida, "glathida", "submissions", "*", "point.csv")
     )
-    
+
     os.path.expanduser
 
     transformer = Transformer.from_crs(proj, "epsg:4326", always_xy=True)
@@ -397,7 +419,7 @@ def _read_glathida(x, y, usurf, proj, path_glathida,state):
         thkobs[:] = np.nan
 
     else:
-        if hasattr(state,'logger'):
+        if hasattr(state, "logger"):
             state.logger.info("Nb of profiles found : " + str(df.index.shape[0]))
 
         xx, yy = transformer.transform(df["lon"], df["lat"])

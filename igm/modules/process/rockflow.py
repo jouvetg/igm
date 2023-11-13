@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os, sys, shutil
@@ -12,6 +12,7 @@ import time
 
 from igm.modules.utils import *
 
+
 def params_rockflow(parser):
     parser.add_argument(
         "--rock_flow_speed",
@@ -20,23 +21,28 @@ def params_rockflow(parser):
         help="Speed of rock flow along the slope in m/y",
     )
 
-def initialize_rockflow(params,state):
+
+def initialize_rockflow(params, state):
     pass
 
-def update_rockflow(params,state):
 
-    slopsurfx, slopsurfy = compute_gradient_tf( state.usurf, state.dx, state.dx )
-    
+def update_rockflow(params, state):
+    slopsurfx, slopsurfy = compute_gradient_tf(state.usurf, state.dx, state.dx)
+
     slop = getmag(slopsurfx, slopsurfy)
-    
-    dirx = -params.rock_flow_speed * tf.where(tf.not_equal(slop,0), slopsurfx/slop,1)
-    diry = -params.rock_flow_speed * tf.where(tf.not_equal(slop,0), slopsurfy/slop,1)
 
-    thkexp = tf.repeat( tf.expand_dims(state.thk, axis=0), state.U.shape[0], axis=0)
-    
-    state.U.assign( tf.where( thkexp > 0, state.U, dirx ) )
-    state.V.assign( tf.where( thkexp > 0, state.V, diry ) )    
+    dirx = -params.rock_flow_speed * tf.where(
+        tf.not_equal(slop, 0), slopsurfx / slop, 1
+    )
+    diry = -params.rock_flow_speed * tf.where(
+        tf.not_equal(slop, 0), slopsurfy / slop, 1
+    )
 
-def  finalize_rockflow(params,state):
+    thkexp = tf.repeat(tf.expand_dims(state.thk, axis=0), state.U.shape[0], axis=0)
+
+    state.U.assign(tf.where(thkexp > 0, state.U, dirx))
+    state.V.assign(tf.where(thkexp > 0, state.V, diry))
+
+
+def finalize_rockflow(params, state):
     pass
-

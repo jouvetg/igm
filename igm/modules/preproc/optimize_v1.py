@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os, copy
@@ -15,7 +15,8 @@ from netCDF4 import Dataset
 
 from igm.modules.utils import *
 from igm.modules.process.iceflow_v1 import *
- 
+
+
 def params_optimize_v1(parser):
     parser.add_argument(
         "--opti_vars_to_save",
@@ -169,7 +170,6 @@ def params_optimize_v1(parser):
 
 
 def initialize_optimize_v1(params, state):
-
     initialize_iceflow_v1(params, state)
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
@@ -229,7 +229,9 @@ def initialize_optimize_v1(params, state):
     # optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
     # add scalng for usurf
-    state.iceflow_fieldbounds["usurf"] = state.iceflow_fieldbounds["slopsurfx"] * state.dx
+    state.iceflow_fieldbounds["usurf"] = (
+        state.iceflow_fieldbounds["slopsurfx"] * state.dx
+    )
 
     ###### PREPARE VARIABLES TO OPTIMIZE
 
@@ -400,7 +402,10 @@ def initialize_optimize_v1(params, state):
             if "velsurf" in params.opti_cost:
                 ACT = ~tf.math.is_nan(state.velsurfobs)
                 COST_U = 0.5 * tf.reduce_mean(
-                    ((state.velsurfobs[ACT] - velsurf[ACT]) / params.opti_velsurfobs_std)
+                    (
+                        (state.velsurfobs[ACT] - velsurf[ACT])
+                        / params.opti_velsurfobs_std
+                    )
                     ** 2
                 )
             else:
@@ -411,7 +416,10 @@ def initialize_optimize_v1(params, state):
                 ACT = ~tf.math.is_nan(state.thkobs)
                 COST_H = 0.5 * tf.reduce_mean(
                     (
-                        (state.thkobs[ACT] - thk[ACT] * state.iceflow_fieldbounds["thk"])
+                        (
+                            state.thkobs[ACT]
+                            - thk[ACT] * state.iceflow_fieldbounds["thk"]
+                        )
                         / params.opti_thkobs_std
                     )
                     ** 2
@@ -557,7 +565,9 @@ def initialize_optimize_v1(params, state):
             )
 
             vol = (
-                np.sum(thk * state.iceflow_fieldbounds["thk"]) * (state.dx**2) / 10**9
+                np.sum(thk * state.iceflow_fieldbounds["thk"])
+                * (state.dx**2)
+                / 10**9
             )
 
             if i % params.opti_output_freq == 0:
@@ -611,7 +621,9 @@ def initialize_optimize_v1(params, state):
                 state.thk = thk * state.iceflow_fieldbounds["thk"]
                 state.thk = tf.where(state.thk < 0.01, 0, state.thk)
             if "strflowctrl" in params.opti_control:
-                state.strflowctrl = strflowctrl * state.iceflow_fieldbounds["strflowctrl"]
+                state.strflowctrl = (
+                    strflowctrl * state.iceflow_fieldbounds["strflowctrl"]
+                )
             if "usurf" in params.opti_control:
                 state.usurf = usurf * state.iceflow_fieldbounds["usurf"]
 
@@ -694,7 +706,6 @@ def finalize_optimize_v1(params, state):
 
 
 def _compute_rms_std_optimization(state, i):
-
     I = state.icemaskobs == 1
 
     if i == 0:
@@ -754,7 +765,7 @@ def _update_ncdf_optimize(params, state, it):
     """
     Initialize and write the ncdf optimze file
     """
-    if hasattr(state,'logger'):
+    if hasattr(state, "logger"):
         state.logger.info("Initialize  and write NCDF output Files")
 
     if "arrhenius" in params.opti_vars_to_save:
@@ -1086,7 +1097,6 @@ def _update_plot_inversion(params, state, i):
 
 
 def _compute_flow_direction_for_anisotropic_smoothing(state):
-
     uvelsurfobs = tf.where(tf.math.is_nan(state.uvelsurfobs), 0.0, state.uvelsurfobs)
     vvelsurfobs = tf.where(tf.math.is_nan(state.vvelsurfobs), 0.0, state.vvelsurfobs)
 

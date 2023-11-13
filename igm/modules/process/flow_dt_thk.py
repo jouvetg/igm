@@ -23,10 +23,10 @@ def initialize_flow_dt_thk(params, state):
 def update_flow_dt_thk(params, state):
     update_iceflow(params, state)
     update_time(params, state)
-    update_thk(params, state) 
+    update_thk(params, state)
 
 
 def finalize_flow_dt_thk(params, state):
     finalize_iceflow(params, state)
     finalize_time(params, state)
-    finalize_thk(params, state) 
+    finalize_thk(params, state)

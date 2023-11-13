@@ -14,7 +14,6 @@ def params_print_info(parser):
 
 
 def initialize_print_info(params, state):
-
     print(
         "IGM %s :         Iterations   |         Time (y)     |     Time Step (y)   |   Ice Volume (km^3) "
     )
@@ -35,8 +34,7 @@ def update_print_info(params, state):
                 np.sum(state.thk) * (state.dx**2) / 10**9,
             )
         )
-        
-        
+
+
 def finalize_print_info(params, state):
     pass
-

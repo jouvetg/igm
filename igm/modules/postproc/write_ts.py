@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os, sys, shutil
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from netCDF4 import Dataset
+
 
 def params_write_ts(parser):
     parser.add_argument(
@@ -19,7 +20,11 @@ def params_write_ts(parser):
 
 
 def initialize_write_ts(params, state):
-    os.system("echo rm " + os.path.join(params.working_dir, params.wts_output_file) + " >> clean.sh")
+    os.system(
+        "echo rm "
+        + os.path.join(params.working_dir, params.wts_output_file)
+        + " >> clean.sh"
+    )
 
     state.var_info_ncdf_ts = {}
     state.var_info_ncdf_ts["vol"] = ["Ice volume", "km^3"]
@@ -27,7 +32,6 @@ def initialize_write_ts(params, state):
 
 
 def update_write_ts(params, state):
-
     if state.saveresult:
         vol = np.sum(state.thk) * (state.dx**2) / 10**9
         area = np.sum(state.thk > 1) * (state.dx**2) / 10**6
@@ -35,7 +39,7 @@ def update_write_ts(params, state):
         if not hasattr(state, "already_called_update_write_ts"):
             state.already_called_update_write_ts = True
 
-            if hasattr(state,'logger'):
+            if hasattr(state, "logger"):
                 state.logger.info("Initialize NCDF ts output Files")
 
             nc = Dataset(
@@ -59,8 +63,10 @@ def update_write_ts(params, state):
             nc.close()
 
         else:
-            if hasattr(state,'logger'):
-                state.logger.info("Write NCDF ts file at time : " + str(state.t.numpy()))
+            if hasattr(state, "logger"):
+                state.logger.info(
+                    "Write NCDF ts file at time : " + str(state.t.numpy())
+                )
 
             nc = Dataset(
                 os.path.join(params.working_dir, params.wts_output_file),
@@ -74,6 +80,6 @@ def update_write_ts(params, state):
                 nc.variables[var][d] = vars()[var].numpy()
             nc.close()
 
-    
+
 def finalize_write_ts(params, state):
     pass

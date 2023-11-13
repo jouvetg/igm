@@ -13,40 +13,48 @@ import matplotlib.pyplot as plt
 def params_anim_video(parser):
     pass
 
+
 def initialize_anim_video(params, state):
     pass
+
 
 def update_anim_video(params, state):
     pass
 
-def finalize_anim_video(params, state):
 
+def finalize_anim_video(params, state):
     import xarray as xr
     from matplotlib import animation
 
-    ds = xr.open_dataset(os.path.join(params.working_dir, "output.nc"), engine="netcdf4")
+    ds = xr.open_dataset(
+        os.path.join(params.working_dir, "output.nc"), engine="netcdf4"
+    )
 
     tas = ds.thk
 
     # Get a handle on the figure and the axes
-    fig, ax = plt.subplots(figsize=(7,7))
+    fig, ax = plt.subplots(figsize=(7, 7))
 
     # Plot the initial frame.
-    cax = tas[0,:,:].where(tas[0,:,:]>0).plot(
-        add_colorbar=True,
-        cmap="jet",
-        vmin=0,
-        vmax=np.max(tas),
-        cbar_kwargs={"extend": "neither"}
+    cax = (
+        tas[0, :, :]
+        .where(tas[0, :, :] > 0)
+        .plot(
+            add_colorbar=True,
+            cmap="jet",
+            vmin=0,
+            vmax=np.max(tas),
+            cbar_kwargs={"extend": "neither"},
+        )
     )
-    
-    cax.axes.set_aspect('equal')
+
+    cax.axes.set_aspect("equal")
 
     ax.axis("off")
 
     # Next we need to create a function that updates the values for the colormesh, as well as the title.
     def animate(frame):
-        cax.set_array(tas[frame,:,:].where(tas[frame,:,:]>0).values.flatten())
+        cax.set_array(tas[frame, :, :].where(tas[frame, :, :] > 0).values.flatten())
         ax.set_title("Time = " + str(tas.coords["time"].values[frame])[:13])
 
     # Finally, we use the animation module to create the animation.
@@ -58,9 +66,7 @@ def finalize_anim_video(params, state):
     )
 
     ani.save(os.path.join(params.working_dir, "animation.mp4"))
-    
+
     os.system(
-        "echo rm "
-        + os.path.join(params.working_dir, "animation.mp4")
-        + " >> clean.sh"
+        "echo rm " + os.path.join(params.working_dir, "animation.mp4") + " >> clean.sh"
     )

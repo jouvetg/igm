@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os, sys, shutil
@@ -53,8 +53,7 @@ def initialize_particles_v1(params, state):
 
 
 def update_particles_v1(params, state):
-
-    if hasattr(state,'logger'):
+    if hasattr(state, "logger"):
         state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
 
     if (state.t.numpy() - state.tlast_seeding) >= params.part_frequency_seeding:
@@ -154,7 +153,9 @@ def update_particles_v1(params, state):
         slopsurfx, slopsurfy = compute_gradient_tf(state.usurf, state.dx, state.dx)
         sloptopgx, sloptopgy = compute_gradient_tf(state.topg, state.dx, state.dx)
 
-        state.divflux = compute_divflux(state.ubar, state.vbar, state.thk, state.dx, state.dx)
+        state.divflux = compute_divflux(
+            state.ubar, state.vbar, state.thk, state.dx, state.dx
+        )
 
         # the vertical velocity is the scalar product of horizont. velo and bedrock gradient
         state.wvelbase = state.uvelbase * sloptopgx + state.vvelbase * sloptopgy
@@ -227,7 +228,7 @@ def update_particles_v1(params, state):
 
 def finalize_particles_v1(params, state):
     pass
-    
+
 
 def seeding_particles(params, state):
     """
@@ -246,7 +247,7 @@ def seeding_particles(params, state):
     #                       [tf.expand_dims((state.ypos - state.y[0]) / state.dx, axis=-1),
     #                        tf.expand_dims((state.xpos - state.x[0]) / state.dx, axis=-1)],
     #                       axis=-1 ), axis=0)
- 
+
     #        thk = interpolate_bilinear_tf(
     #                    tf.expand_dims(tf.expand_dims(state.thk, axis=0), axis=-1),
     #                    indices,indexing="ij",      )[0, :, 0]

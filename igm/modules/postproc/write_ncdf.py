@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os, sys, shutil
@@ -13,15 +13,15 @@ from netCDF4 import Dataset
 
 from igm.modules.utils import getmag
 
+
 def params_write_ncdf(parser):
-    
     parser.add_argument(
         "--wncd_output_file",
         type=str,
         default="output.nc",
         help="Output ncdf data file",
     )
-    
+
     parser.add_argument(
         "--wncd_vars_to_save",
         type=list,
@@ -34,7 +34,7 @@ def params_write_ncdf(parser):
             "velsurf_mag",
             "uvelsurf",
             "vvelsurf",
-            "wvelsurf"
+            "wvelsurf",
         ],
         help="List of variables to be recorded in the ncdf file",
     )
@@ -43,7 +43,11 @@ def params_write_ncdf(parser):
 def initialize_write_ncdf(params, state):
     state.tcomp_write_ncdf = []
 
-    os.system("echo rm " + os.path.join(params.working_dir, params.wncd_output_file) + " >> clean.sh")
+    os.system(
+        "echo rm "
+        + os.path.join(params.working_dir, params.wncd_output_file)
+        + " >> clean.sh"
+    )
 
     # give information on variables for output ncdf, TODO: IMPROVE
     state.var_info_ncdf_ex = {}
@@ -54,7 +58,10 @@ def initialize_write_ncdf(params, state):
     state.var_info_ncdf_ex["smb"] = ["Surface Mass Balance", "m/y"]
     state.var_info_ncdf_ex["ubar"] = ["x depth-average velocity of ice", "m/y"]
     state.var_info_ncdf_ex["vbar"] = ["y depth-average velocity of ice", "m/y"]
-    state.var_info_ncdf_ex["velbar_mag"] = ["Depth-average velocity magnitude of ice", "m/y"]
+    state.var_info_ncdf_ex["velbar_mag"] = [
+        "Depth-average velocity magnitude of ice",
+        "m/y",
+    ]
     state.var_info_ncdf_ex["uvelsurf"] = ["x surface velocity of ice", "m/y"]
     state.var_info_ncdf_ex["vvelsurf"] = ["y surface velocity of ice", "m/y"]
     state.var_info_ncdf_ex["wvelsurf"] = ["z surface velocity of ice", "m/y"]
@@ -64,10 +71,16 @@ def initialize_write_ncdf(params, state):
     state.var_info_ncdf_ex["wvelbase"] = ["z basal velocity of ice", "m/y"]
     state.var_info_ncdf_ex["velbase_mag"] = ["Basal velocity magnitude of ice", "m/y"]
     state.var_info_ncdf_ex["divflux"] = ["Divergence of the ice flux", "m/y"]
-    state.var_info_ncdf_ex["strflowctrl"] = ["arrhenius+1.0*slidingco", "MPa$^{-3}$ a$^{-1}$"]
+    state.var_info_ncdf_ex["strflowctrl"] = [
+        "arrhenius+1.0*slidingco",
+        "MPa$^{-3}$ a$^{-1}$",
+    ]
     state.var_info_ncdf_ex["dtopgdt"] = ["Erosion rate", "m/y"]
     state.var_info_ncdf_ex["arrhenius"] = ["Arrhenius factor", "MPa$^{-3}$ a$^{-1}$"]
-    state.var_info_ncdf_ex["slidingco"] = ["Sliding Coefficient", "km MPa$^{-3}$ a$^{-1}$"]
+    state.var_info_ncdf_ex["slidingco"] = [
+        "Sliding Coefficient",
+        "km MPa$^{-3}$ a$^{-1}$",
+    ]
     state.var_info_ncdf_ex["meantemp"] = ["Mean anual surface temperatures", "°C"]
     state.var_info_ncdf_ex["meanprec"] = ["Mean anual precipitation", "m/y"]
     state.var_info_ncdf_ex["velsurfobs_mag"] = ["Obs. surf. speed of ice", "m/y"]
@@ -96,7 +109,7 @@ def update_write_ncdf(params, state):
         if not hasattr(state, "already_called_update_write_ncdf"):
             state.already_called_update_write_ncdf = True
 
-            if hasattr(state,'logger'):
+            if hasattr(state, "logger"):
                 state.logger.info("Initialize NCDF ex output Files")
 
             nc = Dataset(
@@ -125,22 +138,28 @@ def update_write_ncdf(params, state):
             E.long_name = "x"
             E.axis = "X"
             E[:] = state.x.numpy()
-            
-            if hasattr(params,'iflo_Nz'):
-                nc.createDimension('z',params.iflo_Nz)
+
+            if hasattr(params, "iflo_Nz"):
+                nc.createDimension("z", params.iflo_Nz)
                 E = nc.createVariable("z", np.dtype("float32").char, ("z",))
-                E.units = 'm'
-                E.long_name = 'z'
-                E.axis = 'Z'
-                E[:] = np.arange(params.iflo_Nz)  # TODO: fix this, that's not what we want
+                E.units = "m"
+                E.long_name = "z"
+                E.axis = "Z"
+                E[:] = np.arange(
+                    params.iflo_Nz
+                )  # TODO: fix this, that's not what we want
 
             for var in params.wncd_vars_to_save:
                 if hasattr(state, var):
-                    if vars(state)[var].numpy().ndim==2:
-                        E = nc.createVariable(var, np.dtype("float32").char, ("time", "y", "x"))
+                    if vars(state)[var].numpy().ndim == 2:
+                        E = nc.createVariable(
+                            var, np.dtype("float32").char, ("time", "y", "x")
+                        )
                         E[0, :, :] = vars(state)[var].numpy()
-                    elif vars(state)[var].numpy().ndim==3:
-                        E = nc.createVariable(var, np.dtype("float32").char, ("time", "z", "y", "x"))
+                    elif vars(state)[var].numpy().ndim == 3:
+                        E = nc.createVariable(
+                            var, np.dtype("float32").char, ("time", "z", "y", "x")
+                        )
                         E[0, :, :, :] = vars(state)[var].numpy()
                     if var in state.var_info_ncdf_ex.keys():
                         E.long_name = state.var_info_ncdf_ex[var][0]
@@ -148,8 +167,10 @@ def update_write_ncdf(params, state):
             nc.close()
 
         else:
-            if hasattr(state,'logger'):
-                state.logger.info("Write NCDF ex file at time : " + str(state.t.numpy()))
+            if hasattr(state, "logger"):
+                state.logger.info(
+                    "Write NCDF ex file at time : " + str(state.t.numpy())
+                )
 
             nc = Dataset(
                 os.path.join(params.working_dir, params.wncd_output_file),
@@ -162,16 +183,16 @@ def update_write_ncdf(params, state):
 
             for var in params.wncd_vars_to_save:
                 if hasattr(state, var):
-                    if vars(state)[var].numpy().ndim==2:
+                    if vars(state)[var].numpy().ndim == 2:
                         nc.variables[var][d, :, :] = vars(state)[var].numpy()
-                    elif vars(state)[var].numpy().ndim==3:
+                    elif vars(state)[var].numpy().ndim == 3:
                         nc.variables[var][d, :, :, :] = vars(state)[var].numpy()
 
             nc.close()
 
         state.tcomp_write_ncdf[-1] -= time.time()
         state.tcomp_write_ncdf[-1] *= -1
- 
- 
+
+
 def finalize_write_ncdf(params, state):
     pass

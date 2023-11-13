@@ -37,63 +37,68 @@ def params_include_icemask(parser):
         default="icemask.shp",
         help="Icemask input file (default: icemask.shp)",
     )
-    
+
     parser.add_argument(
         "--mask_invert",
         type=bool,
         default=False,
-        help="Invert ice mask if the mask is where the ice should be (default: False)"
+        help="Invert ice mask if the mask is where the ice should be (default: False)",
     )
 
-def initialize_include_icemask(params,state):
+
+def initialize_include_icemask(params, state):
     # read_shapefile
     gdf = read_shapefile(params.mask_shapefile)
-    
+
     # Flatten the X and Y coordinates and convert to numpy
     flat_X = state.X.numpy().flatten()
     flat_Y = state.Y.numpy().flatten()
-    
+
     # Create a list to store the mask values
     mask_values = []
-    
+
     # Iterate over each grid point
     for x, y in zip(flat_X, flat_Y):
         point = Point(x, y)
         inside_polygon = False
-        
+
         # Check if the point is inside any polygon in the GeoDataFrame
         for geom in gdf.geometry:
             if point.within(geom):
                 inside_polygon = True
-                break # if it is inside one polygon, don't check for others
-        
+                break  # if it is inside one polygon, don't check for others
+
         # Append the corresponding mask value to the list
         mask_values.append(0 if inside_polygon else 1)
-    
+
     # reshape
     mask_values = np.array(mask_values, dtype=np.float32)
     mask_values = mask_values.reshape(state.X.shape)
-    
+
     # Invert the mask values if mask_invert is True
     if params.mask_invert:
         mask_values = np.logical_not(mask_values).astype(np.float32)
-    
+
     # define icemask
     state.icemask = tf.constant(mask_values)
-    
+
+
 def update_include_icemask(params, state):
     pass
 
+
 def finalize_include_icemask(params, state):
-    pass 
+    pass
+
 
 # == Helping functions ==================
+
 
 def read_shapefile(filepath):
     try:
         # Read the shapefile
         gdf = gpd.read_file(filepath)
-        
+
         # Print the information about the shapefile
         print("-----------------------")
         print("Icemask Shapefile information:")
@@ -101,9 +106,8 @@ def read_shapefile(filepath):
         print("EPSG code: ", gdf.crs.to_epsg())
         print("Geometry type:", gdf.geometry.type.unique()[0])
         print("-----------------------")
-        
+
         # Return the GeoDataFrame
         return gdf
     except Exception as e:
         print("Error reading shapefile:", e)
-

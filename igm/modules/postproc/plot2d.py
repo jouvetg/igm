@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os, sys, shutil
@@ -11,6 +11,7 @@ import datetime, time
 import tensorflow as tf
 
 from igm.modules.utils import *
+
 
 def params_plot2d(parser):
     parser.add_argument(
@@ -49,7 +50,7 @@ def initialize_plot2d(params, state):
     state.extent = [np.min(state.x), np.max(state.x), np.min(state.y), np.max(state.y)]
 
     if params.plt2d_editor == "vs":
-        plt.ion() # enable interactive mode
+        plt.ion()  # enable interactive mode
 
     state.tcomp_plot2d = []
 
@@ -66,29 +67,27 @@ def initialize_plot2d(params, state):
 
 
 def update_plot2d(params, state):
-
     if state.saveresult:
- 
         state.tcomp_plot2d.append(time.time())
 
         if params.plt2d_var == "velbar_mag":
             state.velbar_mag = getmag(state.ubar, state.vbar)
- 
+
         im0 = state.ax.imshow(
             state.topg,
             origin="lower",
             cmap=matplotlib.cm.terrain,
             extent=state.extent,
-            alpha=0.65
+            alpha=0.65,
         )
 
         im = state.ax.imshow(
-            np.where(state.thk>0, vars(state)[params.plt2d_var],np.nan),
+            np.where(state.thk > 0, vars(state)[params.plt2d_var], np.nan),
             origin="lower",
             cmap=matplotlib.cm.viridis,
             vmin=0,
             vmax=params.plt2d_var_max,
-            extent=state.extent
+            extent=state.extent,
         )
         if params.plt2d_particles:
             if hasattr(state, "xpos"):
@@ -106,16 +105,17 @@ def update_plot2d(params, state):
                 )
         state.ax.set_title("YEAR : " + str(state.t.numpy()), size=15)
 
-        if not hasattr(state,'already_set_cbar'):
-                state.cbar = plt.colorbar(im, label=params.plt2d_var)
-                state.already_set_cbar = True
+        if not hasattr(state, "already_set_cbar"):
+            state.cbar = plt.colorbar(im, label=params.plt2d_var)
+            state.already_set_cbar = True
 
         if params.plt2d_live:
             if params.plt2d_editor == "vs":
-                state.fig.canvas.draw()         # re-drawing the figure
-                state.fig.canvas.flush_events() # to flush the GUI events
+                state.fig.canvas.draw()  # re-drawing the figure
+                state.fig.canvas.flush_events()  # to flush the GUI events
             else:
                 from IPython.display import display, clear_output
+
                 clear_output(wait=True)
                 display(state.fig)
         else:

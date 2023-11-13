@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os
@@ -13,6 +13,7 @@ import importlib_resources
 
 from igm.modules.utils import *
 from igm import emulators
+
 
 def params_iceflow_v1(parser):
     parser.add_argument(
@@ -56,20 +57,27 @@ def params_iceflow_v1(parser):
 
 
 def initialize_iceflow_v1(params, state):
-
     state.tcomp_iceflow = []
 
     # here we initialize variable parmaetrizing ice flow
     if not hasattr(state, "strflowctrl"):
-        state.strflowctrl = tf.Variable(tf.ones_like(state.thk) * params.init_strflowctrl)
+        state.strflowctrl = tf.Variable(
+            tf.ones_like(state.thk) * params.init_strflowctrl
+        )
 
     if not hasattr(state, "arrhenius"):
-        state.arrhenius = tf.Variable(tf.ones_like(state.thk) * params.iflo_init_arrhenius)
+        state.arrhenius = tf.Variable(
+            tf.ones_like(state.thk) * params.iflo_init_arrhenius
+        )
 
     if not hasattr(state, "slidingco"):
-        state.slidingco = tf.Variable(tf.ones_like(state.thk) * params.iflo_init_slidingco)
-        
-    if os.path.exists(importlib_resources.files(emulators).joinpath(params.iflo_emulator)):
+        state.slidingco = tf.Variable(
+            tf.ones_like(state.thk) * params.iflo_init_slidingco
+        )
+
+    if os.path.exists(
+        importlib_resources.files(emulators).joinpath(params.iflo_emulator)
+    ):
         dirpath = importlib_resources.files(emulators).joinpath(params.iflo_emulator)
     else:
         dirpath = params.iflo_emulator
@@ -93,22 +101,27 @@ def initialize_iceflow_v1(params, state):
 
     # In case of a U-net, must make sure the I/O size is multiple of 2**N
     if params.iflo_multiple_window_size > 0:
-        NNy = params.iflo_multiple_window_size * math.ceil(Ny / params.iflo_multiple_window_size)
-        NNx = params.iflo_multiple_window_size * math.ceil(Nx / params.iflo_multiple_window_size)
+        NNy = params.iflo_multiple_window_size * math.ceil(
+            Ny / params.iflo_multiple_window_size
+        )
+        NNx = params.iflo_multiple_window_size * math.ceil(
+            Nx / params.iflo_multiple_window_size
+        )
         state.PAD = [[0, NNy - Ny], [0, NNx - Nx]]
     else:
         state.PAD = [[0, 0], [0, 0]]
 
 
 def update_iceflow_v1(params, state):
-
-    if hasattr(state,'logger'):
+    if hasattr(state, "logger"):
         state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
     state.tcomp_iceflow.append(time.time())
 
     # update gradients of the surface (slopes)
-    state.slopsurfx, state.slopsurfy = compute_gradient_tf(state.usurf, state.dx, state.dx)
+    state.slopsurfx, state.slopsurfy = compute_gradient_tf(
+        state.usurf, state.dx, state.dx
+    )
 
     # Define the input of the NN, include scaling
     X = tf.expand_dims(
@@ -130,7 +143,8 @@ def update_iceflow_v1(params, state):
     Ny, Nx = state.thk.shape
     for kk, f in enumerate(state.iceflow_mapping["fieldout"]):
         vars(state)[f] = (
-            tf.where(state.thk > 0, Y[0, :Ny, :Nx, kk], 0) * state.iceflow_fieldbounds[f]
+            tf.where(state.thk > 0, Y[0, :Ny, :Nx, kk], 0)
+            * state.iceflow_fieldbounds[f]
         )
 
     # If requested, the speeds are artifically upper-bounded
@@ -153,11 +167,10 @@ def update_iceflow_v1(params, state):
 
 
 def finalize_iceflow_v1(params, state):
-    pass 
-    
+    pass
+
 
 def _read_fields_and_bounds(state, path):
-
     fieldbounds = {}
     fieldin = []
     fieldout = []

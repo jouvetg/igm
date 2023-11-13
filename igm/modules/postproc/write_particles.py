@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
-# Published under the GNU GPL (Version 3), check at the LICENSE file 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
 import os
@@ -9,6 +9,7 @@ import datetime, time
 import tensorflow as tf
 
 from igm.modules.utils import *
+
 
 def params_write_particles(parser):
     parser.add_argument(
@@ -21,7 +22,7 @@ def params_write_particles(parser):
 
 def initialize_write_particles(params, state):
     state.tcomp_write_particles = []
- 
+
     directory = os.path.join(params.working_dir, "trajectories")
     if os.path.exists(directory):
         shutil.rmtree(directory)
@@ -36,7 +37,9 @@ def initialize_write_particles(params, state):
     if params.wpar_add_topography:
         ftt = os.path.join(params.working_dir, "trajectories", "topg.csv")
         array = tf.transpose(
-            tf.stack([state.X[state.X > 0], state.Y[state.X > 0], state.topg[state.X > 0]])
+            tf.stack(
+                [state.X[state.X > 0], state.Y[state.X > 0], state.topg[state.X > 0]]
+            )
         )
         np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
 
@@ -80,7 +83,11 @@ def update_write_particles(params, state):
             )
             array = tf.transpose(
                 tf.stack(
-                    [state.X[state.X > 1], state.Y[state.X > 1], state.usurf[state.X > 1]]
+                    [
+                        state.X[state.X > 1],
+                        state.Y[state.X > 1],
+                        state.usurf[state.X > 1],
+                    ]
                 )
             )
             np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")

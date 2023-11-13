@@ -1,4 +1,7 @@
-for d in */ ; do
+
+
+for d in real_glacier synthetic; do
+# for d in */ ; do
     echo "$d"
     cd $d
     igm_run

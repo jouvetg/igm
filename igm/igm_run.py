@@ -11,6 +11,11 @@ import igm
 
 
 def main():
+    
+    print("-----------------------------------------------------------------")
+    print("Num GPUs Available: ", len(tf.config.list_physical_devices("GPU")))
+    print("-----------------------------------------------------------------")
+    
     # Collect defaults, overide from json file, and parse all core parameters
     parser = igm.params_core()
     igm.overide_from_json_file(parser, check_if_params_exist=False)
@@ -42,9 +47,6 @@ def main():
     # if logging is activated, add a logger to the state
     if params.logging:
         igm.add_logger(params, state)
-        state.logger.info(
-            "Num GPUs Available: ", len(tf.config.list_physical_devices("GPU"))
-        )
     else:
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 

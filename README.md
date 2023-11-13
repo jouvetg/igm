@@ -1,8 +1,6 @@
 [![License badge](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ### <h1 align="center" id="title">The Instructed Glacier Model (IGM) </h1>
 
-**The former IGM, which was hosted on this repo < 17/09/23, is accessible on [this page.](https://github.com/jouvetg/igm_old)**
-
 # Overview    
 
 The Instructed Glacier Model (IGM) is an **open-source Python package**, which permits to simulate **3D glacier evolution** accounting for the coupling between ice thermo-dynamics, surface mass balance, and mass conservation. IGM features:

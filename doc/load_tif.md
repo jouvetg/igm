@@ -14,7 +14,7 @@ This module depends on `rasterio`.
 |`-h`|`--help`||show this help message and exit|
 ||`--ltif_coarsen`|`1`|coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points|
 ||`--ltif_crop`|`False`|Crop the data with xmin, xmax, ymin, ymax (default: False)|
-||`--ltif_xmin`|`None`|crop_xmin|
-||`--ltif_xmax`|`None`|crop_xmax|
-||`--ltif_ymin`|`None`|crop_ymin|
-||`--ltif_ymax`|`None`|crop_ymax|
+||`--ltif_xmin`|`-100000000000000000000`|crop_xmin|
+||`--ltif_xmax`|`100000000000000000000`|crop_xmax|
+||`--ltif_ymin`|`-100000000000000000000`|crop_ymin|
+||`--ltif_ymax`|`100000000000000000000`|crop_ymax|

@@ -17,7 +17,7 @@ This module depends on `netCDF4`.
 ||`--lncd_input_file`|`input.nc`|NetCDF input data file|
 ||`--lncd_coarsen`|`1`|Coarsen the data from NetCDF file by a certain (integer) number: 2 would be twice coarser ignore data each 2 grid points|
 ||`--lncd_crop`|`False`|Crop the data from NetCDF file with given top/down/left/right bounds|
-||`--lncd_xmin`|`None`|X left coordinate for cropping the NetCDF data|
-||`--lncd_xmax`|`None`|X right coordinate for cropping the NetCDF data|
-||`--lncd_ymin`|`None`|Y bottom coordinate fro cropping the NetCDF data|
-||`--lncd_ymax`|`None`|Y top coordinate for cropping the NetCDF data|
+||`--lncd_xmin`|`-100000000000000000000`|X left coordinate for cropping the NetCDF data|
+||`--lncd_xmax`|`100000000000000000000`|X right coordinate for cropping the NetCDF data|
+||`--lncd_ymin`|`-100000000000000000000`|Y bottom coordinate fro cropping the NetCDF data|
+||`--lncd_ymax`|`100000000000000000000`|Y top coordinate for cropping the NetCDF data|

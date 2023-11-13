@@ -45,7 +45,7 @@ def params_optimize(parser):
     parser.add_argument(
         "--opti_regu_param_thk",
         type=float,
-        default=5.0,
+        default=10.0,
         help="Regularization weight for the ice thickness in the optimization",
     )
     parser.add_argument(
@@ -75,7 +75,7 @@ def params_optimize(parser):
     parser.add_argument(
         "--opti_velsurfobs_std",
         type=float,
-        default=2.0,
+        default=1.0,
         help="Confidence/STD of the surface ice velocities as input data for the optimization (if 0, velsurfobs_std field must be given)",
     )
     parser.add_argument(
@@ -161,8 +161,7 @@ def params_optimize(parser):
 
 def initialize_optimize(params, state):
     """
-    This function does the data assimilation (inverse modelling) to optimize thk, strflowctrl ans usurf from data
-    Check at this [page](https://github.com/jouvetg/igm/blob/main/doc/Inverse-modeling.md)
+    This function does the data assimilation (inverse modelling) to optimize thk, slidingco ans usurf from data
     """
 
     initialize_iceflow(params, state)
@@ -212,6 +211,7 @@ def initialize_optimize(params, state):
 
     state.tcomp_optimize = []
 
+    # this thing is outdated with using iflo_new_friction_param default as we use scaling of one.
     sc = {}
     sc["thk"] = 1
     sc["usurf"] = 1
@@ -236,15 +236,6 @@ def initialize_optimize(params, state):
             for f in params.opti_control:
                 vars(state)[f] = vars()[f] * sc[f]
 
-            # build input of the emulator
-            # X = tf.expand_dims(
-            #     tf.stack(
-            #         [tf.pad(vars(state)[f], state.PAD, "CONSTANT") for f in params.iflo_fieldin],
-            #         axis=-1,
-            #     ),
-            #     axis=0,
-            # )
-            
             fieldin = [ vars(state)[f] for f in params.iflo_fieldin ]
             
             X = fieldin_to_X(params, fieldin)
@@ -252,23 +243,12 @@ def initialize_optimize(params, state):
             # evalutae th ice flow emulator
             Y = state.iceflow_model(X)
 
-            # get the dimensions of the working array
-            Ny, Nx = state.thk.shape
-
-            N = params.iflo_Nz
-
-            # state.U = state.Y_to_U(Y[:,:Ny,:Nx,:])
-
-            # state.update_2d_iceflow_variables()
-
-            state.uvelsurf = Y[0, :Ny, :Nx, N - 1]
-            state.vvelsurf = Y[0, :Ny, :Nx, 2 * N - 1]
-
-            # TODO UPDATE : SWITHC TO THE OTHER
-            state.ubar = tf.reduce_mean(Y[0, :Ny, :Nx, :N], axis=-1)
-            # state.ubar = tf.reduce_sum(Y[0, :Ny, :Nx, :N]*state.vert_weight, axis=-1)
-            state.vbar = tf.reduce_mean(Y[0, :Ny, :Nx, N:], axis=-1)
-            # state.vbar = tf.reduce_sum(Y[0, :Ny, :Nx, N:]*state.vert_weight, axis=-1)
+            state.U,state.V = Y_to_UV(params, Y)
+            
+            state.U = state.U[0]
+            state.V = state.V[0]
+            
+            update_2d_iceflow_variables(params, state)
 
             state.velsurf = tf.stack(
                 [state.uvelsurf, state.vvelsurf], axis=-1

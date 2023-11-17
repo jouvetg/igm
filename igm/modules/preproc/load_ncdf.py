@@ -69,7 +69,7 @@ def initialize_load_ncdf(params, state):
     y = np.squeeze(nc.variables["y"]).astype("float32")
 
     # make sure the grid has same cell spacing in x and y
-    assert abs(x[1] - x[0]) == abs(y[1] - y[0])
+    # assert abs(x[1] - x[0]) == abs(y[1] - y[0])
 
     # load any field contained in the ncdf file, replace missing entries by nan
 

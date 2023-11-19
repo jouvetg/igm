@@ -2,3 +2,6 @@ __pycache__
 igm_model.egg-info
 dist
 sol_analytic
+paper.tex
+fig
+biblio.bib

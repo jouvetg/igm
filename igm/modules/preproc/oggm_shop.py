@@ -78,7 +78,7 @@ def initialize_oggm_shop(params, state):
     if hasattr(state, "logger"):
         state.logger.info("Prepare data using oggm and glathida")
 
-    nc = Dataset(os.path.join(params.oggm_RGI_ID, "gridded_data.nc"), "r+")
+    nc = Dataset(os.path.join(params.working_dir, params.oggm_RGI_ID, "gridded_data.nc"), "r+")
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.flip(np.squeeze(nc.variables["y"]).astype("float32"))

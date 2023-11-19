@@ -196,7 +196,7 @@ def finalize_particles(params, state):
     pass
 
 
-def _zeta_to_rhs(state, zeta):
+def _zeta_to_rhs(params, zeta):
     return (zeta / params.iflo_vert_spacing) * (
         1.0 + (params.iflo_vert_spacing - 1.0) * zeta
     )

@@ -346,6 +346,7 @@ def initialize_optimize(params, state):
                     dbdy = state.topg[1:, :] - state.topg[:-1, :]
                     REGU_H = (params.opti_regu_param_thk / (1000**2)) * (
                         tf.nn.l2_loss(dbdx) + tf.nn.l2_loss(dbdy)
+                        - params.opti_convexity_weight * tf.math.reduce_sum(state.thk)
                     )
                 else:
                     dbdx = state.topg[:, 1:] - state.topg[:, :-1]

@@ -119,7 +119,13 @@ def params_iceflow(parser):
         default=True,
         help="Sliding coeeficient (this describe slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco as before)",
     )
-
+    parser.add_argument(
+        "--iflo_save_model",
+        type=str2bool,
+        default=False,
+        help="save the iceflow emaultor at the end of the simulation",
+    )
+     
     # vertical discretization
     parser.add_argument(
         "--iflo_Nz",
@@ -430,7 +436,9 @@ def update_iceflow(params, state):
 
 
 def finalize_iceflow(params, state):
-    pass
+
+    if params.iflo_save_model:
+        save_iceflow_model(params, state) 
 
 
 ########################################################################

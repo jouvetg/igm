@@ -1,7 +1,13 @@
 __pycache__
-igm_model.egg-info
+igm_model.egg-info/
 dist
 sol_analytic
 paper.tex
-fig
+fig/
 biblio.bib
+tests/
+# hide output files and data
+output.nc
+computation-statistics.txt
+computation-pie.png
+examples/params.json

@@ -1098,7 +1098,8 @@ def save_iceflow_model(params, state):
     #    for key,gg in zip(params.iflo_fieldin,fieldin_dim):
     #        fid.write("%s %.1f \n" % (key, gg))
     for key in params.iflo_fieldin:
-        fid.write("%s %.1f \n" % (key))
+        print(key)
+        fid.write("%s \n" % (key))
     fid.close()
 
     fid = open(os.path.join(directory, "vert_grid.dat"), "w")

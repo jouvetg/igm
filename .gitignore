@@ -6,8 +6,13 @@ paper.tex
 fig/
 biblio.bib
 tests/
+
 # hide output files and data
 output.nc
-computation-statistics.txt
-computation-pie.png
+computational-statistics.txt
+memory-statistics.txt
+computational-pie.png
+memory-pie.png
 examples/params.json
+clean.sh
+params_saved.json

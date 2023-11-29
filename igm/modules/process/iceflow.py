@@ -61,10 +61,16 @@ def params_iceflow(parser):
     )
 
     parser.add_argument(
+        "--iflo_pretrained_emulator",
+        type=str2bool,
+        default=True,
+        help="Do we take a pretrained emulator or start from scratch?",
+    )
+    parser.add_argument(
         "--iflo_emulator",
         type=str,
-        default="myemulator",
-        help="Directory path of the deep-learning ice flow model, create a new if empty string",
+        default="",
+        help="Directory path of the deep-learning pretrained ice flow model, take from the library if empty string",
     )
 
     # physical parameters
@@ -334,24 +340,22 @@ def initialize_iceflow(params, state):
             + "_"
             + str(int(params.iflo_new_friction_param))
         )
-
-        existing_emulator = True
-
-        # first check if it finds a pretrained emulator in the igm package
-        if os.path.exists(importlib_resources.files(emulators).joinpath(direct_name)):
-            dirpath = importlib_resources.files(emulators).joinpath(direct_name)
-            print("Found pretrained emulator in the igm package: " + direct_name)
-        else:
-            # if not, check if it finds a pretrained emulator in the current directory
-            if os.path.exists(params.iflo_emulator):
-                dirpath = params.iflo_emulator
-                print("Found pretrained emulator: " + params.iflo_emulator)
-            # if not, create a new one from scratch
+ 
+        if params.iflo_pretrained_emulator:
+            
+            if params.iflo_emulator=="":
+                if os.path.exists(importlib_resources.files(emulators).joinpath(direct_name)):
+                    dirpath = importlib_resources.files(emulators).joinpath(direct_name)
+                    print("Found pretrained emulator in the igm package: " + direct_name)
+                else:
+                    print("No pretrained emulator found in the igm package")
             else:
-                existing_emulator = False
-                print("No pretrained emulator found, creating a new one from scratch")
-
-        if existing_emulator:
+                if os.path.exists(params.iflo_emulator):
+                    dirpath = params.iflo_emulator
+                    print("Found pretrained emulator: " + params.iflo_emulator)
+                else:
+                    print("No pretrained emulator found ")
+  
             fieldin = []
             fid = open(os.path.join(dirpath, "fieldin.dat"), "r")
             for fileline in fid:

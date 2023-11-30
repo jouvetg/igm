@@ -10,7 +10,7 @@ import datetime
 import os
 import xarray
 
-from igm.modules.process.iceflow import *
+from igm.modules.process.iceflow.iceflow import *
 from igm.modules.utils import *
 
 

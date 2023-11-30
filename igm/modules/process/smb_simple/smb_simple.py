@@ -10,7 +10,7 @@ import tensorflow as tf
 from igm.modules.utils import interp1d_tf
 
 
-def params_smb_simple(parser):
+def params(parser):
     parser.add_argument(
         "--smb_simple_update_freq",
         type=float,
@@ -31,7 +31,7 @@ def params_smb_simple(parser):
     )
 
 
-def initialize_smb_simple(params, state):
+def initialize(params, state):
     if params.smb_simple_array == []:
         state.smbpar = np.loadtxt(
             os.path.join(params.working_dir, params.smb_simple_file),
@@ -45,7 +45,7 @@ def initialize_smb_simple(params, state):
     state.tlast_mb = tf.Variable(-1.0e5000)
 
 
-def update_smb_simple(params, state):
+def update(params, state):
     # update smb each X years
     if (state.t - state.tlast_mb) >= params.smb_simple_update_freq:
         if hasattr(state, "logger"):
@@ -78,5 +78,5 @@ def update_smb_simple(params, state):
         state.tcomp_smb_simple[-1] *= -1
 
 
-def finalize_smb_simple(params, state):
+def finalize(params, state):
     pass

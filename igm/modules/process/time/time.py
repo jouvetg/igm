@@ -9,7 +9,7 @@ import datetime, time
 import tensorflow as tf
 
 
-def params_time(parser):
+def params(parser):
     parser.add_argument(
         "--time_start",
         type=float,
@@ -39,7 +39,7 @@ def params_time(parser):
     )
 
 
-def initialize_time(params, state):
+def initialize(params, state):
     state.tcomp_time = []
 
     # Initialize the time with starting time
@@ -62,7 +62,7 @@ def initialize_time(params, state):
     state.saveresult = True
 
 
-def update_time(params, state):
+def update(params, state):
     if hasattr(state, "logger"):
         state.logger.info(
             "Update DT from the CFL condition at time : " + str(state.t.numpy())
@@ -104,5 +104,5 @@ def update_time(params, state):
     state.tcomp_time[-1] *= -1
 
 
-def finalize_time(params, state):
+def finalize(params, state):
     pass

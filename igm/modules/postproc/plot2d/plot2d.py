@@ -13,7 +13,7 @@ import tensorflow as tf
 from igm.modules.utils import *
 
 
-def params_plot2d(parser):
+def params(parser):
     parser.add_argument(
         "--plt2d_editor",
         type=str,
@@ -46,7 +46,7 @@ def params_plot2d(parser):
     )
 
 
-def initialize_plot2d(params, state):
+def initialize(params, state):
     state.extent = [np.min(state.x), np.max(state.x), np.min(state.y), np.max(state.y)]
 
     if params.plt2d_editor == "vs":
@@ -66,7 +66,7 @@ def initialize_plot2d(params, state):
     )
 
 
-def update_plot2d(params, state):
+def update(params, state):
     if state.saveresult:
         state.tcomp_plot2d.append(time.time())
 
@@ -132,5 +132,5 @@ def update_plot2d(params, state):
         state.tcomp_plot2d[-1] *= -1
 
 
-def finalize_plot2d(params, state):
+def finalize(params, state):
     pass

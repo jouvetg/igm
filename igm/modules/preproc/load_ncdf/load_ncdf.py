@@ -14,7 +14,7 @@ from netCDF4 import Dataset
 from igm.modules.utils import *
 
 
-def params_load_ncdf(parser):
+def params(parser):
     parser.add_argument(
         "--lncd_input_file",
         type=str,
@@ -59,7 +59,7 @@ def params_load_ncdf(parser):
     )
 
 
-def initialize_load_ncdf(params, state):
+def initialize(params, state):
     if hasattr(state, "logger"):
         state.logger.info("LOAD NCDF file")
 
@@ -131,9 +131,9 @@ def initialize_load_ncdf(params, state):
     complete_data(state)
 
 
-def update_load_ncdf(params, state):
+def update(params, state):
     pass
 
 
-def finalize_load_ncdf(params, state):
+def finalize(params, state):
     pass

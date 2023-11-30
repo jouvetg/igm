@@ -9,15 +9,15 @@ import tensorflow as tf
 from igm.modules.utils import compute_divflux
 
 
-def params_thk(parser):
+def params(parser):
     pass
 
 
-def initialize_thk(params, state):
+def initialize(params, state):
     state.tcomp_thk = []
 
 
-def update_thk(params, state):
+def update(params, state):
     if state.it >= 0:
         if hasattr(state, "logger"):
             state.logger.info(
@@ -51,5 +51,5 @@ def update_thk(params, state):
         state.tcomp_thk[-1] *= -1
 
 
-def finalize_thk(params, state):
+def finalize(params, state):
     pass

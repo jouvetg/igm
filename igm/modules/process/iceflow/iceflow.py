@@ -51,7 +51,7 @@ import importlib_resources
 ############################################
 
 
-def params_iceflow(parser):
+def params(parser):
     # type of ice flow computations
     parser.add_argument(
         "--iflo_type",
@@ -274,7 +274,7 @@ def params_iceflow(parser):
     )
 
 
-def initialize_iceflow(params, state):
+def initialize(params, state):
     state.tcomp_iceflow = []
 
     # here we initialize variable parmaetrizing ice flow
@@ -413,7 +413,7 @@ def initialize_iceflow(params, state):
         _update_iceflow_emulated(params, state)
 
 
-def update_iceflow(params, state):
+def update(params, state):
     if hasattr(state, "logger"):
         state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
@@ -435,7 +435,7 @@ def update_iceflow(params, state):
     state.tcomp_iceflow[-1] *= -1
 
 
-def finalize_iceflow(params, state):
+def finalize(params, state):
 
     if params.iflo_save_model:
         save_iceflow_model(params, state) 

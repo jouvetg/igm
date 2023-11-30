@@ -10,19 +10,19 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 
-def params_print_comp(parser):
+def params(parser):
     pass
 
 
-def initialize_print_comp(params, state):
+def initialize(params, state):
     pass
 
 
-def update_print_comp(params, state):
+def update(params, state):
     pass
 
 
-def finalize_print_comp(params, state):
+def finalize(params, state):
     ################################################################
 
     size_of_tensor = {}

@@ -12,8 +12,9 @@ import igm
 
 from igm.modules.utils import *
 
+from igm.modules.process.particles_v1 import seeding_particles
 
-def params_particles(parser):
+def params(parser):
     parser.add_argument(
         "--part_tracking_method",
         type=str,
@@ -34,7 +35,7 @@ def params_particles(parser):
     )
 
 
-def initialize_particles(params, state):
+def initialize(params, state):
     state.tlast_seeding = -1.0e5000
     state.tcomp_particles = []
 
@@ -53,12 +54,12 @@ def initialize_particles(params, state):
     state.gridseed[::rr, ::rr] = True
 
 
-def update_particles(params, state):
+def update(params, state):
     if hasattr(state, "logger"):
         state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
 
     if (state.t.numpy() - state.tlast_seeding) >= params.part_frequency_seeding:
-        igm.seeding_particles(params, state)
+        seeding_particles(params, state)
 
         # merge the new seeding points with the former ones
         state.xpos = tf.Variable(tf.concat([state.xpos, state.nxpos], axis=-1))
@@ -192,7 +193,7 @@ def update_particles(params, state):
         state.tcomp_particles[-1] *= -1
 
 
-def finalize_particles(params, state):
+def finalize(params, state):
     pass
 
 

@@ -9,17 +9,17 @@ import datetime
 import matplotlib.pyplot as plt
 
 
-def params_print_info(parser):
+def params(parser):
     pass
 
 
-def initialize_print_info(params, state):
+def initialize(params, state):
     print(
         "IGM %s :         Iterations   |         Time (y)     |     Time Step (y)   |   Ice Volume (km^3) "
     )
 
 
-def update_print_info(params, state):
+def update(params, state):
     """
     This serves to print key info on the fly during computation
     """
@@ -36,5 +36,5 @@ def update_print_info(params, state):
         )
 
 
-def finalize_print_info(params, state):
+def finalize(params, state):
     pass

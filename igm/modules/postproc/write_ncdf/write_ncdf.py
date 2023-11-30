@@ -14,7 +14,7 @@ from netCDF4 import Dataset
 from igm.modules.utils import getmag
 
 
-def params_write_ncdf(parser):
+def params(parser):
     parser.add_argument(
         "--wncd_output_file",
         type=str,
@@ -40,7 +40,7 @@ def params_write_ncdf(parser):
     )
 
 
-def initialize_write_ncdf(params, state):
+def initialize(params, state):
     state.tcomp_write_ncdf = []
 
     os.system(
@@ -87,7 +87,7 @@ def initialize_write_ncdf(params, state):
     state.var_info_ncdf_ex["weight_particles"] = ["weight_particles", "no"]
 
 
-def update_write_ncdf(params, state):
+def update(params, state):
     if state.saveresult:
         state.tcomp_write_ncdf.append(time.time())
 
@@ -194,5 +194,5 @@ def update_write_ncdf(params, state):
         state.tcomp_write_ncdf[-1] *= -1
 
 
-def finalize_write_ncdf(params, state):
+def finalize(params, state):
     pass

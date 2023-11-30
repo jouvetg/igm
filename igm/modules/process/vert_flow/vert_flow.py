@@ -10,18 +10,18 @@ import tensorflow as tf
 from igm.modules.utils import *
 
 
-def params_vert_flow(parser):
+def params(parser):
     pass
 
 
-def initialize_vert_flow(params, state):
+def initialize(params, state):
     state.tcomp_vert_flow = []
 
 
 #    state.W = tf.zeros_like(state.U[0])
 
 
-def update_vert_flow(params, state):
+def update(params, state):
     """ """
 
     state.tcomp_vert_flow.append(time.time())
@@ -37,7 +37,7 @@ def update_vert_flow(params, state):
     state.tcomp_vert_flow[-1] *= -1
 
 
-def finalize_vert_flow(params, state):
+def finalize(params, state):
     pass
 
 

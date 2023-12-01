@@ -3,26 +3,23 @@
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
-import numpy as np
-import os, sys, shutil
-import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
 
-def params_anim_mayavi(parser):
+def params(parser):
     pass
 
 
-def initialize_anim_mayavi(params, state):
+def initialize(params, state):
     pass
 
 
-def update_anim_mayavi(params, state):
+def update(params, state):
     pass
 
 
-def finalize_anim_mayavi(params, state):
+def finalize(params, state):
     from mayavi import mlab
     import xarray as xr
     import numpy as np

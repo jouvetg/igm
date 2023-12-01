@@ -13,7 +13,7 @@ from igm.modules.utils import str2bool
 from igm.modules.utils import complete_data
 
 
-def params_oggm_shop(parser):
+def params(parser):
     # aletsch  RGI60-11.01450
     # malspina RGI60-01.13696
     # brady    RGI60-01.20796
@@ -70,7 +70,7 @@ def params_oggm_shop(parser):
     )
 
 
-def initialize_oggm_shop(params, state):
+def initialize(params, state):
     import json
 
     _oggm_util([params.oggm_RGI_ID], params)
@@ -211,11 +211,11 @@ def initialize_oggm_shop(params, state):
 #            state.logger.setLevel(params.logging_level)
 
 
-def update_oggm_shop(params, state):
+def update(params, state):
     pass
 
 
-def finalize_oggm_shop(params, state):
+def finalize(params, state):
     pass
 
 

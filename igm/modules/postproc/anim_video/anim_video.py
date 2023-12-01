@@ -4,25 +4,23 @@
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
-import os, sys, shutil
-import time
-import tensorflow as tf
+import os
 import matplotlib.pyplot as plt
 
 
-def params_anim_video(parser):
+def params(parser):
     pass
 
 
-def initialize_anim_video(params, state):
+def initialize(params, state):
     pass
 
 
-def update_anim_video(params, state):
+def update(params, state):
     pass
 
 
-def finalize_anim_video(params, state):
+def finalize(params, state):
     import xarray as xr
     from matplotlib import animation
 

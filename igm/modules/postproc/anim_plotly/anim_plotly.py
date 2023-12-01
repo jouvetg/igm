@@ -2,25 +2,25 @@
 import copy
 
 import numpy as np
-import os, sys, shutil
+import os
 import json
 from types import SimpleNamespace
 import xarray as xr
 
 
-def params_anim_plotly(parser):
+def params(parser):
     pass
 
 
-def initialize_anim_plotly(params, state):
+def initialize(params, state):
     pass
 
 
-def update_anim_plotly(params, state):
+def update(params, state):
     pass
 
 
-def finalize_anim_plotly(params, state):
+def finalize(params, state):
     import plotly.graph_objects as go
     import math
     from dash import Dash, dcc, html, Input, Output

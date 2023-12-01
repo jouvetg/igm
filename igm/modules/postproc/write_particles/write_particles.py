@@ -5,13 +5,13 @@
 
 import numpy as np
 import os
-import datetime, time
+import time
 import tensorflow as tf
 
 from igm.modules.utils import *
 
 
-def params_write_particles(parser):
+def params(parser):
     parser.add_argument(
         "--wpar_add_topography",
         type=str2bool,
@@ -20,7 +20,7 @@ def params_write_particles(parser):
     )
 
 
-def initialize_write_particles(params, state):
+def initialize(params, state):
     state.tcomp_write_particles = []
 
     directory = os.path.join(params.working_dir, "trajectories")
@@ -44,7 +44,7 @@ def initialize_write_particles(params, state):
         np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
 
 
-def update_write_particles(params, state):
+def update(params, state):
     if state.saveresult:
         state.tcomp_write_particles.append(time.time())
 
@@ -96,5 +96,5 @@ def update_write_particles(params, state):
         state.tcomp_write_particles[-1] *= -1
 
 
-def finalize_write_particles(params, state):
+def finalize(params, state):
     pass

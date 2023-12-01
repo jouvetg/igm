@@ -15,7 +15,7 @@ from igm.modules.utils import *
 from igm import emulators
 
 
-def params_iceflow_v1(parser):
+def params(parser):
     parser.add_argument(
         "--init_strflowctrl",
         type=float,
@@ -56,7 +56,7 @@ def params_iceflow_v1(parser):
     )
 
 
-def initialize_iceflow_v1(params, state):
+def initialize(params, state):
     state.tcomp_iceflow = []
 
     # here we initialize variable parmaetrizing ice flow
@@ -112,7 +112,7 @@ def initialize_iceflow_v1(params, state):
         state.PAD = [[0, 0], [0, 0]]
 
 
-def update_iceflow_v1(params, state):
+def update(params, state):
     if hasattr(state, "logger"):
         state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
@@ -166,7 +166,7 @@ def update_iceflow_v1(params, state):
     state.tcomp_iceflow[-1] *= -1
 
 
-def finalize_iceflow_v1(params, state):
+def finalize(params, state):
     pass
 
 

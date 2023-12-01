@@ -14,14 +14,14 @@ from scipy import stats
 from netCDF4 import Dataset
 
 from igm.modules.utils import *
-from igm.modules.process.iceflow.iceflow import *
+from igm.modules.process.iceflow import initialize as initialize_iceflow
 
 
 def dependency_optimize():
     return ["iceflow"]
 
 
-def params_optimize(parser):
+def params(parser):
     parser.add_argument(
         "--opti_vars_to_save",
         type=list,
@@ -159,7 +159,7 @@ def params_optimize(parser):
     )
 
 
-def initialize_optimize(params, state):
+def initialize(params, state):
     """
     This function does the data assimilation (inverse modelling) to optimize thk, slidingco ans usurf from data
     """
@@ -548,11 +548,11 @@ def initialize_optimize(params, state):
     )
 
 
-def update_optimize(params, state):
+def update(params, state):
     pass
 
 
-def finalize_optimize(params, state):
+def finalize(params, state):
     pass
 
 

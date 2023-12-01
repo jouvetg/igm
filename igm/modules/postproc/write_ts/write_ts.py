@@ -4,13 +4,11 @@
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
-import os, sys, shutil
-import matplotlib.pyplot as plt
-import tensorflow as tf
+import os
 from netCDF4 import Dataset
 
 
-def params_write_ts(parser):
+def params(parser):
     parser.add_argument(
         "--wts_output_file",
         type=str,
@@ -19,7 +17,7 @@ def params_write_ts(parser):
     )
 
 
-def initialize_write_ts(params, state):
+def initialize(params, state):
     os.system(
         "echo rm "
         + os.path.join(params.working_dir, params.wts_output_file)
@@ -31,7 +29,7 @@ def initialize_write_ts(params, state):
     state.var_info_ncdf_ts["area"] = ["Glaciated area", "km^2"]
 
 
-def update_write_ts(params, state):
+def update(params, state):
     if state.saveresult:
         vol = np.sum(state.thk) * (state.dx**2) / 10**9
         area = np.sum(state.thk > 1) * (state.dx**2) / 10**6
@@ -81,5 +79,5 @@ def update_write_ts(params, state):
             nc.close()
 
 
-def finalize_write_ts(params, state):
+def finalize(params, state):
     pass

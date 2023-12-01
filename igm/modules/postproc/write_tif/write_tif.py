@@ -8,7 +8,7 @@ import os
 import tensorflow as tf
 
 
-def params_write_tif(parser):
+def params(parser):
     parser.add_argument(
         "--wtif_vars_to_save",
         type=list,
@@ -20,11 +20,11 @@ def params_write_tif(parser):
     )
 
 
-def initialize_write_tif(params, state):
+def initialize(params, state):
     pass
 
 
-def update_write_tif(params, state):
+def update(params, state):
     import rasterio
 
     if state.saveresult:
@@ -60,5 +60,5 @@ def update_write_tif(params, state):
             del src
 
 
-def finalize_write_tif(params, state):
+def finalize(params, state):
     pass

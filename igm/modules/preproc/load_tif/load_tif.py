@@ -10,7 +10,7 @@ import tensorflow as tf
 from igm.modules.utils import *
 
 
-def params_load_tif(parser):
+def params(parser):
     parser.add_argument(
         "--ltif_coarsen",
         type=int,
@@ -49,7 +49,7 @@ def params_load_tif(parser):
     )
 
 
-def initialize_load_tif(params, state):
+def initialize(params, state):
     import rasterio
 
     files = glob.glob(os.path.join(params.working_dir, "*.tif"))
@@ -110,9 +110,9 @@ def initialize_load_tif(params, state):
     complete_data(state)
 
 
-def update_load_tif(params, state):
+def update(params, state):
     pass
 
 
-def finalize_load_tif(params, state):
+def finalize(params, state):
     pass

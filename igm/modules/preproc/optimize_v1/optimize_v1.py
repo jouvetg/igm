@@ -14,10 +14,9 @@ from scipy import stats
 from netCDF4 import Dataset
 
 from igm.modules.utils import *
-from igm.modules.process.iceflow_v1 import *
+from igm.modules.process.iceflow_v1.iceflow_v1 import initialize as initialize_iceflow_v1
 
-
-def params_optimize_v1(parser):
+def params(parser):
     parser.add_argument(
         "--opti_vars_to_save",
         type=list,
@@ -169,7 +168,7 @@ def params_optimize_v1(parser):
     )
 
 
-def initialize_optimize_v1(params, state):
+def initialize(params, state):
     initialize_iceflow_v1(params, state)
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
@@ -697,11 +696,11 @@ def initialize_optimize_v1(params, state):
     )
 
 
-def update_optimize_v1(params, state):
+def update(params, state):
     pass
 
 
-def finalize_optimize_v1(params, state):
+def finalize(params, state):
     pass
 
 

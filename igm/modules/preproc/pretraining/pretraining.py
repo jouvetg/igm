@@ -14,11 +14,11 @@ from igm.modules.process.iceflow.iceflow import *
 from igm.modules.utils import *
 
 
-def dependency_pretraining():
+def dependency_iceflow():
     return ["iceflow"]
 
 
-def params_pretraining(parser):
+def params(parser):
     parser.add_argument(
         "--data_dir",
         type=str,
@@ -96,7 +96,7 @@ def params_pretraining(parser):
     )
 
 
-def initialize_pretraining(params, state):
+def initialize(params, state):
     state.direct_name = (
         "pinnbp"
         + "_"
@@ -157,11 +157,11 @@ def initialize_pretraining(params, state):
     train_iceflow_emulator(params, state, subdatasetpath_train)
 
 
-def update_pretraining(params, state):
+def update(params, state):
     pass
 
 
-def finalize_pretraining(params, state):
+def finalize(params, state):
     pass
 
 

@@ -11,7 +11,7 @@ import tensorflow as tf
 import json
 
 
-def params_smb_oggm(parser):
+def params(parser):
     parser.add_argument(
         "--smb_oggm_update_freq",
         type=float,
@@ -32,7 +32,7 @@ def params_smb_oggm(parser):
     )
 
 
-def initialize_smb_oggm(params, state):
+def initialize(params, state):
     state.tcomp_smb_oggm = []
     state.tlast_mb = tf.Variable(-1.0e5000)
 
@@ -48,7 +48,7 @@ def initialize_smb_oggm(params, state):
     params.melt_f = oggm_mb_calib["melt_f"]  # unit: mm water / (celcius day)
 
 
-def update_smb_oggm(params, state):
+def update(params, state):
     #    mass balance forced by climate with accumulation and temperature-index melt model
     #    Input:  state.precipitation [Unit: kg * m^(-2) * y^(-1)]
     #            state.air_temp      [Unit: °C           ]
@@ -109,5 +109,5 @@ def update_smb_oggm(params, state):
         state.tcomp_smb_oggm[-1] *= -1
 
 
-def finalize_smb_oggm(params, state):
+def finalize(params, state):
     pass

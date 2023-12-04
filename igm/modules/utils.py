@@ -18,6 +18,7 @@ __all__ = [
     "compute_divflux",
     "interp1d_tf",
     "complete_data",
+    "interpolate_bilinear_tf"
 ]
 
 def str2bool(v):

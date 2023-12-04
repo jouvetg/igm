@@ -58,6 +58,8 @@ from .common import (
     load_modules,
     add_logger,
     print_params,
+    find_dependent_modules,
+    load_dependecies
 )
 
 from . import emulators

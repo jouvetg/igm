@@ -8,7 +8,7 @@ import tensorflow as tf
 import time
 
 
-def params_gflex(parser):
+def params(parser):
     parser.add_argument(
         "--gflex_update_freq",
         type=float,
@@ -23,8 +23,8 @@ def params_gflex(parser):
     )
 
 
-def initialize_gflex(params, state):
-    import gflex
+def initialize(params, state):
+    import igm.modules.process.gflex.gflex as gflex
 
     state.tcomp_gflex = []
     state.tlast_gflex = tf.Variable(params.time_start, dtype=tf.float32)
@@ -53,8 +53,8 @@ def initialize_gflex(params, state):
         state.flex.Te = np.ones_like(state.thk.numpy() * params.gflex_default_Te)
 
 
-def update_gflex(params, state):
-    import gflex
+def update(params, state):
+    import igm.modules.process.gflex.gflex as gflex
 
     if (state.t - state.tlast_gflex) >= params.gflex_update_freq:
         if hasattr(state, "logger"):
@@ -76,5 +76,5 @@ def update_gflex(params, state):
         state.tcomp_gflex[-1] *= -1
 
 
-def finalize_gflex(params, state):
+def finalize(params, state):
     pass

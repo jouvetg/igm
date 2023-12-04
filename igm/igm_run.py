@@ -40,7 +40,8 @@ def main():
     imported_modules = igm.load_modules(params)
 
     # get the list of all dependent modules, which parameters must be called too
-    # dependent_modules = igm.find_dependent_modules(modules)
+    # dependent_modules = igm.find_dependent_modules(imported_modules)
+    # dependent_modules = igm.load_dependecies(imported_modules)
 
     # Collect defaults, overide from json file, and parse all specific module parameters
     for module in imported_modules:

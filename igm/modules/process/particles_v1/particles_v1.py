@@ -12,7 +12,7 @@ import tensorflow as tf
 from igm.modules.utils import *
 
 
-def params_particles_v1(parser):
+def params(parser):
     parser.add_argument(
         "--part_tracking_method",
         type=str,
@@ -33,7 +33,7 @@ def params_particles_v1(parser):
     )
 
 
-def initialize_particles_v1(params, state):
+def initialize(params, state):
     state.tlast_seeding = -1.0e5000
     state.tcomp_particles = []
 
@@ -52,7 +52,7 @@ def initialize_particles_v1(params, state):
     state.gridseed[::rr, ::rr] = True
 
 
-def update_particles_v1(params, state):
+def update(params, state):
     if hasattr(state, "logger"):
         state.logger.info("Update particle tracking at time : " + str(state.t.numpy()))
 
@@ -226,7 +226,7 @@ def update_particles_v1(params, state):
     state.tcomp_particles[-1] *= -1
 
 
-def finalize_particles_v1(params, state):
+def finalize(params, state):
     pass
 
 

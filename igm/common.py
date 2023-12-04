@@ -10,7 +10,8 @@ import importlib
 import argparse
 from igm.modules.utils import str2bool
 import igm
-
+# from pathlib import Path
+from pathlib import PurePath
 from typing import List, Any
 
 
@@ -202,6 +203,31 @@ def find_dependent_modules(modules):
     )
 
     return [m for m in dm if m not in modules]
+
+def has_dependecies(module: Any):
+    if hasattr(module, 'dependency'):
+        return True
+
+# ! TODO: Make this function better apdated to dependecies, modulenames, and paths... (for custom and inbuilt)
+def load_dependecies(imported_modules: List):
+    # print("in")
+    # print(imported_modules)
+    imported_dependecies = []
+    for module in imported_modules:
+        # print(dir(module))
+        if has_dependecies(module):
+            module_dependecies = module.dependency()
+            print(module_dependecies)
+            # exit()
+            module_folder_path = PurePath(module.__file__).parent.parent # if not custom!...
+            print(os.sep)
+            module_directory = module_folder_path.parts[-1]
+            
+            dependent_module = load_modules_from_directory([module], module_directory)
+            imported_dependecies.append(dependent_module)
+            print(imported_dependecies)
+    
+    return imported_modules + imported_dependecies
 
 
 # this add a logger to the state

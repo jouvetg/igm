@@ -12,7 +12,7 @@ import igm
 
 from igm.modules.utils import *
 
-from igm.modules.process.particles_v1 import seeding_particles
+from igm.modules.process.particles_v1.particles_v1 import seeding_particles
 
 def params(parser):
     parser.add_argument(

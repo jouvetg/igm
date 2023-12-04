@@ -1,0 +1,19 @@
+Copernicus DEM GLO-90
+
+Original resolution: 3 arc seconds (~90m)
+Date of acquisition: 2010-2015
+Date range: 2010-2015
+
+# Credit
+Any usage or publication must include the following statement:
+“Includes material ©CCME (year of acquisition ), provided under COPERNICUS by
+the European Union and ESA, all rights reserved”.
+
+Please also read and agree to the full ESA user license:
+https://spacedata.copernicus.eu/documents/20126/0/CSCDA_ESA_User_Licence_2021_11_17.pdf
+
+
+# Data files
+
+Copernicus_DSM_30_N46_00_E007_00_DEM.tif
+Copernicus_DSM_30_N46_00_E008_00_DEM.tif

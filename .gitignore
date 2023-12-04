@@ -6,6 +6,7 @@ paper.tex
 fig/
 biblio.bib
 tests/
+pix2pixhd-texture-model/
 
 # hide output files and data
 output.nc

@@ -17,7 +17,7 @@ from igm.modules.utils import *
 from igm.modules.process.iceflow import initialize as initialize_iceflow
 
 
-def dependency_optimize():
+def dependency():
     return ["iceflow"]
 
 

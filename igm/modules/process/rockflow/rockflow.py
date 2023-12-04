@@ -13,7 +13,7 @@ import time
 from igm.modules.utils import *
 
 
-def params_rockflow(parser):
+def params(parser):
     parser.add_argument(
         "--rock_flow_speed",
         type=float,
@@ -22,11 +22,11 @@ def params_rockflow(parser):
     )
 
 
-def initialize_rockflow(params, state):
+def initialize(params, state):
     pass
 
 
-def update_rockflow(params, state):
+def update(params, state):
     slopsurfx, slopsurfy = compute_gradient_tf(state.usurf, state.dx, state.dx)
 
     slop = getmag(slopsurfx, slopsurfy)
@@ -44,5 +44,5 @@ def update_rockflow(params, state):
     state.V.assign(tf.where(thkexp > 0, state.V, diry))
 
 
-def finalize_rockflow(params, state):
+def finalize(params, state):
     pass

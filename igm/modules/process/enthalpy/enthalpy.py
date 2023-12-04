@@ -11,7 +11,7 @@ import time
 from igm.modules.utils import *
 
 
-def params_enthalpy(parser):
+def params(parser):
     parser.add_argument(
         "--enth_water_density",
         type=float,
@@ -102,7 +102,7 @@ def params_enthalpy(parser):
     )
 
 
-def initialize_enthalpy(params, state):
+def initialize(params, state):
     Ny, Nx = state.thk.shape
 
     state.basalMeltRate = tf.Variable(tf.zeros_like(state.thk))
@@ -138,7 +138,7 @@ def initialize_enthalpy(params, state):
     assert params.iflo_dim_arrhenius == 3
 
 
-def update_enthalpy(params, state):
+def update(params, state):
     if hasattr(state, "logger"):
         state.logger.info("Update ENTHALPY at time : " + str(state.t.numpy()))
 
@@ -271,7 +271,7 @@ def update_enthalpy(params, state):
     state.tcomp_enthalpy[-1] *= -1
 
 
-def finalize_enthalpy(params, state):
+def finalize(params, state):
     pass
 
 

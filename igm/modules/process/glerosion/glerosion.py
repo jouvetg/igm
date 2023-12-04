@@ -11,7 +11,7 @@ import tensorflow as tf
 from igm.modules.utils import *
 
 
-def params_glerosion(parser):
+def params(parser):
     parser.add_argument(
         "--glerosion_cst",
         type=float,
@@ -34,12 +34,12 @@ def params_glerosion(parser):
     )
 
 
-def initialize_glerosion(params, state):
+def initialize(params, state):
     state.tcomp_glerosion = []
     state.tlast_erosion = tf.Variable(params.time_start)
 
 
-def update_glerosion(params, state):
+def update(params, state):
     if (state.t - state.tlast_erosion) >= params.glerosion_update_freq:
         if hasattr(state, "logger"):
             state.logger.info(
@@ -64,5 +64,5 @@ def update_glerosion(params, state):
         state.tcomp_glerosion[-1] *= -1
 
 
-def finalize_glerosion(params, state):
+def finalize(params, state):
     pass

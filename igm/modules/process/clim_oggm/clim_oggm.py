@@ -13,7 +13,7 @@ import json
 from igm.modules.utils import interp1d_tf
 
 
-def params_clim_oggm(parser):
+def params(parser):
     # CLIMATE PARAMETERS
     parser.add_argument(
         "--clim_oggm_update_freq",
@@ -51,7 +51,7 @@ def params_clim_oggm(parser):
     )
 
 
-def initialize_clim_oggm(params, state):
+def initialize(params, state):
     # load the given parameters from the json file
     
     with open(os.path.join(params.working_dir, params.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
@@ -128,7 +128,7 @@ def initialize_clim_oggm(params, state):
     np.random.seed(params.clim_oggm_seed_par)  # fix the seed
 
 
-def update_clim_oggm(params, state):
+def update(params, state):
     if (state.t - state.tlast_clim_oggm) >= params.clim_oggm_update_freq:
         if hasattr(state, "logger"):
             state.logger.info("update climate at time : " + str(state.t.numpy()))
@@ -181,5 +181,5 @@ def update_clim_oggm(params, state):
         state.tcomp_clim_oggm[-1] *= -1
 
 
-def finalize_clim_oggm(params, state):
+def finalize(params, state):
     pass

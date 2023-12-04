@@ -8,7 +8,7 @@ import tensorflow as tf
 import time
 
 
-def params_avalanche(parser):
+def params(parser):
     parser.add_argument(
         "--avalanche_update_freq",
         type=float,
@@ -24,12 +24,12 @@ def params_avalanche(parser):
     )
 
 
-def initialize_avalanche(params, state):
+def initialize(params, state):
     state.tcomp_avalanche = []
     state.tlast_avalanche = tf.Variable(params.time_start, dtype=tf.float32)
 
 
-def update_avalanche(params, state):
+def update(params, state):
     if (state.t - state.tlast_avalanche) >= params.avalanche_update_freq:
         if hasattr(state, "logger"):
             state.logger.info("Update AVALANCHE at time : " + str(state.t.numpy()))
@@ -120,5 +120,5 @@ def update_avalanche(params, state):
         state.tcomp_avalanche[-1] *= -1
 
 
-def finalize_avalanche(params, state):
+def finalize(params, state):
     pass

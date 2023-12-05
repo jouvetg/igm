@@ -14,12 +14,13 @@ from .constants import FeatureConstants, ImageConstants
 from .preparer import Pix2PixHDImagePreparer
 from .image_data import ImageData
 from .pix2pixhd import Pix2PixHDPipeline
+from .pix2pixhd_model_assets.generator import LocalEnhancer
+from .pix2pixhd_model_assets.loading import load_model_test
 
 TEXTURE_DEFAULT_DIR = igm.__path__[0] + "/modules/postproc/texture/"
 TEXTURE_DEFAULT_PATH = os.path.join(TEXTURE_DEFAULT_DIR, "pix2pixhd-texture-model")
-# print(TEXTURE_DEFAULT_PATH)
-# import sys
-# sys.exit()
+TEXTURE_CKPT_DIR = os.path.join(TEXTURE_DEFAULT_DIR, "checkpoints")
+
 def params(parser: Any) -> None:
     parser.add_argument(
         "--texture_format",
@@ -33,12 +34,12 @@ def params(parser: Any) -> None:
         default=TEXTURE_DEFAULT_PATH,
         help="Name of the folder for the texture model (tf format)",
     )
-    parser.add_argument(
-        "--resize_texture_resolution",
-        type=int,
-        default=1024,
-        help="Resolution for the long-edge of the model (fixed at 1024 now for compatibility with the model)",
-    )
+    # parser.add_argument(
+    #     "--resize_texture_resolution",
+    #     type=int,
+    #     default=1024,
+    #     help="Resolution for the long-edge of the model (fixed at 1024 now for compatibility with the model)",
+    # )
     
     parser.add_argument(
         "--divide_by_density",
@@ -60,7 +61,12 @@ def initialize(params: Any, state: Any) -> None:
             f"Model not found.\n\nPlease download the model\n{model_url})\nand place the downloaded folder in the following directory:\n{TEXTURE_DEFAULT_DIR}"
         )
 
-    state.texture_model = load_model(params.texture_model_path, compile=False)
+    # state.texture_model = load_model(params.texture_model_path, compile=False)
+    state.texture_model = LocalEnhancer(input_nc=8, output_nc=3, ngf=32, n_downsample_global=4, n_blocks_global=9, n_local_enhancers=1, n_blocks_local=3)
+    checkpoint_dict = {"generator": state.texture_model}
+    checkpoint = tf.train.Checkpoint(**checkpoint_dict)
+
+    __ = load_model_test(checkpoint, TEXTURE_CKPT_DIR)
 
     feature_constants = FeatureConstants()
     image_constants = ImageConstants()
@@ -79,6 +85,12 @@ def initialize(params: Any, state: Any) -> None:
         raise NotImplementedError(
             "Texture format not implemented. Please choose one of the following: (png, tif, or tiff)"
         )
+def is_power_of_two(number):
+    return (number & (number - 1)) == 0
+
+def nearest_power_of_two(number):
+    import math
+    return 2 ** round(math.log2(number))
 
 
 def update(params: Any, state: Any) -> None:
@@ -93,8 +105,18 @@ def update(params: Any, state: Any) -> None:
 
         data = ImageData(values=image, height=image.shape[1], width=image.shape[2], state=state)
         
+        # TODO: Check if the image is a power of 2...
+        if data.height > data.width:
+            if not is_power_of_two(data.height):
+                resolution = nearest_power_of_two(data.height)
+        elif data.height < data.width:
+            if not is_power_of_two(data.width):
+                resolution = nearest_power_of_two(data.width)
+        else:
+            resolution = data.height # or data.width but it assumes its a square
+        
         new_width, new_height = data.compute_shape(
-            resolution=params.resize_texture_resolution
+            resolution=resolution
         )
         data.upsample(width=new_width, height=new_height)
 

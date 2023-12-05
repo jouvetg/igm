@@ -19,17 +19,16 @@ class Pix2PixHDImagePreparer:
         vx = self.state.U[-1]
         vy = self.state.V[-1]
 
-        print(dir(self.state))
         try:
             air_temp = self.state.air_temp
         except AttributeError:
-            raise AttributeError("Air temperature is required for texture model. Please include it in an input file with the variable name 'air_temp'. \
+            raise AttributeError("Air temperature is required for the texture model. Please include it in an input file with the variable name 'air_temp'. \
                                 Also, note that air_temp will be averaged to obtain the annually averaged air_temp for the spatial grid.")
         
         try:
             precipitation = self.state.precipitation
         except AttributeError:
-            raise AttributeError("Precipitation is required for texture model. Please include it in an input file with the variable name 'precipitation'. \
+            raise AttributeError("Precipitation is required for the texture model. Please include it in an input file with the variable name 'precipitation'. \
                                 Also, note that precipitation will be averaged to obtain the annually averaged precipitation for the spatial grid.")
             
         # if the user supplies monthly, quarerly, or seasonal data, average to get annual data

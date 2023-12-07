@@ -6,7 +6,6 @@
 import tensorflow as tf
 import os
 import igm
-
 from typing import List, Any
 
 
@@ -14,12 +13,12 @@ def run_intializers(modules: List, params: Any, state: igm.State) -> None:
     for module in modules:
         module.initialize(params, state)
 
-
 def run_processes(modules: List, params: Any, state: igm.State) -> None:
     if hasattr(state, "t"):
         while state.t < params.time_end:
-            for module in modules:
-                module.update(params, state)
+            with tf.profiler.experimental.Trace('process', step_num=state.t, _r=1):
+                for module in modules:
+                    module.update(params, state)
 
 
 def run_finalizers(modules: List, params: Any, state: igm.State) -> None:
@@ -63,10 +62,17 @@ def main():
     else:
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
+
+    # tf.profiler.experimental.start('logdir')
     with tf.device("/GPU:0"):
+        # with tf.profiler.experimental.Profile('logdir'):
         run_intializers(imported_modules, params, state)
         run_processes(imported_modules, params, state)
         run_finalizers(imported_modules, params, state)
+            
+    # tf.profiler.experimental.stop()
+
+
 
 
 if __name__ == "__main__":

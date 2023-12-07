@@ -5,6 +5,7 @@ from typing import Any
 import time
 import os
 import igm
+import logging
 
 from .normalizer import FeatureNormalizer, ImageNormalizer
 from .utils import TextureModelNotFoundError, resize_image
@@ -34,12 +35,12 @@ def params(parser: Any) -> None:
         default=TEXTURE_DEFAULT_PATH,
         help="Name of the folder for the texture model (tf format)",
     )
-    # parser.add_argument(
-    #     "--resize_texture_resolution",
-    #     type=int,
-    #     default=1024,
-    #     help="Resolution for the long-edge of the model (fixed at 1024 now for compatibility with the model)",
-    # )
+    parser.add_argument(
+        "--texture_verbosity",
+        type=int,
+        default=30,
+        help="Python Logger verbosity level (10=DEBUG, 20=INFO, 30=WARNING, 40=ERROR, 50=CRITICAL)",
+    )
     
     parser.add_argument(
         "--divide_by_density",
@@ -52,6 +53,7 @@ def params(parser: Any) -> None:
 
 def initialize(params: Any, state: Any) -> None:
     state.tcomp_texture = []
+    logging.basicConfig(level=params.texture_verbosity)
     if not os.path.exists(params.texture_model_path):
         model_url = "https://drive.google.com/drive/folders/1UP761XQpD4UvqNtbKNO20EXrxmAd4uoA?usp=sharing"
 
@@ -86,9 +88,11 @@ def initialize(params: Any, state: Any) -> None:
             "Texture format not implemented. Please choose one of the following: (png, tif, or tiff)"
         )
 def is_power_of_two(number):
+    """Checks if a number is a power of two"""
     return (number & (number - 1)) == 0
 
 def nearest_power_of_two(number):
+    """Finds nearest power of two"""
     import math
     return 2 ** round(math.log2(number))
 
@@ -103,6 +107,7 @@ def update(params: Any, state: Any) -> None:
         preparer.get_features()
         image = preparer.prepare_batch()
 
+        logging.info(f"Input Image shape (before resizing): {image.shape}")
         data = ImageData(values=image, height=image.shape[1], width=image.shape[2], state=state)
         
         # TODO: Check if the image is a power of 2...
@@ -114,12 +119,12 @@ def update(params: Any, state: Any) -> None:
                 resolution = nearest_power_of_two(data.width)
         else:
             resolution = data.height # or data.width but it assumes its a square
-        
+        logging.info(f"Long side resolution for resizing: {resolution}")
         new_width, new_height = data.compute_shape(
             resolution=resolution
         )
         data.upsample(width=new_width, height=new_height)
-
+        logging.info(f"Input Image shape (after resizing): {data.values.shape}")
         if not data.square:
             padding_parameters = data.make_square()
             state.texture_exporter.padding_parameters = padding_parameters

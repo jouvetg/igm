@@ -9,6 +9,8 @@ tests/
 pix2pixhd-texture-model/
 texture-aif-test
 checkpoints/
+logdir/
+
 # hide output files and data
 output.nc
 computational-statistics.txt

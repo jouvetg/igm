@@ -3,8 +3,6 @@
 
 # Overview    
 
-THIS IS A TEST
-
 The Instructed Glacier Model (IGM) is an **open-source Python package**, which permits to simulate **3D glacier evolution** accounting for the coupling between ice thermo-dynamics, surface mass balance, and mass conservation. IGM features:
 
 - **Accessibility and modularity:** IGM is implemented in the most popular programming language -- Python -- and takes large benefit of existing tools such as [OGGM](https://oggm.org/). It is organized **module-wise** to facilitate coupling, customization and commmunity development. For simplicity, IGM uses a horizontal regular grid for numerical discretization and therefore deals with **2D gridded input and output data**.
@@ -26,4 +24,3 @@ IGM has a [discord channel](https://discord.com/) for quick support, getting lat
 # Contact
 
 Feel free to drop me an email for any questions, bug reports, or ideas of model extension: guillaume.jouvet at unil.ch
-

@@ -10,7 +10,8 @@
   "modules_postproc": ["write_ncdf",
                        "plot2d",
                        "print_info",
-                       "print_comp"],
+                       "print_comp",
+                       "texture"],
   "smb_simple_array": [
                         ["time", "gradabl", "gradacc", "ela", "accmax"],
                         [ 1900,      0.009,     0.005,  2800,      2.0],

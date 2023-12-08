@@ -1,7 +1,23 @@
 __pycache__
-igm_model.egg-info
+igm_model.egg-info/
 dist
 sol_analytic
 paper.tex
-fig
+fig/
 biblio.bib
+tests/
+pix2pixhd-texture-model/
+texture-aif-test
+checkpoints/
+logdir/
+texture/
+
+# hide output files and data
+output.nc
+computational-statistics.txt
+memory-statistics.txt
+computational-pie.png
+memory-pie.png
+examples/params.json
+clean.sh
+params_saved.json

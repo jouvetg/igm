@@ -7,11 +7,19 @@
 This util files provides a large number of usefull function for other modules
 """
 
-import numpy as np
-import os, sys, shutil
-import matplotlib.pyplot as plt
 import tensorflow as tf
 
+# constrains wildcard imports - not necessary but for security reasons - updtae if a utility is added...
+__all__ = [
+    "str2bool",
+    "getmag",
+    "getmag3d",
+    "compute_gradient_tf",
+    "compute_divflux",
+    "interp1d_tf",
+    "complete_data",
+    "interpolate_bilinear_tf"
+]
 
 def str2bool(v):
     return v.lower() in ("true", "1")

@@ -5,11 +5,14 @@ Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
 Published under the GNU GPL (Version 3), check at the LICENSE file
 """
 
-import os, glob, json, sys, inspect, re
+import os, json, sys, inspect
 import importlib
 import argparse
-from igm.modules.utils import *
+from igm.modules.utils import str2bool
 import igm
+# from pathlib import Path
+from pathlib import PurePath
+from typing import List, Any
 
 
 # The (empty) class state serves in fact to use a dictionnary, but it looks like a class
@@ -95,6 +98,8 @@ def overide_from_json_file(parser, check_if_params_exist=True):
     # list only the parameters registered so far
     LIST = list(vars(parser.parse_args(args=[])).keys())
 
+    print(LIST)
+    print(dic_params.keys())
     if "time_step" in dic_params["modules_process"]:
         import sys
 
@@ -117,6 +122,53 @@ def overide_from_json_file(parser, check_if_params_exist=True):
     filtered_dict = {key: value for key, value in dic_params.items() if key in LIST}
 
     parser.set_defaults(**filtered_dict)
+
+
+def load_modules(params: argparse.Namespace):
+    """Returns a list of actionable modules to then apply the update, initialize, finalize functions on for IGM."""
+
+    imported_preproc_modules = load_modules_from_directory(
+        modules_list=params.modules_preproc, module_folder="preproc"
+    )
+    imported_process_modules = load_modules_from_directory(
+        modules_list=params.modules_process, module_folder="process"
+    )
+    imported_postproc_modules = load_modules_from_directory(
+        modules_list=params.modules_postproc, module_folder="postproc"
+    )
+
+    return (
+        imported_preproc_modules + imported_process_modules + imported_postproc_modules
+    )
+
+
+def validate_module(module):
+    """Validates that a module has the required functions to be used in IGM."""
+    required_functions = ["params", "initialize", "finalize", "update"]
+    for function in required_functions:
+        if not hasattr(module, function):
+            raise AttributeError(
+                f"Module {module} is missing the required function ({function}) in its __init__.py file.",
+                f"Please see https://github.com/jouvetg/igm/wiki/5.-Custom-modules-(coding) for more information on how to construct custom modules.",
+            )
+
+
+def load_modules_from_directory(
+    modules_list: List[str], module_folder: str
+) -> List[Any]:
+    imported_modules = []
+    for module in modules_list:
+        module_path = f"igm.modules.{module_folder}.{module}"
+
+        try:
+            module = importlib.import_module(module_path)
+        except ImportError as e:
+            print(e)
+
+        validate_module(module)
+        imported_modules.append(module)
+
+    return imported_modules
 
 
 # this add a logger to the state
@@ -151,6 +203,31 @@ def find_dependent_modules(modules):
     )
 
     return [m for m in dm if m not in modules]
+
+def has_dependecies(module: Any):
+    if hasattr(module, 'dependency'):
+        return True
+
+# ! TODO: Make this function better apdated to dependecies, modulenames, and paths... (for custom and inbuilt)
+def load_dependecies(imported_modules: List):
+    # print("in")
+    # print(imported_modules)
+    imported_dependecies = []
+    for module in imported_modules:
+        # print(dir(module))
+        if has_dependecies(module):
+            module_dependecies = module.dependency()
+            print(module_dependecies)
+            # exit()
+            module_folder_path = PurePath(module.__file__).parent.parent # if not custom!...
+            print(os.sep)
+            module_directory = module_folder_path.parts[-1]
+            
+            dependent_module = load_modules_from_directory([module], module_directory)
+            imported_dependecies.append(dependent_module)
+            print(imported_dependecies)
+    
+    return imported_modules + imported_dependecies
 
 
 # this add a logger to the state

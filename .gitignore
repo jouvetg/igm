@@ -10,6 +10,7 @@ pix2pixhd-texture-model/
 texture-aif-test
 checkpoints/
 logdir/
+texture/
 
 # hide output files and data
 output.nc

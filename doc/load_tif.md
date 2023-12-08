@@ -12,6 +12,13 @@ This module depends on `rasterio`.
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+||`--working_dir`|``|Working directory (default empty string)|
+||`--modules_preproc`|`['oggm_shop']`|List of pre-processing modules|
+||`--modules_process`|`['iceflow', 'time', 'thk']`|List of processing modules|
+||`--modules_postproc`|`['write_ncdf', 'plot2d', 'print_info']`|List of post-processing modules|
+||`--logging`||Activate the looging|
+||`--logging_file`|``|Logging file name, if empty it prints in the screen|
+||`--print_params`||Print definitive parameters in a file for record|
 ||`--ltif_coarsen`|`1`|coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points|
 ||`--ltif_crop`|`False`|Crop the data with xmin, xmax, ymin, ymax (default: False)|
 ||`--ltif_xmin`|`-100000000000000000000`|crop_xmin|

@@ -32,6 +32,13 @@ If parameter `clim_oggm_clim_trend_array` is set to empty list `[]`, then it wil
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+||`--working_dir`|``|Working directory (default empty string)|
+||`--modules_preproc`|`['oggm_shop']`|List of pre-processing modules|
+||`--modules_process`|`['iceflow', 'time', 'thk']`|List of processing modules|
+||`--modules_postproc`|`['write_ncdf', 'plot2d', 'print_info']`|List of post-processing modules|
+||`--logging`||Activate the looging|
+||`--logging_file`|``|Logging file name, if empty it prints in the screen|
+||`--print_params`||Print definitive parameters in a file for record|
 ||`--clim_oggm_update_freq`|`1`|Update the climate each X years|
 ||`--smb_oggm_file`|`smb_oggm_param.txt`|Name of the imput file for the climate outide the given datatime frame (time, delta_temp, prec_scali)|
 ||`--clim_oggm_clim_trend_array`|`[['time', 'delta_temp', 'prec_scal'], [1900, 0.0, 1.0], [2020, 0.0, 1.0]]`|Define climate trend outside available time window|

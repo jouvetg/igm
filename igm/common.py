@@ -67,7 +67,7 @@ def params_core():
     parser.add_argument(
         "--gpu",
         type=int,
-        default=1,
+        default=0,
         help="Id of the GPU to use (default 0)",
         
     )

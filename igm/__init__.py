@@ -31,6 +31,7 @@ from igm.modules.process.gflex import *
 from igm.modules.process.enthalpy import *
 from igm.modules.process.clim_oggm import *
 from igm.modules.process.smb_oggm import *
+from igm.modules.process.read_output import *
 
 from igm.modules.postproc.print_info import *
 from igm.modules.postproc.print_comp import *

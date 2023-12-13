@@ -100,6 +100,15 @@ def params_enthalpy(parser):
         default=0.065,
         help="Geothermal heat flux [W m-2]",
     )
+    
+    parser.add_argument(
+        "--temperature_offset_air_to_ice",
+        type=float,
+        default=0.0,
+        help="This is the offset between the air temperature and the ice temperature as records show \
+              [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder \
+              than the temperature of ice to be given as boundary upper condition to the Enthlapy model"
+    )
 
 
 def initialize_enthalpy(params, state):
@@ -146,7 +155,7 @@ def update_enthalpy(params, state):
 
     # compute the surface temperature taken the negative part of the mean air temperature
     surftemp = (
-        tf.minimum(tf.math.reduce_mean(state.air_temp, axis=0), 0)
+        tf.minimum(tf.math.reduce_mean(state.air_temp + params.temperature_offset_air_to_ice, axis=0), 0)
         + params.enth_melt_temp
     )  # [K]
 

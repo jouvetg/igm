@@ -374,7 +374,9 @@ def _read_glathida(x, y, usurf, proj, path_glathida, state):
     files += glob.glob(
         os.path.join(path_glathida, "glathida", "submissions", "*", "point.csv")
     )
-
+    # Glathida has changed the folder structure, this would need to look like :
+    # os.path.join(path_glathida, "data", "*", "point.csv")
+   
     os.path.expanduser
 
     transformer = Transformer.from_crs(proj, "epsg:4326", always_xy=True)

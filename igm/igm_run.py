@@ -51,7 +51,7 @@ def main():
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
     # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
-    with tf.device("/GPU:0"):
+    with tf.device("/GPU:"+str(params.gpu)):
         # Initialize all the model components in turn
         for module in modules:
             getattr(igm, "initialize_" + module)(params, state)

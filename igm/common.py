@@ -64,7 +64,13 @@ def params_core():
         default=True,
         help="Print definitive parameters in a file for record",
     )
-
+    parser.add_argument(
+        "--gpu",
+        type=int,
+        default=1,
+        help="Id of the GPU to use (default 0)",
+        
+    )
     return parser
 
 

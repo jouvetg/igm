@@ -30,7 +30,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 
 
-def params_include_icemask(parser):
+def params(parser):
     parser.add_argument(
         "--mask_shapefile",
         type=str,
@@ -46,7 +46,7 @@ def params_include_icemask(parser):
     )
 
 
-def initialize_include_icemask(params, state):
+def initialize(params, state):
     # read_shapefile
     gdf = read_shapefile(params.mask_shapefile)
 
@@ -83,11 +83,11 @@ def initialize_include_icemask(params, state):
     state.icemask = tf.constant(mask_values)
 
 
-def update_include_icemask(params, state):
+def update(params, state):
     pass
 
 
-def finalize_include_icemask(params, state):
+def finalize(params, state):
     pass
 
 

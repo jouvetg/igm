@@ -46,6 +46,13 @@ The path (or name of the data folder) must be pass in parameter `data_dir`.
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+||`--working_dir`|``|Working directory (default empty string)|
+||`--modules_preproc`|`['oggm_shop']`|List of pre-processing modules|
+||`--modules_process`|`['iceflow', 'time', 'thk']`|List of processing modules|
+||`--modules_postproc`|`['write_ncdf', 'plot2d', 'print_info']`|List of post-processing modules|
+||`--logging`||Activate the looging|
+||`--logging_file`|``|Logging file name, if empty it prints in the screen|
+||`--print_params`||Print definitive parameters in a file for record|
 ||`--data_dir`|`surflib3d_shape_100`|Directory of the data of the glacier catalogu|
 ||`--batch_size`|`1`|Batch size|
 ||`--freq_test`|`20`|Frequence of the test|

@@ -14,6 +14,13 @@ This module depends on `netCDF4`.
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+||`--working_dir`|``|Working directory (default empty string)|
+||`--modules_preproc`|`['oggm_shop']`|List of pre-processing modules|
+||`--modules_process`|`['iceflow', 'time', 'thk']`|List of processing modules|
+||`--modules_postproc`|`['write_ncdf', 'plot2d', 'print_info']`|List of post-processing modules|
+||`--logging`||Activate the looging|
+||`--logging_file`|``|Logging file name, if empty it prints in the screen|
+||`--print_params`||Print definitive parameters in a file for record|
 ||`--lncd_input_file`|`input.nc`|NetCDF input data file|
 ||`--lncd_coarsen`|`1`|Coarsen the data from NetCDF file by a certain (integer) number: 2 would be twice coarser ignore data each 2 grid points|
 ||`--lncd_crop`|`False`|Crop the data from NetCDF file with given top/down/left/right bounds|

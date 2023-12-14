@@ -98,8 +98,8 @@ def overide_from_json_file(parser, check_if_params_exist=True):
     # list only the parameters registered so far
     LIST = list(vars(parser.parse_args(args=[])).keys())
 
-    print(LIST)
-    print(dic_params.keys())
+    #print(LIST)
+    #print(dic_params.keys())
     if "time_step" in dic_params["modules_process"]:
         import sys
 

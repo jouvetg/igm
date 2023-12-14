@@ -29,7 +29,7 @@ from scipy.interpolate import interp1d
 import time
 
  ## add custumized smb function
-def params_smb_accmelt(parser):  
+def params(parser):  
 
     parser.add_argument(
         "--smb_simple_update_freq",
@@ -84,7 +84,7 @@ def params_smb_accmelt(parser):
         default=1.0, 
     )
 
-def initialize_smb_accmelt(params,state):
+def initialize(params,state):
     """
         load smb data to run the Aletsch Glacier simulation 
     """
@@ -164,7 +164,7 @@ def initialize_smb_accmelt(params,state):
 # Note that tf.function works best with TensorFlow ops; NumPy and Python calls are converted to constants.
 # Therefore: you must make sure any variables are TensorFlow Tensor (and not Numpy)
 # @tf.function()
-def update_smb_accmelt(params,state):
+def update(params,state):
 
     if ((state.t - state.tlast_smb) >= params.smb_simple_update_freq):
 
@@ -243,5 +243,5 @@ def update_smb_accmelt(params,state):
         state.tcomp_smb[-1] *= -1
 
 
-def finalize_smb_accmelt(params,state):
+def finalize(params,state):
     pass

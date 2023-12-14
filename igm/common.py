@@ -10,15 +10,13 @@ import importlib
 import argparse
 from igm.modules.utils import str2bool
 import igm
-# from pathlib import Path
-from pathlib import PurePath
-from typing import List, Any
+import logging
 
+from pathlib import PurePath, Path
+from typing import List, Any, Dict
 
-# The (empty) class state serves in fact to use a dictionnary, but it looks like a class
 class State:
-    def __init__(self):
-        self.__dict__ = dict()
+    pass
 
 
 # this create core parameters for any IGM run
@@ -30,6 +28,12 @@ def params_core():
         type=str,
         default="",
         help="Working directory (default empty string)",
+    )
+    parser.add_argument(
+        "--param_file",
+        type=str,
+        default="params.json",
+        help="Path for the JSON parameter file.",
     )
     parser.add_argument(
         "--modules_preproc",
@@ -53,7 +57,7 @@ def params_core():
         "--logging",
         type=str2bool,
         default=False,
-        help="Activate the looging",
+        help="Activate the logging",
     )
     parser.add_argument(
         "--logging_file",
@@ -78,6 +82,25 @@ def remove_comments(json_str):
     return "\n".join(cleaned_lines)
 
 
+def get_modules_list(params_path: str):
+    try:
+        with open(params_path) as f:
+            params_dict = json.load(f)
+            module_dict = {
+                "modules_preproc": params_dict["modules_preproc"],
+                "modules_process": params_dict["modules_process"],
+                "modules_postproc": params_dict["modules_postproc"]
+            }
+
+            return module_dict
+    except json.JSONDecodeError as e:
+        raise json.JSONDecodeError(
+            msg="For the following line, please check the 1) JSON file structure and/or 2) make sure there are no comments (//, #, etc.)",
+            doc=e.doc,
+            pos=e.pos,
+        )
+
+
 def overide_from_json_file(parser, check_if_params_exist=True):
     # get the path of the json file
     param_file = os.path.join(parser.parse_args(args=[]).working_dir, "params.json")
@@ -98,8 +121,6 @@ def overide_from_json_file(parser, check_if_params_exist=True):
     # list only the parameters registered so far
     LIST = list(vars(parser.parse_args(args=[])).keys())
 
-    #print(LIST)
-    #print(dic_params.keys())
     if "time_step" in dic_params["modules_process"]:
         import sys
 
@@ -124,46 +145,59 @@ def overide_from_json_file(parser, check_if_params_exist=True):
     parser.set_defaults(**filtered_dict)
 
 
-def load_modules(params: argparse.Namespace):
+def load_modules(modules_dict: Dict) -> List:
     """Returns a list of actionable modules to then apply the update, initialize, finalize functions on for IGM."""
 
     imported_preproc_modules = load_modules_from_directory(
-        modules_list=params.modules_preproc, module_folder="preproc"
+        modules_list=modules_dict['modules_preproc'], module_folder="preproc"
     )
     imported_process_modules = load_modules_from_directory(
-        modules_list=params.modules_process, module_folder="process"
+        modules_list=modules_dict['modules_process'], module_folder="process"
     )
     imported_postproc_modules = load_modules_from_directory(
-        modules_list=params.modules_postproc, module_folder="postproc"
+        modules_list=modules_dict['modules_postproc'], module_folder="postproc"
     )
+    # ? Should we have custom modules in a seperate folder?
+    # imported_custom_modules = load_modules_from_directory(
+    #     modules_list=modules_dict.modules_custom, module_folder=params.modules_custom_folder
+    # )
 
     return (
-        imported_preproc_modules + imported_process_modules + imported_postproc_modules
+        imported_preproc_modules
+        + imported_process_modules
+        + imported_postproc_modules  # + imported_custom_modules
     )
 
-
-def validate_module(module):
+def validate_module(module) -> None:
     """Validates that a module has the required functions to be used in IGM."""
     required_functions = ["params", "initialize", "finalize", "update"]
     for function in required_functions:
         if not hasattr(module, function):
             raise AttributeError(
-                f"Module {module} is missing the required function ({function}) in its __init__.py file.",
+                f"Module {module} is missing the required function ({function}). If it is a custom python package, make sure to include it in the __init__.py file.",
                 f"Please see https://github.com/jouvetg/igm/wiki/5.-Custom-modules-(coding) for more information on how to construct custom modules.",
             )
-
 
 def load_modules_from_directory(
     modules_list: List[str], module_folder: str
 ) -> List[Any]:
     imported_modules = []
-    for module in modules_list:
-        module_path = f"igm.modules.{module_folder}.{module}"
 
+    for module_name in modules_list:
+        module_path = f"igm.modules.{module_folder}.{module_name}"
         try:
             module = importlib.import_module(module_path)
-        except ImportError as e:
-            print(e)
+        except ModuleNotFoundError:
+            logging.info(
+                f"Error importing module: {module_path}, checking for custom package in current working directory."
+            )
+            try:
+                logging.info(f"Trying to import custom module from current working directory (folder or .py): {module_name}")
+                module = importlib.import_module(module_name)
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError(
+                    f"Can not find module {module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/{module_folder} directory or 2) in your current working directory."
+                )
 
         validate_module(module)
         imported_modules.append(module)
@@ -204,9 +238,11 @@ def find_dependent_modules(modules):
 
     return [m for m in dm if m not in modules]
 
+
 def has_dependecies(module: Any):
-    if hasattr(module, 'dependency'):
+    if hasattr(module, "dependency"):
         return True
+
 
 # ! TODO: Make this function better apdated to dependecies, modulenames, and paths... (for custom and inbuilt)
 def load_dependecies(imported_modules: List):
@@ -219,14 +255,16 @@ def load_dependecies(imported_modules: List):
             module_dependecies = module.dependency()
             print(module_dependecies)
             # exit()
-            module_folder_path = PurePath(module.__file__).parent.parent # if not custom!...
+            module_folder_path = PurePath(
+                module.__file__
+            ).parent.parent  # if not custom!...
             print(os.sep)
             module_directory = module_folder_path.parts[-1]
-            
+
             dependent_module = load_modules_from_directory([module], module_directory)
             imported_dependecies.append(dependent_module)
             print(imported_dependecies)
-    
+
     return imported_modules + imported_dependecies
 
 

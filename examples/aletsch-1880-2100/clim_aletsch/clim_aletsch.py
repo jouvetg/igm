@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import time
 
-def params_clim_aletsch(parser):
+def params(parser):
 
     # CLIMATE PARAMETERS
     parser.add_argument(
@@ -25,7 +25,7 @@ def params_clim_aletsch(parser):
         help="Give the resolution the climate forcing should be (monthly=12, daily=365)",
     ) 
 
-def  initialize_clim_aletsch(params,state):
+def  initialize(params,state):
     """
         load climate data to run the Aletsch Glacier simulation
     """
@@ -79,7 +79,7 @@ def  initialize_clim_aletsch(params,state):
     state.tcomp_clim_aletsch = []
 
 
-def update_clim_aletsch(params,state):
+def update(params,state):
 
     if ((state.t - state.tlast_clim_aletsch) >= params.clim_update_freq):
 
@@ -124,6 +124,6 @@ def update_clim_aletsch(params,state):
         state.tcomp_clim_aletsch[-1] *= -1
 
 
-def  finalize_clim_aletsch(params,state):
+def  finalize(params,state):
     pass
  

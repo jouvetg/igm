@@ -33,10 +33,12 @@ def main():
 
     # Collect defaults, overide from json file, and parse all core parameters
     parser = igm.params_core()
-    igm.overide_from_json_file(parser, check_if_params_exist=False)
-    params, __ = parser.parse_known_args()  # args=[] add this for jupyter notebook
+    params = parser.parse_args()
 
-    imported_modules = igm.load_modules(params)
+    # params_path = os.path.join(os.getcwd(), "params.json")
+    modules_dict = igm.get_modules_list(params.param_file)
+
+    imported_modules = igm.load_modules(modules_dict)
 
     # get the list of all dependent modules, which parameters must be called too
     # dependent_modules = igm.find_dependent_modules(imported_modules)

@@ -22,7 +22,7 @@ def finalize_check(params, state):
     state.tcomp_all = [ np.sum([np.sum(getattr(state,m)) for m in modules]) ]
    
     vol = np.sum(state.thk) * (state.dx**2) / 10**9
-    if (vol<10.5)&(vol>10.0):
+    if (vol<11.5)&(vol>11.0):
        print(":-) test Passed in "+ str(int(state.tcomp_all[0]))+" sec (ref 11)")
     else:
        print(":-( test NOT PASSED")

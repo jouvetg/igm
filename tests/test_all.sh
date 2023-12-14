@@ -1,10 +1,15 @@
+# This permits to perform a minimaum aamount of testing
 
+cd real_glacier 
+igm_run
+cd ..
 
-for d in real_glacier synthetic; do
-# for d in */ ; do
-    echo "$d"
-    cd $d
-    igm_run
-    cd ..
-done
+cd synthetic 
+igm_run
+cd ..
+
+cd instructed_oggm 
+python run_instructed_oggm.py
+cd ..
+
 

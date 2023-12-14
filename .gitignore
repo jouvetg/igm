@@ -21,3 +21,8 @@ memory-pie.png
 examples/params.json
 clean.sh
 params_saved.json
+
+smb_accpdd/
+clim_glacialindex/
+input_saved.nc
+RGI60-11.01450/

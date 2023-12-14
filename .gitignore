@@ -5,7 +5,6 @@ sol_analytic
 paper.tex
 fig/
 biblio.bib
-tests/
 pix2pixhd-texture-model/
 texture-aif-test
 checkpoints/

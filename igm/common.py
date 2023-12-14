@@ -6,6 +6,7 @@ Published under the GNU GPL (Version 3), check at the LICENSE file
 """
 
 import os, json, sys, inspect
+from json import JSONDecodeError
 import importlib
 import argparse
 from igm.modules.utils import str2bool
@@ -93,8 +94,8 @@ def get_modules_list(params_path: str):
             }
 
             return module_dict
-    except json.JSONDecodeError as e:
-        raise json.JSONDecodeError(
+    except JSONDecodeError as e:
+        raise JSONDecodeError(
             msg="For the following line, please check the 1) JSON file structure and/or 2) make sure there are no comments (//, #, etc.)",
             doc=e.doc,
             pos=e.pos,

@@ -1,0 +1,2 @@
+# will run all tests in the tests folder and ignore depreciated warnings (numpy). This is across all tests - ideally, use a decorator to ignore warnings on specific functions
+pytest -W ignore::DeprecationWarning 

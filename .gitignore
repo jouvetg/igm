@@ -11,8 +11,13 @@ texture-aif-test
 checkpoints/
 logdir/
 texture/
+smb_accpdd/
+clim_glacialindex/
+
 
 # hide output files and data
+input_saved.nc
+RGI60-11.01450/
 output.nc
 computational-statistics.txt
 memory-statistics.txt
@@ -21,3 +26,8 @@ memory-pie.png
 examples/params.json
 clean.sh
 params_saved.json
+
+smb_accpdd/
+clim_glacialindex/
+input_saved.nc
+RGI60-11.01450/

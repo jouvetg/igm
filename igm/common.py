@@ -195,9 +195,9 @@ def load_modules_from_directory(
                 logging.info(f"Trying to import custom module from current working directory (folder or .py): {module_name}")
                 module = importlib.import_module(module_name)
             except ModuleNotFoundError:
-                    raise ModuleNotFoundError(
-                        f"Can not find module {module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/{module_folder} directory or 2) in your current working directory."
-                    )
+                raise ModuleNotFoundError(
+                    f"Can not find module {module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/{module_folder} directory or 2) in your current working directory."
+                )
 
         validate_module(module)
         imported_modules.append(module)

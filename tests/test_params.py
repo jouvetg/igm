@@ -6,10 +6,9 @@ from json import JSONDecodeError
 
 
 def test_load_json_params_with_comments():
-    """Tests that adding comments to the json will fail with a decode error."""
+    """Tests that adding comments to the json will not fail with a decode error."""
 
-    with pytest.raises(JSONDecodeError):
-        _ = igm.get_modules_list("params_comments.json")
+        igm.get_modules_list("params_comments.json")
 
 
 def test_load_igm_modules():

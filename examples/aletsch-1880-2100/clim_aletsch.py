@@ -48,12 +48,12 @@ def  initialize(params,state):
     state.prec = np.zeros((365, ymax - ymin + 1), dtype=np.float32)
     state.year = np.zeros((ymax - ymin + 1), dtype=np.float32)
 
-    # retrieve temp [unit °C] and prec [unit is m ice eq. / y] and year
+    # retrieve temp [unit °C] and prec [unit is kg m^(-2) y^(-1) water eq] and year
     for k, y in enumerate(range(ymin, ymax + 1)):
         IND = (temp_prec[:, 0] == y) & (temp_prec[:, 1] <= 365)
         state.prec[:, k] = (
-            temp_prec[IND, -1] * 365.0 / 1000.0
-        ) / 0.917  # new unit is m ice eq. / y
+            temp_prec[IND, -1] * 365.0
+        )  # new unit is  kg m^(-2) y^(-1) water eq
         state.temp[:, k] = temp_prec[IND, -2]  # new unit is °C
         state.year[k] = y
 

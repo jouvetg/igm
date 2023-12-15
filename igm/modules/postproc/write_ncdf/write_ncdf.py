@@ -55,7 +55,7 @@ def initialize(params, state):
     state.var_info_ncdf_ex["usurf"] = ["Surface Topography", "m"]
     state.var_info_ncdf_ex["thk"] = ["Ice Thickness", "m"]
     state.var_info_ncdf_ex["icemask"] = ["Ice mask", "NO UNIT"]
-    state.var_info_ncdf_ex["smb"] = ["Surface Mass Balance", "m/y"]
+    state.var_info_ncdf_ex["smb"] = ["Surface Mass Balance", "m/y ice eq"]
     state.var_info_ncdf_ex["ubar"] = ["x depth-average velocity of ice", "m/y"]
     state.var_info_ncdf_ex["vbar"] = ["y depth-average velocity of ice", "m/y"]
     state.var_info_ncdf_ex["velbar_mag"] = [
@@ -82,7 +82,7 @@ def initialize(params, state):
         "km MPa$^{-3}$ a$^{-1}$",
     ]
     state.var_info_ncdf_ex["meantemp"] = ["Mean anual surface temperatures", "°C"]
-    state.var_info_ncdf_ex["meanprec"] = ["Mean anual precipitation", "m/y"]
+    state.var_info_ncdf_ex["meanprec"] = ["Mean anual precipitation", "Kg m^(-2) y^(-1)"]
     state.var_info_ncdf_ex["velsurfobs_mag"] = ["Obs. surf. speed of ice", "m/y"]
     state.var_info_ncdf_ex["weight_particles"] = ["weight_particles", "no"]
 

@@ -63,16 +63,14 @@ def main():
         igm.add_logger(params, state)
     else:
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
-
-    # tf.profiler.experimental.start('logdir')
-    with tf.device("/GPU:0"):
-        # with tf.profiler.experimental.Profile('logdir'):
+            
+    # tf.profiler.experimental.stop()
+    # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
+    with tf.device("/GPU:"+str(params.gpu)):
+        # Initialize all the model components in turn
         run_intializers(imported_modules, params, state)
         run_processes(imported_modules, params, state)
         run_finalizers(imported_modules, params, state)
-            
-    # tf.profiler.experimental.stop()
 
 
 

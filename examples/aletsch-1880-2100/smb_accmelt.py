@@ -192,17 +192,17 @@ def update(params,state):
             ),
         )
 
-        # unit to [ m ice eq. / y ] -> [ m ice eq. / d ]
-        accumulation /= accumulation.shape[0] 
+        # unit to [  kg * m^(-2) * y^(-1) water eq  ] -> [ m water eq / d]
+        accumulation /= (accumulation.shape[0] * params.smb_accmelt_wat_density) 
 
         # correct for snow re-distribution
-        accumulation *= state.snow_redistribution  # unit to [ m ice eq. / d ]
+        accumulation *= state.snow_redistribution  # unit to [ m water eq. / d ]
 
-        accumulation *= params.weight_accumulation  # unit to [ m ice eq. / d ]
+        accumulation *= params.weight_accumulation  # unit to [ m water eq. / d ]
 
         pos_temp = tf.where(state.air_temp > 0.0, state.air_temp, 0.0)  # unit is [°C]
 
-        ablation = []  # [ unit : ice-eq. m / d ]
+        ablation = []  # [ unit : water-eq. m / d ]
 
         # the snow depth (=0 or >0) is necessary to find what melt factor to apply
         snow_depth = tf.zeros((state.air_temp.shape[1], state.air_temp.shape[2]))
@@ -215,14 +215,14 @@ def update(params,state):
             # add accumulation to the snow depth
             snow_depth += accumulation[k]
 
-            # the ablation (unit is m ice eq. / d) is the product
+            # the ablation (unit is m water eq. / d) is the product
             # of positive temp  with melt factors for ice, or snow
             # (Fm + ris * state.direct_radiation has unit [m ice eq. / (°C d)] )
             ablation.append(
                 tf.where(
                     snow_depth == 0,
-                    pos_temp[k] * (Fm + ri * state.direct_radiation[k]),
-                    pos_temp[k] * (Fm + rs * state.direct_radiation[k]),
+                    pos_temp[k] * (Fm + ri * state.direct_radiation[k]) * 0.91,
+                    pos_temp[k] * (Fm + rs * state.direct_radiation[k]) * 0.91,
                 )
             )
 
@@ -231,8 +231,10 @@ def update(params,state):
             # remove snow melt to snow depth, and cap it as snow_depth can not be negative
             snow_depth = tf.clip_by_value(snow_depth - ablation[-1], 0.0, 1.0e10)
 
-        # Time integration of accumulation minus ablation
-        state.smb = tf.math.reduce_sum(accumulation - ablation, axis=0)
+        # sum accumulation and ablation over the year, and conversion to ice equivalent
+        state.smb = tf.math.reduce_sum(accumulation - ablation, axis=0)* (
+            params.smb_accmelt_wat_density / params.smb_accmelt_ice_density
+        )
 
         if hasattr(state,'icemask'):
             state.smb  = tf.where((state.smb<0)|(state.icemask>0.5),state.smb,-10)

@@ -208,3 +208,4 @@ Here one updates the enthalpy as many times as the ice flow, we assume that the 
 ||`--enth_till_wat_max`|`2`|Maximum water till tickness [m] (Bueler and Pelt, GMD, 2015)|
 ||`--enth_drain_ice_column`||Transform the water content beyond a thr=0.01 into water, drain it, and add it to basal melt rate|
 ||`--enth_default_bheatflx`|`0.065`|Geothermal heat flux [W m-2]|
+||`--temperature_offset_air_to_ice`|`0.0`|This is the offset between the air temperature and the ice temperature as records show               [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder               than the temperature of ice to be given as boundary upper condition to the Enthlapy model|

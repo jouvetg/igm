@@ -5,7 +5,7 @@ Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
 Published under the GNU GPL (Version 3), check at the LICENSE file
 """
 
-import os, json, sys, inspect
+import os, json
 from json import JSONDecodeError
 import importlib
 import argparse
@@ -13,8 +13,10 @@ from igm.modules.utils import str2bool
 import igm
 import logging
 
-from pathlib import PurePath, Path
+from pathlib import Path
+from functools import partial
 from typing import List, Any, Dict
+
 
 class State:
     pass
@@ -77,7 +79,6 @@ def params_core():
         type=int,
         default=0,
         help="Id of the GPU to use (default 0)",
-        
     )
     return parser
 
@@ -85,18 +86,21 @@ def params_core():
 # Function to remove comments from a JSON string
 def remove_comments(json_str):
     lines = json_str.split("\n")
-    cleaned_lines = [line for line in lines if not line.strip().startswith("#")]
+    cleaned_lines = [line for line in lines if not line.strip().startswith(("//", "#"))] # ! TODO: Add blocks comments...
     return "\n".join(cleaned_lines)
 
 
 def get_modules_list(params_path: str):
     try:
         with open(params_path) as f:
-            params_dict = json.load(f)
+            # params_dict = json.load(f) #re-instate if you want to enforce no comments in the json file
+            json_text = f.read()
+            json_cleaned = remove_comments(json_text)
+            params_dict = json.loads(json_cleaned)
             module_dict = {
                 "modules_preproc": params_dict["modules_preproc"],
                 "modules_process": params_dict["modules_process"],
-                "modules_postproc": params_dict["modules_postproc"]
+                "modules_postproc": params_dict["modules_postproc"],
             }
 
             return module_dict
@@ -156,13 +160,13 @@ def load_modules(modules_dict: Dict) -> List:
     """Returns a list of actionable modules to then apply the update, initialize, finalize functions on for IGM."""
 
     imported_preproc_modules = load_modules_from_directory(
-        modules_list=modules_dict['modules_preproc'], module_folder="preproc"
+        modules_list=modules_dict["modules_preproc"], module_folder="preproc"
     )
     imported_process_modules = load_modules_from_directory(
-        modules_list=modules_dict['modules_process'], module_folder="process"
+        modules_list=modules_dict["modules_process"], module_folder="process"
     )
     imported_postproc_modules = load_modules_from_directory(
-        modules_list=modules_dict['modules_postproc'], module_folder="postproc"
+        modules_list=modules_dict["modules_postproc"], module_folder="postproc"
     )
     # ? Should we have custom modules in a seperate folder?
     # imported_custom_modules = load_modules_from_directory(
@@ -175,6 +179,7 @@ def load_modules(modules_dict: Dict) -> List:
         + imported_postproc_modules  # + imported_custom_modules
     )
 
+
 def validate_module(module) -> None:
     """Validates that a module has the required functions to be used in IGM."""
     required_functions = ["params", "initialize", "finalize", "update"]
@@ -184,6 +189,7 @@ def validate_module(module) -> None:
                 f"Module {module} is missing the required function ({function}). If it is a custom python package, make sure to include it in the __init__.py file.",
                 f"Please see https://github.com/jouvetg/igm/wiki/5.-Custom-modules-(coding) for more information on how to construct custom modules.",
             )
+
 
 def load_modules_from_directory(
     modules_list: List[str], module_folder: str
@@ -199,7 +205,9 @@ def load_modules_from_directory(
                 f"Error importing module: {module_path}, checking for custom package in current working directory."
             )
             try:
-                logging.info(f"Trying to import custom module from current working directory (folder or .py): {module_name}")
+                logging.info(
+                    f"Trying to import custom module from current working directory (folder or .py): {module_name}"
+                )
                 module = importlib.import_module(module_name)
             except ModuleNotFoundError:
                 raise ModuleNotFoundError(
@@ -212,67 +220,39 @@ def load_modules_from_directory(
     return imported_modules
 
 
-# this add a logger to the state
-def load_custom_module(params, module):
-    if os.path.exists(os.path.join(params.working_dir, module + ".py")):
-        sys.path.append(params.working_dir)
-        custmod = importlib.import_module(module)
-
-        def is_user_defined_function(obj):
-            return inspect.isfunction(obj) and inspect.getmodule(obj) == custmod
-
-        LIST = [
-            name
-            for name, obj in inspect.getmembers(custmod)
-            if is_user_defined_function(obj)
-        ]
-
-        for st in LIST:
-            vars(igm)[st] = vars(custmod)[st]
-
-
-# this function checks if there dependency modules that are not in the module list already
-# dependent modules are listed by function dependency_MODULENAME, and exist only if this function exists.
-def find_dependent_modules(modules):
-    dm = sum(
-        [
-            getattr(igm, "dependency_" + m)()
-            for m in modules
-            if hasattr(igm, "dependency_" + m)
-        ],
-        [],
-    )
-
-    return [m for m in dm if m not in modules]
-
-
-def has_dependecies(module: Any):
-    if hasattr(module, "dependency"):
+def has_dependencies(module: Any):
+    if hasattr(module, "dependencies"):
         return True
 
 
-# ! TODO: Make this function better apdated to dependecies, modulenames, and paths... (for custom and inbuilt)
-def load_dependecies(imported_modules: List):
-    # print("in")
-    # print(imported_modules)
-    imported_dependecies = []
+# ! TODO: Make this function better apdated to dependencies, modulenames, and paths... (for custom and inbuilt)
+def add_dependencies(imported_modules: List):
+    imported_dependencies = set()
     for module in imported_modules:
-        # print(dir(module))
-        if has_dependecies(module):
-            module_dependecies = module.dependency()
-            print(module_dependecies)
-            # exit()
-            module_folder_path = PurePath(
-                module.__file__
-            ).parent.parent  # if not custom!...
-            print(os.sep)
-            module_directory = module_folder_path.parts[-1]
+        if has_dependencies(module):
+            module_dependencies = module.dependencies
+            directories_to_search = [
+                "preproc",
+                "process",
+                "postproc",
+            ]  # will also check current working directory if any of them fail
+            load_modules_partial = partial(
+                load_modules_from_directory, module_dependencies
+            )
+            for directory in directories_to_search:
+                try:
+                    dependent_module = load_modules_partial(module_folder=directory)
+                    imported_dependencies.add(dependent_module[0]) #[0] because it returns a singleton list
+                    logging.info(
+                        f"Found dependencies in directory {directory} or current working directory. Checking next module for dependencies."
+                    )
+                    break
+                except ModuleNotFoundError:
+                    logging.info(
+                        f"Could not find dependencies in directory {directory} or current working directory. Checking next IGM directory."
+                    )
 
-            dependent_module = load_modules_from_directory([module], module_directory)
-            imported_dependecies.append(dependent_module)
-            print(imported_dependecies)
-
-    return imported_modules + imported_dependecies
+    return imported_modules + list(imported_dependencies)
 
 
 # this add a logger to the state

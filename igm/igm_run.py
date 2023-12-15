@@ -35,14 +35,9 @@ def main():
     parser = igm.params_core()
     params = parser.parse_args()
 
-    # params_path = os.path.join(os.getcwd(), "params.json")
     modules_dict = igm.get_modules_list(params.param_file)
-
     imported_modules = igm.load_modules(modules_dict)
-
-    # get the list of all dependent modules, which parameters must be called too
-    # dependent_modules = igm.find_dependent_modules(imported_modules)
-    # dependent_modules = igm.load_dependecies(imported_modules)
+    imported_modules = igm.add_dependencies(imported_modules)
 
     # Collect defaults, overide from json file, and parse all specific module parameters
     for module in imported_modules:

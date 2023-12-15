@@ -15,10 +15,7 @@ from netCDF4 import Dataset
 
 from igm.modules.utils import *
 from igm.modules.process.iceflow import initialize as initialize_iceflow
-
-
-def dependency():
-    return ["iceflow"]
+from igm.modules.process.iceflow.iceflow import fieldin_to_X, update_2d_iceflow_variables, iceflow_energy_XY, Y_to_UV
 
 
 def params(parser):

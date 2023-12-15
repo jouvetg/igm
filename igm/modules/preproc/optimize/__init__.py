@@ -3,5 +3,6 @@ from .optimize import (
 	initialize,
 	finalize,
 	update,
-	dependency
 )
+
+dependencies = ["iceflow"]

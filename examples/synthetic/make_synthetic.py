@@ -10,11 +10,11 @@ import tensorflow as tf
 
 from igm.modules.utils import complete_data
 
-def params_make_synthetic(parser):
+def params(parser):
     pass
 
 
-def initialize_make_synthetic(params, state):
+def initialize(params, state):
 
     x = np.arange(0, 100) * 100  # make x-axis, lenght 10 km, resolution 100 m
     y = np.arange(0, 200) * 100  # make y-axis, lenght 20 km, resolution 100 m
@@ -33,10 +33,10 @@ def initialize_make_synthetic(params, state):
     complete_data(state)
 
 
-def update_make_synthetic(params, state):
+def update(params, state):
     pass
 
 
-def finalize_make_synthetic(params, state):
+def finalize(params, state):
     pass
     

@@ -8,7 +8,10 @@
 
 name: Upload Python Package
 
-on: push
+on:
+  push:
+    branches:
+      - reorganize
 
 jobs:
   deploy:
@@ -27,13 +30,22 @@ jobs:
         pip install build
     - name: Build package
       run: python -m build
+    - name: Install package
+      run: pip install .
 #    - name: Publish package to testpypi
 #      uses: pypa/gh-action-pypi-publish@release/v1
 #      with:
 #        password: ${{ secrets.PYPI_API_TOKEN }}
 #        repository-url: https://test.pypi.org/legacy/
-    - name: Publish package to pypi
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.IGM_TOKEN }}
-        repository-url: https://upload.pypi.org/legacy/
+    - name: Run tests
+      run: |
+        pip install pytest
+        python -c "import os; print(os.getcwd())"
+        cd tests
+        python -m pytest -W ignore::DeprecationWarning -p no:cacheprovider
+  # Not deploying pypi at the moment as I am testing some CI/CD with unit-testing (and its a feature branch anyways...)
+    # - name: Publish package to pypi
+    #   uses: pypa/gh-action-pypi-publish@release/v1
+    #   with:
+    #     password: ${{ secrets.IGM_TOKEN }}
+    #     repository-url: https://upload.pypi.org/legacy/

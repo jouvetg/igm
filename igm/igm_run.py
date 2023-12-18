@@ -33,7 +33,7 @@ def main():
 
     # Collect defaults, overide from json file, and parse all core parameters
     parser = igm.params_core()
-    params = parser.parse_args()
+    params, __ = parser.parse_known_args()
 
     modules_dict = igm.get_modules_list(params.param_file)
     imported_modules = igm.load_modules(modules_dict)
@@ -43,9 +43,11 @@ def main():
     for module in imported_modules:
         module.params(parser)
 
-    igm.overide_from_json_file(parser, check_if_params_exist=True)
-    params = parser.parse_args()  # args=[] add this for jupyter notebook
 
+    # igm.overide_from_json_file(parser, check_if_params_exist=True) is this needed?? Does not seem like a good solution
+    # if you just want to give a message to the users, you can use parser.error or a try-except catch
+    params = parser.parse_args()  # args=[] add this for jupyter notebook
+    
     # print definive parameters in a file for record
     if params.print_params:
         igm.print_params(params)

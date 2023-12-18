@@ -93,7 +93,7 @@ def remove_comments(json_str):
 def get_modules_list(params_path: str):
     try:
         with open(params_path) as f:
-            # params_dict = json.load(f) #re-instate if you want to enforce no comments in the json file
+            # params_dict = json.load(f) #re-instate if you want to enforce no comments in the json file(remove all the lines that load the clean json in this case...)
             json_text = f.read()
             json_cleaned = remove_comments(json_text)
             params_dict = json.loads(json_cleaned)

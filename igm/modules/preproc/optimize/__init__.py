@@ -5,4 +5,4 @@ from .optimize import (
 	update,
 )
 
-dependencies = ["iceflow"]
+# dependencies = ["iceflow"] Can NOT use if you also inherit params from another module in this modules params (conflict will occur with same name)

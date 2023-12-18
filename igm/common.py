@@ -24,7 +24,7 @@ class State:
 
 # this create core parameters for any IGM run
 def params_core():
-    parser = argparse.ArgumentParser(description="IGM")
+    parser = argparse.ArgumentParser(description="IGM", conflict_handler='resolve') # automatically overrides repeated/older parameters! Vaid solution?
 
     parser.add_argument(
         "--working_dir",

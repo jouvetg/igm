@@ -16,7 +16,7 @@ def run_intializers(modules: List, params: Any, state: igm.State) -> None:
 def run_processes(modules: List, params: Any, state: igm.State) -> None:
     if hasattr(state, "t"):
         while state.t < params.time_end:
-            with tf.profiler.experimental.Trace('process', step_num=state.t, _r=1):
+            with tf.profiler.experimental.Trace('process_profile', step_num=state.t, _r=1):
                 for module in modules:
                     module.update(params, state)
 
@@ -61,12 +61,13 @@ def main():
     else:
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
             
-    # tf.profiler.experimental.stop()
     # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
     with tf.device("/GPU:"+str(params.gpu)):
         # Initialize all the model components in turn
         run_intializers(imported_modules, params, state)
+        tf.profiler.experimental.server.start(6009)
         run_processes(imported_modules, params, state)
+        tf.profiler.experimental.stop()
         run_finalizers(imported_modules, params, state)
 
 

@@ -112,15 +112,13 @@ def get_modules_list(params_path: str):
         )
 
 
-def overide_from_json_file(parser, check_if_params_exist=True):
-    # get the path of the json file
-    param_file = os.path.join(parser.parse_args(args=[]).working_dir, "params.json")
+def overide_from_json_file(param_file, parser):
 
     # load the given parameters from the json file
     with open(param_file, "r") as json_file:
         json_text = json_file.read()
 
-    # Remove comments from the JSON string
+    # # Remove comments from the JSON string
     json_without_comments = remove_comments(json_text)
 
     # Parse the modified JSON string
@@ -129,29 +127,8 @@ def overide_from_json_file(parser, check_if_params_exist=True):
     except json.JSONDecodeError as e:
         print(f"Error decoding JSON: {e}")
 
-    # list only the parameters registered so far
-    LIST = list(vars(parser.parse_args(args=[])).keys())
-
-    if "time_step" in dic_params["modules_process"]:
-        import sys
-
-        print(
-            " ------- CHECK THE WIKI TO CHANGE YOUR PARAM FILE AND USER MODULES -------------"
-        )
-        sys.exit(
-            "WARNING: the parameter time_step is deprecated, UPDATE you params.json file"
-        )
-
-    if check_if_params_exist:
-        for key in dic_params.keys():
-            if not key in LIST:
-                print(
-                    "WARNING: the following parameters of the json file do not exist in igm: ",
-                    key,
-                )
-
     # keep only the parameters to overide hat were registerd so far
-    filtered_dict = {key: value for key, value in dic_params.items() if key in LIST}
+    filtered_dict = {key: value for key, value in dic_params.items()}
 
     parser.set_defaults(**filtered_dict)
 

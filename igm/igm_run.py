@@ -44,7 +44,7 @@ def main():
         module.params(parser)
 
 
-    # igm.overide_from_json_file(parser, check_if_params_exist=True) is this needed?? Does not seem like a good solution
+    igm.overide_from_json_file(param_file=params.param_file, parser=parser) # is this needed?? Does not seem like a good solution
     # if you just want to give a message to the users, you can use parser.error or a try-except catch
     params = parser.parse_args()  # args=[] add this for jupyter notebook
     
@@ -65,9 +65,9 @@ def main():
     with tf.device("/GPU:"+str(params.gpu)):
         # Initialize all the model components in turn
         run_intializers(imported_modules, params, state)
-        tf.profiler.experimental.server.start(6009)
+        #tf.profiler.experimental.server.start(6009)
         run_processes(imported_modules, params, state)
-        tf.profiler.experimental.stop()
+        #tf.profiler.experimental.stop()
         run_finalizers(imported_modules, params, state)
 
 

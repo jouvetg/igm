@@ -553,7 +553,9 @@ def update_optimize(params, state):
 
 
 def finalize_optimize(params, state):
-    pass
+
+    if params.iflo_save_model:
+        save_iceflow_model(params, state) 
 
 
 def _compute_rms_std_optimization(state, i):

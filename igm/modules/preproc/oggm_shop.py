@@ -338,9 +338,9 @@ def _oggm_util(RGIs, params):
 
         workflow.execute_entity_task(bedtopo.add_consensus_thickness, gdirs)
         
-#        from oggm.shop import glathida
+        from oggm.shop import glathida
 
-#        workflow.execute_entity_task(glathida.glathida_to_gdir, gdirs)
+        workflow.execute_entity_task(glathida.glathida_to_gdir, gdirs)
 
     source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
     destination_folder = os.path.join(params.working_dir, params.oggm_RGI_ID)

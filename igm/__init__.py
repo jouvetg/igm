@@ -18,12 +18,12 @@ from . import modules
 from .common import (
     State,
     params_core,
-    overide_from_json_file,
     load_modules,
     add_logger,
     print_params,
-    add_dependencies,
-    get_modules_list
+    load_dependent_modules,
+    get_modules_list,
+    load_user_defined_params
 )
 
-from . import emulators
+from . import emulators, dashboard

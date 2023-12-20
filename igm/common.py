@@ -24,7 +24,9 @@ class State:
 
 # this create core parameters for any IGM run
 def params_core():
-    parser = argparse.ArgumentParser(description="IGM", conflict_handler='resolve') # automatically overrides repeated/older parameters! Vaid solution?
+    parser = argparse.ArgumentParser(
+        description="IGM", conflict_handler="resolve"
+    )  # automatically overrides repeated/older parameters! Vaid solution?
 
     parser.add_argument(
         "--working_dir",
@@ -58,9 +60,9 @@ def params_core():
     )
     parser.add_argument(
         "--logging",
-        type=str2bool,
+        action='store_true',
         default=False,
-        help="Activate the logging",
+        help="Activate the logging (default value is False)",
     )
     parser.add_argument(
         "--logging_file",
@@ -75,10 +77,10 @@ def params_core():
         help="Print definitive parameters in a file for record",
     )
     parser.add_argument(
-        "--gpu",
+        "--gpu_id",
         type=int,
         default=0,
-        help="Id of the GPU to use (default 0)",
+        help="Id of the GPU to use (default is 0)",
     )
     return parser
 
@@ -86,7 +88,9 @@ def params_core():
 # Function to remove comments from a JSON string
 def remove_comments(json_str):
     lines = json_str.split("\n")
-    cleaned_lines = [line for line in lines if not line.strip().startswith(("//", "#"))] # ! TODO: Add blocks comments...
+    cleaned_lines = [
+        line for line in lines if not line.strip().startswith(("//", "#"))
+    ]  # ! TODO: Add blocks comments...
     return "\n".join(cleaned_lines)
 
 
@@ -112,25 +116,63 @@ def get_modules_list(params_path: str):
         )
 
 
-def overide_from_json_file(param_file, parser):
-
+def load_json_file(param_file: str, remove_param_comments: bool = True):
     # load the given parameters from the json file
     with open(param_file, "r") as json_file:
         json_text = json_file.read()
 
     # # Remove comments from the JSON string
-    json_without_comments = remove_comments(json_text)
+    if remove_param_comments:
+        json_text = remove_comments(json_text)
 
     # Parse the modified JSON string
+    dic_params = json.loads(json_text)
+    return dic_params
+
+
+# from argparse import Namespace
+import warnings
+def load_user_defined_params(param_file: str, params_dict: Dict):
     try:
-        dic_params = json.loads(json_without_comments)
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
+        json_defined_params = load_json_file(param_file=param_file)
+    except JSONDecodeError as e:
+        raise JSONDecodeError(
+            msg=f"Error decoding JSON: Please make sure your file path is correct or your json is properly formatted.",
+            doc=e.doc,
+            pos=e.pos,
+        )
 
-    # keep only the parameters to overide hat were registerd so far
-    filtered_dict = {key: value for key, value in dic_params.items()}
+    unrecognized_json_arguments = {
+        k: v for k, v in json_defined_params.items() if k not in params_dict
+    }
+    params_dict.update(json_defined_params)
 
-    parser.set_defaults(**filtered_dict)
+    for key in unrecognized_json_arguments.keys():
+        warnings.warn(f"The following argument specified in the JSON file does not exist among the core arguments nor the modules you have chosen. Ignoring: {key}")
+
+    return params_dict
+
+
+# def overide_from_json_file(param_file, parser):
+#     print(vars(parser))
+#     dic_params = load_json_file(param_file=param_file)
+#     # # load the given parameters from the json file
+#     # with open(param_file, "r") as json_file:
+#     #     json_text = json_file.read()
+
+#     # # # Remove comments from the JSON string
+#     # json_without_comments = remove_comments(json_text)
+
+#     # # Parse the modified JSON string
+#     # try:
+#     #     dic_params = json.loads(json_without_comments)
+#     # except json.JSONDecodeError as e:
+#     #     print(f"Error decoding JSON: {e}")
+
+#     # keep only the parameters to overide hat were registerd so far
+#     filtered_dict = {key: value for key, value in dic_params.items()}
+
+#     parser.set_defaults(**filtered_dict)
 
 
 def load_modules(modules_dict: Dict) -> List:
@@ -203,7 +245,7 @@ def has_dependencies(module: Any):
 
 
 # ! TODO: Make this function better apdated to dependencies, modulenames, and paths... (for custom and inbuilt)
-def add_dependencies(imported_modules: List):
+def load_dependent_modules(imported_modules: List):
     imported_dependencies = set()
     for module in imported_modules:
         if has_dependencies(module):
@@ -219,7 +261,9 @@ def add_dependencies(imported_modules: List):
             for directory in directories_to_search:
                 try:
                     dependent_module = load_modules_partial(module_folder=directory)
-                    imported_dependencies.add(dependent_module[0]) #[0] because it returns a singleton list
+                    imported_dependencies.add(
+                        dependent_module[0]
+                    )  # [0] because it returns a singleton list
                     logging.info(
                         f"Found dependencies in directory {directory} or current working directory. Checking next module for dependencies."
                     )

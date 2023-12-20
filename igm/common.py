@@ -9,13 +9,14 @@ import os, json
 from json import JSONDecodeError
 import importlib
 import argparse
-from igm.modules.utils import str2bool
 import igm
-import logging
-
+import tensorflow as tf
 from pathlib import Path
 from functools import partial
 from typing import List, Any, Dict
+import types
+import logging
+import warnings
 
 
 class State:
@@ -60,9 +61,15 @@ def params_core():
     )
     parser.add_argument(
         "--logging",
-        action='store_true',
+        action="store_true",
         default=False,
         help="Activate the logging (default value is False)",
+    )
+    parser.add_argument(
+        "--logging_level",
+        default=30,
+        type=int,
+        help="Determine logging level used for logger",
     )
     parser.add_argument(
         "--logging_file",
@@ -85,16 +92,53 @@ def params_core():
     return parser
 
 
-# Function to remove comments from a JSON string
-def remove_comments(json_str):
+def run_intializers(modules: List, params: Any, state: State) -> None:
+    for module in modules:
+        module.initialize(params, state)
+
+
+def run_processes(modules: List, params: Any, state: State) -> None:
+    if hasattr(state, "t"):
+        while state.t < params.time_end:
+            for module in modules:
+                module.update(params, state)
+
+
+def run_finalizers(modules: List, params: Any, state: State) -> None:
+    for module in modules:
+        module.finalize(params, state)
+
+
+def add_logger(params, state, logging_level) -> None:
+    if params.logging_file == "":
+        pathf = ""
+    else:
+        pathf = os.path.join(params.working_dir, params.logging_file)
+
+    logging.basicConfig(
+        filename=pathf,
+        encoding="utf-8",
+        filemode="w",
+        level=logging_level,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+    logging.root.setLevel(logging_level)
+
+    state.logger = logging.getLogger("igm_logger")
+    if not pathf == "":
+        os.system("echo rm " + pathf + " >> clean.sh")
+
+
+def remove_comments(json_str) -> str:
     lines = json_str.split("\n")
     cleaned_lines = [
         line for line in lines if not line.strip().startswith(("//", "#"))
     ]  # ! TODO: Add blocks comments...
-    return "\n".join(cleaned_lines)
+    cleaned_text = "\n".join(cleaned_lines)
+    return cleaned_text
 
 
-def get_modules_list(params_path: str):
+def get_modules_list(params_path: str) -> Dict[str, List[str]]:
     try:
         with open(params_path) as f:
             # params_dict = json.load(f) #re-instate if you want to enforce no comments in the json file(remove all the lines that load the clean json in this case...)
@@ -116,23 +160,18 @@ def get_modules_list(params_path: str):
         )
 
 
-def load_json_file(param_file: str, remove_param_comments: bool = True):
-    # load the given parameters from the json file
+def load_json_file(param_file: str, remove_param_comments: bool = True) -> Dict[str, Any]:
     with open(param_file, "r") as json_file:
         json_text = json_file.read()
 
-    # # Remove comments from the JSON string
     if remove_param_comments:
         json_text = remove_comments(json_text)
 
-    # Parse the modified JSON string
     dic_params = json.loads(json_text)
     return dic_params
 
 
-# from argparse import Namespace
-import warnings
-def load_user_defined_params(param_file: str, params_dict: Dict):
+def load_user_defined_params(param_file: str, params_dict: Dict[str, Any]):
     try:
         json_defined_params = load_json_file(param_file=param_file)
     except JSONDecodeError as e:
@@ -148,34 +187,14 @@ def load_user_defined_params(param_file: str, params_dict: Dict):
     params_dict.update(json_defined_params)
 
     for key in unrecognized_json_arguments.keys():
-        warnings.warn(f"The following argument specified in the JSON file does not exist among the core arguments nor the modules you have chosen. Ignoring: {key}")
+        warnings.warn(
+            f"The following argument specified in the JSON file does not exist among the core arguments nor the modules you have chosen. Ignoring: {key}"
+        )
 
     return params_dict
 
 
-# def overide_from_json_file(param_file, parser):
-#     print(vars(parser))
-#     dic_params = load_json_file(param_file=param_file)
-#     # # load the given parameters from the json file
-#     # with open(param_file, "r") as json_file:
-#     #     json_text = json_file.read()
-
-#     # # # Remove comments from the JSON string
-#     # json_without_comments = remove_comments(json_text)
-
-#     # # Parse the modified JSON string
-#     # try:
-#     #     dic_params = json.loads(json_without_comments)
-#     # except json.JSONDecodeError as e:
-#     #     print(f"Error decoding JSON: {e}")
-
-#     # keep only the parameters to overide hat were registerd so far
-#     filtered_dict = {key: value for key, value in dic_params.items()}
-
-#     parser.set_defaults(**filtered_dict)
-
-
-def load_modules(modules_dict: Dict) -> List:
+def load_modules(modules_dict: Dict) -> List[types.ModuleType]:
     """Returns a list of actionable modules to then apply the update, initialize, finalize functions on for IGM."""
 
     imported_preproc_modules = load_modules_from_directory(
@@ -212,9 +231,8 @@ def validate_module(module) -> None:
 
 def load_modules_from_directory(
     modules_list: List[str], module_folder: str
-) -> List[Any]:
+) -> List[types.ModuleType]:
     imported_modules = []
-
     for module_name in modules_list:
         module_path = f"igm.modules.{module_folder}.{module_name}"
         try:
@@ -239,13 +257,13 @@ def load_modules_from_directory(
     return imported_modules
 
 
-def has_dependencies(module: Any):
+def has_dependencies(module: Any) -> bool:
     if hasattr(module, "dependencies"):
         return True
+    return False
 
 
-# ! TODO: Make this function better apdated to dependencies, modulenames, and paths... (for custom and inbuilt)
-def load_dependent_modules(imported_modules: List):
+def load_dependent_modules(imported_modules: List) -> List[types.ModuleType]:
     imported_dependencies = set()
     for module in imported_modules:
         if has_dependencies(module):
@@ -276,27 +294,17 @@ def load_dependent_modules(imported_modules: List):
     return imported_modules + list(imported_dependencies)
 
 
-# this add a logger to the state
-def add_logger(params, state, logging_level="INFO"):
-    import logging
-
-    if params.logging_file == "":
-        pathf = ""
-    else:
-        pathf = os.path.join(params.working_dir, params.logging_file)
-
-    logging.basicConfig(
-        filename=pathf,
-        encoding="utf-8",
-        filemode="w",
-        level=getattr(logging, logging_level),
-        format="%(asctime)s - %(levelname)s - %(message)s",
-    )
-
-    state.logger = logging.getLogger("my_logger")
-
-    if not pathf == "":
-        os.system("echo rm " + pathf + " >> clean.sh")
+def gpu_information() -> None:
+    gpus = tf.config.experimental.list_physical_devices("GPU")
+    logging.info(f"{'CUDA Enviroment':-^150}")
+    logging.info(f"{json.dumps(tf.sysconfig.get_build_info(), indent=2, default=str)}")
+    logging.info(f"{'Available GPU Devices':-^150}")
+    for gpu in gpus:
+        logging.info(f" Name: {gpu.name} Type: {gpu.device_type}")
+        logging.info(
+            f"{json.dumps(tf.config.experimental.get_device_details(gpu), indent=2, default=str)}"
+        )
+    logging.info(f"{'':-^150}")
 
 
 # Print parameters in screen and a dedicated file

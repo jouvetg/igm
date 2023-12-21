@@ -83,6 +83,20 @@ def params(parser):
         type=float,
         default=1.0, 
     )
+    
+    parser.add_argument(
+        "--smb_accmelt_ice_density",
+        type=float,
+        default=910.0,
+        help="Density of ice for conversion of SMB into ice equivalent",
+    )
+    parser.add_argument(
+        "--smb_accmelt_wat_density",
+        type=float,
+        default=1000.0,
+        help="Density of water",
+    )
+
 
 def initialize(params,state):
     """

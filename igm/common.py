@@ -8,13 +8,13 @@ Published under the GNU GPL (Version 3), check at the LICENSE file
 import os, json
 from json import JSONDecodeError
 import importlib
-import argparse
+from argparse import ArgumentParser, Namespace
 import igm
 import tensorflow as tf
 from pathlib import Path
 from functools import partial
-from typing import List, Any, Dict
-import types
+from typing import List, Any, Dict, Tuple
+from types import ModuleType
 import logging
 import warnings
 
@@ -25,7 +25,7 @@ class State:
 
 # this create core parameters for any IGM run
 def params_core():
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         description="IGM", conflict_handler="resolve"
     )  # automatically overrides repeated/older parameters! Vaid solution?
 
@@ -63,7 +63,7 @@ def params_core():
         "--logging",
         action="store_true",
         default=False,
-        help="Activate the logging (default value is False)",
+        help="Activates the logging (default value is False)",
     )
     parser.add_argument(
         "--logging_level",
@@ -79,9 +79,15 @@ def params_core():
     )
     parser.add_argument(
         "--print_params",
-        type=str,
+        action="store_false",
         default=True,
         help="Print definitive parameters in a file for record",
+    )
+    parser.add_argument(
+        "--gpu_info",
+        action="store_true",
+        default=False,
+        help="Print CUDA and GPU information to the screen",
     )
     parser.add_argument(
         "--gpu_id",
@@ -89,7 +95,47 @@ def params_core():
         default=0,
         help="Id of the GPU to use (default is 0)",
     )
+    parser.add_argument(
+        "--saved_params_filename",
+        type=str,
+        default="params_saved",
+        help="Name of the file to store the parameters used in the run (current working directory)",
+    )
+
     return parser
+
+
+def setup_igm(
+    state: State, parser: ArgumentParser
+) -> Tuple[List[ModuleType], Namespace, State]:
+    params, _ = parser.parse_known_args()
+
+    if params.gpu_info:
+        print_gpu_info()
+
+    if params.logging:
+        add_logger(params=params, state=state)
+        tf.get_logger().setLevel(params.logging_level)
+    # else:
+    #     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3" # this is a little dangerous as the default value (for everyone) is to hide info, warnings, etc! Commenting it out for now
+
+    modules_dict = get_modules_list(params.param_file)
+    imported_modules = load_modules(modules_dict)
+    imported_modules = load_dependent_modules(imported_modules)
+
+    for module in imported_modules:
+        module.params(parser)
+
+    core_and_module_params = parser.parse_args()
+    params = load_user_defined_params(
+        param_file=core_and_module_params.param_file,
+        params_dict=vars(core_and_module_params),
+    )
+
+    parser.set_defaults(**params)
+    params = parser.parse_args()
+
+    return imported_modules, params, state
 
 
 def run_intializers(modules: List, params: Any, state: State) -> None:
@@ -109,7 +155,7 @@ def run_finalizers(modules: List, params: Any, state: State) -> None:
         module.finalize(params, state)
 
 
-def add_logger(params, state, logging_level) -> None:
+def add_logger(params, state) -> None:
     if params.logging_file == "":
         pathf = ""
     else:
@@ -119,10 +165,10 @@ def add_logger(params, state, logging_level) -> None:
         filename=pathf,
         encoding="utf-8",
         filemode="w",
-        level=logging_level,
+        level=params.logging_level,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
-    logging.root.setLevel(logging_level)
+    logging.root.setLevel(params.logging_level)
 
     state.logger = logging.getLogger("igm_logger")
     if not pathf == "":
@@ -138,7 +184,20 @@ def remove_comments(json_str) -> str:
     return cleaned_text
 
 
-def get_modules_list(params_path: str) -> Dict[str, List[str]]:
+def load_json_file(
+    param_file: str, remove_param_comments: bool = True
+) -> Dict[str, Any]:
+    with open(param_file, "r") as json_file:
+        json_text = json_file.read()
+
+    if remove_param_comments:
+        json_text = remove_comments(json_text)
+
+    dic_params = json.loads(json_text)
+    return dic_params
+
+
+def get_modules_list(params_path: str) -> dict[str, List[str]]:
     try:
         with open(params_path) as f:
             # params_dict = json.load(f) #re-instate if you want to enforce no comments in the json file(remove all the lines that load the clean json in this case...)
@@ -160,18 +219,7 @@ def get_modules_list(params_path: str) -> Dict[str, List[str]]:
         )
 
 
-def load_json_file(param_file: str, remove_param_comments: bool = True) -> Dict[str, Any]:
-    with open(param_file, "r") as json_file:
-        json_text = json_file.read()
-
-    if remove_param_comments:
-        json_text = remove_comments(json_text)
-
-    dic_params = json.loads(json_text)
-    return dic_params
-
-
-def load_user_defined_params(param_file: str, params_dict: Dict[str, Any]):
+def load_user_defined_params(param_file: str, params_dict: dict[str, Any]):
     try:
         json_defined_params = load_json_file(param_file=param_file)
     except JSONDecodeError as e:
@@ -194,7 +242,7 @@ def load_user_defined_params(param_file: str, params_dict: Dict[str, Any]):
     return params_dict
 
 
-def load_modules(modules_dict: Dict) -> List[types.ModuleType]:
+def load_modules(modules_dict: Dict) -> List[ModuleType]:
     """Returns a list of actionable modules to then apply the update, initialize, finalize functions on for IGM."""
 
     imported_preproc_modules = load_modules_from_directory(
@@ -231,7 +279,7 @@ def validate_module(module) -> None:
 
 def load_modules_from_directory(
     modules_list: List[str], module_folder: str
-) -> List[types.ModuleType]:
+) -> List[ModuleType]:
     imported_modules = []
     for module_name in modules_list:
         module_path = f"igm.modules.{module_folder}.{module_name}"
@@ -263,7 +311,7 @@ def has_dependencies(module: Any) -> bool:
     return False
 
 
-def load_dependent_modules(imported_modules: List) -> List[types.ModuleType]:
+def load_dependent_modules(imported_modules: List) -> List[ModuleType]:
     imported_dependencies = set()
     for module in imported_modules:
         if has_dependencies(module):
@@ -294,23 +342,26 @@ def load_dependent_modules(imported_modules: List) -> List[types.ModuleType]:
     return imported_modules + list(imported_dependencies)
 
 
-def gpu_information() -> None:
+def print_gpu_info() -> None:
     gpus = tf.config.experimental.list_physical_devices("GPU")
-    logging.info(f"{'CUDA Enviroment':-^150}")
-    logging.info(f"{json.dumps(tf.sysconfig.get_build_info(), indent=2, default=str)}")
-    logging.info(f"{'Available GPU Devices':-^150}")
+    print(f"{'CUDA Enviroment':-^150}")
+    tf.sysconfig.get_build_info().pop("cuda_compute_capabilities", None)
+    print(f"{json.dumps(tf.sysconfig.get_build_info(), indent=2, default=str)}")
+    print(f"{'Available GPU Devices':-^150}")
     for gpu in gpus:
-        logging.info(f" Name: {gpu.name} Type: {gpu.device_type}")
-        logging.info(
-            f"{json.dumps(tf.config.experimental.get_device_details(gpu), indent=2, default=str)}"
-        )
-    logging.info(f"{'':-^150}")
+        gpu_info = {"gpu_id": gpu.name, "device_type": gpu.device_type}
+        device_details = tf.config.experimental.get_device_details(gpu)
+        gpu_info.update(device_details)
+
+        print(f"{json.dumps(gpu_info, indent=2, default=str)}")
+    print(f"{'':-^150}")
 
 
 # Print parameters in screen and a dedicated file
-def print_params(params):
-    param_file = os.path.join(params.working_dir, "params_saved.json")
-
+def print_params(params: Namespace) -> None:
+    param_file = os.path.join(params.working_dir, params.saved_params_filename)
+    param_file = param_file + ".json"
+    
     # load the given parameters
     with open(param_file, "w") as json_file:
         json.dump(params.__dict__, json_file, indent=2)

@@ -52,3 +52,133 @@ def test_load_modules():
         ],
         "modules_postproc": ["write_ncdf", "plot2d", "print_info", "print_comp"],
     }
+
+
+def test_params_core():
+    parser = igm.params_core()
+    params, __ = parser.parse_known_args()
+
+    assert vars(params) == {
+        "working_dir": "",
+        "param_file": "params.json",
+        "modules_preproc": ["oggm_shop"],
+        "modules_process": ["iceflow", "time", "thk"],
+        "modules_postproc": ["write_ncdf", "plot2d", "print_info"],
+        "logging": False,
+        "logging_level": 30,
+        "logging_file": "",
+        "print_params": True,
+        "gpu_info": False,
+        "gpu_id": 0,
+        "saved_params_filename": "params_saved",
+    }
+
+# def test_params_core_overwrite():
+#     state = igm.State()  # class acting as a dictionary
+#     parser = igm.params_core()
+#     # args = ['--working_dir', 'test', '--gpu_info']  # replace with your arguments
+#     parser = get_parser(parser)
+#     __, params, __ = igm.setup_igm(state=state, parser=parser)
+
+#     assert vars(params) == {
+#         "working_dir": "test",
+#         "param_file": "params.json",
+#         "modules_preproc": ["oggm_shop"],
+#         "modules_process": ["iceflow", "time", "thk"],
+#         "modules_postproc": ["write_ncdf", "plot2d", "print_info"],
+#         "logging": False,
+#         "logging_level": 30,
+#         "logging_file": "",
+#         "print_params": True,
+#         "gpu_info": False,
+#         "gpu_id": 0,
+#         "saved_params_filename": "params_saved",
+#     }
+
+# def get_parser(parser):
+#     params, _ = parser.parse_known_args()
+#     params_dict = vars(params)
+#     # print(params_dict)
+#     params_dict.update({"working_dir": "test"})
+#     # print(params_dict)
+
+#     parser.set_defaults(**params_dict)
+    
+#     # print(parser)
+#     # params = parser.parse_args()
+#     return parser
+
+# def test_params_core_overwrite():
+#     state = igm.State()  # class acting as a dictionary
+#     parser = igm.params_core()
+
+#     params, _ = parser.parse_known_args()
+#     params_dict = vars(params)
+#     print(params_dict)
+#     params_dict.update({"working_dir": "test"})
+#     print(params_dict)
+
+#     parser.set_defaults(**params_dict)
+    
+#     print(parser)
+#     params = parser.parse_args()
+#     # args = ['--arg1', 'value1', '--arg2', 'value2']  # replace with your arguments
+#     # parsed_args = parser(args)
+#     __, params, __ = igm.setup_igm(state=state, parser=parser)
+
+#     assert vars(params) == {
+#         "working_dir": "test",
+#         "param_file": "params.json",
+#         "modules_preproc": ["oggm_shop"],
+#         "modules_process": ["iceflow", "time", "thk"],
+#         "modules_postproc": ["write_ncdf", "plot2d", "print_info"],
+#         "logging": False,
+#         "logging_level": 30,
+#         "logging_file": "",
+#         "print_params": True,
+#         "gpu_info": False,
+#         "gpu_id": 0,
+#         "saved_params_filename": "params_saved",
+#     }
+
+
+# def test_params_json():
+#     parser = igm.params_core()
+#     params, _ = parser.parse_known_args()
+
+#     modules_dict = igm.get_modules_list(params.param_file)
+#     imported_modules = igm.load_modules(modules_dict)
+#     imported_modules = igm.load_dependent_modules(imported_modules)
+
+#     for module in imported_modules:
+#         module.params(parser)
+
+#     core_and_module_params = parser.parse_args()
+#     params = igm.load_user_defined_params(
+#         param_file=core_and_module_params.param_file,
+#         params_dict=vars(core_and_module_params),
+#     )
+
+#     parser.set_defaults(**params)
+#     params = parser.parse_args()
+
+
+# def test_params_cli():
+#     parser = igm.params_core()
+#     params, _ = parser.parse_known_args()
+
+#     modules_dict = igm.get_modules_list(params.param_file)
+#     imported_modules = igm.load_modules(modules_dict)
+#     imported_modules = igm.load_dependent_modules(imported_modules)
+
+#     for module in imported_modules:
+#         module.params(parser)
+
+#     core_and_module_params = parser.parse_args()
+#     params = igm.load_user_defined_params(
+#         param_file=core_and_module_params.param_file,
+#         params_dict=vars(core_and_module_params),
+#     )
+
+#     parser.set_defaults(**params)
+#     params = parser.parse_args()

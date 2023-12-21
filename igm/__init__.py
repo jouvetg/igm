@@ -27,7 +27,7 @@ from .common import (
     run_intializers,
     run_processes,
     run_finalizers,
-    gpu_information,
+    setup_igm,
     add_logger
 )
 

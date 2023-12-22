@@ -131,7 +131,7 @@ def params(parser):
         default=False,
         help="save the iceflow emaultor at the end of the simulation",
     )
-     
+
     # vertical discretization
     parser.add_argument(
         "--iflo_Nz",
@@ -281,6 +281,11 @@ def params(parser):
 
 
 def initialize(params, state):
+    # This makes it so that if the user included the optimize module, this intializer will not be called again.
+    # This is due to the fact that the optimize module calls the initialize (and params) function of the iceflow module.
+    if hasattr(state, "optimize_initializer_called"):
+        return
+
     state.tcomp_iceflow = []
 
     # here we initialize variable parmaetrizing ice flow
@@ -340,13 +345,16 @@ def initialize(params, state):
             + "_"
             + str(int(params.iflo_new_friction_param))
         )
- 
+
         if params.iflo_pretrained_emulator:
-            
-            if params.iflo_emulator=="":
-                if os.path.exists(importlib_resources.files(emulators).joinpath(direct_name)):
+            if params.iflo_emulator == "":
+                if os.path.exists(
+                    importlib_resources.files(emulators).joinpath(direct_name)
+                ):
                     dirpath = importlib_resources.files(emulators).joinpath(direct_name)
-                    print("Found pretrained emulator in the igm package: " + direct_name)
+                    print(
+                        "Found pretrained emulator in the igm package: " + direct_name
+                    )
                 else:
                     print("No pretrained emulator found in the igm package")
             else:
@@ -355,7 +363,7 @@ def initialize(params, state):
                     print("Found pretrained emulator: " + params.iflo_emulator)
                 else:
                     print("No pretrained emulator found ")
-  
+
             fieldin = []
             fid = open(os.path.join(dirpath, "fieldin.dat"), "r")
             for fileline in fid:
@@ -440,9 +448,8 @@ def update(params, state):
 
 
 def finalize(params, state):
-
     if params.iflo_save_model:
-        save_iceflow_model(params, state) 
+        save_iceflow_model(params, state)
 
 
 ########################################################################

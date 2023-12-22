@@ -16,14 +16,18 @@ from netCDF4 import Dataset
 from igm.modules.utils import *
 from igm.modules.process.iceflow import initialize as initialize_iceflow
 from igm.modules.process.iceflow import params as params_iceflow
-from igm.modules.process.iceflow.iceflow import fieldin_to_X, update_2d_iceflow_variables, iceflow_energy_XY, Y_to_UV
+from igm.modules.process.iceflow.iceflow import (
+    fieldin_to_X,
+    update_2d_iceflow_variables,
+    iceflow_energy_XY,
+    Y_to_UV,
+)
 
 
 def params(parser):
-    
     # dependency on iceflow parameters...
     params_iceflow(parser)
-    
+
     parser.add_argument(
         "--opti_vars_to_save",
         type=list,
@@ -165,7 +169,9 @@ def initialize(params, state):
     """
     This function does the data assimilation (inverse modelling) to optimize thk, slidingco ans usurf from data
     """
-
+    # 1) hardcoded on attirbte for now for testing. if it works, I will change modules.dict to be part of params.
+    # 2) Assumes that this intialize comes after params are parsed (typically true and a safe assumption)
+    # print("OPTIMIZE")
     initialize_iceflow(params, state)
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
@@ -347,7 +353,8 @@ def initialize(params, state):
                     dbdx = state.topg[:, 1:] - state.topg[:, :-1]
                     dbdy = state.topg[1:, :] - state.topg[:-1, :]
                     REGU_H = (params.opti_regu_param_thk / (1000**2)) * (
-                        tf.nn.l2_loss(dbdx) + tf.nn.l2_loss(dbdy)
+                        tf.nn.l2_loss(dbdx)
+                        + tf.nn.l2_loss(dbdy)
                         - params.opti_convexity_weight * tf.math.reduce_sum(state.thk)
                     )
                 else:
@@ -548,6 +555,9 @@ def initialize(params, state):
     os.system(
         "echo rm " + os.path.join(params.working_dir, "costs.dat") + " >> clean.sh"
     )
+
+    # Flag so we can check if initialize was already called
+    state.optimize_initializer_called = True
 
 
 def update(params, state):

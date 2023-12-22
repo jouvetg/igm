@@ -169,9 +169,7 @@ def initialize(params, state):
     """
     This function does the data assimilation (inverse modelling) to optimize thk, slidingco ans usurf from data
     """
-    # 1) hardcoded on attirbte for now for testing. if it works, I will change modules.dict to be part of params.
-    # 2) Assumes that this intialize comes after params are parsed (typically true and a safe assumption)
-    # print("OPTIMIZE")
+
     initialize_iceflow(params, state)
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS

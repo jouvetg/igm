@@ -1,7 +1,7 @@
 [![License badge](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ### <h1 align="center" id="title">The Instructed Glacier Model (IGM) </h1>
-
-![image](logo_igm.svg)
+ 
+<img src="logo_igm.svg" width="50%" alt="Alt text">
 
 # Overview    
 

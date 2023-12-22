@@ -259,7 +259,7 @@ def _oggm_util(RGIs, params):
 
         # We need the outlines here
         if params.oggm_RGI_version==6:
-            rgi_ids = utils.get_rgi_glacier_entities(RGIs)
+            rgi_ids = RGIs  # rgi_ids = utils.get_rgi_glacier_entities(RGIs)
             base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v2" )
             gdirs = workflow.init_glacier_directories(
                 # Start from level 3 if you want some climate data in them
@@ -353,6 +353,13 @@ def _oggm_util(RGIs, params):
         from oggm.shop import glathida
 
         workflow.execute_entity_task(glathida.glathida_to_gdir, gdirs)
+        
+        from oggm.shop.w5e5 import process_w5e5_data
+
+        workflow.execute_entity_task(process_w5e5_data, gdirs)
+        
+        #workflow.execute_entity_task(tasks.mb_calibration_from_geodetic_mb,
+        #                                        gdirs, informed_threestep=True)
 
     source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
     destination_folder = os.path.join(params.working_dir, params.oggm_RGI_ID)

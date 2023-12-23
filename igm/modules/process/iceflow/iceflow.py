@@ -380,9 +380,13 @@ def initialize(params, state):
                 params.iflo_Nz - 1
             )
             nb_outputs = 2 * params.iflo_Nz
-            state.iceflow_model = getattr(igm, params.iflo_network)(
-                params, nb_inputs, nb_outputs
-            )
+            # state.iceflow_model = getattr(igm, params.iflo_network)(
+            #     params, nb_inputs, nb_outputs
+            # )
+            if params.iflo_network=='cnn':
+                state.iceflow_model = cnn(params, nb_inputs, nb_outputs)
+            elif params.iflo_network=='unet':
+                state.iceflow_model = unet(params, nb_inputs, nb_outputs)
 
     if not params.iflo_type == "emulated":
         if int(tf.__version__.split(".")[1]) <= 10:

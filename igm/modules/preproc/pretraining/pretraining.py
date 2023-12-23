@@ -10,15 +10,16 @@ import datetime
 import os
 import xarray
 
+from igm.modules.process.iceflow import params as params_iceflow
 from igm.modules.process.iceflow.iceflow import *
 from igm.modules.utils import *
 
-
-def dependency_iceflow():
-    return ["iceflow"]
-
-
+ 
 def params(parser):
+    
+    # dependency on iceflow parameters...
+    params_iceflow(parser)
+
     parser.add_argument(
         "--data_dir",
         type=str,
@@ -273,9 +274,10 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
     if os.path.exists("model0.h5"):
         state.iceflow_model = tf.keras.models.load_model("model0.h5", compile=False)
     else:
-        state.iceflow_model = getattr(igm, params.iflo_network)(
-            params, nb_inputs, nb_outputs
-        )
+        if params.iflo_network=='cnn':
+            state.iceflow_model = cnn(params, nb_inputs, nb_outputs)
+        elif params.iflo_network=='unet':
+            state.iceflow_model = unet(params, nb_inputs, nb_outputs)
 
     state.iceflow_model.summary(line_length=130)
 

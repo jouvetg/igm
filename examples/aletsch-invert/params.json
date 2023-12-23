@@ -1,6 +1,6 @@
 {
   "modules_preproc": ["load_ncdf","optimize"],
-  "modules_process": ["iceflow"],
+  "modules_process": [],
   "modules_postproc": [],
   "lncd_input_file": "input.nc",
   "opti_control": ["thk"],

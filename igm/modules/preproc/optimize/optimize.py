@@ -249,12 +249,16 @@ def initialize(params, state):
             # evalutae th ice flow emulator
             Y = state.iceflow_model(X)
 
-            state.U, state.V = Y_to_UV(params, Y)
+            U, V = Y_to_UV(params, Y)
 
-            state.U = state.U[0]
-            state.V = state.V[0]
-
-            update_2d_iceflow_variables(params, state)
+            U = U[0]
+            V = V[0]
+ 
+            state.ubar = tf.reduce_sum(U * state.vert_weight, axis=0)
+            state.vbar = tf.reduce_sum(V * state.vert_weight, axis=0)
+            
+            state.uvelsurf = U[-1]
+            state.vvelsurf = V[-1]
 
             state.velsurf = tf.stack(
                 [state.uvelsurf, state.vvelsurf], axis=-1

@@ -165,15 +165,30 @@ def complete_data(state):
     if not hasattr(state, "thk"):
         state.thk = tf.Variable(tf.zeros((state.y.shape[0], state.x.shape[0])))
         
+    assert hasattr(state, "topg") | hasattr(state, "usurf")
+    
+    # case usurf defined, topg is not defined
     if not hasattr(state, "topg"):
-        hasattr(state, "usurf")
-        state.topg = tf.Variable(state.usurf - state.thk)
+        state.lsurf = tf.Variable(state.usurf - state.thk)
+        state.topg  = tf.Variable( tf.where(state.lsurf > -0.9 * state.thk, state.lsurf, state.lsurf-1) )
 
-    if not hasattr(state, "lsurf"):
-        state.lsurf = tf.maximum(state.topg, -0.9 * state.thk)
-        
-    if not hasattr(state, "usurf"):
+    # case usurf not defined, topg is defined
+    elif not hasattr(state, "usurf"):
+        state.lsurf = tf.Variable(tf.maximum(state.topg, -0.9 * state.thk))
         state.usurf = tf.Variable(state.lsurf + state.thk) 
+
+    # case usurf is defined, topg is defined
+    elif not hasattr(state, "lsurf"):
+        state.lsurf = tf.Variable(state.usurf - state.thk)
+        
+    # # define usurf (or topg) from topg (or usurf) and thk
+    # if hasattr(state, "usurf"):
+    #     state.lsurf = tf.Variable(state.usurf - state.thk)
+    #     state.topg = tf.Variable(state.usurf - state.thk)
+
+    # else:
+    #     state.lsurf = tf.maximum(state.topg, -0.9 * state.thk)
+    #     state.usurf = tf.Variable(state.lsurf + state.thk)
 
 @tf.function
 def interpolate_bilinear_tf(

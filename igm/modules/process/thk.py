@@ -6,16 +6,34 @@
 import datetime, time
 import tensorflow as tf
 
-from igm.modules.utils import compute_divflux
-
+from igm.modules.utils import compute_divflux_slope_limiter
 
 def params_thk(parser):
-    pass
-
+    parser.add_argument(
+        "--thk_slope_type",
+        type=str,
+        default="superbee",
+        help="Type of slope limiter for the ice thickness equation (godunov or superbee)",
+    )
+    parser.add_argument(
+        "--thk_ratio_density",
+        type=float,
+        default=0.910,
+        help="density of ice divided by density of water",
+    )
 
 def initialize_thk(params, state):
-    state.tcomp_thk = []
 
+    # define the lower ice surface
+    if hasattr(state, "sealevel"):
+        state.lsurf = tf.maximum(state.topg,-0.91*state.thk + state.sealevel)
+    else:
+        state.lsurf = tf.maximum(state.topg,-0.91*state.thk)
+
+    # define the upper ice surface
+    state.usurf = state.lsurf + state.thk
+
+    state.tcomp_thk = []
 
 def update_thk(params, state):
     if state.it >= 0:
@@ -27,8 +45,8 @@ def update_thk(params, state):
         state.tcomp_thk.append(time.time())
 
         # compute the divergence of the flux
-        state.divflux = compute_divflux(
-            state.ubar, state.vbar, state.thk, state.dx, state.dx
+        state.divflux = compute_divflux_slope_limiter(
+            state.ubar, state.vbar, state.thk, state.dx, state.dx, state.dt, slope_type=params.thk_slope_type
         )
 
         # if not smb model is given, set smb to zero
@@ -38,11 +56,11 @@ def update_thk(params, state):
         # Forward Euler with projection to keep ice thickness non-negative
         state.thk = tf.maximum(state.thk + state.dt * (state.smb - state.divflux), 0)
 
-        # TODO: replace 0.9 by physical constant, and add SL value
         # define the lower ice surface
-        # state.lsurf = tf.maximum(state.topg,-0.9*state.thk)
-        # lower surface is not implmented yet
-        state.lsurf = state.topg
+        if hasattr(state, "sealevel"):
+            state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk + state.sealevel)
+        else:
+            state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk)
 
         # define the upper ice surface
         state.usurf = state.lsurf + state.thk

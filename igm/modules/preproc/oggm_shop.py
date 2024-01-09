@@ -358,8 +358,10 @@ def _oggm_util(RGIs, params):
 
         workflow.execute_entity_task(process_w5e5_data, gdirs)
         
-        #workflow.execute_entity_task(tasks.mb_calibration_from_geodetic_mb,
-        #                                        gdirs, informed_threestep=True)
+        workflow.execute_entity_task(tasks.elevation_band_flowline, gdirs)
+        workflow.execute_entity_task(tasks.fixed_dx_elevation_band_flowline, gdirs)
+        workflow.execute_entity_task(tasks.mb_calibration_from_geodetic_mb,
+                                                gdirs, informed_threestep=True)
 
     source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
     destination_folder = os.path.join(params.working_dir, params.oggm_RGI_ID)

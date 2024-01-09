@@ -206,7 +206,7 @@ def finalize_anim_plotly(params, state):
                 z=bedrock_border,
                 x=lat_range,
                 y=lon_range,
-                colorscale='terrain',
+                colorscale='speed_r',
                 opacity=1,
                 showlegend=True,
                 name="bedrock",

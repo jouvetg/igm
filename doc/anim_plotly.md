@@ -1,7 +1,7 @@
 ### <h1 align="center" id="title">IGM module `anim_plotly` </h1>
 
  <div align="center">
-    <img src="anim_plotly_example.png" width="50%" alt="Alt text">
+    <img src="anim_plotly_example.png" width="50%">
 </div>
 
 # Description:

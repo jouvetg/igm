@@ -144,10 +144,11 @@ def finalize_anim_plotly(params, state):
         # make edges equal so that it looks like a volume
         max_bedrock = np.max(bedrock)
         min_bedrock = np.min(bedrock)
-        bedrock[0, :] = min_bedrock
-        bedrock[-1, :] = min_bedrock
-        bedrock[:, 0] = min_bedrock
-        bedrock[:, -1] = min_bedrock
+        bedrock_border = copy.copy(bedrock)
+        bedrock_border[0, :] = min_bedrock
+        bedrock_border[-1, :] = min_bedrock
+        bedrock_border[:, 0] = min_bedrock
+        bedrock_border[:, -1] = min_bedrock
 
         # aim to mimic the matplotlib terrain
         custom_colorscale = [
@@ -160,7 +161,6 @@ def finalize_anim_plotly(params, state):
         ]
 
         # create time frames for slider
-        res = 1
         frames = []
         slider_steps = []
         for i, year in enumerate(time):
@@ -175,13 +175,13 @@ def finalize_anim_plotly(params, state):
 
             # create 3D surface plots with property as surface color
             surface_fig = go.Surface(
-                z=glacier_surface[::res, ::res],
-                x=lat_range[::res],
-                y=lon_range[::res],
+                z=glacier_surface,
+                x=lat_range,
+                y=lon_range,
                 colorscale=color_scale,
                 cmax=max_property_map,
                 cmin=min_property_map,
-                surfacecolor=property_map[::res, ::res],
+                surfacecolor=property_map,
                 showlegend=True,
                 name="glacier surface",
                 colorbar=dict(title=property, titleside="right"),
@@ -189,13 +189,13 @@ def finalize_anim_plotly(params, state):
 
             # create 3D plot of the bottom of the glacier
             bottom_fig = go.Surface(
-                z=glacier_bottom[::res, ::res],
-                x=lat_range[::res],
-                y=lon_range[::res],
+                z=glacier_bottom,
+                x=lat_range,
+                y=lon_range,
                 colorscale=color_scale,
                 cmax=max_property_map,
                 cmin=min_property_map,
-                surfacecolor=property_map[::res, ::res],
+                surfacecolor=property_map,
                 showlegend=True,
                 name="glacier bottom",
                 colorbar=dict(title=property, titleside="right"),
@@ -203,10 +203,10 @@ def finalize_anim_plotly(params, state):
 
             # create 3D bedrock plots
             bedrock_fig = go.Surface(
-                z=bedrock[::res, ::res],
-                x=lat_range[::res],
-                y=lon_range[::res],
-                colorscale=custom_colorscale,
+                z=bedrock_border,
+                x=lat_range,
+                y=lon_range,
+                colorscale='terrain',
                 opacity=1,
                 showlegend=True,
                 name="bedrock",
@@ -258,8 +258,9 @@ def finalize_anim_plotly(params, state):
             title = "glacier"
 
         # compute aspect ratio of the base
+        resolution = int(lat_range[1]-lat_range[0])
         ratio_y = bedrock.shape[0] / bedrock.shape[1]
-        ratio_z = (max_bedrock - min_bedrock) / (bedrock.shape[0] * 100)
+        ratio_z = (max_bedrock - min_bedrock) / (bedrock.shape[0] * resolution)
         ratio_z *= 2  # emphasize z-axis to make mountians look twice as steep
 
         # transform angle[0-180] into values between [0, 1] for camera postion
@@ -283,12 +284,14 @@ def finalize_anim_plotly(params, state):
                         showbackground=False,
                         showticklabels=True,
                         visible=True,
+                        range=[lat_range[0], lat_range[-1]],
                         title="Longitude",
                     ),
                     yaxis=dict(
                         showbackground=False,
                         showticklabels=True,
                         visible=True,
+                        range=[lon_range[0], lon_range[-1]],
                         title="Latitude",
                     ),
                 ),

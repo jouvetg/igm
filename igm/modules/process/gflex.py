@@ -56,6 +56,38 @@ def initialize_gflex(params, state):
 
 def update_gflex(params, state):
     import gflex
+    from scipy.interpolate import griddata
+    
+    def downsample_array_to_resolution(arr, dx, target_resolution):
+        """
+        Downsample a 2D array to a specified resolution using bilinear interpolation (chatgpt).
+
+        """
+        m, n = arr.shape
+        x = np.arange(0, n) * dx
+        y = np.arange(0, m) * dx
+
+        target_x = np.arange(0, n, target_resolution / dx) * dx
+        target_y = np.arange(0, m, target_resolution / dx) * dx
+
+        xx, yy = np.meshgrid(x, y)
+        target_xx, target_yy = np.meshgrid(target_x, target_y)
+        target_xx = target_xx.astype(np.int32)
+        target_yy = target_yy.astype(np.int32)
+
+        points = np.column_stack((xx.flatten(), yy.flatten()))
+        target_points = np.column_stack((target_xx.flatten(), target_yy.flatten()))
+
+        downsampled_array = griddata(points, arr.flatten(), target_points, method='linear')
+        return downsampled_array.reshape(len(target_y), len(target_x)), target_points, points, x, y
+
+    def upsample_result_to_original_resolution(result, target_points, points, x, y, original_resolution):
+        """
+        Upsample a 2D array to the original resolution using bilinear interpolation (chatgpt).
+
+        """
+        upsampled_result = griddata(target_points, result.flatten(), points, method='linear')
+        return upsampled_result.reshape(len(y), len(x))
 
     if (state.t - state.tlast_gflex) >= params.gflex_update_freq:
         if hasattr(state, "logger"):
@@ -66,9 +98,18 @@ def update_gflex(params, state):
         state.flex.Te = state.Te # Elastic thickness [m] -- scalar or array
         state.flex.Te = state.flex.Te.numpy()        
         state.flex.qs = state.thk.numpy() * 917 * 9.81  # Populating this template
-        state.flex.initialize()
-        state.flex.run()
-        state.flex.finalize()
+        
+        if state.dx < 1000:
+            state.flex.Te, target_points,points, x, y = downsample_array_to_resolution(state.flex.Te, state.flex.dx, 1000)
+            state.flex.qs, target_points,points, x, y = downsample_array_to_resolution(state.flex.qs, state.flex.dx, 1000)
+            state.flex.initialize()
+            state.flex.run()
+            state.flex.finalize()
+            state.flex.w = upsample_result_to_original_resolution(state.flex.w, target_points, points, x, y, state.flex.dx)
+        else:
+            state.flex.initialize()
+            state.flex.run()
+            state.flex.finalize()
         state.topg = state.topg + state.flex.w
         state.usurf = state.topg + state.thk
         # state.flex.output()

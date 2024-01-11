@@ -25,14 +25,15 @@ def params_gflex(parser):
 
 def initialize_gflex(params, state):
     import gflex
+    from gflex.f2d import F2D
 
     state.tcomp_gflex = []
     state.tlast_gflex = tf.Variable(params.time_start, dtype=tf.float32)
 
-    state.flex = gflex.F2D()
+    state.flex = F2D()
 
     state.flex.giafreq = params.gflex_update_freq
-    state.flex.giatime = 1000
+    state.flex.giatime = params.gflex_update_freq
     state.flex.Quiet = False
     state.flex.Method = "FD"
     state.flex.PlateSolutionType = "vWC1994"
@@ -41,7 +42,7 @@ def initialize_gflex(params, state):
     state.flex.E = 100e9
     state.flex.nu = 0.25
     state.flex.rho_m = 3300.0
-    state.flex.rho_fill = 1900
+    state.flex.rho_fill = 0
     state.flex.dx = state.dx.numpy()
     state.flex.dy = state.dx.numpy()
     state.flex.BC_W = "Periodic"
@@ -62,6 +63,8 @@ def update_gflex(params, state):
 
         state.tcomp_gflex.append(time.time())
 
+        state.flex.Te = state.Te # Elastic thickness [m] -- scalar or array
+        state.flex.Te = state.flex.Te.numpy()        
         state.flex.qs = state.thk.numpy() * 917 * 9.81  # Populating this template
         state.flex.initialize()
         state.flex.run()

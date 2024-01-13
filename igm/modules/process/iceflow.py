@@ -292,6 +292,13 @@ def params_iceflow(parser):
         default=False,
         help="This forces calving front at the border of the domain in the side given in the list",
     )
+    
+    parser.add_argument(
+        "--iflo_vert_flow",
+        type=str2bool,
+        default=False,
+        help="iflo_add_vert_flow",
+    )
 
 
 def initialize_iceflow(params, state):
@@ -320,6 +327,11 @@ def initialize_iceflow(params, state):
             tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
         )
         state.V = tf.Variable(
+            tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+        )
+        
+    if params.iflo_vert_flow:
+        state.W = tf.Variable(
             tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
         )
 
@@ -354,6 +366,9 @@ def initialize_iceflow(params, state):
             + "_"
             + str(int(params.iflo_new_friction_param))
         )
+        
+        if params.iflo_vert_flow:
+            direct_name += "_" + str(int(params.iflo_vert_flow))
  
         if params.iflo_pretrained_emulator:
             
@@ -385,7 +400,7 @@ def initialize_iceflow(params, state):
             nb_inputs = len(params.iflo_fieldin) + (params.iflo_dim_arrhenius == 3) * (
                 params.iflo_Nz - 1
             )
-            nb_outputs = 2 * params.iflo_Nz
+            nb_outputs = 2 * params.iflo_Nz + int(params.iflo_vert_flow) * params.iflo_Nz 
             state.iceflow_model = getattr(igm, params.iflo_network)(
                 params, nb_inputs, nb_outputs
             )
@@ -767,28 +782,127 @@ def _iceflow_energy(
 
     return tf.reduce_mean(C_shear + C_slid + C_grav + C_front)
 
+##############################
+
+@tf.function()
+def _compute_gradient_exp_tf(s, dx, dy):
+    """
+    compute spatial 2D gradient of a given field
+    """
+
+    # EX = tf.concat([s[:, 0:1], 0.5 * (s[:, :-1] + s[:, 1:]), s[:, -1:]], 1)
+    # diffx = (EX[:, 1:] - EX[:, :-1]) / dx
+
+    # EY = tf.concat([s[0:1, :], 0.5 * (s[:-1, :] + s[1:, :]), s[-1:, :]], 0)
+    # diffy = (EY[1:, :] - EY[:-1, :]) / dy
+
+    EX = tf.concat(
+        [
+            1.5 * s[:, :, 0:1] - 0.5 * s[:, :, 1:2],
+            0.5 * s[:, :, :-1] + 0.5 * s[:, :, 1:],
+            1.5 * s[:, :, -1:] - 0.5 * s[:, :, -2:-1],
+        ],
+        2,
+    )
+    diffx = (EX[:, :, 1:] - EX[:, :, :-1]) / dx
+    
+    EY = tf.concat(
+        [
+            1.5 * s[:,0:1, :] - 0.5 * s[:,1:2, :],
+            0.5 * s[:,:-1, :] + 0.5 * s[:,1:, :],
+            1.5 * s[:,-1:, :] - 0.5 * s[:,-2:-1, :],
+        ],
+        1,
+    )
+    diffy = (EY[:,1:, :] - EY[:,:-1, :]) / dy
+
+    return diffx, diffy
+
+def vertflow_energy(params, U, V, W, fieldin):
+    thk, usurf, arrhenius, slidingco, dX = fieldin
+
+    return _vertflow_energy(
+        U,
+        V,
+        W,
+        thk,
+        usurf,
+        dX,
+        params.iflo_Nz,
+        params.iflo_vert_spacing,
+        params.iflo_thr_ice_thk
+    )
+ 
+@tf.function(experimental_relax_shapes=True)
+def _vertflow_energy(U, V, W, thk, usurf, dX, Nz, vert_spacing, thr):
+     
+    topg = usurf - thk
+    
+    if Nz > 1:
+        zeta = np.arange(Nz) / (Nz - 1)
+        temp = (zeta / vert_spacing) * (1.0 + (vert_spacing - 1.0) * zeta)
+        temd = temp[1:] - temp[:-1]
+        ddz = tf.stack([_stag4(thk) * z for z in temd], axis=1)
+    else:
+        ddz = tf.expand_dims(_stag4(thk), axis=0)
+    
+    sloptopgx, sloptopgy = _compute_gradient_exp_tf(topg, dX, dX)
+    sloptopgx = tf.expand_dims(sloptopgx, axis=1)
+    sloptopgy = tf.expand_dims(sloptopgy, axis=1)
+     
+    dUdx = (U[:, :, :, 1:] - U[:, :, :, :-1]) / dX[0,0,0]
+    dVdy = (V[:, :, 1:, :] - V[:, :, :-1, :]) / dX[0,0,0]
+ 
+    dUdx = (dUdx[:, :, :-1, :] + dUdx[:, :, 1:, :]) / 2  
+    dVdy = (dVdy[:, :, :, :-1] + dVdy[:, :, :, 1:]) / 2
+ 
+    if U.shape[1] > 1:
+        dUdx = (dUdx[:, :-1, :, :] + dUdx[:, 1:, :, :]) / 2  
+        dVdy = (dVdy[:, :-1, :, :] + dVdy[:, 1:, :, :]) / 2
+ 
+    Wm = ( W[:, :, 1:, 1:] + W[:, :, 1:, :-1] + W[:, :, :-1, 1:] + W[:, :, :-1, :-1] ) / 4
+
+    if U.shape[1] > 1:
+        dWdz = (Wm[:, 1:, :, :] - Wm[:, :-1, :, :]) / tf.maximum(ddz, thr)
+    else:
+        dWdz = 0.0
+ 
+    wvelbase = U * sloptopgx + V * sloptopgy
+
+    return tf.reduce_mean( (dUdx+dVdy+dWdz)**2 ) \
+         + tf.reduce_mean( (wvelbase - W[:, 0])**2 ) 
+ 
+###################################
 
 # @tf.function(experimental_relax_shapes=True)
 def iceflow_energy_XY(params, X, Y):
-    U, V = Y_to_UV(params, Y)
 
+    UV = Y_to_UV(params, Y)
+    
     fieldin = X_to_fieldin(params, X)
-
-    return iceflow_energy(params, U, V, fieldin)
-
-
+     
+    if not params.iflo_vert_flow: 
+        return iceflow_energy(params, UV[0], UV[1], fieldin)
+    else:
+        return iceflow_energy(params, UV[0], UV[1], fieldin) \
+            + vertflow_energy(params, UV[0], UV[1], UV[2], fieldin)
+ 
 def Y_to_UV(params, Y):
+    
     N = params.iflo_Nz
-
+    
     U = tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1])
-    V = tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1])
+    V = tf.experimental.numpy.moveaxis(Y[:, :, :, N:2*N], [-1], [1])
 
-    return U, V
+    if not params.iflo_vert_flow:
+        return U, V
+    else:
+        W = tf.experimental.numpy.moveaxis(Y[:, :, :, 2*N:], [-1], [1])
+        return U, V, W
 
-
-def UV_to_Y(params, U, V):
-    UU = tf.experimental.numpy.moveaxis(U, [0], [-1])
-    VV = tf.experimental.numpy.moveaxis(V, [0], [-1])
+def UV_to_Y(params, UV):
+    UU = tf.experimental.numpy.moveaxis(UV[0], [0], [-1])
+    VV = tf.experimental.numpy.moveaxis(UV[1], [0], [-1])
     RR = tf.expand_dims(
         tf.concat(
             [UU, VV],
@@ -954,9 +1068,9 @@ def _update_iceflow_emulated(params, state):
     Ny, Nx = state.thk.shape
     N = params.iflo_Nz
 
-    U, V = Y_to_UV(params, Y[:, :Ny, :Nx, :])
-    U = U[0]
-    V = V[0]
+    UV = Y_to_UV(params, Y[:, :Ny, :Nx, :])
+    U = UV[0][0]
+    V = UV[1][0]
 
     #    U = tf.where(state.thk > 0, U, 0)
 
@@ -1015,9 +1129,9 @@ def _update_iceflow_emulator(params, state):
                     cost_emulator = cost_emulator + COST
 
                     if (epoch + 1) % 100 == 0:
-                        U, V = Y_to_UV(params, Y)
-                        U = U[0]
-                        V = V[0]
+                        UV = Y_to_UV(params, Y)
+                        U = UV[0][0]
+                        V = UV[1][0]
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
                         print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 

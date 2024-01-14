@@ -847,8 +847,8 @@ def _vertflow_energy(U, V, W, thk, usurf, dX, Nz, vert_spacing, thr):
         ddz = tf.expand_dims(_stag4(thk), axis=0)
     
     sloptopgx, sloptopgy = _compute_gradient_exp_tf(topg, dX, dX)
-    sloptopgx = tf.expand_dims(sloptopgx, axis=1)
-    sloptopgy = tf.expand_dims(sloptopgy, axis=1)
+#    sloptopgx = tf.expand_dims(sloptopgx, axis=1)
+#    sloptopgy = tf.expand_dims(sloptopgy, axis=1)
      
     dUdx = (U[:, :, :, 1:] - U[:, :, :, :-1]) / dX[0,0,0]
     dVdy = (V[:, :, 1:, :] - V[:, :, :-1, :]) / dX[0,0,0]
@@ -867,11 +867,13 @@ def _vertflow_energy(U, V, W, thk, usurf, dX, Nz, vert_spacing, thr):
     else:
         dWdz = 0.0
  
-    wvelbase = U * sloptopgx + V * sloptopgy
-
-    return tf.reduce_mean( (dUdx+dVdy+dWdz)**2 ) \
-         + tf.reduce_mean( (wvelbase - W[:, 0])**2 ) 
- 
+    wvelbase = U[:, 0] * sloptopgx + V[:, 0] * sloptopgy
+    
+    c1 = tf.reduce_mean(tf.reduce_sum(ddz * (dUdx+dVdy+dWdz)**2, axis=1), axis=(-1, -2))
+    c2 = tf.reduce_mean(                         (wvelbase - W[:, 0])**2, axis=(-1, -2))
+     
+    return tf.math.sqrt(tf.reduce_mean( c1 + c2 ))
+          
 ###################################
 
 # @tf.function(experimental_relax_shapes=True)

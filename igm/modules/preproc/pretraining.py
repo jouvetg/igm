@@ -117,9 +117,6 @@ def initialize_pretraining(params, state):
         str(params.iflo_dim_arrhenius) + "_" + str(int(params.iflo_new_friction_param))
     )
 
-    if params.iflo_vert_flow:
-        state.direct_name += "_" + str(int(params.iflo_vert_flow))
-
     os.makedirs(os.path.join(params.working_dir, state.direct_name), exist_ok=True)
 
     os.system(
@@ -220,7 +217,7 @@ def compute_solutions(params, state):
 
         U, V, MISFIT = solve_iceflow(params, state, U, V)
 
-        Y = UV_to_Y(params, [U,V])
+        Y = UV_to_Y(params, U, V)
 
         code = (
             p.split("/")[-1]
@@ -271,7 +268,7 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
     nb_inputs = len(params.iflo_fieldin) + (params.iflo_dim_arrhenius == 3) * (
         params.iflo_Nz - 1
     )
-    nb_outputs = 2 * params.iflo_Nz + int(params.iflo_vert_flow) * params.iflo_Nz 
+    nb_outputs = 2 * params.iflo_Nz
 
     if os.path.exists("model0.h5"):
         state.iceflow_model = tf.keras.models.load_model("model0.h5", compile=False)
@@ -549,12 +546,12 @@ def _computemisfitall(params, state, X, Y, YP):
     temp = temp[1:] - temp[:-1]
     dz = tf.stack([thk * z for z in temp])
 
-    uvt = Y_to_UV(params, Y)
-    ut = uvt[0][0]
-    vt = uvt[1][0]
-    uvp = Y_to_UV(params, YP)
-    up = uvp[0][0]
-    vp = uvp[1][0]
+    ut, vt = Y_to_UV(params, Y)
+    ut = ut[0]
+    vt = vt[0]
+    up, vp = Y_to_UV(params, YP)
+    up = up[0]
+    vp = vp[0]
 
     nl1bardiff, nl2bardiff = computemisfit(state, thk, ut - up, vt - vp)
 
@@ -604,9 +601,9 @@ def _plot_one_Glen(params, X, Y, path):
     #    ut   = Y[0,:,:,N-1] ; #tf.reduce_mean( Y[0,:,:,:N] , axis=-1)
     #    vt   = Y[0,:,:,2*N-1]  ; #tf.reduce_mean( Y[0,:,:,N:] , axis=-1)
 
-    UV = Y_to_UV(params, Y)
-    ut = UV[0][0, -1]
-    vt = UV[1][0, -1]
+    U, V = Y_to_UV(params, Y)
+    ut = U[0, -1]
+    vt = V[0, -1]
 
     thk = X[0, :, :, 0]
 
@@ -650,12 +647,12 @@ def _plot_iceflow_Glen(params, state, X, Y, YP, tit, path):
     #    up   = YP[0,:,:,N-1] ; #up   = tf.reduce_mean( YP[0,:,:,:N] , axis=-1)
     #    vp   = YP[0,:,:,2*N-1] ; #vp   = tf.reduce_mean( YP[0,:,:,N:] , axis=-1)
 
-    UV = Y_to_UV(params, Y)
-    ut = UV[0][0, -1]
-    vt = UV[1][0, -1]
-    UVP = Y_to_UV(params, YP)
-    up = UVP[0][0, -1]
-    vp = UVP[1][0, -1]
+    U, V = Y_to_UV(params, Y)
+    ut = U[0, -1]
+    vt = V[0, -1]
+    UP, VP = Y_to_UV(params, YP)
+    up = UP[0, -1]
+    vp = VP[0, -1]
 
     thk = X[0, :, :, 0]
 

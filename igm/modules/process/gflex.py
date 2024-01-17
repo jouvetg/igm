@@ -99,13 +99,14 @@ def update_gflex(params, state):
         state.flex.Te = state.flex.Te.numpy()        
         state.flex.qs = state.thk.numpy() * 917 * 9.81  # Populating this template
         
-        if state.dx < 1000:
-            state.flex.Te, target_points,points, x, y = downsample_array_to_resolution(state.flex.Te, state.flex.dx, 1000)
-            state.flex.qs, target_points,points, x, y = downsample_array_to_resolution(state.flex.qs, state.flex.dx, 1000)
+        if state.dx < 2000:
+            state.flex.Te, target_points,points, x, y = downsample_array_to_resolution(state.flex.Te, state.flex.dx, 2000)
+            state.flex.qs, target_points,points, x, y = downsample_array_to_resolution(state.flex.qs, state.flex.dx, 2000)
             state.flex.initialize()
             state.flex.run()
             state.flex.finalize()
             state.flex.w = upsample_result_to_original_resolution(state.flex.w, target_points, points, x, y, state.flex.dx)
+            state.flex.w = np.float32(state.flex.w)
         else:
             state.flex.initialize()
             state.flex.run()

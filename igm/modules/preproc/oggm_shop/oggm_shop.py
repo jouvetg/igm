@@ -26,6 +26,9 @@ def params(parser):
         "--oggm_preprocess", type=str2bool, default=True, help="Use preprocessing"
     )
     parser.add_argument(
+        "--oggm_RGI_version", type=int, default=6, help="this is temporary fix, is 6 or 7"
+    )
+    parser.add_argument(
         "--oggm_dx",
         type=int,
         default=100,
@@ -255,18 +258,27 @@ def _oggm_util(RGIs, params):
         cfg.PATHS["working_dir"] = utils.gettempdir(dirname=WD, reset=True)
 
         # We need the outlines here
-        rgi_ids = utils.get_rgi_glacier_entities(RGIs)
-
-        base_url = (
-            "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v2"
-        )
-        gdirs = workflow.init_glacier_directories(
-            # Start from level 3 if you want some climate data in them
-            rgi_ids,
-            prepro_border=40,
-            from_prepro_level=3,
-            prepro_base_url=base_url,
-        )
+        if params.oggm_RGI_version==6:
+            rgi_ids = RGIs  # rgi_ids = utils.get_rgi_glacier_entities(RGIs)
+            base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v2" )
+            gdirs = workflow.init_glacier_directories(
+                # Start from level 3 if you want some climate data in them
+                rgi_ids,
+                prepro_border=40,
+                from_prepro_level=3,
+                prepro_base_url=base_url,
+            )
+        else:
+            rgi_ids = RGIs
+            base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v3" )
+            gdirs = workflow.init_glacier_directories(
+                # Start from level 3 if you want some climate data in them
+                rgi_ids,
+                prepro_border=40,
+                from_prepro_level=2,
+                prepro_rgi_version='70C',
+                prepro_base_url=base_url,
+            )
 
     else:
         # Note: if you start from here you'll need most of the packages
@@ -338,9 +350,18 @@ def _oggm_util(RGIs, params):
 
         workflow.execute_entity_task(bedtopo.add_consensus_thickness, gdirs)
         
-#        from oggm.shop import glathida
+        from oggm.shop import glathida
 
-#        workflow.execute_entity_task(glathida.glathida_to_gdir, gdirs)
+        workflow.execute_entity_task(glathida.glathida_to_gdir, gdirs)
+        
+        from oggm.shop.w5e5 import process_w5e5_data
+
+        workflow.execute_entity_task(process_w5e5_data, gdirs)
+        
+        workflow.execute_entity_task(tasks.elevation_band_flowline, gdirs)
+        workflow.execute_entity_task(tasks.fixed_dx_elevation_band_flowline, gdirs)
+        workflow.execute_entity_task(tasks.mb_calibration_from_geodetic_mb,
+                                                gdirs, informed_threestep=True)
 
     source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
     destination_folder = os.path.join(params.working_dir, params.oggm_RGI_ID)

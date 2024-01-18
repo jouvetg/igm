@@ -21,6 +21,7 @@ from igm.modules.process.iceflow.iceflow import (
     update_2d_iceflow_variables,
     iceflow_energy_XY,
     Y_to_UV,
+    save_iceflow_model
 )
 
 
@@ -567,7 +568,8 @@ def update(params, state):
 
 
 def finalize(params, state):
-    pass
+    if params.iflo_save_model:
+        save_iceflow_model(params, state) 
 
 
 def _compute_rms_std_optimization(state, i):

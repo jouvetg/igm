@@ -274,9 +274,23 @@ def params(parser):
     )
     parser.add_argument(
         "--iflo_exclude_borders",
+        type=int,
+        default=0,
+        help="This is a quick fix of the border issue, other the physics informed emaulator shows zero velocity at the border",
+    )
+    
+    parser.add_argument(
+        "--iflo_cf_eswn",
+        type=list,
+        default=[],
+        help="This forces calving front at the border of the domain in the side given in the list",
+    )
+    
+    parser.add_argument(
+        "--iflo_cf_cond",
         type=str2bool,
         default=False,
-        help="This is a quick fix of the border issue, other the physics informed emaulator shows zero velocity at the border",
+        help="This forces calving front at the border of the domain in the side given in the list",
     )
 
 
@@ -479,7 +493,7 @@ def _compute_gradient_stag(s, dX, dY):
 
 
 @tf.function(experimental_relax_shapes=True)
-def _compute_strainrate_Glen_tf(U, V, thk, dX, ddz, sloptopgx, sloptopgy, thr):
+def _compute_strainrate_Glen_tf(U, V, thk, slidingco, dX, ddz, sloptopgx, sloptopgy, thr):
     # Compute horinzontal derivatives
     dUdx = (U[:, :, :, 1:] - U[:, :, :, :-1]) / dX[0, 0, 0]
     dVdx = (V[:, :, :, 1:] - V[:, :, :, :-1]) / dX[0, 0, 0]
@@ -507,6 +521,9 @@ def _compute_strainrate_Glen_tf(U, V, thk, dX, ddz, sloptopgx, sloptopgy, thr):
         # vertical derivative if there is at least two layears
         dUdz = (Um[:, 1:, :, :] - Um[:, :-1, :, :]) / tf.maximum(ddz, thr)
         dVdz = (Vm[:, 1:, :, :] - Vm[:, :-1, :, :]) / tf.maximum(ddz, thr)
+        slc = tf.expand_dims(_stag4(slidingco), axis=1)
+        dUdz = tf.where(slc > 0, dUdz, 0.01 * dUdz)
+        dVdz = tf.where(slc > 0, dVdz, 0.01 * dVdz)
     else:
         # zero otherwise
         dUdz = 0.0
@@ -538,8 +555,18 @@ def _compute_strainrate_Glen_tf(U, V, thk, dX, ddz, sloptopgx, sloptopgy, thr):
     )
 
 
+def _stag2(B):
+    return (B[:, 1:] + B[:, :1]) / 2
+
+
 def _stag4(B):
     return (B[:, 1:, 1:] + B[:, 1:, :-1] + B[:, :-1, 1:] + B[:, :-1, :-1]) / 4
+
+
+def _stag4b(B):
+    return (
+        B[:, :, 1:, 1:] + B[:, :, 1:, :-1] + B[:, :, :-1, 1:] + B[:, :, :-1, :-1]
+    ) / 4
 
 
 def _stag8(B):
@@ -576,6 +603,8 @@ def iceflow_energy(params, U, V, fieldin):
         params.iflo_ice_density,
         params.iflo_gravity_cst,
         params.iflo_new_friction_param,
+        params.iflo_cf_cond,
+        params.iflo_cf_eswn,
     )
 
 
@@ -598,6 +627,8 @@ def _iceflow_energy(
     ice_density,
     gravity_cst,
     new_friction_param,
+    iflo_cf_cond,
+    iflo_cf_eswn,
 ):
     # warning, the energy is here normalized dividing by int_Omega
 
@@ -641,7 +672,7 @@ def _iceflow_energy(
 
     # sr has unit y^(-1)
     sr = _compute_strainrate_Glen_tf(
-        U, V, thk, dX, dz, sloptopgx, sloptopgy, thr=thr_ice_thk
+        U, V, thk, C, dX, dz, sloptopgx, sloptopgy, thr=thr_ice_thk
     )
 
     sr = tf.where(COND, sr, 0.0)
@@ -666,6 +697,10 @@ def _iceflow_energy(
             )
             / p
         )
+        
+    lsurf = usurf - thk
+
+    sloptopgx, sloptopgy = _compute_gradient_stag(lsurf, dX, dX)
 
     # C_slid is unit Mpa y^m m^(-m) * m^(1+m) * y^(-1-m) * m*2 = Mpa y^(-1) m^3
     N = (
@@ -679,8 +714,13 @@ def _iceflow_energy(
     slopsurfx = tf.expand_dims(slopsurfx, axis=1)
     slopsurfy = tf.expand_dims(slopsurfy, axis=1)
 
-    uds = _stag8(U) * slopsurfx + _stag8(V) * slopsurfy
+    if Nz > 1:
+        uds = _stag8(U) * slopsurfx + _stag8(V) * slopsurfy
+    else:
+        uds = _stag4b(U) * slopsurfx + _stag4b(V) * slopsurfy
+
     uds = tf.where(COND, uds, 0.0)
+
     C_grav = (
         ice_density
         * gravity_cst
@@ -688,9 +728,55 @@ def _iceflow_energy(
         * tf.reduce_mean(tf.reduce_sum(dz * uds, axis=1), axis=(-1, -2))
     )
 
-    #        print(C_shear[0].numpy(),C_slid[0].numpy(),C_grav[0].numpy(),C_front[0].numpy())
+    # if activae this applies the stress condition along the calving front
+    if iflo_cf_cond:
+        
+        lsurf = usurf - thk
+        
+    #   Check formula (17) in [Jouvet and Graeser 2012]
+        P = tf.where(lsurf<0, 0.5 * 10 ** (-6) * 9.81 * 910 * ( thk**2 - (1000/910)*lsurf**2 ) , 0.0)
+        
+        if len(iflo_cf_eswn) == 0:
+            thkext = tf.pad(thk,[[0,0],[1,1],[1,1]],"CONSTANT",constant_values=1)
+        else:
+            thkext = thk
+            thkext = tf.pad(thkext,[[0,0],[1,0],[0,0]],"CONSTANT",constant_values=1.0*('S' not in iflo_cf_eswn))
+            thkext = tf.pad(thkext,[[0,0],[0,1],[0,0]],"CONSTANT",constant_values=1.0*('N' not in iflo_cf_eswn))
+            thkext = tf.pad(thkext,[[0,0],[0,0],[1,0]],"CONSTANT",constant_values=1.0*('W' not in iflo_cf_eswn))
+            thkext = tf.pad(thkext,[[0,0],[0,0],[0,1]],"CONSTANT",constant_values=1.0*('E' not in iflo_cf_eswn)) 
+        
+        # this permits to locate the calving front in a cell in the 4 directions
+        CF_W = tf.where((thk>0)&(thkext[:,1:-1,:-2]==0),1.0,0.0)
+        CF_E = tf.where((thk>0)&(thkext[:,1:-1,2:]==0),1.0,0.0) 
+        CF_S = tf.where((thk>0)&(thkext[:,:-2,1:-1]==0),1.0,0.0)
+        CF_N = tf.where((thk>0)&(thkext[:,2:,1:-1]==0),1.0,0.0)
 
-    return tf.reduce_mean(C_shear + C_slid + C_grav)  # * dX[:,0,0]**2
+        if Nz > 1:
+            # Blatter-Pattyn
+            dz0 = tf.stack([tf.ones_like(thk) * z for z in temd], axis=1)
+            C_front = (
+                tf.reduce_sum( P * tf.reduce_sum(dz0 * _stag2(U), axis=1) * CF_W, axis=(-2,-1) ) 
+                - tf.reduce_sum( P * tf.reduce_sum(dz0 * _stag2(U), axis=1) * CF_E, axis=(-2,-1) ) 
+                + tf.reduce_sum( P * tf.reduce_sum(dz0 * _stag2(V), axis=1) * CF_S, axis=(-2,-1) ) 
+                - tf.reduce_sum( P * tf.reduce_sum(dz0 * _stag2(V), axis=1) * CF_N, axis=(-2,-1) ) 
+            ) * dX[:, 0, 0]
+        else:
+            # SSA
+            C_front = (
+                tf.reduce_sum(P * U * CF_W, axis=(-2,-1) ) 
+                - tf.reduce_sum(P * U * CF_E, axis=(-2,-1) ) 
+                + tf.reduce_sum(P * V * CF_S, axis=(-2,-1) ) 
+                - tf.reduce_sum(P * V * CF_N, axis=(-2,-1) ) 
+            ) * dX[:, 0, 0]
+    
+        C_front = C_front / ( tf.reduce_sum(tf.ones_like(thk),axis=(-2,-1)) * dX[:, 0, 0]**2 )
+        
+    else:
+        C_front = tf.zeros_like(C_shear)
+
+#    print(C_shear[0].numpy(),C_slid[0].numpy(),C_grav[0].numpy(),C_front[0].numpy())
+
+    return tf.reduce_mean(C_shear + C_slid + C_grav + C_front)
 
 
 # @tf.function(experimental_relax_shapes=True)
@@ -866,13 +952,15 @@ def _update_iceflow_emulated(params, state):
 
     X = fieldin_to_X(params, fieldin)
 
-    if params.iflo_exclude_borders:
-        X = tf.pad(X, [[0, 0], [1, 1], [1, 1], [0, 0]], "SYMMETRIC")
+    if params.iflo_exclude_borders>0:
+        iz = params.iflo_exclude_borders
+        X = tf.pad(X, [[0, 0], [iz, iz], [iz, iz], [0, 0]], "SYMMETRIC")
 
     Y = state.iceflow_model(X)
 
-    if params.iflo_exclude_borders:
-        Y = Y[:, 1:-1, 1:-1, :]
+    if params.iflo_exclude_borders>0:
+        iz = params.iflo_exclude_borders
+        Y = Y[:, iz:-iz, iz:-iz, :]
 
     Ny, Nx = state.thk.shape
     N = params.iflo_Nz
@@ -921,6 +1009,8 @@ def _update_iceflow_emulator(params, state):
             state.it < 0
         ) * params.iflo_retrain_emulator_nbit_init
 
+        iz = params.iflo_exclude_borders 
+
         for epoch in range(nbit):
             cost_emulator = tf.Variable(0.0)
 
@@ -928,7 +1018,10 @@ def _update_iceflow_emulator(params, state):
                 with tf.GradientTape() as t:
                     Y = state.iceflow_model(X[i : i + 1, :, :, :])
 
-                    COST = iceflow_energy_XY(params, X[i : i + 1, :, :, :], Y)
+                    if iz>0:
+                        COST = iceflow_energy_XY(params, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
+                    else:
+                        COST = iceflow_energy_XY(params, X[i : i + 1, :, :, :], Y[:, :, :, :])
 
                     cost_emulator = cost_emulator + COST
 

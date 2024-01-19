@@ -5,6 +5,8 @@ import numpy as np
 import os, sys, shutil
 import json
 from types import SimpleNamespace
+
+import pandas as pd
 import xarray as xr
 
 
@@ -22,6 +24,7 @@ def update_anim_plotly(params, state):
 
 def finalize_anim_plotly(params, state):
     import plotly.graph_objects as go
+    import plotly.express as px
     import math
     from dash import Dash, dcc, html, Input, Output
 
@@ -38,7 +41,7 @@ def finalize_anim_plotly(params, state):
                     html.Div(
                         children=[
                             dcc.Dropdown(
-                                ["thickness [m]", "velocity [m/a]", "SMB [m]"],
+                                ["thickness [m]", "velocity [m/a]", "SMB [m]", "slidingco", "arrhenius"],
                                 "thickness [m]",
                                 id="property",
                             )
@@ -60,6 +63,17 @@ def finalize_anim_plotly(params, state):
                     ),
                     # 3D surface plot
                     dcc.Graph(id="mnt_surface", figure=fig),
+                    html.Div(
+                        children=[
+                            dcc.Dropdown(
+                                ["volume", "velocity", "SMB",],
+                                "volume",
+                                id="property_change_plot",
+                            )
+                        ],
+                        style={"margin-bottom": "10px"},
+                    ),
+                    dcc.Graph(id="change_plot")
                 ],
                 style={"width": "95%", "height": "800px", "display": "inline-block"},
             ),
@@ -92,6 +106,28 @@ def finalize_anim_plotly(params, state):
         },
     )
 
+    path_to_json_saved = "params_saved.json"
+    with open(path_to_json_saved, "r") as json_file:
+        json_text = json_file.read()
+    params = json.loads(json_text, object_hook=lambda d: SimpleNamespace(**d))
+
+    # read output.nc
+    ds = xr.open_dataset(
+        os.path.join(params.working_dir, "output.nc"), engine="netcdf4"
+    )
+    @app.callback(
+        Output("change_plot", "figure"),
+        Input("property", "value"),
+    )
+    def update_plot(property):
+        time = np.array(ds.time)
+        thicknesses = np.array(ds.thk)
+        volume = np.sum(thicknesses, axis=(1,2))
+        df = pd.DataFrame({'time': time, 'volume': volume})
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x = df['time'], y = df['volume']))
+        return fig
+
     ### update graph everytime an input is changed
     @app.callback(
         Output("mnt_surface", "figure"),
@@ -100,16 +136,6 @@ def finalize_anim_plotly(params, state):
         Input("camera_height", "drag_value"),
     )
     def updata_graph(property, camera_angle, camera_height):
-        # load params
-        path_to_json_saved = "params_saved.json"
-        with open(path_to_json_saved, "r") as json_file:
-            json_text = json_file.read()
-        params = json.loads(json_text, object_hook=lambda d: SimpleNamespace(**d))
-
-        # read output.nc
-        ds = xr.open_dataset(
-            os.path.join(params.working_dir, "output.nc"), engine="netcdf4"
-        )
 
         # get attributes from ds
         bedrock = np.array(ds.topg[0])
@@ -132,7 +158,7 @@ def finalize_anim_plotly(params, state):
             color_scale = "magma"
             max_property_map = np.max(property_maps)
             min_property_map = np.min(property_maps)
-        else:
+        elif property == "slidingco ":
             property_maps = smbs
             color_scale = "rdbu"
             max_property_map = np.max(property_maps)

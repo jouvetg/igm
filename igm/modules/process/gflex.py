@@ -21,6 +21,12 @@ def params_gflex(parser):
         default=50000,
         help="Default value for Te (Elastic thickness [m]) if not given as ncdf file",
     )
+    parser.add_argument(
+        "--gflex_dx",
+        type=float,
+        default=2000,
+        help="Default resolution for computing isostasy (m).",
+    )
 
 
 def initialize_gflex(params, state):
@@ -34,6 +40,7 @@ def initialize_gflex(params, state):
 
     state.flex.giafreq = params.gflex_update_freq
     state.flex.giatime = params.gflex_update_freq
+    state.flex.dx = params.gflex_dx
     state.flex.Quiet = False
     state.flex.Method = "FD"
     state.flex.PlateSolutionType = "vWC1994"
@@ -43,8 +50,7 @@ def initialize_gflex(params, state):
     state.flex.nu = 0.25
     state.flex.rho_m = 3300.0
     state.flex.rho_fill = 0
-    state.flex.dx = state.dx.numpy()
-    state.flex.dy = state.dx.numpy()
+    state.flex.dy = state.flex.dx
     state.flex.BC_W = "Periodic"
     state.flex.BC_E = "Periodic"
     state.flex.BC_S = "Periodic"
@@ -100,12 +106,12 @@ def update_gflex(params, state):
         state.flex.qs = state.thk.numpy() * 917 * 9.81  # Populating this template
         
         if state.dx < 2000:
-            state.flex.Te, target_points,points, x, y = downsample_array_to_resolution(state.flex.Te, state.flex.dx, 2000)
-            state.flex.qs, target_points,points, x, y = downsample_array_to_resolution(state.flex.qs, state.flex.dx, 2000)
+            state.flex.Te, target_points,points, x, y = downsample_array_to_resolution(state.flex.Te, state.dx, state.flex.dx)
+            state.flex.qs, target_points,points, x, y = downsample_array_to_resolution(state.flex.qs, state.dx, state.flex.dx)
             state.flex.initialize()
             state.flex.run()
             state.flex.finalize()
-            state.flex.w = upsample_result_to_original_resolution(state.flex.w, target_points, points, x, y, state.flex.dx)
+            state.flex.w = upsample_result_to_original_resolution(state.flex.w, target_points, points, x, y, state.dx)
             state.flex.w = np.float32(state.flex.w)
         else:
             state.flex.initialize()

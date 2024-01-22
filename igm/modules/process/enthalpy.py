@@ -72,6 +72,32 @@ def params_enthalpy(parser):
         default=30,
         help="Till friction angle in the Mohr-Coulomb friction law [deg]",
     )
+
+    parser.add_argument(
+        "--enth_till_friction_angle_bed_min",
+        type=float,
+        default=None,
+        help="enth_till_friction_angle_bed_min",
+    )
+    parser.add_argument(
+        "--enth_till_friction_angle_bed_max",
+        type=float,
+        default=None,
+        help="enth_till_friction_angle_bed_max",
+    )
+    parser.add_argument(
+        "--enth_till_friction_angle_phi_min",
+        type=float,
+        default=15,
+        help="enth_till_friction_angle_phi_min",
+    )
+    parser.add_argument(
+        "--enth_till_friction_angle_phi_max",
+        type=float,
+        default=45,
+        help="enth_till_friction_angle_phi_max",
+    )
+    
     parser.add_argument(
         "--enth_uthreshold", type=float, default=100, help="uthreshold [m/y]"
     )
@@ -128,6 +154,8 @@ def initialize_enthalpy(params, state):
             tf.ones_like(state.thk) * params.enth_default_bheatflx
         )
 
+    state.phi = compute_phi(params,state)
+
     # update the sliding coefficient
     state.slidingco = compute_slidingco_tf(
         state.thk,
@@ -135,7 +163,7 @@ def initialize_enthalpy(params, state):
         params.iflo_ice_density,
         params.iflo_gravity_cst,
         params.enth_till_wat_max,
-        params.enth_till_friction_angle,
+        state.phi,
         params.iflo_exp_weertman,
         params.enth_uthreshold,
         params.iflo_new_friction_param,
@@ -262,6 +290,8 @@ def update_enthalpy(params, state):
     )
     state.tillwat = tf.clip_by_value(state.tillwat, 0.0, params.enth_till_wat_max)
     state.tillwat = tf.where(state.thk > 0, state.tillwat, 0.0)
+    
+    state.phi = compute_phi(params,state)
 
     # update the sliding coefficient
     state.slidingco = compute_slidingco_tf(
@@ -270,7 +300,7 @@ def update_enthalpy(params, state):
         params.iflo_ice_density,
         params.iflo_gravity_cst,
         params.enth_till_wat_max,
-        params.enth_till_friction_angle,
+        state.phi,
         params.iflo_exp_weertman,
         params.enth_uthreshold,
         params.iflo_new_friction_param,
@@ -387,6 +417,23 @@ def compute_slidingco_tf(
 
     return slidingco
 
+def compute_phi(params,state):
+
+    if params.enth_till_friction_angle_bed_min == None:
+        return params.enth_till_friction_angle * tf.ones_like(state.thk)
+    else:
+        return tf.where(
+            state.topg <= params.enth_till_friction_angle_bed_min,
+            params.enth_till_friction_angle_phi_min,
+            tf.where(
+                state.topg >= params.enth_till_friction_angle_bed_max,
+                params.enth_till_friction_angle_phi_max,
+                params.enth_till_friction_angle_phi_min
+                + (params.enth_till_friction_angle_phi_max - params.enth_till_friction_angle_phi_min)
+                * (state.topg                              - params.enth_till_friction_angle_bed_min)
+                / (params.enth_till_friction_angle_bed_max - params.enth_till_friction_angle_bed_min),
+            ),
+        )
 
 @tf.function()
 def compute_strainheat_tf(U, V, arrhenius, dx, dz, exp_glen, thr):

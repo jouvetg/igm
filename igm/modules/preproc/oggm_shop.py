@@ -136,6 +136,14 @@ def initialize_oggm_shop(params, state):
         thkinit = np.where(np.isnan(thkinit), 0, thkinit)
         thkinit = np.where(icemaskobs, thkinit, 0)
         vars_to_save += ["thkinit"]
+        
+    if "hugonnet_dhdt" in nc.variables:
+        dhdt = np.flipud(
+            np.squeeze(nc.variables["hugonnet_dhdt"]).astype("float32")
+        )
+        dhdt = np.where(np.isnan(dhdt), 0, dhdt)
+        dhdt = np.where(icemaskobs, dhdt, 0)
+        vars_to_save += ["dhdt"]
 
     thkobs = np.zeros_like(thk) * np.nan
 
@@ -179,6 +187,7 @@ def initialize_oggm_shop(params, state):
         var_info["uvelsurfobs"] = ["x surface velocity of ice", "m/y"]
         var_info["vvelsurfobs"] = ["y surface velocity of ice", "m/y"]
         var_info["icemask"] = ["Ice mask", "no unit"]
+        var_info["dhdt"] = ["Ice thickness change", "m/y"]
 
         nc = Dataset(
             os.path.join(params.working_dir, "input_saved.nc"), "w", format="NETCDF4"

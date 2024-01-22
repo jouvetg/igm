@@ -10,15 +10,15 @@
   "modules_postproc": ["write_ncdf",
                        "plot2d",
                        "print_info",
-                       "print_comp"],
+                       "print_comp", "anim_plotly"],
   "smb_simple_array": [
                         ["time", "gradabl", "gradacc", "ela", "accmax"],
                         [ 1900,      0.009,     0.005,  2800,      2.0],
                         [ 2000,      0.009,     0.005,  2900,      2.0],
                         [ 2100,      0.009,     0.005,  3300,      2.0]
                       ],
-  "time_start": 1900.0,
-  "time_end": 2000.0,
+  "time_start": 2000.0,
+  "time_end": 2100.0,
   "plt2d_live": true,
   "time_save": 10.0
 }

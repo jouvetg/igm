@@ -17,10 +17,10 @@
     "write_ncdf",
     "plot2d",
     "print_info",
-    "print_comp"
+    "print_comp", "anim_plotly"
   ],
   "time_start": 1880.0,
-  "time_end": 2020.0,
+  "time_end": 2100.0,
   "time_save": 5.0,
   "plt2d_live": true,
   "iflo_init_slidingco": 0.0595,

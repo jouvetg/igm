@@ -191,6 +191,12 @@ def initialize_optimize(params, state):
 
     if params.opti_init_zero_thk:
         state.thk = tf.zeros_like(state.thk)
+        
+    # this is a density matrix that will be used to weight the cost function
+    state.dens_thkobs = create_density_matrix(state.thkobs, kernel_size=5)    
+    state.dens_thkobs = tf.where(state.dens_thkobs>0, 1.0/state.dens_thkobs, 0.0)
+    state.dens_thkobs = tf.where(tf.math.is_nan(state.thkobs),0.0,state.dens_thkobs)
+    state.dens_thkobs = state.dens_thkobs / tf.reduce_mean(state.dens_thkobs[state.dens_thkobs>0])
 
     ###### PREPARE OPIMIZER
 
@@ -273,7 +279,7 @@ def initialize_optimize(params, state):
             # misfit between ice thickness profiles
             if "thk" in params.opti_cost:
                 ACT = ~tf.math.is_nan(state.thkobs)
-                COST_H = 0.5 * tf.reduce_mean(
+                COST_H = 0.5 * tf.reduce_mean( state.dens_thkobs[ACT] * 
                     ((state.thkobs[ACT] - state.thk[ACT]) / params.opti_thkobs_std) ** 2
                 )
             else:
@@ -557,6 +563,22 @@ def finalize_optimize(params, state):
     if params.iflo_save_model:
         save_iceflow_model(params, state) 
 
+
+def create_density_matrix(data, kernel_size):
+    # Convert data to binary mask (1 for valid data, 0 for NaN)
+    binary_mask = tf.where(tf.math.is_nan(data), tf.zeros_like(data), tf.ones_like(data))
+
+    # Create a kernel for convolution (all ones)
+    kernel = tf.ones((kernel_size, kernel_size, 1, 1), dtype=binary_mask.dtype)
+
+    # Apply convolution to count valid data points in the neighborhood
+    density = tf.nn.conv2d(tf.expand_dims(tf.expand_dims(binary_mask, 0), -1), 
+                           kernel, strides=[1, 1, 1, 1], padding='SAME')
+
+    # Remove the extra dimensions added for convolution
+    density = tf.squeeze(density)
+
+    return density
 
 def _compute_rms_std_optimization(state, i):
     I = state.icemaskobs > 0  # == 1

@@ -81,7 +81,7 @@ def initialize(params, state):
     if hasattr(state, "logger"):
         state.logger.info("Prepare data using oggm and glathida")
 
-    nc = Dataset(os.path.join(params.working_dir, params.oggm_RGI_ID, "gridded_data.nc"), "r+")
+    nc = Dataset(os.path.join(params.oggm_RGI_ID, "gridded_data.nc"), "r+")
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.flip(np.squeeze(nc.variables["y"]).astype("float32"))
@@ -180,9 +180,7 @@ def initialize(params, state):
         var_info["vvelsurfobs"] = ["y surface velocity of ice", "m/y"]
         var_info["icemask"] = ["Ice mask", "no unit"]
 
-        nc = Dataset(
-            os.path.join(params.working_dir, "input_saved.nc"), "w", format="NETCDF4"
-        )
+        nc = Dataset( "input_saved.nc", "w", format="NETCDF4" )
 
         nc.createDimension("y", len(y))
         yn = nc.createVariable("y", np.dtype("float32").char, ("y",))
@@ -364,17 +362,13 @@ def _oggm_util(RGIs, params):
                                                 gdirs, informed_threestep=True)
 
     source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
-    destination_folder = os.path.join(params.working_dir, params.oggm_RGI_ID)
+    destination_folder = params.oggm_RGI_ID
 
     if os.path.exists(destination_folder):
         shutil.rmtree(destination_folder)
     shutil.copytree(source_folder, destination_folder)
 
-    os.system(
-        "echo rm -r "
-        + os.path.join(params.working_dir, params.oggm_RGI_ID)
-        + " >> clean.sh"
-    )
+    os.system( "echo rm -r " + params.oggm_RGI_ID + " >> clean.sh" )
 
 
 def _read_glathida(x, y, usurf, proj, path_glathida, state):

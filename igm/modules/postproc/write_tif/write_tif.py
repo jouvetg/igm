@@ -29,9 +29,7 @@ def update(params, state):
 
     if state.saveresult:
         for var in params.wtif_vars_to_save:
-            file = os.path.join(
-                params.working_dir, var + "-" + str(int(state.t)).zfill(6) + ".tif"
-            )
+            file = var + "-" + str(int(state.t)).zfill(6) + ".tif"
 
             os.system("echo rm " + file + " >> clean.sh")
 

@@ -118,11 +118,11 @@ def initialize(params, state):
         str(params.iflo_dim_arrhenius) + "_" + str(int(params.iflo_new_friction_param))
     )
 
-    os.makedirs(os.path.join(params.working_dir, state.direct_name), exist_ok=True)
+    os.makedirs( state.direct_name, exist_ok=True)
 
     os.system(
         "echo rm -r "
-        + os.path.join(params.working_dir, state.direct_name)
+        + state.direct_name
         + " >> clean.sh"
     )
 
@@ -233,7 +233,7 @@ def compute_solutions(params, state):
         )
 
         # define path
-        path = os.path.join(params.working_dir, state.direct_name, code)
+        path = os.path.join(state.direct_name, code)
         os.makedirs(path, exist_ok=True)
 
         fig = plt.figure(figsize=(10, 10))
@@ -396,9 +396,7 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
             optimizer.lr = params.iflo_retrain_emulator_lr * (0.9 ** (epoch / 100))
 
         if epoch % (params.epochs // 5) == 0:
-            pp = os.path.join(
-                params.working_dir, state.direct_name, "model-" + str(epoch) + ".h5"
-            )
+            pp = os.path.join( state.direct_name, "model-" + str(epoch) + ".h5" )
             state.iceflow_model.save(pp)
 
         if epoch % params.freq_test == 0:
@@ -426,7 +424,7 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
                     + str(int(par[4]))
                 )
 
-                path = os.path.join(params.working_dir, state.direct_name, code)
+                path = os.path.join(state.direct_name, code)
 
                 YP = state.iceflow_model(X)
 
@@ -493,7 +491,7 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
     plt.legend()
     plt.tight_layout()
     plt.savefig(
-        os.path.join(params.working_dir, state.direct_name, "MISFIT.png"), pad_inches=0
+        os.path.join(state.direct_name, "MISFIT.png"), pad_inches=0
     )
     plt.close("all")
 
@@ -520,13 +518,13 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
     plt.legend()
     plt.tight_layout()
     plt.savefig(
-        os.path.join(params.working_dir, state.direct_name, "MISFIT_CO.png"),
+        os.path.join(state.direct_name, "MISFIT_CO.png"),
         pad_inches=0,
     )
     plt.close("all")
 
     state.iceflow_model.save(
-        os.path.join(params.working_dir, state.direct_name, "model.h5")
+        os.path.join(state.direct_name, "model.h5")
     )
 
 

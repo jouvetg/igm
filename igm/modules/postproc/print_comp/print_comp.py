@@ -41,16 +41,12 @@ def finalize(params, state):
     )
 
     print("Memory statistics report:")
-    with open(os.path.join(params.working_dir, "memory-statistics.txt"), "w") as f:
+    with open("memory-statistics.txt", "w") as f:
         for key, value in size_of_tensor.items():
             print("     %24s  |  size : %8.4f Gb " % (key, value), file=f)
             print("     %24s  |  size : %8.4f Gb  " % (key, value))
 
-    os.system(
-        "echo rm "
-        + os.path.join(params.working_dir, "memory-statistics.txt")
-        + " >> clean.sh"
-    )
+    os.system("echo rm " + "memory-statistics.txt" + " >> clean.sh" )
 
     _plot_memory_pie(params, state)
 
@@ -61,9 +57,7 @@ def finalize(params, state):
     state.tcomp_all = [np.sum([np.sum(getattr(state, m)) for m in modules])]
 
     print("Computational statistics report:")
-    with open(
-        os.path.join(params.working_dir, "computational-statistics.txt"), "w"
-    ) as f:
+    with open("computational-statistics.txt", "w") as f:
         for m in modules:
             CELA = (
                 m[6:],
@@ -81,11 +75,7 @@ def finalize(params, state):
                 % CELA
             )
 
-    os.system(
-        "echo rm "
-        + os.path.join(params.working_dir, "computational-statistics.txt")
-        + " >> clean.sh"
-    )
+    os.system( "echo rm " + "computational-statistics.txt" + " >> clean.sh" )
 
     _plot_computational_pie(params, state)
 
@@ -129,15 +119,10 @@ def _plot_computational_pie(params, state):
     plt.setp(autotexts, size=8, weight="bold")
     #    ax.set_title("Matplotlib bakery: A pie")
     plt.tight_layout()
-    plt.savefig(os.path.join(params.working_dir, "computational-pie.png"), pad_inches=0)
+    plt.savefig("computational-pie.png", pad_inches=0)
     plt.close("all")
 
-    os.system(
-        "echo rm "
-        + os.path.join(params.working_dir, "computational-pie.png")
-        + " >> clean.sh"
-    )
-
+    os.system("echo rm computational-pie.png >> clean.sh")
 
 def _plot_memory_pie(params, state):
     """
@@ -185,9 +170,7 @@ def _plot_memory_pie(params, state):
     plt.setp(autotexts, size=8, weight="bold")
     #    ax.set_title("Matplotlib bakery: A pie")
     plt.tight_layout()
-    plt.savefig(os.path.join(params.working_dir, "memory-pie.png"), pad_inches=0)
+    plt.savefig("memory-pie.png", pad_inches=0)
     plt.close("all")
 
-    os.system(
-        "echo rm " + os.path.join(params.working_dir, "memory-pie.png") + " >> clean.sh"
-    )
+    os.system("echo rm memory-pie.png >> clean.sh")

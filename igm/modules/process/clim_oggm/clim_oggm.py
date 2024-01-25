@@ -54,7 +54,7 @@ def params(parser):
 def initialize(params, state):
     # load the given parameters from the json file
     
-    with open(os.path.join(params.working_dir, params.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
+    with open(os.path.join(params.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
         jsonString = json_file.read()
 
     oggm_mb_calib = json.loads(jsonString)
@@ -67,7 +67,7 @@ def initialize(params, state):
 
     # load climate data from netcdf file climate_historical.nc
     nc = Dataset(
-        os.path.join(params.working_dir, params.oggm_RGI_ID, "climate_historical.nc")
+        os.path.join(params.oggm_RGI_ID, "climate_historical.nc")
     )
 
     time = np.squeeze(nc.variables["time"]).astype("float32")  # unit : year
@@ -116,7 +116,7 @@ def initialize(params, state):
 
     if params.clim_oggm_clim_trend_array == []:
         state.climpar = np.loadtxt(
-            os.path.join(params.working_dir, params.clim_oggm_file),
+            params.clim_oggm_file,
             skiprows=1,
             dtype=np.float32,
         )

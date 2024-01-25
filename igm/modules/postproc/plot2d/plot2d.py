@@ -59,11 +59,7 @@ def initialize(params, state):
     state.ax.axis("off")
     state.ax.set_aspect("equal")
 
-    os.system(
-        "echo rm "
-        + os.path.join(params.working_dir, params.plt2d_var + "*.png")
-        + " >> clean.sh"
-    )
+    os.system("echo rm " + params.plt2d_var + "*.png" + " >> clean.sh")
 
 
 def update(params, state):
@@ -120,10 +116,7 @@ def update(params, state):
                 display(state.fig)
         else:
             plt.savefig(
-                os.path.join(
-                    params.working_dir,
-                    params.plt2d_var + "-" + str(state.t.numpy()).zfill(4) + ".png",
-                ),
+                params.plt2d_var + "-" + str(state.t.numpy()).zfill(4) + ".png",
                 bbox_inches="tight",
                 pad_inches=0.2,
             )

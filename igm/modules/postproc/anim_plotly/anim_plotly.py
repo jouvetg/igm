@@ -107,9 +107,7 @@ def finalize(params, state):
         params = json.loads(json_text, object_hook=lambda d: SimpleNamespace(**d))
 
         # read output.nc
-        ds = xr.open_dataset(
-            os.path.join(params.working_dir, "output.nc"), engine="netcdf4"
-        )
+        ds = xr.open_dataset("output.nc", engine="netcdf4")
 
         # get attributes from ds
         bedrock = np.array(ds.topg[0])

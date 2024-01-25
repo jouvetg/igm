@@ -52,7 +52,7 @@ def params(parser):
 def initialize(params, state):
     import rasterio
 
-    files = glob.glob(os.path.join(params.working_dir, "*.tif"))
+    files = glob.glob("*.tif")
 
     for file in files:
         var = os.path.split(file)[-1].split(".")[0]

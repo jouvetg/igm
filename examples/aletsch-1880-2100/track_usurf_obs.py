@@ -27,7 +27,7 @@ def params(parser):
 
 def initialize(params,state):
     
-    nc = Dataset( os.path.join(params.working_dir, 'past_surf.nc'), "r" )
+    nc = Dataset('past_surf.nc', "r" )
 #    for y in [1880,1926,1957,1980,1999,2009,2017]:
 #        vars(state)['surf_'+str(y)] = np.squeeze( nc.variables['surf_'+str(y)] ).astype("float32") 
     for v in nc.variables:

@@ -37,7 +37,7 @@ def initialize(params, state):
     state.tlast_mb = tf.Variable(-1.0e5000)
 
     # load the given parameters from the json file
-    with open(os.path.join(params.working_dir, params.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
+    with open(os.path.join(params.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
         jsonString = json_file.read()
 
     oggm_mb_calib = json.loads(jsonString)

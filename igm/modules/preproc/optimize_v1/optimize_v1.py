@@ -18,6 +18,13 @@ from igm.modules.process.iceflow_v1.iceflow_v1 import initialize as initialize_i
 
 def params(parser):
     parser.add_argument(
+        "--working_dir",
+        type=str,
+        default="",
+        help="Working directory (default empty string)",
+    )
+    
+    parser.add_argument(
         "--opti_vars_to_save",
         type=list,
         default=[

@@ -103,9 +103,7 @@ def initialize(params,state):
         load smb data to run the Aletsch Glacier simulation 
     """
 
-    nc = Dataset(
-        os.path.join(params.working_dir, 'massbalance.nc'), "r"
-    )
+    nc = Dataset('massbalance.nc', "r")
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")
 
@@ -117,7 +115,7 @@ def initialize(params,state):
     nc.close()
     
     
-    nc = Dataset( os.path.join(params.working_dir, 'bassin.nc'), "r" )
+    nc = Dataset('bassin.nc', "r" )
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")
 
@@ -146,7 +144,7 @@ def initialize(params,state):
     # read mass balance parameters
     state.mb_parameters = tf.Variable(
         np.loadtxt(
-            os.path.join(params.working_dir, "mbparameter.dat"),
+            "mbparameter.dat",
             skiprows=2,
             dtype=np.float32,
         )

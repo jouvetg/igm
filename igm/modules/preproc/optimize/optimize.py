@@ -527,14 +527,14 @@ def initialize(params, state):
     plt.close("all")
 
     np.savetxt(
-        os.path.join(params.working_dir, "costs.dat"),
+        "costs.dat",
         np.stack(state.costs),
         fmt="%.10f",
         header="        COST_U        COST_H      COST_D       COST_S       REGU_H       REGU_S          HPO           COSTGLEN ",
     )
 
     np.savetxt(
-        os.path.join(params.working_dir, "rms_std.dat"),
+        "rms_std.dat",
         np.stack(
             [
                 state.rmsthk,
@@ -553,10 +553,10 @@ def initialize(params, state):
     )
 
     os.system(
-        "echo rm " + os.path.join(params.working_dir, "rms_std.dat") + " >> clean.sh"
+        "echo rm " + "rms_std.dat" + " >> clean.sh"
     )
     os.system(
-        "echo rm " + os.path.join(params.working_dir, "costs.dat") + " >> clean.sh"
+        "echo rm " + "costs.dat" + " >> clean.sh"
     )
 
     # Flag so we can check if initialize was already called
@@ -644,7 +644,7 @@ def _update_ncdf_optimize(params, state, it):
 
     if it == 0:
         nc = Dataset(
-            os.path.join(params.working_dir, "optimize.nc"),
+            "optimize.nc",
             "w",
             format="NETCDF4",
         )
@@ -678,18 +678,10 @@ def _update_ncdf_optimize(params, state, it):
 
         nc.close()
 
-        os.system(
-            "echo rm "
-            + os.path.join(params.working_dir, "optimize.nc")
-            + " >> clean.sh"
-        )
+        os.system( "echo rm " + "optimize.nc" + " >> clean.sh" )
 
     else:
-        nc = Dataset(
-            os.path.join(params.working_dir, "optimize.nc"),
-            "a",
-            format="NETCDF4",
-        )
+        nc = Dataset("optimize.nc", "a", format="NETCDF4", )
 
         d = nc.variables["iterations"][:].shape[0]
 
@@ -707,7 +699,7 @@ def _output_ncdf_optimize_final(params, state):
     """
 
     nc = Dataset(
-        os.path.join(params.working_dir, params.opti_save_result_in_ncdf),
+        params.opti_save_result_in_ncdf,
         "w",
         format="NETCDF4",
     )
@@ -736,7 +728,7 @@ def _output_ncdf_optimize_final(params, state):
 
     os.system(
         "echo rm "
-        + os.path.join(params.working_dir, params.opti_save_result_in_ncdf)
+        + params.opti_save_result_in_ncdf
         + " >> clean.sh"
     )
 
@@ -758,12 +750,12 @@ def _plot_cost_functions(params, state, costs):
     plt.ylim(0, 1)
     plt.legend()
 
-    plt.savefig(os.path.join(params.working_dir, "convergence.png"), pad_inches=0)
+    plt.savefig("convergence.png", pad_inches=0)
     plt.close("all")
 
     os.system(
         "echo rm "
-        + os.path.join(params.working_dir, "convergence.png")
+        + "convergence.png"
         + " >> clean.sh"
     )
 
@@ -942,15 +934,10 @@ def _update_plot_inversion(params, state, i):
             clear_output(wait=True)
             display(state.fig)
     else:
-        plt.savefig(
-            os.path.join(params.working_dir, "resu-opti-" + str(i).zfill(4) + ".png"),
-            pad_inches=0,
-        )
+        plt.savefig("resu-opti-" + str(i).zfill(4) + ".png", pad_inches=0 )
         plt.close("all")
 
-        os.system(
-            "echo rm " + os.path.join(params.working_dir, "*.png") + " >> clean.sh"
-        )
+        os.system( "echo rm " + "*.png" + " >> clean.sh" )
 
 
 def _update_plot_inversion_simple(params, state, i):
@@ -1047,13 +1034,13 @@ def _update_plot_inversion_simple(params, state, i):
             display(state.fig)
     else:
         plt.savefig(
-            os.path.join(params.working_dir, "resu-opti-" + str(i).zfill(4) + ".png"),
+            "resu-opti-" + str(i).zfill(4) + ".png",
             pad_inches=0,
         )
         plt.close("all")
 
         os.system(
-            "echo rm " + os.path.join(params.working_dir, "*.png") + " >> clean.sh"
+            "echo rm " + "*.png" + " >> clean.sh"
         )
 
 

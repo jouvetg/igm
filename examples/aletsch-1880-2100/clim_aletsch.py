@@ -35,7 +35,7 @@ def  initialize(params,state):
 
     # read temperature and precipitation data from temp_prec.dat
     temp_prec = np.loadtxt(
-        os.path.join(params.working_dir, "temp_prec.dat"),
+        "temp_prec.dat",
         dtype=np.float32,
         skiprows=2,
     )

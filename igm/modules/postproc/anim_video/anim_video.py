@@ -24,9 +24,7 @@ def finalize(params, state):
     import xarray as xr
     from matplotlib import animation
 
-    ds = xr.open_dataset(
-        os.path.join(params.working_dir, "output.nc"), engine="netcdf4"
-    )
+    ds = xr.open_dataset("output.nc", engine="netcdf4")
 
     tas = ds.thk
 
@@ -63,8 +61,6 @@ def finalize(params, state):
         interval=500,  # ms between frames
     )
 
-    ani.save(os.path.join(params.working_dir, "animation.mp4"))
+    ani.save("animation.mp4")
 
-    os.system(
-        "echo rm " + os.path.join(params.working_dir, "animation.mp4") + " >> clean.sh"
-    )
+    os.system("echo rm " + "animation.mp4" + " >> clean.sh")

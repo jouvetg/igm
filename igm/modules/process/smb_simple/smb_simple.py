@@ -34,7 +34,7 @@ def params(parser):
 def initialize(params, state):
     if params.smb_simple_array == []:
         state.smbpar = np.loadtxt(
-            os.path.join(params.working_dir, params.smb_simple_file),
+            params.smb_simple_file,
             skiprows=1,
             dtype=np.float32,
         )

@@ -63,7 +63,7 @@ def initialize(params, state):
     if hasattr(state, "logger"):
         state.logger.info("LOAD NCDF file")
 
-    nc = Dataset(os.path.join(params.working_dir, params.lncd_input_file), "r")
+    nc = Dataset(params.lncd_input_file, "r")
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")

@@ -30,12 +30,6 @@ def params_core():
     )  # automatically overrides repeated/older parameters! Vaid solution?
 
     parser.add_argument(
-        "--working_dir",
-        type=str,
-        default="",
-        help="Working directory (default empty string)",
-    )
-    parser.add_argument(
         "--param_file",
         type=str,
         default="params.json",
@@ -159,7 +153,7 @@ def add_logger(params, state) -> None:
     if params.logging_file == "":
         pathf = ""
     else:
-        pathf = os.path.join(params.working_dir, params.logging_file)
+        pathf = params.logging_file
 
     logging.basicConfig(
         filename=pathf,
@@ -359,7 +353,7 @@ def print_gpu_info() -> None:
 
 # Print parameters in screen and a dedicated file
 def print_params(params: Namespace) -> None:
-    param_file = os.path.join(params.working_dir, params.saved_params_filename)
+    param_file = params.saved_params_filename
     param_file = param_file + ".json"
     
     # load the given parameters

@@ -23,19 +23,15 @@ def params(parser):
 def initialize(params, state):
     state.tcomp_write_particles = []
 
-    directory = os.path.join(params.working_dir, "trajectories")
+    directory = "trajectories"
     if os.path.exists(directory):
         shutil.rmtree(directory)
     os.mkdir(directory)
 
-    os.system(
-        "echo rm -r "
-        + os.path.join(params.working_dir, "trajectories")
-        + " >> clean.sh"
-    )
+    os.system( "echo rm -r " + "trajectories" + " >> clean.sh" )
 
     if params.wpar_add_topography:
-        ftt = os.path.join(params.working_dir, "trajectories", "topg.csv")
+        ftt = os.path.join("trajectories", "topg.csv")
         array = tf.transpose(
             tf.stack(
                 [state.X[state.X > 0], state.Y[state.X > 0], state.topg[state.X > 0]]
@@ -49,7 +45,6 @@ def update(params, state):
         state.tcomp_write_particles.append(time.time())
 
         f = os.path.join(
-            params.working_dir,
             "trajectories",
             "traj-" + "{:06d}".format(int(state.t.numpy())) + ".csv",
         )
@@ -71,13 +66,12 @@ def update(params, state):
         )
         np.savetxt(f, array, delimiter=",", fmt="%.2f", header="Id,x,y,z,rh,t,englt")
 
-        ft = os.path.join(params.working_dir, "trajectories", "time.dat")
+        ft = os.path.join("trajectories", "time.dat")
         with open(ft, "a") as f:
             print(state.t.numpy(), file=f)
 
         if params.wpar_add_topography:
             ftt = os.path.join(
-                params.working_dir,
                 "trajectories",
                 "usurf-" + "{:06d}".format(int(state.t.numpy())) + ".csv",
             )

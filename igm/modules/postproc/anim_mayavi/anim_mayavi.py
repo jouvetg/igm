@@ -27,9 +27,7 @@ def finalize(params, state):
 
     plt.close("all")
 
-    ds = xr.open_dataset(
-        os.path.join(params.working_dir, "output.nc"), engine="netcdf4"
-    )
+    ds = xr.open_dataset("output.nc", engine="netcdf4")
 
     X, Y = np.meshgrid(ds.x, ds.y)
 
@@ -54,7 +52,7 @@ def finalize(params, state):
 
     VEC = hasattr(ds, "uvelsurf") & hasattr(ds, "vvelsurf") & hasattr(ds, "wvelsurf")
 
-    PAR = os.path.isdir(os.path.join(params.working_dir, "trajectories"))
+    PAR = os.path.isdir("trajectories")
 
     if VEC:
         quiv = mlab.quiver3d(
@@ -67,7 +65,7 @@ def finalize(params, state):
         )
 
     # if PAR:
-    #     f = os.path.join(params.working_dir, "trajectories",'traj-'+"{:06.0f}".format(TIME[0])+".csv")
+    #     f = os.path.join("trajectories",'traj-'+"{:06.0f}".format(TIME[0])+".csv")
     #     XYZ = np.loadtxt(f,skiprows=1,delimiter=',')
     #     pt3d = mlab.points3d(XYZ[:,1], XYZ[:,2], XYZ[:,3], colormap="RdBu",mode='point')
     #     pt3d.actor.property.point_size = 5
@@ -84,7 +82,7 @@ def finalize(params, state):
                 quiv.mlab_source.v = np.array(tf.expand_dims(ds.vvelsurf[i], axis=0))
                 quiv.mlab_source.w = np.array(tf.expand_dims(ds.wvelsurf[i], axis=0))
             # if PAR:
-            #     f = os.path.join(params.working_dir, "trajectories",'traj-'+"{:06.0f}".format(TIME[i])+".csv")
+            #     f = os.path.join("trajectories",'traj-'+"{:06.0f}".format(TIME[i])+".csv")
             #     XYZ = np.loadtxt(f,skiprows=1,delimiter=',')
             #     pt3d.mlab_source.x = XYZ[:,1]
             #     pt3d.mlab_source.y = XYZ[:,2]

@@ -1091,7 +1091,7 @@ def _update_iceflow_diagnostic(params, state):
 
         print(ERR)
 
-        with open(os.path.join(params.working_dir, "errors.txt"), "ab") as f:
+        with open("errors.txt", "ab") as f:
             np.savetxt(f, np.expand_dims(ERR, axis=0), delimiter=",", fmt="%5.5f")
 
 
@@ -1191,7 +1191,7 @@ def unet(params, nb_inputs, nb_outputs):
 
 
 def save_iceflow_model(params, state):
-    directory = os.path.join(params.working_dir, "iceflow-model")
+    directory = "iceflow-model"
 
     if os.path.exists(directory):
         shutil.rmtree(directory)

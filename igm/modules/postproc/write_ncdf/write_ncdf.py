@@ -43,11 +43,7 @@ def params(parser):
 def initialize(params, state):
     state.tcomp_write_ncdf = []
 
-    os.system(
-        "echo rm "
-        + os.path.join(params.working_dir, params.wncd_output_file)
-        + " >> clean.sh"
-    )
+    os.system("echo rm " + params.wncd_output_file + " >> clean.sh")
 
     # give information on variables for output ncdf, TODO: IMPROVE
     state.var_info_ncdf_ex = {}
@@ -112,11 +108,7 @@ def update(params, state):
             if hasattr(state, "logger"):
                 state.logger.info("Initialize NCDF ex output Files")
 
-            nc = Dataset(
-                os.path.join(params.working_dir, params.wncd_output_file),
-                "w",
-                format="NETCDF4",
-            )
+            nc = Dataset(params.wncd_output_file, "w", format="NETCDF4")
 
             nc.createDimension("time", None)
             E = nc.createVariable("time", np.dtype("float32").char, ("time",))
@@ -172,11 +164,7 @@ def update(params, state):
                     "Write NCDF ex file at time : " + str(state.t.numpy())
                 )
 
-            nc = Dataset(
-                os.path.join(params.working_dir, params.wncd_output_file),
-                "a",
-                format="NETCDF4",
-            )
+            nc = Dataset( params.wncd_output_file, "a", format="NETCDF4" )
 
             d = nc.variables["time"][:].shape[0]
             nc.variables["time"][d] = state.t.numpy()

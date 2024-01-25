@@ -18,11 +18,7 @@ def params(parser):
 
 
 def initialize(params, state):
-    os.system(
-        "echo rm "
-        + os.path.join(params.working_dir, params.wts_output_file)
-        + " >> clean.sh"
-    )
+    os.system( "echo rm " + params.wts_output_file + " >> clean.sh" )
 
     state.var_info_ncdf_ts = {}
     state.var_info_ncdf_ts["vol"] = ["Ice volume", "km^3"]
@@ -40,11 +36,7 @@ def update(params, state):
             if hasattr(state, "logger"):
                 state.logger.info("Initialize NCDF ts output Files")
 
-            nc = Dataset(
-                os.path.join(params.working_dir, params.wts_output_file),
-                "w",
-                format="NETCDF4",
-            )
+            nc = Dataset( params.wts_output_file,"w", format="NETCDF4" )
 
             nc.createDimension("time", None)
             E = nc.createVariable("time", np.dtype("float32").char, ("time",))
@@ -66,11 +58,7 @@ def update(params, state):
                     "Write NCDF ts file at time : " + str(state.t.numpy())
                 )
 
-            nc = Dataset(
-                os.path.join(params.working_dir, params.wts_output_file),
-                "a",
-                format="NETCDF4",
-            )
+            nc = Dataset( params.wts_output_file, "a", format="NETCDF4" )
             d = nc.variables["time"][:].shape[0]
 
             nc.variables["time"][d] = state.t.numpy()

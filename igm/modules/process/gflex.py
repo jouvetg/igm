@@ -24,7 +24,7 @@ def params_gflex(parser):
     parser.add_argument(
         "--gflex_dx",
         type=float,
-        default=2000,
+        default=100,
         help="Default resolution for computing isostasy (m).",
     )
 
@@ -33,8 +33,9 @@ def initialize_gflex(params, state):
     import gflex
     from gflex.f2d import F2D
 
-    state.tcomp_gflex = []
-    state.tlast_gflex = tf.Variable(params.time_start, dtype=tf.float32)
+    if not hasattr(state,"tcomp_gflex"):
+        state.tcomp_gflex = []
+        state.tlast_gflex = tf.Variable(params.time_start, dtype=tf.float32)
 
     state.flex = F2D()
 
@@ -57,12 +58,14 @@ def initialize_gflex(params, state):
     state.flex.BC_N = "Periodic"
 
     if not hasattr(state, "Te"):
-        state.flex.Te = np.ones_like(state.thk.numpy() * params.gflex_default_Te)
+        state.flex.Te = np.ones_like(state.thk.numpy()) * params.gflex_default_Te
 
 
 def update_gflex(params, state):
     import gflex
     from scipy.interpolate import griddata
+    
+    initialize_gflex(params, state)
     
     def downsample_array_to_resolution(arr, dx, target_resolution):
         """
@@ -101,11 +104,11 @@ def update_gflex(params, state):
 
         state.tcomp_gflex.append(time.time())
 
-        state.flex.Te = state.Te # Elastic thickness [m] -- scalar or array
-        state.flex.Te = state.flex.Te.numpy()        
+    
+        state.flex.Te = np.float32(state.flex.Te)       
         state.flex.qs = state.thk.numpy() * 917 * 9.81  # Populating this template
         
-        if state.dx < 2000:
+        if state.dx < 100:
             state.flex.Te, target_points,points, x, y = downsample_array_to_resolution(state.flex.Te, state.dx, state.flex.dx)
             state.flex.qs, target_points,points, x, y = downsample_array_to_resolution(state.flex.qs, state.dx, state.flex.dx)
             state.flex.initialize()
@@ -119,7 +122,10 @@ def update_gflex(params, state):
             state.flex.finalize()
         state.topg = state.topg + state.flex.w
         state.usurf = state.topg + state.thk
+        # state.flex.plotChoice='both'
         # state.flex.output()
+        # plt.imshow(state.flex.w)
+        # plt.colorbar()
 
         state.tlast_gflex.assign(state.t)
 

@@ -24,7 +24,7 @@ def params(parser):
 
     parser.add_argument(
         "--wncd_vars_to_save",
-        type=list,
+        nargs='+',
         default=[
             "topg",
             "usurf",

@@ -9,7 +9,7 @@ pix2pixhd-texture-model/
 texture-aif-test
 checkpoints/
 logdir/
-texture/
+# texture/
 smb_accpdd/
 clim_glacialindex/
 

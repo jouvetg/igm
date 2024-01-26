@@ -59,7 +59,6 @@ def test_params_core():
     params, __ = parser.parse_known_args()
 
     assert vars(params) == {
-        "working_dir": "",
         "param_file": "params.json",
         "modules_preproc": ["oggm_shop"],
         "modules_process": ["iceflow", "time", "thk"],

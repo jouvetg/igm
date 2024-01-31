@@ -5,7 +5,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import os, glob, shutil
+import os, glob, shutil, scipy
 from netCDF4 import Dataset
 import tensorflow as tf
 from igm.modules.utils import str2bool
@@ -104,13 +104,14 @@ def initialize_oggm_shop(params, state):
                 np.squeeze(nc.variables["millan_vx"]).astype("float32")
             )
             uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
+            
             uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
             vars_to_save += ["uvelsurfobs"]
         if "millan_vy" in nc.variables:
             vvelsurfobs = np.flipud(
                 np.squeeze(nc.variables["millan_vy"]).astype("float32")
             )
-            vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
+            vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)            
             vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
             vars_to_save += ["vvelsurfobs"]
     else:
@@ -128,6 +129,9 @@ def initialize_oggm_shop(params, state):
             vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
             vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
             vars_to_save += ["vvelsurfobs"]
+
+    uvelsurfobs = scipy.signal.medfilt2d(uvelsurfobs, kernel_size=3) # remove outliers
+    vvelsurfobs = scipy.signal.medfilt2d(vvelsurfobs, kernel_size=3) # remove outliers
 
     if "millan_ice_thickness" in nc.variables:
         thkinit = np.flipud(

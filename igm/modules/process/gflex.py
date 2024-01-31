@@ -139,11 +139,15 @@ def update_gflex(params, state):
                         
             state.flex.w = griddata(points, values, (target_X, target_Y), method='linear')
         else:
-            pad_arrays(params,state)
+            p = pad_arrays(params,state)
             state.flex.initialize()
             state.flex.run()
             state.flex.finalize()
+            
+            # remove the padded cols and rows
+            state.flex.w = state.flex.w[p:-p,p:-p]
         
+        # add the deflection to the topography 
         state.topg = state.topg0 + state.flex.w
         state.usurf = state.topg + state.thk
         # state.flex.plotChoice='both'

@@ -452,6 +452,8 @@ def initialize_optimize(params, state):
                 #     )
             else:
                 REGU_S = tf.Variable(0.0)
+                
+            mean_slidingco = tf.math.reduce_mean(state.slidingco[ACT])
 
             # sum all component into the main cost function
             COST = (
@@ -474,12 +476,12 @@ def initialize_optimize(params, state):
 
             if i == 0:
                 print(
-                    "                   Step  |  ICE_VOL |  COST_U  |  COST_H  |  COST_D  |  COST_S  |   REGU_H |   REGU_S | COST_GLEN  "
+                    "                   Step  |  ICE_VOL |  COST_U  |  COST_H  |  COST_D  |  COST_S  |   REGU_H |   REGU_S | COST_GLEN | MEAN_SLIDCO  "
                 )
 
             if i % params.opti_output_freq == 0:
                 print(
-                    "OPTI %s :   %6.0f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |"
+                    "OPTI %s :   %6.0f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.4f |"
                     % (
                         datetime.datetime.now().strftime("%H:%M:%S"),
                         i,
@@ -491,6 +493,7 @@ def initialize_optimize(params, state):
                         REGU_H.numpy(),
                         REGU_S.numpy(),
                         COST_GLEN.numpy(),
+                        mean_slidingco.numpy()
                     )
                 )
 

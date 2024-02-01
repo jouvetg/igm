@@ -1,5 +1,5 @@
 {
-  "modules_preproc": ["oggm_shop", "optimize"],
+  "modules_preproc": ["load_ncdf", "optimize"],
   "modules_process": [],
   "modules_postproc": [],
   
@@ -8,6 +8,7 @@
   "opti_control": ["thk", "usurf","slidingco"],
   "opti_cost": ["velsurf","icemask", "usurf", "thk", "divfluxfcz"],
 
+  "lncd_input_file": "input_saved.nc",
   "oggm_incl_glathida"			: true,
   "opti_usurfobs_std"			: 0.3,
   "opti_velsurfobs_std" 	: 0.25,

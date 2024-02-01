@@ -7,7 +7,7 @@ import tensorflow as tf
 import numpy as np
 from scipy.interpolate import interp1d
 
-def params_smb_signal(parser):
+def params(parser):
 
     parser.add_argument(
         "--pdela",
@@ -40,7 +40,7 @@ def params_smb_signal(parser):
         help="Maximum accumulation",
     )
 
-def initialize_smb_signal(params,state):
+def initialize(params,state):
     """
         Retrieve the Temperature difference from the EPICA signal
     """
@@ -50,7 +50,7 @@ def initialize_smb_signal(params,state):
     dT   = ss[:,3]          # extract the dT, i.e. global temp. difference
     state.dT =  interp1d(time,dT, fill_value=(dT[0], dT[-1]),bounds_error=False)
 
-def update_smb_signal(params,state):
+def update(params,state):
     """
         mass balance 'signal'
     """
@@ -65,5 +65,5 @@ def update_smb_signal(params,state):
     state.smb  *= tf.where(tf.less(state.smb , 0), params.gradabl, params.gradacc)
     state.smb  = tf.clip_by_value(state.smb , -100, params.maxacc)
 
-def finalize_smb_signal(params, state):
+def finalize(params, state):
     pass

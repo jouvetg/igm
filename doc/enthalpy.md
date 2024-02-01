@@ -186,6 +186,13 @@ Here one updates the enthalpy as many times as the ice flow, we assume that the 
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+||`--working_dir`|``|Working directory (default empty string)|
+||`--modules_preproc`|`['oggm_shop']`|List of pre-processing modules|
+||`--modules_process`|`['iceflow', 'time', 'thk']`|List of processing modules|
+||`--modules_postproc`|`['write_ncdf', 'plot2d', 'print_info']`|List of post-processing modules|
+||`--logging`||Activate the looging|
+||`--logging_file`|``|Logging file name, if empty it prints in the screen|
+||`--print_params`||Print definitive parameters in a file for record|
 ||`--enth_water_density`|`1000`|Constant of the Water density [kg m-3]|
 ||`--enth_spy`|`31556926`|Number of seconds per years [s y-1]|
 ||`--enth_ki`|`2.1`|Conductivity of cold ice [W m-1 K-1] (Aschwanden and al, JOG, 2012)|

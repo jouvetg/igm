@@ -3,69 +3,31 @@
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
-import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow as tf
-import os
-import igm
+from igm import (
+    State,
+    params_core,
+    print_params,
+    run_intializers,
+    run_processes,
+    run_finalizers,
+    setup_igm,
+)
 
 
-def main():
-    
-    print("-----------------------------------------------------------------")
-    print("Num GPUs Available: ", len(tf.config.list_physical_devices("GPU")))
-    print("-----------------------------------------------------------------")
-    
-    # Collect defaults, overide from json file, and parse all core parameters
-    parser = igm.params_core()
-    igm.overide_from_json_file(parser, check_if_params_exist=False)
-    params, __ = parser.parse_known_args()  # args=[] add this for jupyter notebook
+def main() -> None:
+    state = State()  # class acting as a dictionary
+    parser = params_core()
+    imported_modules, params, state = setup_igm(state=state, parser=parser)
 
-    # get the list of all modules in order
-    modules = params.modules_preproc + params.modules_process + params.modules_postproc
-
-    # load custom modules from file (must be called my_module_name.py) to igm
-    for module in modules:
-        igm.load_custom_module(params, module)
-
-    # get the list of all dependent modules, which parameters must be called too
-    dependent_modules = igm.find_dependent_modules(modules)
-
-    # Collect defaults, overide from json file, and parse all specific module parameters
-    for module in modules + dependent_modules:
-        getattr(igm, "params_" + module)(parser)
-    igm.overide_from_json_file(parser, check_if_params_exist=True)
-    params = parser.parse_args()  # args=[] add this for jupyter notebook
-
-    # print definive parameters in a file for record
     if params.print_params:
-        igm.print_params(params)
-
-    # Define a state class/dictionnary that contains all the data
-    state = igm.State()
-
-    # if logging is activated, add a logger to the state
-    if params.logging:
-        igm.add_logger(params, state)
-    else:
-        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+        print_params(params=params)
 
     # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
-    with tf.device("/GPU:"+str(params.gpu)):
-        # Initialize all the model components in turn
-        for module in modules:
-            getattr(igm, "initialize_" + module)(params, state)
-
-        # Time loop, perform the simulation until reaching the defined end time
-        if hasattr(state, "t"):
-            while state.t < params.time_end:
-                # Update each model components in turn
-                for module in modules:
-                    getattr(igm, "update_" + module)(params, state)
-
-        # Finalize each module in turn
-        for module in modules:
-            getattr(igm, "finalize_" + module)(params, state)
+    with tf.device(f"/GPU:{params.gpu_id}"):  # type: ignore for linting checks
+        run_intializers(imported_modules, params, state)
+        run_processes(imported_modules, params, state)
+        run_finalizers(imported_modules, params, state)
 
 
 if __name__ == "__main__":

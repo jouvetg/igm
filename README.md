@@ -29,4 +29,3 @@ IGM has a [discord channel](https://discord.com/) for quick support, getting lat
 # Contact
 
 Feel free to drop me an email for any questions, bug reports, or ideas of model extension: guillaume.jouvet at unil.ch
-

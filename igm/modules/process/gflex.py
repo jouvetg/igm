@@ -21,19 +21,28 @@ def params_gflex(parser):
         default=50000,
         help="Default value for Te (Elastic thickness [m]) if not given as ncdf file",
     )
+    parser.add_argument(
+        "--gflex_dx",
+        type=float,
+        default=1000,
+        help="Default resolution for computing isostasy (m).",
+    )
 
 
 def initialize_gflex(params, state):
     import gflex
     from gflex.f2d import F2D
 
-    state.tcomp_gflex = []
-    state.tlast_gflex = tf.Variable(params.time_start, dtype=tf.float32)
+    if not hasattr(state,"tcomp_gflex"):
+        state.tcomp_gflex = []
+        state.tlast_gflex = tf.Variable(params.time_start, dtype=tf.float32)
+        state.topg0 = state.usurf - state.thk
 
     state.flex = F2D()
 
     state.flex.giafreq = params.gflex_update_freq
     state.flex.giatime = params.gflex_update_freq
+    state.flex.dx = params.gflex_dx
     state.flex.Quiet = False
     state.flex.Method = "FD"
     state.flex.PlateSolutionType = "vWC1994"
@@ -43,20 +52,22 @@ def initialize_gflex(params, state):
     state.flex.nu = 0.25
     state.flex.rho_m = 3300.0
     state.flex.rho_fill = 0
-    state.flex.dx = state.dx.numpy()
-    state.flex.dy = state.dx.numpy()
-    state.flex.BC_W = "Periodic"
-    state.flex.BC_E = "Periodic"
-    state.flex.BC_S = "Periodic"
-    state.flex.BC_N = "Periodic"
+    state.flex.dy = state.flex.dx
+    state.flex.BC_W = "0Displacement0Slope"
+    state.flex.BC_E = "0Displacement0Slope"
+    state.flex.BC_S = "0Displacement0Slope"
+    state.flex.BC_N = "0Displacement0Slope"
 
     if not hasattr(state, "Te"):
-        state.flex.Te = np.ones_like(state.thk.numpy() * params.gflex_default_Te)
-
+        state.flex.Te0 = np.ones_like(state.thk.numpy()) * params.gflex_default_Te
+    if not hasattr(state,"tcomp_gflex"):
+        state.flex.Te0 = state.flex.Te    
 
 def update_gflex(params, state):
     import gflex
     from scipy.interpolate import griddata
+    
+    initialize_gflex(params, state)
     
     def downsample_array_to_resolution(arr, dx, target_resolution):
         """
@@ -66,28 +77,28 @@ def update_gflex(params, state):
         m, n = arr.shape
         x = np.arange(0, n) * dx
         y = np.arange(0, m) * dx
+        xx, yy = np.meshgrid(x, y)
 
         target_x = np.arange(0, n, target_resolution / dx) * dx
         target_y = np.arange(0, m, target_resolution / dx) * dx
-
-        xx, yy = np.meshgrid(x, y)
         target_xx, target_yy = np.meshgrid(target_x, target_y)
-        target_xx = target_xx.astype(np.int32)
-        target_yy = target_yy.astype(np.int32)
-
+        
         points = np.column_stack((xx.flatten(), yy.flatten()))
         target_points = np.column_stack((target_xx.flatten(), target_yy.flatten()))
 
-        downsampled_array = griddata(points, arr.flatten(), target_points, method='linear')
-        return downsampled_array.reshape(len(target_y), len(target_x)), target_points, points, x, y
-
-    def upsample_result_to_original_resolution(result, target_points, points, x, y, original_resolution):
+        downsampled_array = griddata(points, arr.flatten(), target_points, method='nearest')
+        return downsampled_array.reshape(len(target_y), len(target_x))
+      
+    def pad_arrays(params,state):
         """
-        Upsample a 2D array to the original resolution using bilinear interpolation (chatgpt).
-
+        Pad Te and load arrays with one flexural wavelenth based on the mean effective elastic thickness. This is to avoid boundary effects.
         """
-        upsampled_result = griddata(target_points, result.flatten(), points, method='linear')
-        return upsampled_result.reshape(len(y), len(x))
+        mean_Te = np.mean(state.flex.Te, where=~np.isnan(state.flex.Te))
+        fw = 2 * np.pi * ((state.flex.E * mean_Te**3) / (12 * (1 - state.flex.nu**2) * (state.flex.rho_m - 917) * 9.81))**0.25
+        pad_width = round(fw / state.flex.dx)
+        state.flex.qs = np.pad(state.flex.qs, pad_width, mode='constant', constant_values=0)
+        state.flex.Te = np.pad(state.flex.Te, pad_width, mode='constant', constant_values=mean_Te)
+        return pad_width
 
     if (state.t - state.tlast_gflex) >= params.gflex_update_freq:
         if hasattr(state, "logger"):
@@ -95,24 +106,54 @@ def update_gflex(params, state):
 
         state.tcomp_gflex.append(time.time())
 
-        state.flex.Te = state.Te # Elastic thickness [m] -- scalar or array
-        state.flex.Te = state.flex.Te.numpy()        
-        state.flex.qs = state.thk.numpy() * 917 * 9.81  # Populating this template
+        state.flex.Te = np.float32(state.flex.Te0)       
+        state.flex.qs = state.thk.numpy() * 917 * 9.81  # convert thicknesses to loads
         
-        if state.dx < 1000:
-            state.flex.Te, target_points,points, x, y = downsample_array_to_resolution(state.flex.Te, state.flex.dx, 1000)
-            state.flex.qs, target_points,points, x, y = downsample_array_to_resolution(state.flex.qs, state.flex.dx, 1000)
+        if state.dx < state.flex.dx:
+            state.flex.Te = downsample_array_to_resolution(state.flex.Te, state.dx, state.flex.dx)
+            state.flex.qs = downsample_array_to_resolution(state.flex.qs, state.dx, state.flex.dx)
+            
+            r, c = np.shape(state.flex.qs) # dimension of the downsampled arrays
+            rr, cc = np.shape( state.thk.numpy()) # dimension of the original array
+            p = pad_arrays(params,state) # padding of one flexural wavelength
+            
+            # gFlex
             state.flex.initialize()
             state.flex.run()
             state.flex.finalize()
-            state.flex.w = upsample_result_to_original_resolution(state.flex.w, target_points, points, x, y, state.flex.dx)
+            
+            # transform result back to original resolution and dimension
+            u, v = np.shape(state.flex.w) # dimension of the padded arrays
+            start_row = p
+            end_row = start_row + r
+            start_col = p
+            end_col = start_col + c
+            x = np.arange(0, v)
+            y = np.arange(0, u)
+            X, Y = np.meshgrid(x, y)
+            points = np.column_stack((X.flatten(), Y.flatten()))
+            values = state.flex.w.flatten()
+            target_x = np.linspace(start_col, end_col, cc)
+            target_y = np.linspace(start_row, end_row, rr)
+            target_X, target_Y = np.meshgrid(target_x, target_y)
+                        
+            state.flex.w = griddata(points, values, (target_X, target_Y), method='linear')
         else:
+            p = pad_arrays(params,state)
             state.flex.initialize()
             state.flex.run()
             state.flex.finalize()
-        state.topg = state.topg + state.flex.w
+            
+            # remove the padded cols and rows
+            state.flex.w = state.flex.w[p:-p,p:-p]
+        
+        # add the deflection to the topography 
+        state.topg = state.topg0 + state.flex.w
         state.usurf = state.topg + state.thk
+        # state.flex.plotChoice='both'
         # state.flex.output()
+        # plt.imshow(state.flex.qs)
+        # plt.colorbar()
 
         state.tlast_gflex.assign(state.t)
 

@@ -5,13 +5,13 @@ import tensorflow as tf
 import math
 
  ## add custumized smb function
-def params_mysmb(parser):  
+def params(parser):  
     parser.add_argument("--meanela", type=float, default=3000 )
 
-def initialize_mysmb(params,state):
+def initialize(params,state):
     params.meanela = np.quantile(state.usurf[state.thk>10],0.2)
 
-def update_mysmb(params,state):
+def update(params,state):
     # perturabe the ELA with sinusional signal 
     ELA = ( params.meanela - 750*math.sin((state.t/100)*math.pi) )
     # compute smb linear with elevation with 2 acc & abl gradients
@@ -23,5 +23,5 @@ def update_mysmb(params,state):
     if hasattr(state, "icemask"):
         state.smb  = tf.where((state.smb<0)|(state.icemask>0.5),state.smb,-10)
     
-def finalize_mysmb(params,state):
+def finalize(params,state):
     pass

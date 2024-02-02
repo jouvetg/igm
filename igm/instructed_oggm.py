@@ -76,8 +76,16 @@ class IGM_Model2D(Model2D):
         
         """
 
-        parser = argparse.ArgumentParser(description="IGM")
-        igm.params_iceflow(parser)
+        # parser = argparse.ArgumentParser(description="IGM")
+        parser = igm.params_core()
+        
+        params, __ = parser.parse_known_args()  # args=[] add this for jupyter notebook
+             
+        imported_modules = igm.load_modules(params)
+
+        for module in imported_modules:
+            module.params(parser)
+        
         self.params = parser.parse_args(args=[])
 
         self.state = igm.State()
@@ -111,7 +119,7 @@ class IGM_Model2D(Model2D):
 
         self.icemask = mb_filter
 
-        igm.initialize_iceflow(self.params, self.state)
+        igm.modules.process.iceflow.initialize(self.params, self.state)
 
     def step(self, dt):
         # recast glacier variables into igm-like variables
@@ -120,7 +128,7 @@ class IGM_Model2D(Model2D):
         self.state.usurf.assign(self.surface_h)
 
         # compute ubar and vbar
-        igm.update_iceflow(self.params, self.state)
+        igm.modules.process.iceflow.update(self.params, self.state)
 
         # retrurn the divergence of the flux using upwind fluxes
         divflux = (

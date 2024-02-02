@@ -29,7 +29,7 @@ from scipy.interpolate import interp1d
 import time
 
  ## add custumized smb function
-def params_smb_accmelt(parser):  
+def params(parser):  
 
     parser.add_argument(
         "--smb_simple_update_freq",
@@ -83,6 +83,7 @@ def params_smb_accmelt(parser):
         type=float,
         default=1.0, 
     )
+    
     parser.add_argument(
         "--smb_accmelt_ice_density",
         type=float,
@@ -95,15 +96,14 @@ def params_smb_accmelt(parser):
         default=1000.0,
         help="Density of water",
     )
-    
-def initialize_smb_accmelt(params,state):
+
+
+def initialize(params,state):
     """
         load smb data to run the Aletsch Glacier simulation 
     """
 
-    nc = Dataset(
-        os.path.join(params.working_dir, 'massbalance.nc'), "r"
-    )
+    nc = Dataset('massbalance.nc', "r")
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")
 
@@ -115,7 +115,7 @@ def initialize_smb_accmelt(params,state):
     nc.close()
     
     
-    nc = Dataset( os.path.join(params.working_dir, 'bassin.nc'), "r" )
+    nc = Dataset('bassin.nc', "r" )
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")
 
@@ -144,7 +144,7 @@ def initialize_smb_accmelt(params,state):
     # read mass balance parameters
     state.mb_parameters = tf.Variable(
         np.loadtxt(
-            os.path.join(params.working_dir, "mbparameter.dat"),
+            "mbparameter.dat",
             skiprows=2,
             dtype=np.float32,
         )
@@ -176,7 +176,7 @@ def initialize_smb_accmelt(params,state):
 # Note that tf.function works best with TensorFlow ops; NumPy and Python calls are converted to constants.
 # Therefore: you must make sure any variables are TensorFlow Tensor (and not Numpy)
 # @tf.function()
-def update_smb_accmelt(params,state):
+def update(params,state):
 
     if ((state.t - state.tlast_smb) >= params.smb_simple_update_freq):
 
@@ -257,5 +257,5 @@ def update_smb_accmelt(params,state):
         state.tcomp_smb[-1] *= -1
 
 
-def finalize_smb_accmelt(params,state):
+def finalize(params,state):
     pass

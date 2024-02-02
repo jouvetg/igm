@@ -50,7 +50,7 @@ def params_read_output(parser):
  
 def initialize_read_output(params, state):
  
-    nc = Dataset(os.path.join(params.working_dir, params.rncd_input_file), "r")
+    nc = Dataset(params.rncd_input_file, "r")
 
     state.x    = np.squeeze(nc.variables["x"]).astype("float32")
     state.y    = np.squeeze(nc.variables["y"]).astype("float32")

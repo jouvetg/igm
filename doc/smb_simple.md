@@ -39,6 +39,13 @@ If one has provided in input an "icemask" field, then this module will compute n
 |short|long|default|help|
 | :--- | :--- | :--- | :--- |
 |`-h`|`--help`||show this help message and exit|
+||`--working_dir`|``|Working directory (default empty string)|
+||`--modules_preproc`|`['oggm_shop']`|List of pre-processing modules|
+||`--modules_process`|`['iceflow', 'time', 'thk']`|List of processing modules|
+||`--modules_postproc`|`['write_ncdf', 'plot2d', 'print_info']`|List of post-processing modules|
+||`--logging`||Activate the looging|
+||`--logging_file`|``|Logging file name, if empty it prints in the screen|
+||`--print_params`||Print definitive parameters in a file for record|
 ||`--smb_simple_update_freq`|`1`|Update the mass balance each X years (1)|
 ||`--smb_simple_file`|`smb_simple_param.txt`|Name of the imput file for the simple mass balance model (time, gradabl, gradacc, ela, accmax)|
 ||`--smb_simple_array`|`[]`|Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)|

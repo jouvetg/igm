@@ -87,6 +87,12 @@ def params(parser):
         help="Initial arrhenius factor arrhenuis",
     )
     parser.add_argument(
+        "--iflo_enhancement_factor",
+        type=float,
+        default=1.0,
+        help="Enhancement factor multiying the arrhenius factor",
+    )
+    parser.add_argument(
         "--iflo_regu_glen",
         type=float,
         default=10 ** (-5),
@@ -307,11 +313,11 @@ def initialize(params, state):
         if params.iflo_dim_arrhenius == 3:
             state.arrhenius = tf.Variable(
                 tf.ones((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
-                * params.iflo_init_arrhenius
+                * params.iflo_init_arrhenius * params.iflo_enhancement_factor
             )
         else:
             state.arrhenius = tf.Variable(
-                tf.ones_like(state.thk) * params.iflo_init_arrhenius
+                tf.ones_like(state.thk) * params.iflo_init_arrhenius * params.iflo_enhancement_factor
             )
 
     if not hasattr(state, "slidingco"):

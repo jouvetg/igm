@@ -139,7 +139,7 @@ def params(parser):
     parser.add_argument(
         "--enth_tauc_min",
         type=float,
-        default=10**3,
+        default=10**5,
         help="lower bound for tauc [Pa]"
     )
     parser.add_argument(

@@ -30,7 +30,6 @@ def params(parser):
 
 
 def initialize(params, state):
-    import gflex
     from gflex.f2d import F2D
 
     if not hasattr(state,"tcomp_gflex"):
@@ -63,11 +62,10 @@ def initialize(params, state):
     if not hasattr(state,"tcomp_gflex"):
         state.flex.Te0 = state.flex.Te    
 
-def update(params, state):    
-    import igm.modules.process.gflex.gflex as gflex
+def update(params, state):
     from scipy.interpolate import griddata
     
-    initialize_gflex(params, state)
+    initialize(params, state)
     
     def downsample_array_to_resolution(arr, dx, target_resolution):
         """

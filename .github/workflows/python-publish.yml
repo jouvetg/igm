@@ -6,15 +6,18 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Upload Python Package
+name: Upload Python Package (Main)
 
 on:
   push:
     branches:
-      - reorganize
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  deploy:
+  build:
 
     strategy:
       matrix:
@@ -27,15 +30,6 @@ jobs:
       uses: actions/setup-python@v3
       with:
             python-version: '<3.11'
-    # Should integration tests be run here or just assume the user has a working environment?
-    # - name: Install CUDA
-    #   run: |
-    #     ./.github/workflows/install_cuda_ubuntu.sh
-    #     nvidia-smi
-    # - uses: Jimver/cuda-toolkit@v0.2.11
-    #   id: cuda-toolkit
-    #   with:
-    #     cuda: '12.1.0'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -44,20 +38,19 @@ jobs:
       run: python -m build
     - name: Install package
       run: pip install .
-#    - name: Publish package to testpypi
-#      uses: pypa/gh-action-pypi-publish@release/v1
-#      with:
-#        password: ${{ secrets.PYPI_API_TOKEN }}
-#        repository-url: https://test.pypi.org/legacy/
     - name: Run tests
       run: |
         pip install pytest
         python -c "import os; print(os.getcwd())"
         cd tests
         python -m pytest -W ignore::DeprecationWarning -p no:cacheprovider
-  # Not deploying pypi at the moment as I am testing some CI/CD with unit-testing (and its a feature branch anyways...)
-    # - name: Publish package to pypi
-    #   uses: pypa/gh-action-pypi-publish@release/v1
-    #   with:
-    #     password: ${{ secrets.IGM_TOKEN }}
-    #     repository-url: https://upload.pypi.org/legacy/
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/') # if a new tag is pushed
+    runs-on: ubuntu-latest
+    steps:
+    - name: Publish package to pypi
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.IGM_TOKEN }}
+        repository-url: https://upload.pypi.org/legacy/

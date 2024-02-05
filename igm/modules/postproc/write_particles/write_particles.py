@@ -7,7 +7,7 @@ import numpy as np
 import os
 import time
 import tensorflow as tf
-
+import shutil
 from igm.modules.utils import *
 
 

@@ -266,7 +266,7 @@ def validate_module(module) -> None:
     for function in required_functions:
         if not hasattr(module, function):
             raise AttributeError(
-                f"Module {module} is missing the required function ({function}). If it is a custom python package, make sure to include it in the __init__.py file.",
+                f"Module {module} is missing the required function ({function}). If it is a custom python package, make sure to include the 4 required functions: ['params', 'initialize', 'finalize', 'update'].",
                 f"Please see https://github.com/jouvetg/igm/wiki/5.-Custom-modules-(coding) for more information on how to construct custom modules.",
             )
 
@@ -355,7 +355,7 @@ def print_gpu_info() -> None:
 def print_params(params: Namespace) -> None:
     param_file = params.saved_params_filename
     param_file = param_file + ".json"
-    
+
     # load the given parameters
     with open(param_file, "w") as json_file:
         json.dump(params.__dict__, json_file, indent=2)

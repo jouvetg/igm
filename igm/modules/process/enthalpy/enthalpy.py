@@ -135,8 +135,20 @@ def params(parser):
               [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder \
               than the temperature of ice to be given as boundary upper condition to the Enthlapy model"
     )
-
-
+    
+    parser.add_argument(
+        "--enth_tauc_min",
+        type=float,
+        default=10**5,
+        help="lower bound for tauc [Pa]"
+    )
+    parser.add_argument(
+        "--enth_tauc_max",
+        type=float,
+        default=10**10,
+        help="lower bound for tauc [Pa]"
+    )
+ 
 def initialize(params, state):
     Ny, Nx = state.thk.shape
 
@@ -157,7 +169,7 @@ def initialize(params, state):
     state.phi = compute_phi(params,state)
 
     # update the sliding coefficient
-    state.slidingco = compute_slidingco_tf(
+    state.tauc,state.slidingco = compute_slidingco_tf(
         state.thk,
         state.tillwat,
         params.iflo_ice_density,
@@ -167,6 +179,8 @@ def initialize(params, state):
         params.iflo_exp_weertman,
         params.enth_uthreshold,
         params.iflo_new_friction_param,
+        params.enth_tauc_min,
+        params.enth_tauc_max
     )
 
     state.tcomp_enthalpy = []
@@ -221,7 +235,7 @@ def update(params, state):
         params.iflo_gravity_cst,
         params.iflo_ice_density,
         params.enth_claus_clape,
-    )
+    ) * params.iflo_enhancement_factor
 
     # correct vertical velocity from melting rate
     state.W = state.W - tf.expand_dims(state.basalMeltRate, axis=0)
@@ -294,7 +308,7 @@ def update(params, state):
     state.phi = compute_phi(params,state)
 
     # update the sliding coefficient
-    state.slidingco = compute_slidingco_tf(
+    state.tauc,state.slidingco = compute_slidingco_tf(
         state.thk,
         state.tillwat,
         params.iflo_ice_density,
@@ -304,6 +318,8 @@ def update(params, state):
         params.iflo_exp_weertman,
         params.enth_uthreshold,
         params.iflo_new_friction_param,
+        params.enth_tauc_min,
+        params.enth_tauc_max
     )
 
     state.tcomp_enthalpy[-1] -= time.time()
@@ -386,6 +402,8 @@ def compute_slidingco_tf(
     exp_weertman,
     uthreshold,
     new_friction_param,
+    tauc_min,
+    tauc_max
 ):
     # return the sliding coefficient in [m MPa^{-3} y^{-1}]
 
@@ -406,7 +424,7 @@ def compute_slidingco_tf(
 
     tauc = tf.where(thk > 0, tauc, 10**6)  # high value if ice-fre
 
-    tauc = tf.clip_by_value(tauc, 10**5, 10**10)
+    tauc = tf.clip_by_value(tauc, tauc_min, tauc_max)
 
     if new_friction_param:
         slidingco = (tauc * 10 ** (-6)) * uthreshold ** (
@@ -415,7 +433,7 @@ def compute_slidingco_tf(
     else:
         slidingco = (tauc * 10 ** (-6)) ** (-exp_weertman) * uthreshold  # Mpa^-3 m y^-1
 
-    return slidingco
+    return tauc,slidingco
 
 def compute_phi(params,state):
 

@@ -11,7 +11,12 @@ from igm.modules.utils import *
 
 
 def params(parser):
-    pass
+    parser.add_argument(
+        "--vflo_method",
+        type=str,
+        default="kinematic",
+        help="Method to retrive the vertical velocity (kinematic, incompressibility)",
+    )
 
 
 def initialize(params, state):
@@ -26,9 +31,14 @@ def update(params, state):
 
     state.tcomp_vert_flow.append(time.time())
 
-    state.W = _compute_vertical_velocity_tf(
-        params, state, state.U, state.V, state.thk, state.dX
-    )
+    if params.vflo_method == "kinematic":
+        state.W = _compute_vertical_velocity_kinematic(
+            params, state, state.U, state.V, state.thk, state.dX
+        )
+    else:
+        state.W = _compute_vertical_velocity_incompressibility(
+            params, state, state.U, state.V, state.thk, state.dX
+        )
 
     state.wvelbase = state.W[0]
     state.wvelsurf = state.W[-1]
@@ -40,9 +50,68 @@ def update(params, state):
 def finalize(params, state):
     pass
 
+def _compute_vertical_velocity_kinematic(params, state, U, V, thk, dX):
+ 
+    # use the formula w = u dot \nabla l + \nable \cdot (u l)
+ 
+    # get the vertical thickness layers
+    zeta = np.arange(params.iflo_Nz) / (params.iflo_Nz - 1)
+    temp = (zeta / params.iflo_vert_spacing) * (
+        1.0 + (params.iflo_vert_spacing - 1.0) * zeta
+    )
+    temd = temp[1:] - temp[:-1]
+    dz = tf.stack([state.thk * z for z in temd], axis=0)
+
+    sloptopgx, sloptopgy = compute_gradient_tf(state.topg, state.dx, state.dx)
+    
+    sloplayx = [sloptopgx]
+    sloplayy = [sloptopgy]
+    divfl    = [tf.zeros_like(state.thk)]
+    
+    for l in range(1,U.shape[0]):
+
+        cumdz = tf.reduce_sum(dz[:l], axis=0)
+         
+        sx, sy = compute_gradient_tf(state.topg + cumdz, state.dx, state.dx)
+        
+        sloplayx.append(sx)
+        sloplayy.append(sy)
+
+        ub = tf.reduce_sum(state.vert_weight[:l] * state.U[:l], axis=0) / tf.reduce_sum(state.vert_weight[:l], axis=0)
+        vb = tf.reduce_sum(state.vert_weight[:l] * state.V[:l], axis=0) / tf.reduce_sum(state.vert_weight[:l], axis=0)         
+        div = compute_divflux_mid(ub, vb, cumdz, state.dx, state.dx) 
+
+        divfl.append(div)
+    
+    sloplayx = tf.stack(sloplayx, axis=0)
+    sloplayy = tf.stack(sloplayy, axis=0)
+    divfl    = tf.stack(divfl, axis=0)
+     
+    W = state.U * sloplayx + state.V * sloplayy - divfl
+    
+    return W
+    
+    
+@tf.function()
+def compute_divflux_mid(u, v, h, dx, dy):
+
+    Qx = u * h  
+    Qy = v * h  
+    
+    Qx = tf.concat(
+        [Qx[:, 0:1], 0.5 * (Qx[:, :-1] + Qx[:, 1:]), Qx[:, -1:]], 1
+    )  # has shape (ny,nx+1) 
+    
+    Qy = tf.concat(
+        [Qy[0:1, :], 0.5 * (Qy[:-1, :] + Qy[1:, :]), Qy[-1:, :]], 0
+    )  # has shape (ny+1,nx)
+    
+    ## Computation of the divergence, final shape is (ny,nx)
+    return (Qx[:, 1:] - Qx[:, :-1]) / dx + (Qy[1:, :] - Qy[:-1, :]) / dy
+
 
 # @tf.function(experimental_relax_shapes=True)
-def _compute_vertical_velocity_tf(params, state, U, V, thk, dX):
+def _compute_vertical_velocity_incompressibility(params, state, U, V, thk, dX):
     # Compute horinzontal derivatives
     dUdx = (U[:, :, 2:] - U[:, :, :-2]) / (2 * dX[0, 0])
     dVdy = (V[:, 2:, :] - V[:, :-2, :]) / (2 * dX[0, 0])

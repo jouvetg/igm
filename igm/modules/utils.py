@@ -9,7 +9,7 @@ This util files provides a large number of usefull function for other modules
 
 import tensorflow as tf
 
-# constrains wildcard imports - not necessary but for security reasons - updtae if a utility is added...
+# constrains wildcard imports - not necessary but for security reasons - update if a utility is added...
 __all__ = [
     "str2bool",
     "getmag",

@@ -8,9 +8,8 @@ Published under the GNU GPL (Version 3), check at the LICENSE file
 import os, json
 from json import JSONDecodeError
 import importlib
+import argparse
 from argparse import ArgumentParser, Namespace
-import igm
-import tensorflow as tf
 from pathlib import Path
 from functools import partial
 from typing import List, Any, Dict, Tuple
@@ -18,82 +17,106 @@ from types import ModuleType
 import logging
 import warnings
 
+import tensorflow as tf
+
+import igm
+
+IGM_DESCRIPTION = r"""
+  ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Welcome to IGM! The Iceflow Glacier Model (IGM) is a modular, open-source, and user-friendly glacier model.      │
+  │ It is designed to be used in a variety of applications, including glacier evolution, ice flow, and ice           │
+  │ dynamics.                                                                                                        │
+  │                                                                                                                  │
+  │                         __/\\\\\\\\\\\_____/\\\\\\\\\\\\__/\\\\____________/\\\\_                                │
+  │                          _\/////\\\///____/\\\//////////__\/\\\\\\________/\\\\\\_                               │
+  │                           _____\/\\\______/\\\_____________\/\\\//\\\____/\\\//\\\_                              │
+  │                            _____\/\\\_____\/\\\____/\\\\\\\_\/\\\\///\\\/\\\/_\/\\\_                             │
+  │                             _____\/\\\_____\/\\\___\/////\\\_\/\\\__\///\\\/___\/\\\_                            │
+  │                              _____\/\\\_____\/\\\_______\/\\\_\/\\\____\///_____\/\\\_                           │
+  │                               _____\/\\\_____\/\\\_______\/\\\_\/\\\_____________\/\\\_                          │
+  │                                __/\\\\\\\\\\\_\//\\\\\\\\\\\\/__\/\\\_____________\/\\\_                         │
+  │                                 _\///////////___\////////////____\///______________\///__                        │
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+"""
+
 
 class State:
     pass
 
 
 # this create core parameters for any IGM run
-def params_core():
+def params_core() -> argparse.ArgumentParser:
     parser = ArgumentParser(
-        description="IGM", conflict_handler="resolve"
-    )  # automatically overrides repeated/older parameters! Vaid solution?
+        description=IGM_DESCRIPTION,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        conflict_handler="resolve",
+    )  # automatically overrides repeated/older parameters! Valid solution?
 
     parser.add_argument(
         "--param_file",
         type=str,
         default="params.json",
-        help="Path for the JSON parameter file.",
+        help="Path for the JSON parameter file. (default: %(default)s)",
     )
     parser.add_argument(
         "--modules_preproc",
         type=list,
         default=["oggm_shop"],
-        help="List of pre-processing modules",
+        help="List of pre-processing modules (default: %(default)s)",
     )
     parser.add_argument(
         "--modules_process",
         type=list,
         default=["iceflow", "time", "thk"],
-        help="List of processing modules",
+        help="List of processing modules (default: %(default)s)",
     )
     parser.add_argument(
         "--modules_postproc",
         type=list,
         default=["write_ncdf", "plot2d", "print_info"],
-        help="List of post-processing modules",
+        help="List of post-processing modules (default: %(default)s)",
     )
     parser.add_argument(
         "--logging",
         action="store_true",
         default=False,
-        help="Activates the logging (default value is False)",
+        help="Activates the logging (default: %(default)s)",
     )
     parser.add_argument(
         "--logging_level",
         default=30,
         type=int,
-        help="Determine logging level used for logger",
+        help="Determine logging level used for logger (default: %(default)s)",
     )
     parser.add_argument(
         "--logging_file",
         type=str,
         default="",
-        help="Logging file name, if empty it prints in the screen",
+        help="Logging file name, if empty it prints in the screen (default: %(default)s)",
     )
     parser.add_argument(
         "--print_params",
         action="store_false",
         default=True,
-        help="Print definitive parameters in a file for record",
+        help="Print definitive parameters in a file for record (default: %(default)s)",
     )
     parser.add_argument(
         "--gpu_info",
         action="store_true",
         default=False,
-        help="Print CUDA and GPU information to the screen",
+        help="Print CUDA and GPU information to the screen (default: %(default)s)",
     )
     parser.add_argument(
         "--gpu_id",
         type=int,
         default=0,
-        help="Id of the GPU to use (default is 0)",
+        help="Id of the GPU to use (default: %(default)s)",
     )
     parser.add_argument(
         "--saved_params_filename",
         type=str,
         default="params_saved",
-        help="Name of the file to store the parameters used in the run (current working directory)",
+        help="Name of the file to store the parameters used in the run (default: %(default)s)",
     )
 
     return parser

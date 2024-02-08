@@ -5,15 +5,9 @@
 
 import sys
 import os
-sys.path.append(os.getcwd()) # i guess by default sys.path does not have cwd. not sure if this is the convention though...
+sys.path.append(os.getcwd()) # I guess by default sys.path does not have cwd. not sure if this is the convention though...
     
-from . import modules
-# from .modules import (
-# 	preproc,
-# 	process,
-# 	postproc,
-    
-# )
+from . import modules, emulators
 
 from .common import (
     State,
@@ -30,5 +24,3 @@ from .common import (
     setup_igm,
     add_logger
 )
-
-from . import emulators

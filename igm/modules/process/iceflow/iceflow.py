@@ -41,7 +41,7 @@ import matplotlib.pyplot as plt
 import datetime, time
 import math
 import tensorflow as tf
-
+import shutil
 from igm.modules.utils import *
 
 import igm

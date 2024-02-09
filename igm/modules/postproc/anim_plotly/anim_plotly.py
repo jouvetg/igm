@@ -347,4 +347,4 @@ def finalize(params, state):
 
 
 if __name__ == "__main__":
-    finalize_anim_plotly(None, None)
+    finalize(None, None)

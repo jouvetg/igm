@@ -298,6 +298,27 @@ def params(parser):
         default=False,
         help="This forces calving front at the border of the domain in the side given in the list",
     )
+    
+    parser.add_argument(
+        "--iflo_regu",
+        type=float,
+        default=0.0,
+        help="This regularizes the energy forcing ice flow to be smooth in the horizontal direction",
+    )
+    parser.add_argument(
+        "--iflo_min_sr",
+        type=float,
+        default=10**(-20),
+        help="Minimum strain rate",
+    )
+    parser.add_argument(
+        "--iflo_max_sr",
+        type=float,
+        default=10**(20),
+        help="Maximum strain rate",
+    )
+
+
 
 
 def initialize(params, state):
@@ -547,18 +568,11 @@ def _compute_strainrate_Glen_tf(U, V, thk, slidingco, dX, ddz, sloptopgx, slopto
     Exy = 0.5 * dVdx + 0.5 * dUdy
     Exz = 0.5 * dUdz
     Eyz = 0.5 * dVdz
+    
+    srx = 0.5 * ( Exx**2 + Exy**2 + Exy**2 + Eyy**2 + Ezz**2 )
+    srz = 0.5 * ( Exz**2 + Eyz**2 + Exz**2 + Eyz**2 )
 
-    return 0.5 * (
-        Exx**2
-        + Exy**2
-        + Exz**2
-        + Exy**2
-        + Eyy**2
-        + Eyz**2
-        + Exz**2
-        + Eyz**2
-        + Ezz**2
-    )
+    return srx, srz
 
 
 def _stag2(B):
@@ -611,6 +625,9 @@ def iceflow_energy(params, U, V, fieldin):
         params.iflo_new_friction_param,
         params.iflo_cf_cond,
         params.iflo_cf_eswn,
+        params.iflo_regu,
+        params.iflo_min_sr,
+        params.iflo_max_sr
     )
 
 
@@ -635,6 +652,9 @@ def _iceflow_energy(
     new_friction_param,
     iflo_cf_cond,
     iflo_cf_eswn,
+    iflo_regu,
+    min_sr,
+    max_sr,
 ):
     # warning, the energy is here normalized dividing by int_Omega
 
@@ -677,9 +697,13 @@ def _iceflow_energy(
     # TODO : sloptopgx, sloptopgy must be the elevaion of layers! not the bedrock, this probably has very little effects.
 
     # sr has unit y^(-1)
-    sr = _compute_strainrate_Glen_tf(
+    srx, srz = _compute_strainrate_Glen_tf(
         U, V, thk, C, dX, dz, sloptopgx, sloptopgy, thr=thr_ice_thk
     )
+    
+    sr = srx + srz
+    
+    sr = tf.clip_by_value(sr, min_sr**2, max_sr**2)
 
     sr = tf.where(COND, sr, 0.0)
 
@@ -703,6 +727,32 @@ def _iceflow_energy(
             )
             / p
         )
+        
+    if iflo_regu > 0:
+        
+        srx = tf.where(COND, srx, 0.0)
+ 
+        if len(B.shape) == 3:
+            C_shear_2 = ( 
+                tf.reduce_mean(
+                    _stag4(B)
+                    * tf.reduce_sum(dz * ((srx + regu_glen**2) ** (p / 2)), axis=1),
+                    axis=(-1, -2),
+                )
+                / p
+            )
+        else:
+            C_shear_2 = ( 
+                tf.reduce_mean(
+                    tf.reduce_sum(
+                        _stag8(B) * dz * ((srx + regu_glen**2) ** (p / 2)), axis=1
+                    ),
+                    axis=(-1, -2),
+                )
+                / p
+            )
+
+        C_shear = C_shear + iflo_regu*C_shear_2
         
     lsurf = usurf - thk
 

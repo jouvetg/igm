@@ -6,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import time
+from igm.modules.utils import *
+
 
 
 def params(parser):
@@ -27,7 +29,18 @@ def params(parser):
         default=1000,
         help="Default resolution for computing isostasy (m).",
     )
-
+    parser.add_argument(
+        "--gflex_pad",
+        type=str2bool,
+        default=False,
+        help="Default padding option",
+    )
+    parser.add_argument(
+        "--gflex_quiet",
+        type=str2bool,
+        default=True,
+        help="Default padding option",
+    )
 
 def initialize(params, state):
     from gflex.f2d import F2D
@@ -43,6 +56,7 @@ def initialize(params, state):
     state.flex.giatime = params.gflex_update_freq
     state.flex.dx = params.gflex_dx
     state.flex.Quiet = False
+    state.flex.pad = params.gflex_pad
     state.flex.Method = "FD"
     state.flex.PlateSolutionType = "vWC1994"
     state.flex.Solver = "direct"

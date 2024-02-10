@@ -979,6 +979,23 @@ def _update_iceflow_solved(params, state):
 
     state.U.assign(U)
     state.V.assign(V)
+    
+    if params.iflo_force_max_velbar > 0:
+        velbar_mag = getmag3d(state.U, state.V)
+        state.U.assign(
+            tf.where(
+                velbar_mag >= params.iflo_force_max_velbar,
+                params.iflo_force_max_velbar * (state.U / velbar_mag),
+                state.U,
+            )
+        )
+        state.V.assign(
+            tf.where(
+                velbar_mag >= params.iflo_force_max_velbar,
+                params.iflo_force_max_velbar * (state.V / velbar_mag),
+                state.V,
+            )
+        )
 
     state.COST_Glen = Cost_Glen[-1].numpy()
 

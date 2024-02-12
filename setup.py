@@ -18,16 +18,6 @@ def package_files(directory):
 with open("README.md", "r") as f:
     readme = f.read()
 
-
-# def get_latest_tag():
-#     return (
-#         subprocess.check_output(["git", "describe", "--tags"])
-#         .decode("utf-8")
-#         .strip()
-#         .split("-")[0]
-#     )
-
-
 setup(
     name="igm-model-dev",
     version="2.1.0",
@@ -42,20 +32,16 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     python_requires="<3.12",
-    #    extras_require={
-    #        'doc': ['numpydoc', 'sphinx', 'sphinx_rtd_theme', 'sphinx_mdinclude'],
-    #    },
     install_requires=[
-        "tensorflow[and-cuda]", #good
-        "matplotlib", #good
-        # "numpy",
-        "scipy", # good
-        "netCDF4", #good
-        "xarray", #good
-        "rasterio", #good
-        "pyproj", # good
-        "geopandas", #good
-        "oggm", # good
-        "importlib_resources", #good
+        "tensorflow[and-cuda]",
+        "matplotlib",
+        "scipy",
+        "netCDF4",
+        "xarray",
+        "rasterio",
+        "pyproj",
+        "geopandas",
+        "oggm",
+        "importlib_resources",
     ],
 )

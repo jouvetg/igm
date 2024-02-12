@@ -11,11 +11,12 @@ name: Upload Python Package
 on:
   push:
     branches:
-      - main
+      - development
   pull_request:
     branches:
-      - main
+      - development
 
+# permissions read?
 jobs:
   build:
 
@@ -35,7 +36,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install build
     - name: Build package
-      run: python -m build
+      run: python -m build # bdist_wheel?
     - name: Install package
       run: pip install .
     - name: Run tests
@@ -46,16 +47,16 @@ jobs:
         python -m pytest -W ignore::DeprecationWarning -p no:cacheprovider
   release:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/') # if a new tag is pushed
+    # if: startsWith(github.ref, 'refs/tags/') # if a new tag is pushed
     runs-on: ubuntu-latest
     steps:
-    - name: Publish package to pypi
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.IGM_TOKEN }}
-        repository-url: https://upload.pypi.org/legacy/
-    # - name: Publish package to testpypi
+    # - name: Publish package to pypi
     #   uses: pypa/gh-action-pypi-publish@release/v1
     #   with:
-    #     password: ${{ secrets.PYPI_API_TOKEN }}
-    #     repository-url: https://test.pypi.org/legacy/
+    #     password: ${{ secrets.IGM_TOKEN }}
+    #     repository-url: https://upload.pypi.org/legacy/
+    - name: Publish package to testpypi
+      uses: pypa/gh-action-pypi-publish@release/v1 #twine?
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        repository-url: https://test.pypi.org/legacy/

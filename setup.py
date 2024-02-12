@@ -19,18 +19,18 @@ with open("README.md", "r") as f:
     readme = f.read()
 
 
-def get_latest_tag():
-    return (
-        subprocess.check_output(["git", "describe", "--tags"])
-        .decode("utf-8")
-        .strip()
-        .split("-")[0]
-    )
+# def get_latest_tag():
+#     return (
+#         subprocess.check_output(["git", "describe", "--tags"])
+#         .decode("utf-8")
+#         .strip()
+#         .split("-")[0]
+#     )
 
 
 setup(
     name="igm-model",
-    version=get_latest_tag(),
+    version="2.1.0",
     author="Guillaume Jouvet",
     author_email="guillaume.jouvet@unil.ch",
     url="https://github.com/jouvetg/igm",

@@ -37,6 +37,10 @@ jobs:
         pip install build
     - name: Build package
       run: python -m build
+    - name: Check if dist folder exists
+      run: |
+        ls -l
+        ls -l dist
     - name: Install package
       run: pip install dist/*.whl
     - name: Run tests

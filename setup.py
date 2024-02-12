@@ -29,7 +29,7 @@ with open("README.md", "r") as f:
 
 
 setup(
-    name="igm-model",
+    name="igm-model-dev",
     version="2.1.0",
     author="Guillaume Jouvet",
     author_email="guillaume.jouvet@unil.ch",
@@ -46,16 +46,16 @@ setup(
     #        'doc': ['numpydoc', 'sphinx', 'sphinx_rtd_theme', 'sphinx_mdinclude'],
     #    },
     install_requires=[
-        "matplotlib",
-        "numpy",
-        "scipy",
-        "tensorflow==2.12.0",
-        "netCDF4",
-        "xarray",
-        "rasterio",
-        "pyproj",
-        "geopandas",
-        "oggm",
-        "importlib_resources",
+        "tensorflow[and-cuda]", #good
+        "matplotlib", #good
+        # "numpy",
+        "scipy", # good
+        "netCDF4", #good
+        "xarray", #good
+        "rasterio", #good
+        "pyproj", # good
+        "geopandas", #good
+        "oggm", # good
+        "importlib_resources", #good
     ],
 )

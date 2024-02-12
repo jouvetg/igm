@@ -4,12 +4,11 @@
 
 from setuptools import setup, find_packages
 import os
-import subprocess
 
 
 def package_files(directory):
     paths = []
-    for path, directories, filenames in os.walk(directory):
+    for path, __, filenames in os.walk(directory):
         for filename in filenames:
             paths.append(os.path.join("..", path, filename))
     return paths
@@ -18,19 +17,9 @@ def package_files(directory):
 with open("README.md", "r") as f:
     readme = f.read()
 
-
-# def get_latest_tag():
-#     return (
-#         subprocess.check_output(["git", "describe", "--tags"])
-#         .decode("utf-8")
-#         .strip()
-#         .split("-")[0]
-#     )
-
-
 setup(
     name="igm-model",
-    version="2.1.0",
+    version="2.2.0",
     author="Guillaume Jouvet",
     author_email="guillaume.jouvet@unil.ch",
     url="https://github.com/jouvetg/igm",
@@ -42,14 +31,10 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     python_requires="<3.12",
-    #    extras_require={
-    #        'doc': ['numpydoc', 'sphinx', 'sphinx_rtd_theme', 'sphinx_mdinclude'],
-    #    },
     install_requires=[
+        "tensorflow[and-cuda]",
         "matplotlib",
-        "numpy",
         "scipy",
-        "tensorflow==2.12.0",
         "netCDF4",
         "xarray",
         "rasterio",

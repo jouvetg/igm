@@ -38,7 +38,7 @@ jobs:
     - name: Build package
       run: python setup.py bdist_wheel
     - name: Install package
-      run: pip install dist/*
+      run: pip install dist/*.whl
     - name: Run tests
       run: |
         pip install pytest

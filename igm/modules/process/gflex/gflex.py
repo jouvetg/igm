@@ -127,7 +127,11 @@ def update(params, state):
             
             r, c = np.shape(state.flex.qs) # dimension of the downsampled arrays
             rr, cc = np.shape( state.thk.numpy()) # dimension of the original array
-            p = pad_arrays(params,state) # padding of one flexural wavelength
+            
+            if state.flex.pad == True:
+                p = pad_arrays(params,state) # padding of one flexural wavelength
+            else:
+                p = 0
             
             # gFlex
             state.flex.initialize()
@@ -149,22 +153,25 @@ def update(params, state):
             target_y = np.linspace(start_row, end_row, rr)
             target_X, target_Y = np.meshgrid(target_x, target_y)
                         
-            state.flex.w = griddata(points, values, (target_X, target_Y), method='linear')
+            state.flex.w = griddata(points, values, (target_X, target_Y), method='linear', fill_value = 0)
         else:
-            p = pad_arrays(params,state)
+            if state.flex.pad == True:
+                p = pad_arrays(params,state)
+            
             state.flex.initialize()
             state.flex.run()
             state.flex.finalize()
             
-            # remove the padded cols and rows
-            state.flex.w = state.flex.w[p:-p,p:-p]
+            if state.flex.pad == True:
+                # remove the padded cols and rows
+                state.flex.w = state.flex.w[p:-p,p:-p]
         
         # add the deflection to the topography 
         state.topg = state.topg0 + state.flex.w
         state.usurf = state.topg + state.thk
         # state.flex.plotChoice='both'
         # state.flex.output()
-        # plt.imshow(state.flex.qs)
+        # plt.imshow(state.flex.w)
         # plt.colorbar()
 
         state.tlast_gflex.assign(state.t)

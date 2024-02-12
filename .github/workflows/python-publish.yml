@@ -42,7 +42,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: dist
-        path: dist
+        path: ./dist
     - name: Install package
       run: pip install dist/*.whl
     - name: Run tests
@@ -71,7 +71,7 @@ jobs:
     - name: Check if dist folder exists
       run: |
         ls -l
-        ls -l dist
+        # ls -l dist
     - name: Publish package to Test PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:

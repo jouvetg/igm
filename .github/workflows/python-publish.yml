@@ -41,8 +41,8 @@ jobs:
     - name: Create artifact for release job
       uses: actions/upload-artifact@v2
       with:
-        name: dist
-        path: ./dist
+        name: dist_folder
+        path: dist
     - name: Install package
       run: pip install dist/*.whl
     - name: Run tests
@@ -67,7 +67,8 @@ jobs:
     - name: Download artifact from build job
       uses: actions/download-artifact@v2
       with:
-        name: dist
+        name: dist_folder
+        path: dist
     - name: Check if dist folder exists
       run: |
         ls -l

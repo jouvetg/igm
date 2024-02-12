@@ -33,15 +33,16 @@ jobs:
       with:
             python-version: '<3.11'
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
+      run: python -m pip install --upgrade pip build twine
     - name: Build package
-      run: python -m build
-    - name: Check if dist folder exists
       run: |
-        ls -l
-        ls -l dist
+        python -m build
+        twine check --strict dist/*
+    - name: Create artifact for release job
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist_folder
+        path: dist/
     - name: Install package
       run: pip install dist/*.whl
     - name: Run tests
@@ -63,9 +64,17 @@ jobs:
     #   with:
     #     password: ${{ secrets.IGM_TOKEN }}
     #     repository-url: https://upload.pypi.org/legacy/
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v2
+      with:
+        name: dist_folder
+    - name: Check if dist folder exists
+      run: |
+        ls -l
+        ls -l dist
     - name: Publish package to Test PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        username: __token__
+        user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
         repository-url: https://test.pypi.org/legacy/

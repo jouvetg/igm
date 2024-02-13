@@ -4,12 +4,11 @@
 
 from setuptools import setup, find_packages
 import os
-import subprocess
 
 
 def package_files(directory):
     paths = []
-    for path, directories, filenames in os.walk(directory):
+    for path, __, filenames in os.walk(directory):
         for filename in filenames:
             paths.append(os.path.join("..", path, filename))
     return paths
@@ -42,6 +41,7 @@ setup(
         "pyproj",
         "geopandas",
         "oggm",
+        "salem",
         "importlib_resources",
     ],
 )

@@ -21,6 +21,8 @@ from .common import (
     run_intializers,
     run_processes,
     run_finalizers,
-    setup_igm,
-    add_logger
+    setup_igm_modules,
+    setup_igm_params,
+    add_logger,
+    print_gpu_info
 )

@@ -23,9 +23,8 @@ import igm
 
 IGM_DESCRIPTION = r"""
   ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Welcome to IGM! The Instructed Glacier Model (IGM) is a modular, open-source, and user-friendly glacier model.   │
-  │ It is designed to be used in a variety of applications, including glacier evolution, ice flow, and ice           │
-  │ dynamics.                                                                                                        │
+  │             Welcome to IGM! a modular, open-source, fast, and user-friendly glacier evolution model.             │
+  │                                                                                                                  │
   │                                                                                                                  │
   │                         __/\\\\\\\\\\\_____/\\\\\\\\\\\\__/\\\\____________/\\\\_                                │
   │                          _\/////\\\///____/\\\//////////__\/\\\\\\________/\\\\\\_                               │

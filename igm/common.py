@@ -246,8 +246,8 @@ def load_user_defined_params(param_file: str, params_dict: dict[str, Any]):
     params_dict.update(json_defined_params)
 
     for key in unrecognized_json_arguments.keys():
-        warnings.warn(
-            f"The following argument specified in the JSON file does not exist among the core arguments nor the modules you have chosen. Ignoring: {key}"
+        raise ValueError(
+            f"The following argument specified in the JSON file does not exist among the core arguments nor the modules you have chosen: {key}"
         )
 
     return params_dict

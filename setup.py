@@ -18,7 +18,7 @@ with open("README.md", "r") as f:
     readme = f.read()
 
 setup(
-    name="igm-model-dev",
+    name="igm-model",
     version="2.1.0",
     author="Guillaume Jouvet",
     author_email="guillaume.jouvet@unil.ch",
@@ -32,7 +32,7 @@ setup(
     long_description_content_type="text/markdown",
     python_requires="<3.12",
     install_requires=[
-        "tensorflow[and-cuda]",
+        "tensorflow[and-cuda]==2.12.0",
         "matplotlib",
         "scipy",
         "netCDF4",

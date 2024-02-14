@@ -1,0 +1,14 @@
+{
+  "modules_preproc": [],
+  "modules_process": ["cap_enth_exp","vert_flow","enthalpy"],
+  "modules_postproc": ["plotsection","write_ncdf","print_info"],
+  "iflo_dim_arrhenius": 3,
+  "time_start": 0.0,
+  "time_end": 3000.0,
+  "wncd_vars_to_save":  ["topg", "usurf", "thk", "smb", "frictheat", "T","basalMeltRate","ubar","vbar",
+                          "tillwat", "strainheat","arrhenius","tauc","W"],
+  "time_step_max": 2.0,
+  "time_save": 100.0,
+  "plt2d_live": true,
+  "enth_drain_ice_column": true
+}

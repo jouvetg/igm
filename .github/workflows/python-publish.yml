@@ -48,6 +48,9 @@ jobs:
         python -c "import os; print(os.getcwd())"
         cd tests
         python -m pytest -W ignore::DeprecationWarning -p no:cacheprovider
+    - name: Print github.ref # debug
+      run: |
+        echo "github.ref: ${{ github.ref }}"
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v') # only release if a new tag is pushed

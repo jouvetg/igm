@@ -32,7 +32,7 @@ setup(
     long_description_content_type="text/markdown",
     python_requires="<3.12",
     install_requires=[
-        "tensorflow[and-cuda]==2.12.0",
+        "tensorflow[and-cuda]",
         "matplotlib",
         "scipy",
         "netCDF4",

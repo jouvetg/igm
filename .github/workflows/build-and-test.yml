@@ -16,7 +16,6 @@ on:
     branches:
       - develop
 
-# permissions read?
 jobs:
   build:
 
@@ -49,24 +48,3 @@ jobs:
         python -c "import os; print(os.getcwd())"
         cd tests
         python -m pytest -W ignore::DeprecationWarning -p no:cacheprovider
-  release:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/') # if a new tag is pushed
-    runs-on: ubuntu-latest
-    steps:
-    - name: Download artifact from build job
-      uses: actions/download-artifact@v2
-      with:
-        name: dist_folder
-        path: dist
-    - name: Check contents of dist folder
-      run: |
-        ls -l
-        ls -l dist
-    - name: Publish package to pypi
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.IGM_TOKEN }}
-        repository-url: https://upload.pypi.org/legacy/
-        skip-existing: true # overwrites existing package even if its the same tag

@@ -13,7 +13,6 @@ logdir/
 smb_accpdd/
 clim_glacialindex/
 
-
 # hide output files and data
 input_saved.nc
 output.nc

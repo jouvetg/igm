@@ -58,10 +58,6 @@ jobs:
       with:
         name: dist_folder
         path: dist
-    - name: Check contents of dist folder
-      run: |
-        ls -l
-        ls -l dist
     - name: Publish package to pypi
       uses: pypa/gh-action-pypi-publish@release/v1
       with:

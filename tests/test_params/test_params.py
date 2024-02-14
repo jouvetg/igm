@@ -8,12 +8,12 @@ from json import JSONDecodeError
 def test_load_json_params_with_comments():
     """Tests that adding comments to the json will not fail with a decode error."""
 
-    igm.get_modules_list("params_comments.json")
+    igm.get_modules_list("./test_params/param_files/params_comments.json")
 
 
 def test_load_igm_modules():
     """Tests that the core igm modules LIST loaded from the params.json file are loaded."""
-    modules_dict = igm.get_modules_list("params.json")
+    modules_dict = igm.get_modules_list("./test_params/param_files/params.json")
 
     preproc_modules = modules_dict["modules_preproc"]
     process_modules = modules_dict["modules_process"]
@@ -37,7 +37,7 @@ def test_load_igm_modules():
 
 def test_load_modules():
     """Tests that the core igm modules LIST AND the custom modules from the params.json file are loaded."""
-    modules_dict = igm.get_modules_list("params.json")
+    modules_dict = igm.get_modules_list("./test_params/param_files/params.json")
     assert modules_dict == {
         "modules_preproc": ["load_ncdf", "track_usurf_obs"],
         "modules_process": [

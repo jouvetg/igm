@@ -2,7 +2,7 @@
 ### <h1 align="center" id="title">The Instructed Glacier Model (IGM) </h1>
  
  <div align="center">
-    <img src="logo_igm.svg" width="40%" alt="Alt text">
+    <img src="logo/logo_igm.svg" width="40%" alt="Alt text">
 </div>
 
 
@@ -20,7 +20,7 @@ The Instructed Glacier Model (IGM) is an **open-source Python package**, which p
   
 # Documentation
 
-Start with the 10-min [video tutorial](https://vimeo.com/884003820). Then, all the documentation can be found on the dedicated [wiki](https://github.com/jouvetg/igm/wiki) and the the in-progress and open-to-contributions [technical paper](https://github.com/jouvetg/igm/blob/main/technical-paper/paper.pdf).
+Start with the 10-min [video tutorial](https://vimeo.com/884003820). Then, all the documentation can be found on the dedicated [wiki](https://github.com/jouvetg/igm/wiki) and the the in-progress and open-to-contributions [technical paper](https://github.com/jouvetg/igm-paper/paper.pdf).
 
 # Discord channel
 

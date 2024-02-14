@@ -11,14 +11,27 @@ from igm import (
     run_intializers,
     run_processes,
     run_finalizers,
-    setup_igm,
+    setup_igm_modules,
+    setup_igm_params,
+    print_gpu_info,
+    add_logger
 )
 
 
 def main() -> None:
     state = State()  # class acting as a dictionary
     parser = params_core()
-    imported_modules, params, state = setup_igm(state=state, parser=parser)
+    params, _ = parser.parse_known_args()
+
+    if params.gpu_info:
+        print_gpu_info()
+
+    if params.logging:
+        add_logger(params=params, state=state)
+        tf.get_logger().setLevel(params.logging_level)
+        
+    imported_modules = setup_igm_modules(params)
+    params = setup_igm_params(parser, imported_modules)
 
     if params.print_params:
         print_params(params=params)

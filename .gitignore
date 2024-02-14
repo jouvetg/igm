@@ -18,6 +18,7 @@ clim_glacialindex/
 input_saved.nc
 RGI60-11.01450/
 output.nc
+optimize.nc
 computational-statistics.txt
 memory-statistics.txt
 computational-pie.png
@@ -29,5 +30,5 @@ params_saved.json
 smb_accpdd/
 clim_glacialindex/
 input_saved.nc
-RGI60-11.01450/
+RGI60-*/
 .vscode/

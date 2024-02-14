@@ -122,24 +122,18 @@ def params_core() -> argparse.ArgumentParser:
     return parser
 
 
-def setup_igm(
-    state: State, parser: ArgumentParser
-) -> Tuple[List[ModuleType], Namespace, State]:
-    params, _ = parser.parse_known_args()
-
-    if params.gpu_info:
-        print_gpu_info()
-
-    if params.logging:
-        add_logger(params=params, state=state)
-        tf.get_logger().setLevel(params.logging_level)
-    # else:
-    #     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3" # this is a little dangerous as the default value (for everyone) is to hide info, warnings, etc! Commenting it out for now
+def setup_igm_modules(params: Namespace) -> List[ModuleType]:
 
     modules_dict = get_modules_list(params.param_file)
     imported_modules = load_modules(modules_dict)
     imported_modules = load_dependent_modules(imported_modules)
 
+    return imported_modules
+
+
+def setup_igm_params(
+    parser: ArgumentParser, imported_modules: List[ModuleType]
+) -> Namespace:
     for module in imported_modules:
         module.params(parser)
 
@@ -152,7 +146,7 @@ def setup_igm(
     parser.set_defaults(**params)
     params = parser.parse_args()
 
-    return imported_modules, params, state
+    return params
 
 
 def run_intializers(modules: List, params: Any, state: State) -> None:
@@ -252,8 +246,8 @@ def load_user_defined_params(param_file: str, params_dict: dict[str, Any]):
     params_dict.update(json_defined_params)
 
     for key in unrecognized_json_arguments.keys():
-        warnings.warn(
-            f"The following argument specified in the JSON file does not exist among the core arguments nor the modules you have chosen. Ignoring: {key}"
+        raise ValueError(
+            f"The following argument specified in the JSON file does not exist among the core arguments nor the modules you have chosen: {key}"
         )
 
     return params_dict

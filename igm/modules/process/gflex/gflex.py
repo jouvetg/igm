@@ -6,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import time
+from igm.modules.utils import *
+
 
 
 def params(parser):
@@ -27,7 +29,18 @@ def params(parser):
         default=1000,
         help="Default resolution for computing isostasy (m).",
     )
-
+    parser.add_argument(
+        "--gflex_pad",
+        type=str2bool,
+        default=False,
+        help="Default padding option",
+    )
+    parser.add_argument(
+        "--gflex_quiet",
+        type=str2bool,
+        default=True,
+        help="Default padding option",
+    )
 
 def initialize(params, state):
     from gflex.f2d import F2D
@@ -43,6 +56,7 @@ def initialize(params, state):
     state.flex.giatime = params.gflex_update_freq
     state.flex.dx = params.gflex_dx
     state.flex.Quiet = False
+    state.flex.pad = params.gflex_pad
     state.flex.Method = "FD"
     state.flex.PlateSolutionType = "vWC1994"
     state.flex.Solver = "direct"
@@ -59,8 +73,11 @@ def initialize(params, state):
 
     if not hasattr(state, "Te"):
         state.flex.Te0 = np.ones_like(state.thk.numpy()) * params.gflex_default_Te
+    else:
+        state.flex.Te0 = state.Te    
     if not hasattr(state,"tcomp_gflex"):
-        state.flex.Te0 = state.flex.Te    
+        state.flex.Te0 = state.flex.Te   
+    
 
 def update(params, state):
     from scipy.interpolate import griddata
@@ -94,8 +111,13 @@ def update(params, state):
         mean_Te = np.mean(state.flex.Te, where=~np.isnan(state.flex.Te))
         fw = 2 * np.pi * ((state.flex.E * mean_Te**3) / (12 * (1 - state.flex.nu**2) * (state.flex.rho_m - 917) * 9.81))**0.25
         pad_width = round(fw / state.flex.dx)
+        if np.shape(state.flex.Te)==np.shape(state.flex.qs):
+            state.flex.Te = np.pad(state.flex.Te, pad_width, mode='constant', constant_values=mean_Te)
+        else:
+            rp, cp = np.shape(state.flex.Te) # dims of padded grid
+            pad_width = round((rp-r)/2)
         state.flex.qs = np.pad(state.flex.qs, pad_width, mode='constant', constant_values=0)
-        state.flex.Te = np.pad(state.flex.Te, pad_width, mode='constant', constant_values=mean_Te)
+        
         return pad_width
 
     if (state.t - state.tlast_gflex) >= params.gflex_update_freq:
@@ -108,12 +130,17 @@ def update(params, state):
         state.flex.qs = state.thk.numpy() * 917 * 9.81  # convert thicknesses to loads
         
         if state.dx < state.flex.dx:
-            state.flex.Te = downsample_array_to_resolution(state.flex.Te, state.dx, state.flex.dx)
-            state.flex.qs = downsample_array_to_resolution(state.flex.qs, state.dx, state.flex.dx)
+            if np.shape(state.flex.Te)==np.shape(state.flex.qs): # in case you want to use a pre-padded (and resampled) Te grid
+                state.flex.Te = downsample_array_to_resolution(state.flex.Te, state.dx, state.flex.dx)  
+            state.flex.qs = downsample_array_to_resolution(state.flex.qs, state.dx, state.flex.dx)    
             
             r, c = np.shape(state.flex.qs) # dimension of the downsampled arrays
             rr, cc = np.shape( state.thk.numpy()) # dimension of the original array
-            p = pad_arrays(params,state) # padding of one flexural wavelength
+            
+            if state.flex.pad == True:
+                p = pad_arrays(params,state) # padding of one flexural wavelength
+            else:
+                p = 0
             
             # gFlex
             state.flex.initialize()
@@ -135,22 +162,25 @@ def update(params, state):
             target_y = np.linspace(start_row, end_row, rr)
             target_X, target_Y = np.meshgrid(target_x, target_y)
                         
-            state.flex.w = griddata(points, values, (target_X, target_Y), method='linear')
+            state.flex.w = griddata(points, values, (target_X, target_Y), method='linear', fill_value = 0)
         else:
-            p = pad_arrays(params,state)
+            if state.flex.pad == True:
+                p = pad_arrays(params,state)
+            
             state.flex.initialize()
             state.flex.run()
             state.flex.finalize()
             
-            # remove the padded cols and rows
-            state.flex.w = state.flex.w[p:-p,p:-p]
+            if state.flex.pad == True:
+                # remove the padded cols and rows
+                state.flex.w = state.flex.w[p:-p,p:-p]
         
         # add the deflection to the topography 
         state.topg = state.topg0 + state.flex.w
         state.usurf = state.topg + state.thk
         # state.flex.plotChoice='both'
         # state.flex.output()
-        # plt.imshow(state.flex.qs)
+        # plt.imshow(state.flex.w)
         # plt.colorbar()
 
         state.tlast_gflex.assign(state.t)

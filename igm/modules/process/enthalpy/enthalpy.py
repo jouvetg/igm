@@ -226,15 +226,14 @@ def update(params, state):
         params.enth_ref_temp,
         params.enth_Lh,
     )
+    
+    # pressure adjusted temperature
+    state.Tpa = state.T + params.enth_claus_clape * params.iflo_ice_density * params.iflo_gravity_cst * depth
 
     # get the arrhenius factor from temperature and and enthalpy
     state.arrhenius = arrhenius_from_temp_tf(
-        state.T,
-        state.omega,
-        depth,
-        params.iflo_gravity_cst,
-        params.iflo_ice_density,
-        params.enth_claus_clape,
+        state.Tpa,
+        state.omega
     ) * params.iflo_enhancement_factor
 
     # correct vertical velocity from melting rate
@@ -321,6 +320,9 @@ def update(params, state):
         params.enth_tauc_min,
         params.enth_tauc_max
     )
+    
+    state.hardav = tf.reduce_sum(state.arrhenius**(-1/3) * state.vert_weight, axis=0) \
+                 * 1e+6 * (365.25*24*3600)**(1/3)  # unit is Pa s**(1/3)
 
     state.tcomp_enthalpy[-1] -= time.time()
     state.tcomp_enthalpy[-1] *= -1
@@ -371,12 +373,9 @@ def temperature_from_enthalpy_tf(E, Tpmp, Epmp, ci, ref_temp, Lh):
 
 
 @tf.function()
-def arrhenius_from_temp_tf(T, omega, depth, gravity_cst, ice_density, claus_clape_cst):
+def arrhenius_from_temp_tf(Tpa, omega):
     # Budd Paterson Law adapted for (T,omega), return result in MPa^{-3} y^{-1}
     # (Aschwanden and al, JOG, 2012) & (Paterson 1994)
-
-    # pressure adjusted temperature
-    Tpa = T + claus_clape_cst * ice_density * gravity_cst * depth
 
     A = tf.where(Tpa < 263.15, 3.985 * 10 ** (-13), 1.916 * 10**3)  # s^{-1} Pa^{-3}
     Q = tf.where(Tpa < 263.15, 60000.0, 139000.0)  # J mol-1

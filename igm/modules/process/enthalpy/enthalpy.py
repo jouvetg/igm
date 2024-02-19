@@ -229,6 +229,9 @@ def update(params, state):
     
     # pressure adjusted temperature
     state.Tpa = state.T + params.enth_claus_clape * params.iflo_ice_density * params.iflo_gravity_cst * depth
+    
+    state.temppabase = state.Tpa[0]
+    state.temppasurf = state.Tpa[-1]
 
     # get the arrhenius factor from temperature and and enthalpy
     state.arrhenius = arrhenius_from_temp_tf(

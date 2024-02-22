@@ -326,7 +326,9 @@ def update(params, state):
     
     state.hardav = tf.reduce_sum(state.arrhenius**(-1/3) * state.vert_weight, axis=0) \
                  * 1e+6 * (365.25*24*3600)**(1/3)  # unit is Pa s**(1/3)
-
+                 
+    state.arrheniusav = tf.reduce_sum(state.arrhenius * state.vert_weight, axis=0)
+    
     state.tcomp_enthalpy[-1] -= time.time()
     state.tcomp_enthalpy[-1] *= -1
 

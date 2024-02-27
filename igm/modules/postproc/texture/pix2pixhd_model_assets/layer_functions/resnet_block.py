@@ -14,14 +14,14 @@ class ResnetBlock(layers.Layer):
         # CONSTANT REFLECT SYMMETRIC
         model = K.Sequential((layers.ZeroPadding2D(padding=(1, 1)),
                               layers.Conv2D(dim, 3, kernel_initializer=weight_init['conv']),
-                              norm_layer(),
+                              norm_layer(groups=-1),
                               activation
                               ))
         if use_dropout:
             model.add(layers.Dropout(0.5))
         model.add(layers.ZeroPadding2D([1, 1]))
         model.add(layers.Conv2D(dim, 3, kernel_initializer=weight_init['conv']))
-        model.add(norm_layer())
+        model.add(norm_layer(groups=-1))
         self.model = model
 
     def call(self, x):

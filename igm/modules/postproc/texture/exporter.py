@@ -37,7 +37,7 @@ class PngExporter(Exporter):
         plt.savefig(
             filename,
             bbox_inches="tight",
-            # dpi=300,
+            dpi=300,
             pad_inches=0,
         )
         plt.close(fig)

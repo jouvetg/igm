@@ -23,7 +23,7 @@ import igm
 
 IGM_DESCRIPTION = r"""
   ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │             Welcome to IGM! a modular, open-source, fast, and user-friendly glacier evolution model.             │
+  │             Welcome to IGM, a modular, open-source, fast, and user-friendly glacier evolution model!             │
   │                                                                                                                  │
   │                                                                                                                  │
   │                         __/\\\\\\\\\\\_____/\\\\\\\\\\\\__/\\\\____________/\\\\_                                │
@@ -272,7 +272,7 @@ def load_modules(modules_dict: Dict) -> List[ModuleType]:
     return (
         imported_preproc_modules
         + imported_process_modules
-        + imported_postproc_modules  # + imported_custom_modules
+        + imported_postproc_modules  # + imported_custom_modules ? (see above)
     )
 
 

@@ -117,6 +117,9 @@ def update(params,state):
         # the final precipitation and temperature must have shape (365,ny,ny)
         state.precipitation = (tf.clip_by_value(state.precipitation * prec_corr_mult, 0, 10 ** 10))
         state.air_temp      = (state.air_temp + temp_corr_addi)
+        
+        state.meanprec = tf.math.reduce_mean(state.precipitation, axis=0)
+        state.meantemp = tf.math.reduce_mean(state.air_temp, axis=0)
 
         state.tlast_clim_aletsch.assign(state.t)
 

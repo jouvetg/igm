@@ -80,8 +80,10 @@ class IGM_Model2D(Model2D):
         parser = igm.params_core()
         
         params, __ = parser.parse_known_args()  # args=[] add this for jupyter notebook
+        
+        modules_dict = { "modules_preproc": [ ], "modules_process": ["iceflow"], "modules_postproc": [ ] }
              
-        imported_modules = igm.load_modules(params)
+        imported_modules = igm.load_modules(modules_dict)
 
         for module in imported_modules:
             module.params(parser)
@@ -109,7 +111,7 @@ class IGM_Model2D(Model2D):
         self.state.arrhenius = (
             tf.ones_like(self.state.thk) * cfg.PARAMS["glen_a"] * SEC_IN_YEAR * 1e18
         )
-        self.state.slidingco = tf.ones_like(self.state.thk) * 10000
+        self.state.slidingco = tf.ones_like(self.state.thk) * 0.045
         self.state.dX = tf.ones_like(self.state.thk) * self.dx
 
         self.state.x = tf.constant(self.x)

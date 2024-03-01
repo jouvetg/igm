@@ -10,7 +10,7 @@ from netCDF4 import Dataset
  
 from igm.modules.utils import *
  
-def params_read_output(parser):
+def params(parser):
     parser.add_argument(
         "--rncd_input_file",
         type=str,
@@ -48,7 +48,7 @@ def params_read_output(parser):
         default=10**20,
     )
  
-def initialize_read_output(params, state):
+def initialize(params, state):
  
     nc = Dataset(params.rncd_input_file, "r")
 
@@ -86,7 +86,7 @@ def initialize_read_output(params, state):
     state.it = 0
     state.saveresult = True
 
-def update_read_output(params, state):
+def update(params, state):
     
     state.t.assign(state.time[state.it])
      
@@ -95,5 +95,5 @@ def update_read_output(params, state):
 
     state.it += 1
 
-def finalize_read_output(params, state):
+def finalize(params, state):
     pass

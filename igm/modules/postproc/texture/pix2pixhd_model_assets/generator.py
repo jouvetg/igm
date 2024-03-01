@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras as K
-from tensorflow_addons.layers import InstanceNormalization
+# from tensorflow_addons.layers import InstanceNormalization # depreciated in tf 2.14
+from tensorflow.keras.layers import GroupNormalization
 from tensorflow.keras import layers
 # from tensorflow.keras.layers import BatchNormalization
 # from tensorflow.keras.layers import Input
@@ -18,7 +19,7 @@ weight_init['bn_beta'] = tf.zeros_initializer()
 
 class LocalEnhancer(K.Model):
     def __init__(self, input_nc, output_nc, ngf=32, n_downsample_global=3, n_blocks_global=9,
-                 n_local_enhancers=1, n_blocks_local=3, norm_layer=InstanceNormalization, padding_type='REFLECT'):
+                 n_local_enhancers=1, n_blocks_local=3, norm_layer=GroupNormalization, padding_type='REFLECT'):
         super(LocalEnhancer, self).__init__()
         
         # Setup variables
@@ -42,10 +43,10 @@ class LocalEnhancer(K.Model):
         model_downsample = K.Sequential(name="DownSampler")
         model_downsample.add(ReflectionPad2d(paddings))
         model_downsample.add(layers.Conv2D(ngf_global, 7, kernel_initializer=weight_init['conv']))
-        model_downsample.add(norm_layer()) # can't seem to figure out how to alter RandomNormal mean/std
+        model_downsample.add(norm_layer(groups=-1)) # can't seem to figure out how to alter RandomNormal mean/std
         model_downsample.add(activation)
         model_downsample.add(layers.Conv2D(ngf_global * 2, 3, strides=2, padding='same', kernel_initializer=weight_init['conv']))
-        model_downsample.add(norm_layer()) # can't seem to figure out how to alter RandomNormal mean/std
+        model_downsample.add(norm_layer(groups=-1)) # can't seem to figure out how to alter RandomNormal mean/std
         model_downsample.add(activation)
 
         # Residual blocks
@@ -56,7 +57,7 @@ class LocalEnhancer(K.Model):
         # Upsampling layers
         # model_upsample.add(layers.Conv2DTranspose(ngf_global, 3, strides=2, padding='same', output_padding=1, kernel_initializer=weight_init['conv'])) # change this to bilinear?
         model_upsample.add(BilinearUpSampling(ngf=ngf_global, mult=2, weight_init=weight_init, name=f"UpConv2D_0")) # FIX THIS TO WORK WITH LOCAL
-        model_upsample.add(norm_layer()) # can't seem to figure out how to alter RandomNormal mean/std
+        model_upsample.add(norm_layer(groups=-1)) # can't seem to figure out how to alter RandomNormal mean/std
         model_upsample.add(activation)
 
         # Final Convolutional
@@ -91,38 +92,10 @@ class LocalEnhancer(K.Model):
         output = model_upsample(model_downsample(input[0]) + global_feature_map)
 
         return output
-    # def call(self, x):
-    #     # Initial input (full resolution image)
-    #     input = [x]
-    #     #print("am I spliting?", self.split_model)
-    #     # Creating low resolution input -> input is now [high_res, low_res]
-    #     low_res_input = self.downsample(input[-1])
-    #     input.append(low_res_input)
-
-    #     # Pass low resolution input into global model to get feature map
-    #     if self.split_model:
-    #         with tf.device("/gpu:0"):
-    #             global_feature_map = self.model(input[-1])
-    #     else:
-    #         global_feature_map = self.model(input[-1])
-
-    #     # Get downsampling and upsampling parts of the local enhancer
-    #     model_downsample = getattr(self, 'model_downsampler')
-    #     model_upsample = getattr(self, 'model_upsampler')
-        
-    #     # Get high resolution input and pass it through the local enhancers downsampler
-    #     if self.split_model:
-    #      #   print("yep, im splitting")
-    #         with tf.device("/gpu:1"):
-    #             output = model_upsample(model_downsample(input[0]) + global_feature_map)
-    #     else:
-    #         output = model_upsample(model_downsample(input[0]) + global_feature_map)
-
-    #     return output
-
+    
 class GlobalGenerator(K.Model):
     def __init__(self, input_nc, output_nc, ngf=64, n_downsampling=3, n_blocks=9,
-                 norm_layer=InstanceNormalization, # instance norm?
+                 norm_layer=GroupNormalization,
                  padding_type='REFLECT'):
         assert(n_blocks >= 0)
         super(GlobalGenerator, self).__init__()
@@ -139,7 +112,7 @@ class GlobalGenerator(K.Model):
         # Initial Block
         model.add(ReflectionPad2d(paddings, name=f"InReflectPad"))
         model.add(layers.Conv2D(ngf, 7, kernel_initializer=weight_init['conv'], name=f"InConv2D"))
-        model.add(norm_layer(name=f"InNorm"))
+        model.add(norm_layer(name=f"InNorm", groups=-1))
         model.add(layers.LeakyReLU(0.2, name=f"InActivation"))
 
         # Downsampling blocks
@@ -147,7 +120,7 @@ class GlobalGenerator(K.Model):
             mult = 2**i
             # model.add(ReflectionPad2d(paddings, name=f"ReflectPad_{i}"))
             model.add(layers.Conv2D(ngf * mult * 2, 3, strides=2, padding='same', kernel_initializer=weight_init['conv'], name=f"Conv2D_{i}"))
-            model.add(norm_layer(name=f"DownNorm_{i}"))
+            model.add(norm_layer(name=f"DownNorm_{i}", groups=-1))
             model.add(layers.LeakyReLU(0.2, name=f"DownActivation_{i}"))
 
         # Resnet blocks
@@ -160,7 +133,7 @@ class GlobalGenerator(K.Model):
             mult = 2**(n_downsampling - i)
             # model.add(layers.Conv2DTranspose(int(ngf * mult / 2), 3, strides=2, padding='same', output_padding=1, kernel_initializer=weight_init['conv'], name=f"TransConv2D_{i}"))
             model.add(BilinearUpSampling(ngf=ngf, mult=mult, weight_init=weight_init))
-            model.add(norm_layer(name=f"UpNorm_{i}"))
+            model.add(norm_layer(name=f"UpNorm_{i}", groups=-1))
             model.add(layers.LeakyReLU(0.2, name=f"UpActivation_{i}"))
             
         # Final layers

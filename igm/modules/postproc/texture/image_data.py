@@ -1,17 +1,17 @@
 import tensorflow as tf
 
-from typing import Tuple
+from typing import Tuple, Any
 from dataclasses import dataclass
 
 from .utils import resize_image
-from igm import State
+# from igm import State
 
 @dataclass
 class ImageData:
     values: tf.Tensor
     height: int
     width: int
-    state: State
+    state: Any
     upsampled: bool = False
     square: bool = False
  

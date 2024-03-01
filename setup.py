@@ -19,7 +19,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="igm-model",
-    version="2.1.0",
+    version="2.1.1",
     author="Guillaume Jouvet",
     author_email="guillaume.jouvet@unil.ch",
     url="https://github.com/jouvetg/igm",
@@ -30,9 +30,9 @@ setup(
     description="IGM - a glacier evolution model",
     long_description=readme,
     long_description_content_type="text/markdown",
-    python_requires="<3.12",
+    python_requires="<3.11",
     install_requires=[
-        "tensorflow[and-cuda]==2.12.0",
+        "tensorflow[and-cuda]==2.14",
         "matplotlib",
         "scipy",
         "netCDF4",

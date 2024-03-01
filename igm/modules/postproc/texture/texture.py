@@ -48,6 +48,12 @@ def params(parser: Any) -> None:
         default=1,
         help="This parameter solves an imcompatibility (this option will be removed in the future)",
     )
+    parser.add_argument(
+        "--texture_resolution",
+        type=float,
+        default=-1,
+        help="This parameter solves an imcompatibility (this option will be removed in the future)",
+    )
     # TODO: Add an option where they can overwrite certain features with their own data (e.g. ndvi, water, etc.), so one can you high resolution topg for example...
     # TODO: Add a logger for verbosity
 
@@ -63,12 +69,7 @@ def initialize(params: Any, state: Any) -> None:
             f"Model not found.\n\nPlease download the model\n{model_url})\nand place the downloaded folder in the following directory:\n{TEXTURE_DEFAULT_DIR}"
         )
 
-    # state.texture_model = load_model(params.texture_model_path, compile=False)
-    state.texture_model = LocalEnhancer(input_nc=8, output_nc=3, ngf=32, n_downsample_global=4, n_blocks_global=9, n_local_enhancers=1, n_blocks_local=3)
-    checkpoint_dict = {"generator": state.texture_model}
-    checkpoint = tf.train.Checkpoint(**checkpoint_dict)
-
-    __ = load_model_test(checkpoint, TEXTURE_CKPT_DIR)
+    state.texture_model = load_model(params.texture_model_path, compile=False)
 
     feature_constants = FeatureConstants()
     image_constants = ImageConstants()
@@ -109,8 +110,7 @@ def update(params: Any, state: Any) -> None:
 
         logging.info(f"Input Image shape (before resizing): {image.shape}")
         data = ImageData(values=image, height=image.shape[1], width=image.shape[2], state=state)
-        
-        # TODO: Check if the image is a power of 2...
+        logging.debug(f"Input Image (before resizing): {data.values}")
         if data.height > data.width:
             if not is_power_of_two(data.height):
                 resolution = nearest_power_of_two(data.height)
@@ -119,12 +119,19 @@ def update(params: Any, state: Any) -> None:
                 resolution = nearest_power_of_two(data.width)
         else:
             resolution = data.height # or data.width but it assumes its a square
+        
+        # ! Not tested yet but trying it out
+        if params.texture_resolution != -1:
+            resolution = params.texture_resolution
+            
         logging.info(f"Long side resolution for resizing: {resolution}")
         new_width, new_height = data.compute_shape(
             resolution=resolution
         )
         data.upsample(width=new_width, height=new_height)
         logging.info(f"Input Image shape (after resizing): {data.values.shape}")
+        logging.debug(f"Input Image (after resizing): {data.values}")
+        
         if not data.square:
             padding_parameters = data.make_square()
             state.texture_exporter.padding_parameters = padding_parameters

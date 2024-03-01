@@ -23,9 +23,8 @@ import igm
 
 IGM_DESCRIPTION = r"""
   ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Welcome to IGM! The Iceflow Glacier Model (IGM) is a modular, open-source, and user-friendly glacier model.      │
-  │ It is designed to be used in a variety of applications, including glacier evolution, ice flow, and ice           │
-  │ dynamics.                                                                                                        │
+  │             Welcome to IGM, a modular, open-source, fast, and user-friendly glacier evolution model!             │
+  │                                                                                                                  │
   │                                                                                                                  │
   │                         __/\\\\\\\\\\\_____/\\\\\\\\\\\\__/\\\\____________/\\\\_                                │
   │                          _\/////\\\///____/\\\//////////__\/\\\\\\________/\\\\\\_                               │
@@ -126,7 +125,7 @@ def setup_igm_modules(params: Namespace) -> List[ModuleType]:
 
     modules_dict = get_modules_list(params.param_file)
     imported_modules = load_modules(modules_dict)
-    imported_modules = load_dependent_modules(imported_modules)
+#    imported_modules = load_dependent_modules(imported_modules) this is no more in used
 
     return imported_modules
 
@@ -273,7 +272,7 @@ def load_modules(modules_dict: Dict) -> List[ModuleType]:
     return (
         imported_preproc_modules
         + imported_process_modules
-        + imported_postproc_modules  # + imported_custom_modules
+        + imported_postproc_modules  # + imported_custom_modules ? (see above)
     )
 
 
@@ -304,7 +303,10 @@ def load_modules_from_directory(
                 logging.info(
                     f"Trying to import custom module from current working directory (folder or .py): {module_name}"
                 )
-                module = importlib.import_module(module_name)
+                try:
+                    module = importlib.import_module(module_name)
+                except:
+                    module = importlib.import_module("modules_custom."+module_name)
             except ModuleNotFoundError:
                 raise ModuleNotFoundError(
                     f"Can not find module {module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/{module_folder} directory or 2) in your current working directory."
@@ -316,41 +318,41 @@ def load_modules_from_directory(
     return imported_modules
 
 
-def has_dependencies(module: Any) -> bool:
-    if hasattr(module, "dependencies"):
-        return True
-    return False
+# def has_dependencies(module: Any) -> bool:
+#     if hasattr(module, "dependencies"):
+#         return True
+#     return False
 
 
-def load_dependent_modules(imported_modules: List) -> List[ModuleType]:
-    imported_dependencies = set()
-    for module in imported_modules:
-        if has_dependencies(module):
-            module_dependencies = module.dependencies
-            directories_to_search = [
-                "preproc",
-                "process",
-                "postproc",
-            ]  # will also check current working directory if any of them fail
-            load_modules_partial = partial(
-                load_modules_from_directory, module_dependencies
-            )
-            for directory in directories_to_search:
-                try:
-                    dependent_module = load_modules_partial(module_folder=directory)
-                    imported_dependencies.add(
-                        dependent_module[0]
-                    )  # [0] because it returns a singleton list
-                    logging.info(
-                        f"Found dependencies in directory {directory} or current working directory. Checking next module for dependencies."
-                    )
-                    break
-                except ModuleNotFoundError:
-                    logging.info(
-                        f"Could not find dependencies in directory {directory} or current working directory. Checking next IGM directory."
-                    )
+# def load_dependent_modules(imported_modules: List) -> List[ModuleType]:
+#     imported_dependencies = set()
+#     for module in imported_modules:
+#         if has_dependencies(module):
+#             module_dependencies = module.dependencies
+#             directories_to_search = [
+#                 "preproc",
+#                 "process",
+#                 "postproc",
+#             ]  # will also check current working directory if any of them fail
+#             load_modules_partial = partial(
+#                 load_modules_from_directory, module_dependencies
+#             )
+#             for directory in directories_to_search:
+#                 try:
+#                     dependent_module = load_modules_partial(module_folder=directory)
+#                     imported_dependencies.add(
+#                         dependent_module[0]
+#                     )  # [0] because it returns a singleton list
+#                     logging.info(
+#                         f"Found dependencies in directory {directory} or current working directory. Checking next module for dependencies."
+#                     )
+#                     break
+#                 except ModuleNotFoundError:
+#                     logging.info(
+#                         f"Could not find dependencies in directory {directory} or current working directory. Checking next IGM directory."
+#                     )
 
-    return imported_modules + list(imported_dependencies)
+#     return imported_modules + list(imported_dependencies)
 
 
 def print_gpu_info() -> None:

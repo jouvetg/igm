@@ -7,13 +7,22 @@ import math
 from igm.modules.process.clim_oggm import *
 from igm.modules.process.smb_oggm import *
 
+from igm.modules.process.clim_oggm import params as params_clim_oggm
+from igm.modules.process.smb_oggm import params as params_smb_oggm
+ 
+from igm.modules.process.clim_oggm import initialize as initialize_clim_oggm
+from igm.modules.process.smb_oggm import initialize as initialize_smb_oggm
+
+from igm.modules.process.clim_oggm import update as update_clim_oggm
+from igm.modules.process.smb_oggm import update as update_smb_oggm
+
 import igm
  
-def params_infersmb(parser):  
+def params(parser):  
     params_clim_oggm(parser)
     params_smb_oggm(parser)
  
-def initialize_infersmb(params,state):
+def initialize(params,state):
     initialize_clim_oggm(params,state)
     initialize_smb_oggm(params,state)
 
@@ -37,8 +46,8 @@ def initialize_infersmb(params,state):
     del state.t
  
 
-def update_infersmb(params,state):
+def update(params,state):
     pass
      
-def finalize_infersmb(params,state):
+def finalize(params,state):
     pass

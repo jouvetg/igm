@@ -702,17 +702,20 @@ def _iceflow_energy(
     )
     
     sr = srx + srz
-    
-    sr = tf.clip_by_value(sr, min_sr**2, max_sr**2)
 
     sr = tf.where(COND, sr, 0.0)
+    
+    srcapped = tf.clip_by_value(sr, min_sr**2, max_sr**2)
+
+    srcapped = tf.where(COND, srcapped, 0.0)
+ 
 
     # C_shear is unit  Mpa y^(1/n) y^(-1-1/n) * m^3 = Mpa y^(-1) m^3
     if len(B.shape) == 3:
         C_shear = (
             tf.reduce_mean(
                 _stag4(B)
-                * tf.reduce_sum(dz * ((sr + regu_glen**2) ** (p / 2)), axis=1),
+                * tf.reduce_sum(dz * ((srcapped + regu_glen**2) ** ((p-2) / 2)) * sr, axis=1),
                 axis=(-1, -2),
             )
             / p
@@ -721,7 +724,7 @@ def _iceflow_energy(
         C_shear = (
             tf.reduce_mean(
                 tf.reduce_sum(
-                    _stag8(B) * dz * ((sr + regu_glen**2) ** (p / 2)), axis=1
+                    _stag8(B) * dz * ((srcapped + regu_glen**2) ** ((p-2) / 2)) * sr, axis=1
                 ),
                 axis=(-1, -2),
             )

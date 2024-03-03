@@ -16,6 +16,7 @@ from netCDF4 import Dataset
 from igm.modules.utils import *
 from igm.modules.process.iceflow import initialize as initialize_iceflow
 from igm.modules.process.iceflow import params as params_iceflow
+
 from igm.modules.process.iceflow.iceflow import (
     fieldin_to_X,
     update_2d_iceflow_variables,
@@ -108,6 +109,12 @@ def params(parser):
         type=float,
         default=1.0,
         help="Confidence/STD of the flux divergence as input data for the optimization (if 0, divfluxobs_std field must be given)",
+    )
+    parser.add_argument(
+        "--opti_divflux_method",
+        type=str,
+        default="upwind",
+        help="Compute the divergence of the flux using the upwind or centered method",
     )
     parser.add_argument(
         "--opti_scaling_thk",
@@ -348,8 +355,10 @@ def initialize(params, state):
             # misfit divergence of the flux
             if ("divfluxobs" in params.opti_cost) | ("divfluxfcz" in params.opti_cost) | ("divfluxpen" in params.opti_cost):
                 divflux = compute_divflux(
-                    state.ubar, state.vbar, state.thk, state.dx, state.dx
+                    state.ubar, state.vbar, state.thk, state.dx, state.dx, method=params.opti_divflux_method
                 )
+                
+                # divflux = tf.where(ACT, divflux, 0.0)
 
                 if "divfluxfcz" in params.opti_cost:
                     ACT = state.icemaskobs > 0.5
@@ -546,8 +555,10 @@ def initialize(params, state):
                 state.thk = tf.where(state.thk < 0.01, 0, state.thk)
 
             state.divflux = compute_divflux(
-                state.ubar, state.vbar, state.thk, state.dx, state.dx
+                state.ubar, state.vbar, state.thk, state.dx, state.dx, method=params.opti_divflux_method
             )
+
+            #state.divflux = tf.where(ACT, state.divflux, 0.0)
 
             _compute_rms_std_optimization(state, i)
 
@@ -931,7 +942,7 @@ def _update_plot_inversion(params, state, i):
     ax4 = state.axes[1, 0]
 
     im1 = ax4.imshow(
-        np.ma.masked_where(state.thk == 0, velsurf_mag),
+        velsurf_mag, # np.ma.masked_where(state.thk == 0, velsurf_mag),
         origin="lower",
         extent=state.extent,
         vmin=0,
@@ -970,7 +981,7 @@ def _update_plot_inversion(params, state, i):
 
     ax6 = state.axes[1, 2]
     im1 = ax6.imshow(
-        np.ma.masked_where(state.thk == 0, state.divflux),
+        state.divflux, # np.where(state.icemaskobs > 0.5, state.divflux,np.nan),
         origin="lower",
         extent=state.extent,
         vmin=-10,
@@ -999,8 +1010,7 @@ def _update_plot_inversion(params, state, i):
             clear_output(wait=True)
             display(state.fig)
     else:
-        plt.savefig("resu-opti-" + str(i).zfill(4) + ".png", pad_inches=0 )
-        plt.close("all")
+        plt.savefig("resu-opti-" + str(i).zfill(4) + ".png", bbox_inches="tight", pad_inches=0.2)
 
         os.system( "echo rm " + "*.png" + " >> clean.sh" )
 

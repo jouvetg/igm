@@ -79,7 +79,7 @@ def _compute_vertical_velocity_kinematic(params, state, U, V, thk, dX):
 
         ub = tf.reduce_sum(state.vert_weight[:l] * state.U[:l], axis=0) / tf.reduce_sum(state.vert_weight[:l], axis=0)
         vb = tf.reduce_sum(state.vert_weight[:l] * state.V[:l], axis=0) / tf.reduce_sum(state.vert_weight[:l], axis=0)         
-        div = compute_divflux_mid(ub, vb, cumdz, state.dx, state.dx) 
+        div = compute_divflux(ub, vb, cumdz, state.dx, state.dx, method='centered')
 
         divfl.append(div)
     
@@ -90,25 +90,6 @@ def _compute_vertical_velocity_kinematic(params, state, U, V, thk, dX):
     W = state.U * sloplayx + state.V * sloplayy - divfl
     
     return W
-    
-    
-@tf.function()
-def compute_divflux_mid(u, v, h, dx, dy):
-
-    Qx = u * h  
-    Qy = v * h  
-    
-    Qx = tf.concat(
-        [Qx[:, 0:1], 0.5 * (Qx[:, :-1] + Qx[:, 1:]), Qx[:, -1:]], 1
-    )  # has shape (ny,nx+1) 
-    
-    Qy = tf.concat(
-        [Qy[0:1, :], 0.5 * (Qy[:-1, :] + Qy[1:, :]), Qy[-1:, :]], 0
-    )  # has shape (ny+1,nx)
-    
-    ## Computation of the divergence, final shape is (ny,nx)
-    return (Qx[:, 1:] - Qx[:, :-1]) / dx + (Qy[1:, :] - Qy[:-1, :]) / dy
-
 
 # @tf.function(experimental_relax_shapes=True)
 def _compute_vertical_velocity_incompressibility(params, state, U, V, thk, dX):

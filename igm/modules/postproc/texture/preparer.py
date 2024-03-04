@@ -36,7 +36,7 @@ class Pix2PixHDImagePreparer:
         self.image = tf.stack([topg, water, vx, thk, prec, ndvi, vy, temp], axis=0)
 
     def prec_units(self, prec: tf.Tensor) -> tf.Tensor:
-        return (prec / self.params.divide_by_density) * (1000 / 12)  # (m / yr. -> mm / month)
+        return (prec / self.params.divide_by_density) * (1 / 12)  # (m / yr. -> mm / month)
 
     def compute_ndvi(self, temp: tf.Tensor, prec: tf.Tensor) -> tf.Tensor:
         temp_flat = tf.reshape(temp, [-1])

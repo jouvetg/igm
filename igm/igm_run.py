@@ -38,6 +38,7 @@ def main() -> None:
 
     # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
     with tf.device(f"/GPU:{params.gpu_id}"):  # type: ignore for linting checks
+#    with tf.device('/CPU:0'):
         run_intializers(imported_modules, params, state)
         run_processes(imported_modules, params, state)
         run_finalizers(imported_modules, params, state)

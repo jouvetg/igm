@@ -668,10 +668,12 @@ def _iceflow_energy(
 
     # Vertical discretization
     if Nz > 1:
-        zeta = np.arange(Nz) / (Nz - 1)
+        zeta = np.arange(Nz) / (Nz - 1)  # formerly ...
+        #zeta = tf.range(Nz, dtype=tf.float32) / (Nz - 1)
         temp = (zeta / vert_spacing) * (1.0 + (vert_spacing - 1.0) * zeta)
         temd = temp[1:] - temp[:-1]
-        dz = tf.stack([_stag4(thk) * z for z in temd], axis=1)
+        dz = tf.stack([_stag4(thk) * z for z in temd], axis=1)  # formerly ..
+        #dz = (tf.expand_dims(tf.expand_dims(temd,axis=-1),axis=-1)*tf.expand_dims(_stag4(thk),axis=0))
     else:
         dz = tf.expand_dims(_stag4(thk), axis=0)
 

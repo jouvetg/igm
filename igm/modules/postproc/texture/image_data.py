@@ -16,7 +16,8 @@ class ImageData:
     square: bool = False
  
     def upsample(self, height: int, width: int) -> None:
-        self.values = resize_image(self.values, height, width)
+        # self.values = resize_image(self.values, height, width)
+        self.values = self.pad_image(self.values, height, width)
         self.upsampled = True
 
     def compute_shape(self, resolution: int) -> Tuple[int, int]:
@@ -51,6 +52,7 @@ class ImageData:
             self.width = new_width
 
             return new_width, new_height
+    
 
     def make_square(self, method: str = "reflect"):
         if not self.upsampled:
@@ -80,6 +82,28 @@ class ImageData:
 
         self.values = tf.pad(self.values, padding_parameters, mode=method)
 
+        return padding_parameters
+    
+    def pad_image(self, resolution_height, resolution_width, method: str = "reflect"):
+        import numpy as np
+
+        pad_width = (resolution_width - self.width) // 2
+        pad_height = (resolution_height - self.height) // 2
+        
+        # edge case if the resulting resolution is odd...
+        width_offset = (resolution_width - self.width) % 2
+        height_offset = (resolution_height - self.height) % 2
+        padding_parameters = np.array([
+            [0, 0],
+            [pad_height, pad_height + height_offset],
+            [pad_width, pad_width  + width_offset],
+            [0, 0],
+        ])  # [bs, h + padding, w + padding, c]
+
+        self.values = tf.pad(self.values, padding_parameters, mode=method)
+        self.height += 2 * pad_height + height_offset
+        self.width += 2 * pad_width + width_offset
+        
         return padding_parameters
 
     def run(self) -> None:

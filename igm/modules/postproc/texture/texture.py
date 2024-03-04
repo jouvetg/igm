@@ -1,4 +1,4 @@
-from tensorflow.keras.models import load_model
+# from tensorflow.keras.models import load_model
 import tensorflow as tf
 
 from typing import Any
@@ -16,7 +16,7 @@ from .preparer import Pix2PixHDImagePreparer
 from .image_data import ImageData
 from .pix2pixhd import Pix2PixHDPipeline
 from .pix2pixhd_model_assets.generator import LocalEnhancer
-from .pix2pixhd_model_assets.loading import load_model_test
+from .pix2pixhd_model_assets.loading import load_model
 
 TEXTURE_DEFAULT_DIR = igm.__path__[0] + "/modules/postproc/texture/"
 TEXTURE_DEFAULT_PATH = os.path.join(TEXTURE_DEFAULT_DIR, "pix2pixhd-texture-model")
@@ -69,7 +69,12 @@ def initialize(params: Any, state: Any) -> None:
             f"Model not found.\n\nPlease download the model\n{model_url})\nand place the downloaded folder in the following directory:\n{TEXTURE_DEFAULT_DIR}"
         )
 
-    state.texture_model = load_model(params.texture_model_path, compile=False)
+    state.texture_model = LocalEnhancer(input_nc=8, output_nc=3, ngf=32, n_downsample_global=4, n_blocks_global=9, n_local_enhancers=1, n_blocks_local=3)
+    checkpoint_dict = {"generator": state.texture_model}
+    checkpoint = tf.train.Checkpoint(**checkpoint_dict)
+
+    __ = load_model(checkpoint, TEXTURE_CKPT_DIR)
+    # __ = load_model_test(checkpoint, TEXTURE_CKPT_DIR)
 
     feature_constants = FeatureConstants()
     image_constants = ImageConstants()
@@ -88,16 +93,22 @@ def initialize(params: Any, state: Any) -> None:
         raise NotImplementedError(
             "Texture format not implemented. Please choose one of the following: (png, tif, or tiff)"
         )
+
 def is_power_of_two(number):
     """Checks if a number is a power of two"""
     return (number & (number - 1)) == 0
 
-def nearest_power_of_two(number):
+def nearest_power_of_two(number, method="ceil"):
     """Finds nearest power of two"""
     import math
-    return 2 ** round(math.log2(number))
+    if method == "ceil":
+        return 2 ** math.ceil(math.log2(number))
+    elif method == "floor":
+        return 2 ** math.floor(math.log2(number))
+    else:
+        return 2 ** round(math.log2(number))
 
-
+import numpy as np
 def update(params: Any, state: Any) -> None:
     if state.saveresult:
         state.tcomp_texture.append(time.time())
@@ -111,30 +122,42 @@ def update(params: Any, state: Any) -> None:
         logging.info(f"Input Image shape (before resizing): {image.shape}")
         data = ImageData(values=image, height=image.shape[1], width=image.shape[2], state=state)
         logging.debug(f"Input Image (before resizing): {data.values}")
-        if data.height > data.width:
-            if not is_power_of_two(data.height):
-                resolution = nearest_power_of_two(data.height)
-        elif data.height < data.width:
-            if not is_power_of_two(data.width):
-                resolution = nearest_power_of_two(data.width)
+        if max(data.height, data.width) < 1024: # optimal resolution for pix2pixhd
+            resolution = 1024
         else:
-            resolution = data.height # or data.width but it assumes its a square
+            if data.height > data.width:
+                if not is_power_of_two(data.height):
+                    resolution = nearest_power_of_two(data.height)
+            elif data.height < data.width:
+                if not is_power_of_two(data.width):
+                    resolution = nearest_power_of_two(data.width)
+            else:
+                resolution = data.height # or data.width but its always going to be a square here
         
         # ! Not tested yet but trying it out
-        if params.texture_resolution != -1:
+        if params.texture_resolution != -1: # overrides the resolution
             resolution = params.texture_resolution
             
         logging.info(f"Long side resolution for resizing: {resolution}")
-        new_width, new_height = data.compute_shape(
-            resolution=resolution
-        )
-        data.upsample(width=new_width, height=new_height)
+
+        padding_parameters = np.array([
+            [0, 0],
+            [0, 0],
+            [0, 0],
+            [0, 0],
+        ])
+        # iteratively resize image until it is at least 1024x1024 (due to tf.pad maximal padding restraints)
+        while (data.height < resolution) or (data.width < resolution): # only in < 1024 case
+            resolution_height = 2 * data.height if (2 * data.height <= resolution) else resolution
+            resolution_width = 2 * data.width if (2 * data.width <= resolution) else resolution
+            logging.info(f"Resolution size (HxW) for padding: {resolution_height}x{resolution_width}")
+            padding_parameters += data.pad_image(resolution_height=resolution_height, resolution_width=resolution_width)
+            logging.info(f"Resolution size (HxW) after padding: {data.height}x{data.width}")
+            logging.debug(f"Padding parameters: {padding_parameters}")
+
         logging.info(f"Input Image shape (after resizing): {data.values.shape}")
         logging.debug(f"Input Image (after resizing): {data.values}")
-        
-        if not data.square:
-            padding_parameters = data.make_square()
-            state.texture_exporter.padding_parameters = padding_parameters
+        state.texture_exporter.padding_parameters = padding_parameters       
 
         pipeline = Pix2PixHDPipeline(
             feature_normalizer=state.feature_normalizer,

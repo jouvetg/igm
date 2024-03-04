@@ -19,28 +19,22 @@ class PngExporter(Exporter):
         return out
 
     def unpad(self, image: tf.Tensor, padding_parameters) -> tf.Tensor:
+        import numpy as np
         n_dimensions = len(padding_parameters)
+        padded_image = image
         for i, dimension in enumerate(padding_parameters):
-            if dimension != (0, 0):
+            if not np.all(np.equal(dimension,0)):
                 begin = [0] * n_dimensions
                 size = [-1] * n_dimensions
                 begin[i] = dimension[0]
                 size[i] = image.shape[i] - dimension[0] - dimension[1]
-                unpadded_image = tf.slice(image, begin=begin, size=size)
-
+                padded_image = tf.slice(padded_image, begin=begin, size=size)
+        unpadded_image = padded_image
+        
         return unpadded_image
 
     def export(self, image: tf.Tensor, filename: str) -> None:
-        fig = plt.figure()
-        plt.imshow(image, origin="lower")
-        plt.axis("off")
-        plt.savefig(
-            filename,
-            bbox_inches="tight",
-            dpi=300,
-            pad_inches=0,
-        )
-        plt.close(fig)
+        plt.imsave(fname=filename, arr=image, format='png', dpi=300, origin='lower')
 
 
 class TiffExporter(Exporter):

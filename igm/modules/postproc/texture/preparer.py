@@ -16,46 +16,11 @@ class Pix2PixHDImagePreparer:
     def get_features(self) -> None:
         topg = self.state.topg
         thk = self.state.thk
+        vx = self.state.uvelsurf
+        vy = self.state.vvelsurf    
+        temp = self.state.meantemp
+        prec = self.state.meanprec
         
-        # ----------------------------------------------------------------------------------------------
-        # Specific to testing IGM (will remove later as it assumes a different naming structure!)
-        # vx = self.state.uvelsurf
-        # vy = self.state.vvelsurf
-        
-        # air_temp = self.state.meantemp
-        # precipitation = self.state.meanprec
-        
-        # temp = air_temp
-        # prec = precipitation
-        # ----------------------------------------------------------------------------------------------
-        
-        # ----------------------------------------------------------------------------------------------
-        # Specific to IGM (do not delete anything here as it will be reinstated later!)
-        vx = self.state.U[-1]
-        vy = self.state.V[-1]
-        try:
-            air_temp = self.state.air_temp
-        except AttributeError:
-            raise AttributeError("Air temperature is required for the texture model. Please include it in an input file with the variable name 'air_temp'. \
-                                Also, note that air_temp will be averaged to obtain the annually averaged air_temp for the spatial grid.")
-        
-        try:
-            precipitation = self.state.precipitation
-        except AttributeError:
-            raise AttributeError("Precipitation is required for the texture model. Please include it in an input file with the variable name 'precipitation'. \
-                                Also, note that precipitation will be averaged to obtain the annually averaged precipitation for the spatial grid.")
-        
-        # if the user supplies monthly, quarerly, or seasonal data, average to get annual data
-        if air_temp.shape[0] > 1:
-            temp = tf.math.reduce_mean(air_temp, axis=0)
-        else:
-            temp = air_temp
-        if precipitation.shape[0] > 1:
-            prec = tf.math.reduce_mean(precipitation, axis=0)
-        else:
-            prec = precipitation
-        # ----------------------------------------------------------------------------------------------
-
         prec = self.prec_units(prec)
 
         if hasattr(self.state, "ndvi"):

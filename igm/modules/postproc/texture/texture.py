@@ -31,7 +31,7 @@ def params(parser: Any) -> None:
     parser.add_argument(
         "--texture_model_path",
         type=str,
-        default=TEXTURE_DEFAULT_PATH,
+        default=TEXTURE_CKPT_DIR,
         help="Name of the folder for the texture model (tf format)",
     )
     parser.add_argument(

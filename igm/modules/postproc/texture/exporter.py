@@ -1,7 +1,7 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
-
+from typing import Any
 from .normalizer import Normalizer
 
 class Exporter(ABC):
@@ -11,6 +11,7 @@ class Exporter(ABC):
 
 
 class PngExporter(Exporter):
+
     def convert_8bit(self, image: tf.Tensor, image_normalizer: Normalizer) -> tf.Tensor:
         out = image_normalizer.unnormalize(image)
         out = tf.cast(out, tf.uint8)
@@ -33,12 +34,15 @@ class PngExporter(Exporter):
         
         return unpadded_image
 
-    def export(self, image: tf.Tensor, filename: str, state: any) -> None:
+    def export(self, image: tf.Tensor, filename: str) -> None:
         plt.imsave(fname=filename, arr=image, format='png', dpi=300, origin='lower')
 
 
 class TiffExporter(Exporter):
     
+    def __init__(self, state: Any):
+        self.state = state
+        
     # this is a copy of the PngExporter, but it should be changed to export tiff files
     def convert_8bit(self, image: tf.Tensor, image_normalizer: Normalizer) -> tf.Tensor:
         out = image_normalizer.unnormalize(image)
@@ -63,7 +67,7 @@ class TiffExporter(Exporter):
         
         return unpadded_image    
     
-    def export(self, image: tf.Tensor, filename: str, state: any) -> None:
+    def export(self, image: tf.Tensor, filename: str) -> None:
 
         import rasterio
         from rasterio.enums import ColorInterp
@@ -75,10 +79,10 @@ class TiffExporter(Exporter):
         nx=image.shape[1]
         ch=image.shape[2]    
         
-        xmin = min(state.x)
-        xmax = max(state.x)
-        ymin = min(state.y)
-        ymax = max(state.y)
+        xmin = min(self.state.x)
+        xmax = max(self.state.x)
+        ymin = min(self.state.y)
+        ymax = max(self.state.y)
         
         xres = (xmax - xmin) / float(nx)
         yres = (ymax - ymin) / float(ny)

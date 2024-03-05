@@ -14,7 +14,7 @@ class ImageData:
     state: Any
     upsampled: bool = False
     square: bool = False
- 
+
     def upsample(self, height: int, width: int) -> None:
         # self.values = resize_image(self.values, height, width)
         self.values = self.pad_image(self.values, height, width)

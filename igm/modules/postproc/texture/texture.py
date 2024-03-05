@@ -6,6 +6,7 @@ import time
 import os
 import igm
 import logging
+import numpy as np
 
 from .normalizer import FeatureNormalizer, ImageNormalizer
 from .utils import TextureModelNotFoundError, resize_image
@@ -73,7 +74,6 @@ def initialize(params: Any, state: Any) -> None:
     checkpoint = tf.train.Checkpoint(**checkpoint_dict)
 
     __ = load_model(checkpoint, TEXTURE_CKPT_DIR)
-    # __ = load_model_test(checkpoint, TEXTURE_CKPT_DIR)
 
     feature_constants = FeatureConstants()
     image_constants = ImageConstants()
@@ -86,8 +86,8 @@ def initialize(params: Any, state: Any) -> None:
 
     if params.texture_format == "png":
         state.texture_exporter = PngExporter()
-    elif params.texture_format == ("tif" or "tiff"):
-        state.texture_exporter = TiffExporter()
+    elif params.texture_format == "tif" or params.texture_format == "tiff":
+        state.texture_exporter = TiffExporter(state=state)
     else:
         raise NotImplementedError(
             "Texture format not implemented. Please choose one of the following: (png, tif, or tiff)"
@@ -107,7 +107,6 @@ def nearest_power_of_two(number, method="ceil"):
     else:
         return 2 ** round(math.log2(number))
 
-import numpy as np
 def update(params: Any, state: Any) -> None:
     if state.saveresult:
         state.tcomp_texture.append(time.time())
@@ -152,7 +151,7 @@ def update(params: Any, state: Any) -> None:
             logging.info(f"Resolution size (HxW) for padding: {resolution_height}x{resolution_width}")
             padding_parameters += data.pad_image(resolution_height=resolution_height, resolution_width=resolution_width)
             logging.info(f"Resolution size (HxW) after padding: {data.height}x{data.width}")
-            logging.debug(f"Padding parameters: {padding_parameters}")
+            logging.debug(f"Cumulative padding parameters: {padding_parameters}")
 
         logging.info(f"Input Image shape (after resizing): {data.values.shape}")
         logging.debug(f"Input Image (after resizing): {data.values}")

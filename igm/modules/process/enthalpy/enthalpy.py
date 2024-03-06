@@ -238,10 +238,14 @@ def update(params, state):
         state.Tpa,
         state.omega
     ) * params.iflo_enhancement_factor
-
-    # correct vertical velocity from melting rate
-    state.W = state.W - tf.expand_dims(state.basalMeltRate, axis=0)
-
+ 
+    if hasattr(state, "W"):
+        # correct vertical velocity corrected (therefore Wc) from melting rate
+        Wc = state.W - tf.expand_dims(state.basalMeltRate, axis=0)
+    else:
+        # if the vertical velocity is not given, we assume it is zero
+        Wc = tf.zeros_like(state.U) - tf.expand_dims(state.basalMeltRate, axis=0)
+        
     # compute the strainheat is in [W m-3]
     state.strainheat = compute_strainheat_tf(
         state.U / params.enth_spy,
@@ -280,7 +284,7 @@ def update(params, state):
         Epmp,
         state.dt * params.enth_spy,
         dz,
-        state.W / params.enth_spy,
+        Wc / params.enth_spy,
         surfenth,
         state.bheatflx,
         state.strainheat,

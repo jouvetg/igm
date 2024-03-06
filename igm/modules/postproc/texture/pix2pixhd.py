@@ -43,7 +43,6 @@ class Pix2PixHDPipeline:
             image=image, image_normalizer=self.image_normalizer
         )
         logging.info(f"Image type after converting to 8bit (if needed): {image.dtype}")
-        logging.info(f"First column from Image after converting to 8bit (if needed): {image[:,0]}")
+        logging.debug(f"First column from Image after converting to 8bit (if needed): {image[:,0]}")
         self.exporter.export(
-            image=image, filename=f"texture_{year}.{self.params.texture_format}"
-        )
+            image=image, filename=f"texture_{year}.{self.params.texture_format}")

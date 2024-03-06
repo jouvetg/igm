@@ -13,7 +13,7 @@ logdir/
 # texture/
 smb_accpdd/
 clim_glacialindex/
-
+igm_performance/
 
 # hide output files and data
 input_saved.nc

@@ -1,13 +1,12 @@
 import tensorflow as tf
 import os
 
-def load_model_test(checkpoint, checkpoint_dir):
+def load_model(checkpoint, checkpoint_dir):
     
     model_path = tf.train.latest_checkpoint(checkpoint_dir)
 
     try:
-        # print(model_path, checkpoint_dir)
-        checkpoint.restore(model_path).assert_consumed() #.expect_partial()
+        checkpoint.restore(model_path).expect_partial()
         print("Successfully restored model.")
     except AssertionError as error:
         print(error)

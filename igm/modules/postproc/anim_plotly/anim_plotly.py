@@ -24,6 +24,7 @@ def finalize(params, state):
     import plotly.graph_objects as go
     import math
     from dash import Dash, dcc, html, Input, Output
+    import pyproj
 
     import matplotlib.cm as cm  # Import the Matplotlib colormap library
 
@@ -266,6 +267,22 @@ def finalize(params, state):
         camera_x = math.sin(-radians)
         camera_y = math.cos(-radians)
 
+        # Define the UTM projection (UTM zone 32N)
+        utm_proj = pyproj.Proj(proj='utm', zone=32, ellps='WGS84')
+
+        # Define the WGS84 projection
+        wgs84_proj = pyproj.Proj(proj='latlong', datum='WGS84')
+
+        # Example coordinate in UTM zone 32N (replace these values with your coordinates)
+        utm_easting = lat_range  # example easting value
+        utm_northing = lon_range  # example northing value
+
+        # Reproject the coordinate
+        lon_x, lat_x = pyproj.transform(utm_proj, wgs84_proj, utm_easting, np.ones_like(utm_easting)*utm_northing[0])
+        lon_y, lat_y = pyproj.transform(utm_proj, wgs84_proj, np.ones_like(utm_northing)*utm_easting[0], utm_northing)
+
+        # Output the WGS84 coordinate
+
         fig_dict = dict(
             data=frames[0]["data"],
             frames=frames,
@@ -283,7 +300,11 @@ def finalize(params, state):
                         showticklabels=True,
                         visible=True,
                         range=[lat_range[0], lat_range[-1]],
+                        tickvals=[ticks for ticks in lat_range[::42]],
+                        ticktext=["%.2fE"%ticks for ticks in lon_x[::42]],
+
                         title="Longitude",
+
                     ),
                     yaxis=dict(
                         showbackground=False,
@@ -291,6 +312,9 @@ def finalize(params, state):
                         visible=True,
                         range=[lon_range[0], lon_range[-1]],
                         title="Latitude",
+                        tickvals=[ticks for ticks in lon_range[::42]],
+                        ticktext=["%.2fN"%ticks for ticks in lat_y[::42]],
+
                     ),
                 ),
                 scene_aspectratio=dict(x=1, y=ratio_y, z=ratio_z),

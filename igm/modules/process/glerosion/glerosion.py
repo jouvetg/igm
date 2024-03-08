@@ -49,11 +49,15 @@ def update(params, state):
         state.tcomp_glerosion.append(time.time())
 
         velbase_mag = getmag(state.U[0], state.V[0])
-
+        
+        sed = tf.where(state.sed > 0, tf.ones_like(state.sed)*2, state.sed)
         # apply erosion law, erosion rate is proportional to a power of basal sliding speed
-        dtopgdt = params.glerosion_cst * (velbase_mag**params.glerosion_exp)
+        dtopgdt = params.glerosion_cst * (velbase_mag**params.glerosion_exp)*sed
+        
 
         state.topg = state.topg - (state.t - state.tlast_erosion) * dtopgdt
+        state.sed = state.sed - (state.t - state.tlast_erosion) * dtopgdt
+        state.sed = tf.where(state.sed < 0, tf.zeros_like(state.sed), state.sed)
 
         # THIS WORK ONLY FOR GROUNDED ICE, TO BE ADAPTED FOR FLOATING ICE
         state.usurf = state.topg + state.thk

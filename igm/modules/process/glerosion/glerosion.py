@@ -32,6 +32,12 @@ def params(parser):
         default=1.0,
         help="Update the erosion only each X years (Default: 100)",
     )
+    parser.add_argument(
+        "--glerosion_sediment_fac",
+        type=float,
+        default=2.0,
+        help="Erosion efficency of sediments relative to bedrock.",
+    )
 
 
 def initialize(params, state):
@@ -50,7 +56,7 @@ def update(params, state):
 
         velbase_mag = getmag(state.U[0], state.V[0])
         
-        sed = tf.where(state.sed > 0, tf.ones_like(state.sed)*2, state.sed)
+        sed = tf.where(state.sed > 0, tf.ones_like(state.sed)*params.glerosion_sediment_fac, state.sed)
         # apply erosion law, erosion rate is proportional to a power of basal sliding speed
         dtopgdt = params.glerosion_cst * (velbase_mag**params.glerosion_exp)*sed
         

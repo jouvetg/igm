@@ -29,14 +29,14 @@ def params(parser):
     parser.add_argument(
         "--glerosion_update_freq",
         type=float,
-        default=1,
+        default=1.0,
         help="Update the erosion only each X years (Default: 100)",
     )
 
 
 def initialize(params, state):
     state.tcomp_glerosion = []
-    state.tlast_erosion = tf.Variable(params.time_start)
+    state.tlast_erosion = tf.Variable(params.time_start, dtype=tf.float32)
 
 
 def update(params, state):

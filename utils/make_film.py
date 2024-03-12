@@ -67,12 +67,12 @@ if config.reverse:
 
 img = cv2.imread(file_list[0])
 
-print(img.shape)
+#print(img.shape)
 
 frame_size = (int(img.shape[1]*config.resize), 
               int(img.shape[0]*config.resize))
 
-print(frame_size)
+#print(frame_size)
 
 # Create a VideoWriter object
 video_out = cv2.VideoWriter(config.output_file+'.mp4', 

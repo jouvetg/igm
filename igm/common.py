@@ -117,6 +117,18 @@ def params_core() -> argparse.ArgumentParser:
         default="params_saved",
         help="Name of the file to store the parameters used in the run (default: %(default)s)",
     )
+    parser.add_argument(
+        "--url_data",
+        type=str,
+        default="",
+        help="The URL of the ZIP file to download and unzip (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--folder_data",
+        type=str,
+        default="data",
+        help="The name of the folder where are stored the data (default: %(default)s)",
+    )
 
     return parser
 
@@ -380,3 +392,37 @@ def print_params(params: Namespace) -> None:
         json.dump(params.__dict__, json_file, indent=2)
 
     os.system("echo rm " + param_file + " >> clean.sh")
+
+
+def download_unzip_and_store(url, folder_name='data') -> None:
+    """
+    Use wget to download a ZIP file and unzip its contents to a specified folder.
+    
+    Args:
+    - url (str): The URL of the ZIP file to download.
+    - folder_name (str): The name of the folder where the ZIP file's contents will be extracted.
+    """
+
+    import subprocess
+    import os
+    import zipfile
+
+    # Ensure the destination folder exists
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+        
+        # Download the file with wget
+        print("Downloading the ZIP file with wget...")
+        subprocess.run(['wget', '-O', 'downloaded_file.zip', url])
+        
+        # Unzipping the file
+        print("Unzipping the file...")
+        with zipfile.ZipFile('downloaded_file.zip', 'r') as zip_ref:
+            zip_ref.extractall(folder_name)
+        
+        # Clean up (delete) the zip file after extraction
+        os.remove('downloaded_file.zip')
+        print(f"File successfully downloaded and extracted to '{folder_name}'")
+
+    else:
+        print(f"The data already existing at '{folder_name}'")

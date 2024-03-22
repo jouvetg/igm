@@ -8,8 +8,7 @@ import os
 import datetime, time
 import tensorflow as tf
 from netCDF4 import Dataset
-
-# from scipy.interpolate import RectBivariateSpline
+from scipy.interpolate import RectBivariateSpline
 
 from igm.modules.utils import *
 
@@ -20,6 +19,12 @@ def params(parser):
         type=str,
         default="input.nc",
         help="NetCDF input data file",
+    )
+    parser.add_argument(
+        "--lncd_method_coarsen",
+        type=str,
+        default="skipping",
+        help="Method for coarsening the data from NetCDF file: skipping or cubic_spline",
     )
     parser.add_argument(
         "--lncd_coarsen",
@@ -89,18 +94,29 @@ def initialize(params, state):
                 vars()[var] = np.squeeze(nc.variables[var]).astype("float32")
             vars()[var] = np.where(vars()[var] > 10**35, np.nan, vars()[var])
 
+
+
     # coarsen if requested
     if params.lncd_coarsen > 1:
         xx = x[:: params.lncd_coarsen]
         yy = y[:: params.lncd_coarsen]
-        for var in nc.variables:
-            if (not var in ["x", "y"]) & (vars()[var].ndim == 2):
-                vars()[var] = vars()[var][
-                    :: params.lncd_coarsen, :: params.lncd_coarsen
-                ]
-        #                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
+         
+        if params.lncd_method_coarsen == "skipping":            
+            for var in nc.variables:
+                if (not var in ["x", "y"]) & (vars()[var].ndim == 2):
+                    vars()[var] = vars()[var][
+                        :: params.lncd_coarsen, :: params.lncd_coarsen
+                    ]
+        elif params.lncd_method_coarsen == "cubic_spline":
+            for var in nc.variables:
+                if (not var in ["x", "y"]) & (vars()[var].ndim == 2):
+                                    
+                    interp_spline = RectBivariateSpline(y, x, vars()[var])
+                    vars()[var] = interp_spline(yy, xx)
         x = xx
         y = yy
+
+
 
     # crop if requested
     if params.lncd_crop:

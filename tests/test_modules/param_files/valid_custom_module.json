@@ -1,0 +1,30 @@
+{
+  "modules_preproc": [
+    "load_ncdf"
+  ],
+  "modules_process": [
+    "iceflow",
+    "time",
+    "thk",
+    "valid_custom_module",
+    "rockflow",
+    "vert_flow",
+    "particles"
+  ],
+  "modules_postproc": [
+    "write_ncdf",
+    "plot2d",
+    "print_info",
+    "print_comp"
+  ],
+  "time_start": 1880.0,
+  "time_end": 2020.0,
+  "time_save": 5.0,
+  "plt2d_live": true,
+  "iflo_init_slidingco": 0.0595,
+  "weight_accumulation": 1.0,
+  "weight_ablation": 1.25,
+  "part_frequency_seeding": 500,
+  "part_tracking_method": "simple",
+  "part_density_seeding": 1
+}

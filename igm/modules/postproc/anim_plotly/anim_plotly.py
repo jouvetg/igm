@@ -9,7 +9,12 @@ import xarray as xr
 
 
 def params(parser):
-    pass
+    parser.add_argument(
+        "--wncd_output_file",
+        type=str,
+        default="output.nc",
+        help="Output ncdf data file",
+    )
 
 
 def initialize(params, state):
@@ -108,7 +113,7 @@ def finalize(params, state):
         params = json.loads(json_text, object_hook=lambda d: SimpleNamespace(**d))
 
         # read output.nc
-        ds = xr.open_dataset("output.nc", engine="netcdf4")
+        ds = xr.open_dataset(params.wncd_output_file, engine="netcdf4")
 
         # get attributes from ds
         bedrock = np.array(ds.topg[0])

@@ -553,7 +553,8 @@ def initialize(params, state):
 
             # get back optimized variables in the pool of state.variables
             if "thk" in params.opti_control:
-                state.thk = tf.where(state.thk < 0.01, 0, state.thk)
+                state.thk = tf.where(state.icemaskobs > 0.5, state.thk, 0)
+#                state.thk = tf.where(state.thk < 0.01, 0, state.thk)
 
             state.divflux = compute_divflux(
                 state.ubar, state.vbar, state.thk, state.dx, state.dx, method=params.opti_divflux_method

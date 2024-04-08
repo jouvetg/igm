@@ -22,7 +22,7 @@ def initialize_particles(params, state):
     rr = int(1.0 / params.part_density_seeding)
     state.gridseed[::rr, ::rr] = True
     
-    nc = Dataset( os.path.join(params.working_dir, 'seeding.nc'), "r" ) 
+    nc = Dataset( os.path.join("data", 'seeding.nc'), "r" ) 
     state.seeding = np.squeeze( nc.variables["seeding"] ).astype("float32") 
     nc.close()
 

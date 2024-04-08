@@ -9,6 +9,6 @@
                           "tillwat", "strainheat","arrhenius","tauc","W"],
   "time_step_max": 2.0,
   "time_save": 100.0,
-  "plt2d_live": true,
+  "plt2d_live": false,
   "enth_drain_ice_column": true
 }

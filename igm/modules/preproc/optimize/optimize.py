@@ -473,6 +473,7 @@ def initialize(params, state):
             else:
                 REGU_S = tf.Variable(0.0)
                 
+            ACT = state.icemaskobs > 0.5
             mean_slidingco = tf.math.reduce_mean(state.slidingco[ACT])
 
             # sum all component into the main cost function

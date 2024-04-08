@@ -82,10 +82,7 @@ def update(params, state):
                 display(state.fig)
         else:
             plt.savefig(
-                os.path.join(
-                    params.working_dir,
-                    "temperature-" + str(state.t.numpy()).zfill(4) + ".png",
-                ),
+                "temperature-" + str(state.t.numpy()).zfill(4) + ".png",
                 bbox_inches="tight",
                 pad_inches=0.2,
             )

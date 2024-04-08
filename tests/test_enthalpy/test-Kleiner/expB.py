@@ -47,6 +47,9 @@ params.enth_KtdivKc = 10 ** (-5)  # check this value if ok ?
 params.enth_till_wat_max = 200
 params.enth_drain_rate = 0
 
+params.iflo_Nz = 2000
+params.iflo_vert_spacing = 1
+
 thk = tf.Variable(200 * tf.ones((1, 1)))
 
 depth, dz = vertically_discretize_tf(thk, params.iflo_Nz, params.iflo_vert_spacing)
@@ -129,7 +132,7 @@ for it, t in enumerate(tim):
 
 hz = np.arange(0, params.iflo_Nz) / (params.iflo_Nz - 1)
 
-fig = plt.figure(figsize=(6, 8))
+fig = plt.figure(figsize=(8, 8))
 
 plt.subplot(131)
 plt.plot(E[:, 0, 0] / 1000, hz * 200)

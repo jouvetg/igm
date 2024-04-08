@@ -21,14 +21,20 @@ def params(parser):
         default=0.910,
         help="density of ice divided by density of water",
     )
+    parser.add_argument(
+        "--thk_default_sealevel",
+        type=float,
+        default=0.0,
+        help="Default sea level if not provided by the user",
+    )
 
 def initialize(params, state):
 
     # define the lower ice surface
     if hasattr(state, "sealevel"):
-        state.lsurf = tf.maximum(state.topg,-0.91*state.thk + state.sealevel)
+        state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk + state.sealevel)
     else:
-        state.lsurf = tf.maximum(state.topg,-0.91*state.thk)
+        state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk + params.thk_default_sealevel)
 
     # define the upper ice surface
     state.usurf = state.lsurf + state.thk
@@ -60,7 +66,7 @@ def update(params, state):
         if hasattr(state, "sealevel"):
             state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk + state.sealevel)
         else:
-            state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk)
+            state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk + params.thk_default_sealevel)
 
         # define the upper ice surface
         state.usurf = state.lsurf + state.thk

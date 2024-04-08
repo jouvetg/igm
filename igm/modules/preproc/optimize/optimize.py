@@ -264,7 +264,7 @@ def initialize(params, state):
 
     ###### PREPARE OPIMIZER
 
-    if int(tf.__version__.split(".")[1]) <= 10:
+    if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
         optimizer = tf.keras.optimizers.Adam(learning_rate=params.opti_step_size)
         opti_retrain = tf.keras.optimizers.Adam(
             learning_rate=params.iflo_retrain_emulator_lr

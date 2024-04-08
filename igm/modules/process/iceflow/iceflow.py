@@ -356,7 +356,7 @@ def initialize(params, state):
         )
 
     if not params.iflo_type == "solved":
-        if int(tf.__version__.split(".")[1]) <= 10:
+        if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
             state.opti_retrain = tf.keras.optimizers.Adam(
                 learning_rate=params.iflo_retrain_emulator_lr
             )

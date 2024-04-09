@@ -41,7 +41,7 @@ def params(parser):
     parser.add_argument(
         "--plt2d_var_max",
         type=float,
-        default=250,
+        default=1000,
         help="Maximum value of the varplot variable used to adjust the scaling of the colorbar",
     )
 
@@ -72,19 +72,28 @@ def update(params, state):
         im0 = state.ax.imshow(
             state.topg,
             origin="lower",
-            cmap=matplotlib.cm.terrain,
-            extent=state.extent,
-            alpha=0.65,
+            cmap='binary', # matplotlib.cm.terrain,
+            extent=state.extent
+#            alpha=0.65,
         )
-
-        im = state.ax.imshow(
-            np.where(state.thk > 0, vars(state)[params.plt2d_var], np.nan),
-            origin="lower",
-            cmap=matplotlib.cm.viridis,
-            vmin=0,
-            vmax=params.plt2d_var_max,
-            extent=state.extent,
-        )
+ 
+        if params.plt2d_var=="velbar_mag":
+            im = state.ax.imshow(
+                np.where(state.thk > 0, vars(state)[params.plt2d_var], np.nan),
+                origin="lower",
+                cmap="turbo",
+                extent=state.extent, 
+                norm=matplotlib.colors.LogNorm(vmin=1, vmax=params.plt2d_var_max)
+            )
+        else:
+            im = state.ax.imshow(
+                np.where(state.thk > 0, vars(state)[params.plt2d_var], np.nan),
+                origin="lower",
+                cmap='jet',
+                vmin=0,
+                vmax=params.plt2d_var_max,
+                extent=state.extent,
+            )
         if params.plt2d_particles:
             if hasattr(state, "xpos"):
                 if hasattr(state, "ip"):

@@ -72,7 +72,7 @@ def update(params, state):
 
         state.tlast_seeding = state.t.numpy()
 
-    if state.it >= 0:
+    if (state.xpos.shape[0]>0)&(state.it >= 0):
         state.tcomp_particles.append(time.time())
 
         # find the indices of trajectories

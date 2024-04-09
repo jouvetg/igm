@@ -117,6 +117,12 @@ def params(parser):
         help="Compute the divergence of the flux using the upwind or centered method",
     )
     parser.add_argument(
+        "--opti_force_zero_sum_divflux",
+        type=str2bool,
+        default="False",
+        help="Add a penalty to the cost function to force the sum of the divergence of the flux to be zero",
+    )
+    parser.add_argument(
         "--opti_scaling_thk",
         type=float,
         default=2.0,
@@ -388,6 +394,9 @@ def initialize(params, state):
                     dddx = (divflux[:, 1:] - divflux[:, :-1])/state.dx
                     dddy = (divflux[1:, :] - divflux[:-1, :])/state.dx
                     COST_D = (params.opti_regu_param_div) * ( tf.nn.l2_loss(dddx) + tf.nn.l2_loss(dddy) )
+                    
+                if params.opti_force_zero_sum_divflux:
+                     COST_D += 0.5 * 1000 * tf.reduce_mean(divflux[ACT] / params.opti_divfluxobs_std) ** 2
 
             else:
                 COST_D = tf.Variable(0.0)
@@ -497,12 +506,12 @@ def initialize(params, state):
 
             if i == 0:
                 print(
-                    "                   Step  |  ICE_VOL |  COST_U  |  COST_H  |  COST_D  |  COST_S  |   REGU_H |   REGU_S | COST_GLEN | MEAN_SLIDCO  "
+                    "                   Step  |  ICE_VOL |  COST_U  |  COST_H  |  COST_D  |  COST_S  |   REGU_H |   REGU_S | COST_GLEN | MEAN_SLIDCO  | SUM_DIVFLUX  "
                 )
 
             if i % params.opti_output_freq == 0:
                 print(
-                    "OPTI %s :   %6.0f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.4f |"
+                    "OPTI %s :   %6.0f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.4f |   %6.4f |"
                     % (
                         datetime.datetime.now().strftime("%H:%M:%S"),
                         i,
@@ -514,7 +523,8 @@ def initialize(params, state):
                         REGU_H.numpy(),
                         REGU_S.numpy(),
                         COST_GLEN.numpy(),
-                        mean_slidingco.numpy()
+                        mean_slidingco.numpy(),
+                        tf.reduce_mean(divflux[ACT]).numpy(),
                     )
                 )
 

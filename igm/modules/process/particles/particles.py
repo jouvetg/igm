@@ -29,7 +29,7 @@ def params(parser):
     )
     parser.add_argument(
         "--part_density_seeding",
-        type=int,
+        type=float,
         default=0.2,
         help="Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)",
     )

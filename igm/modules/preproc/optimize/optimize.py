@@ -956,7 +956,7 @@ def _update_plot_inversion(params, state, i):
         velsurf_mag, # np.ma.masked_where(state.thk == 0, velsurf_mag),
         origin="lower",
         extent=state.extent,
-        norm=matplotlib.colors.LogNorm(vmin=1, vmax=velsurfobs_mag),
+        norm=matplotlib.colors.LogNorm(vmin=1, vmax=5000),
         cmap=cmap,
     )
     if i == 0:
@@ -978,7 +978,7 @@ def _update_plot_inversion(params, state, i):
         np.ma.masked_where(state.thk == 0, velsurfobs_mag),
         origin="lower",
         extent=state.extent,
-        norm=matplotlib.colors.LogNorm(vmin=1, vmax=velsurfobs_mag),
+        norm=matplotlib.colors.LogNorm(vmin=1, vmax=5000),
         cmap=cmap,
     )
     if i == 0:

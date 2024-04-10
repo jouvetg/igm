@@ -4,7 +4,7 @@ import tensorflow as tf
 from netCDF4 import Dataset
 import os
 
-def initialize_particles(params, state):
+def initialize(params, state):
     state.tlast_seeding = -1.0e5000
     state.tcomp_particles = []
 
@@ -26,7 +26,7 @@ def initialize_particles(params, state):
     state.seeding = np.squeeze( nc.variables["seeding"] ).astype("float32") 
     nc.close()
 
-def seeding_particles(params, state):
+def seeding(params, state):
     # here we seed where i) thickness is higher than 1 m
     #                    ii) the seeding field of geology.nc is active
     #                    iii) on the gridseed (which permit to control the seeding density)

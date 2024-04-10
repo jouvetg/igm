@@ -874,7 +874,7 @@ def _update_plot_inversion(params, state, i):
             plt.ion()  # enable interactive mode
 
         # state.fig = plt.figure()
-        state.fig, state.axes = plt.subplots(2, 3)
+        state.fig, state.axes = plt.subplots(2, 3,figsize=(10, 8))
 
         state.extent = [state.x[0], state.x[-1], state.y[0], state.y[-1]]
 
@@ -890,7 +890,7 @@ def _update_plot_inversion(params, state, i):
         origin="lower",
         extent=state.extent,
         vmin=0,
-        #                    vmax=np.quantile(state.thk, 0.98),
+        vmax=np.quantile(state.thk, 0.98),
         cmap=cmap,
     )
     if i == 0:
@@ -957,8 +957,7 @@ def _update_plot_inversion(params, state, i):
         velsurf_mag, # np.ma.masked_where(state.thk == 0, velsurf_mag),
         origin="lower",
         extent=state.extent,
-        vmin=0,
-        vmax=np.nanmax(velsurfobs_mag),
+        norm=matplotlib.colors.LogNorm(vmin=1, vmax=velsurfobs_mag),
         cmap=cmap,
     )
     if i == 0:
@@ -980,8 +979,7 @@ def _update_plot_inversion(params, state, i):
         np.ma.masked_where(state.thk == 0, velsurfobs_mag),
         origin="lower",
         extent=state.extent,
-        vmin=0,
-        vmax=np.nanmax(velsurfobs_mag),
+        norm=matplotlib.colors.LogNorm(vmin=1, vmax=velsurfobs_mag),
         cmap=cmap,
     )
     if i == 0:
@@ -1066,7 +1064,7 @@ def _update_plot_inversion_simple(params, state, i):
         origin="lower",
         extent=state.extent,
         vmin=0,
-        #                    vmax=np.quantile(state.thk, 0.98),
+        vmax=np.quantile(state.thk, 0.98),
         cmap=cmap,
     )
     if i == 0:

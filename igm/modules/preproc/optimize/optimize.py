@@ -329,6 +329,9 @@ def initialize(params, state):
             state.uvelsurf = U[-1]
             state.vvelsurf = V[-1]
 
+            state.uvelbase = U[0]
+            state.vvelbase = V[0]
+
             state.velsurf = tf.stack(
                 [state.uvelsurf, state.vvelsurf], axis=-1
             )  # NOT normalized vars
@@ -725,12 +728,18 @@ def _update_ncdf_optimize(params, state, it):
 
     if hasattr(state, "logger"):
         state.logger.info("Initialize  and write NCDF output Files")
+        
+    if "velbase_mag" in params.opti_vars_to_save:
+        state.velbase_mag = getmag(state.uvelbase, state.vvelbase)
 
     if "velsurf_mag" in params.opti_vars_to_save:
         state.velsurf_mag = getmag(state.uvelsurf, state.vvelsurf)
 
     if "velsurfobs_mag" in params.opti_vars_to_save:
         state.velsurfobs_mag = getmag(state.uvelsurfobs, state.vvelsurfobs)
+        
+    if "sliding_ratio" in params.opti_vars_to_save:
+        state.sliding_ratio = tf.where(state.velsurf_mag > 10, state.velbase_mag / state.velsurf_mag, np.nan)
 
     if it == 0:
         nc = Dataset(

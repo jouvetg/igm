@@ -30,5 +30,5 @@
   "weight_ablation": 1.25,
   "part_frequency_seeding": 500,
   "part_tracking_method": "simple",
-  "part_density_seeding": 1
+  "part_density_seeding": 0.2
 }

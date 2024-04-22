@@ -454,20 +454,13 @@ def initialize(params, state):
     Ny = state.thk.shape[0]
     Nx = state.thk.shape[1]
 
-    # In case of a U-net, must make sure the I/O size is multiple of 2**N
-    if params.iflo_multiple_window_size > 0:
-        NNy = params.iflo_multiple_window_size * math.ceil(
-            Ny / params.iflo_multiple_window_size
-        )
-        NNx = params.iflo_multiple_window_size * math.ceil(
-            Nx / params.iflo_multiple_window_size
-        )
-        state.PAD = [[0, NNy - Ny], [0, NNx - Nx]]
-    else:
-        state.PAD = [[0, 0], [0, 0]]
+    state.PAD = compute_PAD(params,Nx,Ny)
 
     if not params.iflo_type == "solved":
         _update_iceflow_emulated(params, state)
+        
+    # Currently it is not supported to have the two working simulatanoutly
+    assert (params.iflo_exclude_borders==0) | (params.iflo_multiple_window_size==0)
 
 
 def update(params, state):
@@ -1026,6 +1019,9 @@ def update_2d_iceflow_variables(params, state):
 def _update_iceflow_emulated(params, state):
     # Define the input of the NN, include scaling
 
+    Ny, Nx = state.thk.shape
+    N = params.iflo_Nz
+
     fieldin = [vars(state)[f] for f in params.iflo_fieldin]
 
     X = fieldin_to_X(params, fieldin)
@@ -1033,17 +1029,14 @@ def _update_iceflow_emulated(params, state):
     if params.iflo_exclude_borders>0:
         iz = params.iflo_exclude_borders
         X = tf.pad(X, [[0, 0], [iz, iz], [iz, iz], [0, 0]], "SYMMETRIC")
-
-    Y = state.iceflow_model(X)
+        
+    Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
 
     if params.iflo_exclude_borders>0:
         iz = params.iflo_exclude_borders
         Y = Y[:, iz:-iz, iz:-iz, :]
 
-    Ny, Nx = state.thk.shape
-    N = params.iflo_Nz
-
-    U, V = Y_to_UV(params, Y[:, :Ny, :Nx, :])
+    U, V = Y_to_UV(params, Y)
     U = U[0]
     V = V[0]
 
@@ -1080,6 +1073,11 @@ def _update_iceflow_emulator(params, state):
         XX = fieldin_to_X(params, fieldin)
 
         X = _split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
+        
+        Ny = X.shape[1]
+        Nx = X.shape[2]
+        
+        PAD = compute_PAD(params,Nx,Ny)
 
         state.COST_EMULATOR = []
 
@@ -1094,8 +1092,9 @@ def _update_iceflow_emulator(params, state):
 
             for i in range(X.shape[0]):
                 with tf.GradientTape() as t:
-                    Y = state.iceflow_model(X[i : i + 1, :, :, :])
 
+                    Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
+                    
                     if iz>0:
                         COST = iceflow_energy_XY(params, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
                     else:
@@ -1295,3 +1294,17 @@ def save_iceflow_model(params, state):
         % (params.iflo_vert_spacing, "# param for vertical spacing (vert_spacing)")
     )
     fid.close()
+
+def compute_PAD(params,Nx,Ny):
+
+    # In case of a U-net, must make sure the I/O size is multiple of 2**N
+    if params.iflo_multiple_window_size > 0:
+        NNy = params.iflo_multiple_window_size * math.ceil(
+            Ny / params.iflo_multiple_window_size
+        )
+        NNx = params.iflo_multiple_window_size * math.ceil(
+            Nx / params.iflo_multiple_window_size
+        )
+        return [[0, 0], [0, NNy - Ny], [0, NNx - Nx], [0, 0]]
+    else:
+        return [[0, 0], [0, 0], [0, 0], [0, 0]]

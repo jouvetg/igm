@@ -299,6 +299,8 @@ def initialize(params, state):
     sc["thk"] = params.opti_scaling_thk
     sc["usurf"] = params.opti_scaling_usurf
     sc["slidingco"] = params.opti_scaling_slidingco
+    
+    Ny, Nx = state.thk.shape
 
     for f in params.opti_control:
         vars()[f] = tf.Variable(vars(state)[f] / sc[f])
@@ -323,7 +325,7 @@ def initialize(params, state):
             X = fieldin_to_X(params, fieldin)
 
             # evalutae th ice flow emulator
-            Y = state.iceflow_model(X)
+            Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
 
             U, V = Y_to_UV(params, Y)
 

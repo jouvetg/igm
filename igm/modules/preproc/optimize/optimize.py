@@ -21,6 +21,7 @@ from igm.modules.process.iceflow.iceflow import (
     fieldin_to_X,
     update_2d_iceflow_variables,
     iceflow_energy_XY,
+    _update_iceflow_emulator,
     Y_to_UV,
     save_iceflow_model
 )
@@ -234,6 +235,9 @@ def initialize(params, state):
     """
 
     initialize_iceflow(params, state)
+    
+    state.it = -1
+    _update_iceflow_emulator(params, state)
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
 
@@ -287,6 +291,11 @@ def initialize(params, state):
         opti_retrain = tf.keras.optimizers.legacy.Adam(
             learning_rate=params.iflo_retrain_emulator_lr
         )
+        
+    #######################################
+    
+    # force zero slidingco in the floating areas
+    state.slidingco = tf.where( state.icemaskobs == 2, 0.0, state.slidingco)
 
     ###### PREPARE VARIABLES TO OPTIMIZE
 
@@ -463,6 +472,11 @@ def initialize(params, state):
                     dbdy = (state.topg[1:, :] - state.topg[:-1, :])/state.dx
                     dbdy = (dbdy[:, 1:] + dbdy[:, :-1]) / 2.0
                     
+                    if params.sole_mask:
+                        MASK = (state.icemaskobs[1:, 1:] > 0.5) & (state.icemaskobs[1:, :-1] > 0.5) & (state.icemaskobs[:-1, 1:] > 0.5) & (state.icemaskobs[:-1, :-1] > 0.5)
+                        dbdx = tf.where( MASK, dbdx, 0.0)
+                        dbdy = tf.where( MASK, dbdy, 0.0)
+                    
                     REGU_H = (params.opti_regu_param_thk) * (
                         (1.0/np.sqrt(params.opti_smooth_anisotropy_factor))
                         * tf.nn.l2_loss((dbdx * state.flowdirx + dbdy * state.flowdiry))
@@ -476,13 +490,13 @@ def initialize(params, state):
             # Here one adds a regularization terms for slidingco to the cost function
             if "slidingco" in params.opti_control:
 
-                # if not hasattr(state, "flowdirx"):
+#                if not hasattr(state, "flowdirx"):
                 dadx = (state.slidingco[:, 1:] - state.slidingco[:, :-1])/state.dx
                 dady = (state.slidingco[1:, :] - state.slidingco[:-1, :])/state.dx
 
                 if params.sole_mask:                
-                    dadx = tf.where( (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5) , dadx, 0.0)
-                    dady = tf.where( (state.icemaskobs[1:, :] > 0.5) & (state.icemaskobs[:-1, :] > 0.5) , dady, 0.0)
+                    dadx = tf.where( (state.icemaskobs[:, 1:] == 1) & (state.icemaskobs[:, :-1] == 1) , dadx, 0.0)
+                    dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
                 
                 REGU_S = (params.opti_regu_param_slidingco) * (
                     tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
@@ -490,17 +504,23 @@ def initialize(params, state):
                 + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
                 # this last line serve to enforce non-negative slidingco
                 
-                # else:
-                #     dadx = (state.slidingco[:, 1:] - state.slidingco[:, :-1])/state.dx
-                #     dadx = (dadx[1:, :] + dadx[:-1, :]) / 2.0
-                #     dady = (state.slidingco[1:, :] - state.slidingco[:-1, :])/state.dx
-                #     dady = (dady[:, 1:] + dady[:, :-1]) / 2.0
-                #     REGU_S = (params.opti_regu_param_slidingco) * (
-                #         (1.0/np.sqrt(params.opti_smooth_anisotropy_factor))
-                #         * tf.nn.l2_loss((dadx * state.flowdirx + dady * state.flowdiry))
-                #         + np.sqrt(params.opti_smooth_anisotropy_factor)
-                #         * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx))
-                #     )
+ #               else:
+                    # dadx = (state.slidingco[:, 1:] - state.slidingco[:, :-1])/state.dx
+                    # dadx = (dadx[1:, :] + dadx[:-1, :]) / 2.0
+                    # dady = (state.slidingco[1:, :] - state.slidingco[:-1, :])/state.dx
+                    # dady = (dady[:, 1:] + dady[:, :-1]) / 2.0
+                    
+                    # if params.sole_mask:
+                    #     MASK = (state.icemaskobs[1:, 1:] > 0.5) & (state.icemaskobs[1:, :-1] > 0.5) & (state.icemaskobs[:-1, 1:] > 0.5) & (state.icemaskobs[:-1, :-1] > 0.5)
+                    #     dadx = tf.where( MASK, dadx, 0.0)
+                    #     dady = tf.where( MASK, dady, 0.0)
+                    
+                    # REGU_S = (params.opti_regu_param_slidingco) * (
+                    #     (1.0/np.sqrt(params.opti_smooth_anisotropy_factor))
+                    #     * tf.nn.l2_loss((dadx * state.flowdirx + dady * state.flowdiry))
+                    #     + np.sqrt(params.opti_smooth_anisotropy_factor)
+                    #     * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx))
+                    # )
             else:
                 REGU_S = tf.Variable(0.0)
                 
@@ -573,8 +593,11 @@ def initialize(params, state):
             # this serve to restict the optimization of controls to the mask
 
             if params.sole_mask:
-                for ii in range(grads.shape[0]): 
-                    grads[ii].assign(tf.where((state.icemaskobs > 0.5), grads[ii], 0))
+                for ii in range(grads.shape[0]):
+                    if not "slidingco" == params.opti_control[ii]:
+                        grads[ii].assign(tf.where((state.icemaskobs > 0.5), grads[ii], 0))
+                    else:
+                        grads[ii].assign(tf.where((state.icemaskobs == 1), grads[ii], 0))
             else:
                 for ii in range(grads.shape[0]):
                     if not "slidingco" == params.opti_control[ii]:
@@ -690,7 +713,7 @@ def create_density_matrix(data, kernel_size):
     return density
 
 def _compute_rms_std_optimization(state, i):
-    I = state.icemaskobs > 0  # == 1
+    I = state.icemaskobs > 0.5
 
     if i == 0:
         state.rmsthk = []

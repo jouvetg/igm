@@ -1269,6 +1269,8 @@ def unet(params, nb_inputs, nb_outputs):
 
 def save_iceflow_model(params, state):
     directory = "iceflow-model"
+    
+    import shutil
 
     if os.path.exists(directory):
         shutil.rmtree(directory)

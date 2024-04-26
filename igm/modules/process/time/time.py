@@ -77,7 +77,7 @@ def update(params, state):
     )
 
     # dt_target account for both cfl and dt_max
-    if velomax > 0:
+    if (velomax > 0) & (params.time_cfl>0):
         state.dt_target = min(
             params.time_cfl * state.dx / velomax, params.time_step_max
         )

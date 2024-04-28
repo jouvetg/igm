@@ -72,7 +72,12 @@ def params(parser):
         default=True,
         help="Write prepared data into a geology file",
     )
-
+    parser.add_argument(
+        "--oggm_remove_RGI_folder",
+        type=str2bool,
+        default=False,
+        help="oggm_remove_RGI_folder",
+    )
 
 def initialize(params, state):
     import json
@@ -243,8 +248,12 @@ def update(params, state):
     pass
 
 
-def finalize(params, state):
-    pass
+def finalize(params, state): 
+    try:
+        shutil.rmtree(params.oggm_RGI_ID) 
+    except Exception as error:
+        print("Error: ", error)
+
 
 
 #########################################################################

@@ -644,7 +644,8 @@ def initialize(params, state):
     # now that the ice thickness is optimized, we can fix the bed once for all! (ONLY FOR GROUNDED ICE)
     state.topg = state.usurf - state.thk
 
-    _output_ncdf_optimize_final(params, state)
+    if not params.opti_save_result_in_ncdf=="":
+        _output_ncdf_optimize_final(params, state)
 
     _plot_cost_functions(params, state, state.costs)
 

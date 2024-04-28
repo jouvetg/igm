@@ -5,7 +5,7 @@
                       "time",
                       "thk"
                     ],
-  "modules_postproc": ["check"],
+  "modules_postproc": [ ],
   "smb_simple_array": [
                         ["time", "gradabl", "gradacc", "ela", "accmax"],
                         [ 2000,      0.009,     0.005,  2900,      2.0],

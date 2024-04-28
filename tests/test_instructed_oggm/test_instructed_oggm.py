@@ -50,10 +50,13 @@ sdmodel = IGM_Model2D( bed.data, init_ice_thick=thick.data, dx=gdir.grid.dx,
 # Run the model
 ods = sdmodel.run_until_and_store(100, grid=gdir.grid, print_stdout="My run")
 
-# Plot the results
-for i in range(0,ods.ice_thickness.shape[0],10):
-    plt.imshow(ods.ice_thickness[i, :])
-    plt.colorbar()
-    plt.savefig("snapshot" + str(i) + ".png")
-    plt.close()
-    print(i)
+########################
+
+if False:
+    # Plot the results
+    for i in range(0,ods.ice_thickness.shape[0],10):
+        plt.imshow(ods.ice_thickness[i, :])
+        plt.colorbar()
+        plt.savefig("snapshot" + str(i) + ".png")
+        plt.close()
+        print(i)

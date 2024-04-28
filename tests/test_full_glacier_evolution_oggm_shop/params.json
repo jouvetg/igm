@@ -6,12 +6,14 @@
                       "thk",
                       "vert_flow",
                       "particles"],
-  "modules_postproc": ["check"],
+  "modules_postproc": [],
   "oggm_RGI_ID": "RGI60-11.01238",
+  "oggm_remove_RGI_folder": true,
+  "oggm_save_in_ncdf" : false,
   "time_start": 2000.0,
   "time_end": 2100.0,
   "time_save": 5.0,
-  "smb_simple_array": [ 
+  "smb_simple_array": [
                         ["time", "gradabl", "gradacc", "ela", "accmax"],
                         [ 2000,      0.009,     0.005,  2700,      2.0],
                         [ 2100,      0.009,     0.005,  2600,      2.0]

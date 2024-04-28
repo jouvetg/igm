@@ -19,44 +19,46 @@ from oggm.cfg import G, SEC_IN_YEAR, SEC_IN_DAY
 from oggm.core.massbalance import LinearMassBalance
 from igm.instructed_oggm import IGM_Model2D
 
-# Choice of a glacier
-rgi_ids = ["RGI60-11.01450"]  # Aletsch
-# rgi_ids = ['RGI60-11.00897']  # Hitereisferner
+def test_instructed_oggm():
 
-cfg.initialize(logging_level="WARNING")
-cfg.PATHS["working_dir"] = utils.gettempdir(dirname="OGGM-Distrib", reset=True)
-base_url = "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v1/"
+    # Choice of a glacier
+    rgi_ids = ["RGI60-11.01450"]  # Aletsch
+    # rgi_ids = ['RGI60-11.00897']  # Hitereisferner
 
-gdirs = workflow.init_glacier_directories(
-    rgi_ids, prepro_base_url=base_url, from_prepro_level=2, prepro_border=30
-)
-gdir = gdirs[0]
+    cfg.initialize(logging_level="WARNING")
+    cfg.PATHS["working_dir"] = utils.gettempdir(dirname="OGGM-Distrib", reset=True)
+    base_url = "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v1/"
 
-with xr.open_dataset(gdir.get_filepath("gridded_data")) as ds:
-    ds = ds.load()
+    gdirs = workflow.init_glacier_directories(
+        rgi_ids, prepro_base_url=base_url, from_prepro_level=2, prepro_border=30
+    )
+    gdir = gdirs[0]
 
-thick = ds.consensus_ice_thickness.where(~ds.consensus_ice_thickness.isnull(), 0)
-bed  = ds.topo - thick
-mask = ds.glacier_mask.data == 1
-topo = ds.topo
+    with xr.open_dataset(gdir.get_filepath("gridded_data")) as ds:
+        ds = ds.load()
 
-# Define SMB model
-mb = LinearMassBalance(ela_h=2900.0)
- 
-# Define IGM model
-sdmodel = IGM_Model2D( bed.data, init_ice_thick=thick.data, dx=gdir.grid.dx,
-                       mb_model=mb, y0=0, mb_filter=mask, x=ds.x, y=ds.y)
+    thick = ds.consensus_ice_thickness.where(~ds.consensus_ice_thickness.isnull(), 0)
+    bed  = ds.topo - thick
+    mask = ds.glacier_mask.data == 1
+    topo = ds.topo
 
-# Run the model
-ods = sdmodel.run_until_and_store(100, grid=gdir.grid, print_stdout="My run")
+    # Define SMB model
+    mb = LinearMassBalance(ela_h=2900.0)
+    
+    # Define IGM model
+    sdmodel = IGM_Model2D( bed.data, init_ice_thick=thick.data, dx=gdir.grid.dx,
+                        mb_model=mb, y0=0, mb_filter=mask, x=ds.x, y=ds.y)
 
-########################
+    # Run the model
+    ods = sdmodel.run_until_and_store(100, grid=gdir.grid, print_stdout="My run")
 
-if False:
-    # Plot the results
-    for i in range(0,ods.ice_thickness.shape[0],10):
-        plt.imshow(ods.ice_thickness[i, :])
-        plt.colorbar()
-        plt.savefig("snapshot" + str(i) + ".png")
-        plt.close()
-        print(i)
+    ########################
+
+    if False:
+        # Plot the results
+        for i in range(0,ods.ice_thickness.shape[0],10):
+            plt.imshow(ods.ice_thickness[i, :])
+            plt.colorbar()
+            plt.savefig("snapshot" + str(i) + ".png")
+            plt.close()
+            print(i)

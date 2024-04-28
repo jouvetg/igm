@@ -5,33 +5,35 @@ import numpy as np
 from make_fake_ncdf import write_ncdf
 import os
 
-write_ncdf()
+def test_load_ncdf():
+    
+    write_ncdf()
  
-state = igm.State()
-modules_dict = {'modules_preproc': ['load_ncdf'], 'modules_process': [], 'modules_postproc': []}
+    state = igm.State()
+    modules_dict = {'modules_preproc': ['load_ncdf'], 'modules_process': [], 'modules_postproc': []}
  
-imported_modules = igm.load_modules(modules_dict)
+    imported_modules = igm.load_modules(modules_dict)
  
-module = imported_modules[0] 
+    module = imported_modules[0] 
 
-parser = igm.params_core()
+    parser = igm.params_core()
 
-module.params(parser)
+    module.params(parser)
 
-params, __ = parser.parse_known_args()
+    params, __ = parser.parse_known_args()
  
-module.initialize(params, state)
+    module.initialize(params, state)
 
-module.update(params, state)
+    module.update(params, state)
 
-module.finalize(params, state)
+    module.finalize(params, state)
 
-ny,nx = state.thk.shape
+    ny,nx = state.thk.shape
 
-mid = state.topg[int(ny/2),int(nx/2)]
+    mid = state.topg[int(ny/2),int(nx/2)]
  
-assert (mid>2450)&(mid<2550)
+    assert (mid>2450)&(mid<2550)
 
-for f in ['input.nc']:
-    if os.path.exists(f):
-        os.remove(f)
+    for f in ['input.nc']:
+        if os.path.exists(f):
+            os.remove(f)

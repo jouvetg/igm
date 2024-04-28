@@ -48,7 +48,7 @@ sdmodel = IGM_Model2D( bed.data, init_ice_thick=thick.data, dx=gdir.grid.dx,
                        mb_model=mb, y0=0, mb_filter=mask, x=ds.x, y=ds.y)
 
 # Run the model
-ods = sdmodel.run_until_and_store(500, grid=gdir.grid, print_stdout="My run")
+ods = sdmodel.run_until_and_store(100, grid=gdir.grid, print_stdout="My run")
 
 # Plot the results
 for i in range(0,ods.ice_thickness.shape[0],10):

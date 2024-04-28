@@ -29,7 +29,9 @@ state.dX    = tf.Variable(tf.ones((Ny,Nx))*100)
 state.it    = -1
  
 module.initialize(params, state)
-module.initialize(params, state)
+
 module.update(params, state)
+
+module.finalize(params, state)
 
 assert (tf.reduce_mean(state.ubar).numpy()<10*10)

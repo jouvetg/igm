@@ -1030,7 +1030,7 @@ def _update_iceflow_emulated(params, state):
         iz = params.iflo_exclude_borders
         X = tf.pad(X, [[0, 0], [iz, iz], [iz, iz], [0, 0]], "SYMMETRIC")
         
-    if params.iflo_multiple_window_size>0:
+    if params.iflo_multiple_window_size==0:
         Y = state.iceflow_model(X)
     else:
         Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]

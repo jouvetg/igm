@@ -189,7 +189,6 @@ def params(parser):
         default="geology-optimized.nc",
         help="Geology input file",
     )
-
     parser.add_argument(
         "--opti_plot2d_live",
         type=str2bool,
@@ -214,20 +213,27 @@ def params(parser):
         default="vs",
         help="optimized for VS code (vs) or spyder (sp) for live plot",
     )
-    
     parser.add_argument(
         "--opti_uniformize_thkobs",
         type=str2bool,
         default=True,
         help="uniformize the density of thkobs",
     )
-
     parser.add_argument(
         "--sole_mask",
         type=str2bool,
         default=False,
         help="sole_mask",
     )
+    
+    parser.add_argument(
+        "--opti_retrain_iceflow_model",
+        type=str2bool,
+        default=True,
+        help="Retrain the iceflow model simulatounously ?",
+    ) 
+    
+    
 
 def initialize(params, state):
     """
@@ -250,10 +256,7 @@ def initialize(params, state):
             params.opti_cost.remove("thk")
 
     ###### PREPARE DATA PRIOR OPTIMIZATIONS
-
-    if hasattr(state, "uvelsurfobs") & hasattr(state, "vvelsurfobs"):
-        state.velsurfobs = tf.stack([state.uvelsurfobs, state.vvelsurfobs], axis=-1)
-
+ 
     if "divfluxobs" in params.opti_cost:
         state.divfluxobs = state.smb - state.dhdt
 
@@ -274,11 +277,6 @@ def initialize(params, state):
     else:
         state.dens_thkobs = tf.ones_like(state.thkobs)
     
-    areaicemask = tf.reduce_sum(tf.where(state.icemask>0.5,1.0,0.0))*state.dx**2
-
-    # here we had factor 8*np.pi*0.04, which is equal to 1
-    gamma = params.opti_convexity_weight * areaicemask**(params.opti_convexity_power-2.0)
-
     ###### PREPARE OPIMIZER
 
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
@@ -333,242 +331,90 @@ def initialize(params, state):
 
             X = fieldin_to_X(params, fieldin)
 
-            # evalutae th ice flow emulator
-            Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
+            # evalutae th ice flow emulator                
+            if params.iflo_multiple_window_size==0:
+                Y = state.iceflow_model(X)
+            else:
+                Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
 
             U, V = Y_to_UV(params, Y)
 
             U = U[0]
             V = V[0]
- 
-            state.ubar = tf.reduce_sum(U * state.vert_weight, axis=0)
-            state.vbar = tf.reduce_sum(V * state.vert_weight, axis=0)
+
+            state.U.assign(U)
+            state.V.assign(V)
             
-            state.uvelsurf = U[-1]
-            state.vvelsurf = V[-1]
-
-            state.uvelbase = U[0]
-            state.vvelbase = V[0]
-
-            state.velsurf = tf.stack(
-                [state.uvelsurf, state.vvelsurf], axis=-1
-            )  # NOT normalized vars
-
+            update_2d_iceflow_variables(params, state)
+ 
             if not params.opti_smooth_anisotropy_factor == 1:
                 _compute_flow_direction_for_anisotropic_smoothing(state)
-
+                 
             # misfit between surface velocity
             if "velsurf" in params.opti_cost:
-                ACT = ~tf.math.is_nan(state.velsurfobs)
-                COST_U = 0.5 * tf.reduce_mean(
-                    (
-                        (state.velsurfobs[ACT] - state.velsurf[ACT])
-                        / params.opti_velsurfobs_std
-                    )
-                    ** 2
-                )
+                COST_U = misfit_velsurf(params, state)
             else:
                 COST_U = tf.Variable(0.0)
 
             # misfit between ice thickness profiles
             if "thk" in params.opti_cost:
-                ACT = ~tf.math.is_nan(state.thkobs)
-                COST_H = 0.5 * tf.reduce_mean( state.dens_thkobs[ACT] * 
-                    ((state.thkobs[ACT] - state.thk[ACT]) / params.opti_thkobs_std) ** 2
-                )
+                COST_H = misfit_thk(params, state)
             else:
                 COST_H = tf.Variable(0.0)
 
             # misfit divergence of the flux
             if ("divfluxobs" in params.opti_cost) | ("divfluxfcz" in params.opti_cost) | ("divfluxpen" in params.opti_cost):
-                divflux = compute_divflux(
-                    state.ubar, state.vbar, state.thk, state.dx, state.dx, method=params.opti_divflux_method
-                )
-                
-                # divflux = tf.where(ACT, divflux, 0.0)
-
-                if "divfluxfcz" in params.opti_cost:
-                    ACT = state.icemaskobs > 0.5
-                    if i % 10 == 0:
-                        # his does not need to be comptued any iteration as this is expensive
-                        res = stats.linregress(
-                            state.usurf[ACT], divflux[ACT]
-                        )  # this is a linear regression (usually that's enough)
-                    # or you may go for polynomial fit (more gl, but may leads to errors)
-                    #  weights = np.polyfit(state.usurf[ACT],divflux[ACT], 2)
-                    divfluxtar = tf.where(
-                        ACT, res.intercept + res.slope * state.usurf, 0.0
-                    )
-                #   divfluxtar = tf.where(ACT, np.poly1d(weights)(state.usurf) , 0.0 )
-                
-                if "divfluxobs" in params.opti_cost:
-                    divfluxtar = state.divfluxobs
-
-                ACT = state.icemaskobs > 0.5
-                
-                if ("divfluxobs" in params.opti_cost) | ("divfluxfcz" in params.opti_cost):
-                    COST_D = 0.5 * tf.reduce_mean(
-                        ((divfluxtar[ACT] - divflux[ACT]) / params.opti_divfluxobs_std) ** 2
-                    )
-
-                if ("divfluxpen" in params.opti_cost):
-                    dddx = (divflux[:, 1:] - divflux[:, :-1])/state.dx
-                    dddy = (divflux[1:, :] - divflux[:-1, :])/state.dx
-                    COST_D = (params.opti_regu_param_div) * ( tf.nn.l2_loss(dddx) + tf.nn.l2_loss(dddy) )
-                    
-                if params.opti_force_zero_sum_divflux:
-                     COST_D += 0.5 * 1000 * tf.reduce_mean(divflux[ACT] / params.opti_divfluxobs_std) ** 2
-
+                COST_D = cost_divflux(params, state, i)
             else:
                 COST_D = tf.Variable(0.0)
 
             # misfit between top ice surfaces
             if "usurf" in params.opti_cost:
-                ACT = state.icemaskobs > 0.5
-                COST_S = 0.5 * tf.reduce_mean(
-                    (
-                        (state.usurf[ACT] - state.usurfobs[ACT])
-                        / params.opti_usurfobs_std
-                    )
-                    ** 2
-                )
+                COST_S = misfit_usurf(params, state)
             else:
                 COST_S = tf.Variable(0.0)
 
             # force zero thikness outisde the mask
             if "icemask" in params.opti_cost:
-                COST_O = 10**10 * tf.math.reduce_mean(
-                    tf.where(state.icemaskobs > 0.5, 0.0, state.thk**2)
-                )
+                COST_O = 10**10 * tf.math.reduce_mean( tf.where(state.icemaskobs > 0.5, 0.0, state.thk**2) )
             else:
                 COST_O = tf.Variable(0.0)
 
             # Here one enforces non-negative ice thickness, and possibly zero-thickness in user-defined ice-free areas.
             if "thk" in params.opti_control:
-                COST_HPO = 10**10 * tf.math.reduce_mean(
-                    tf.where(state.thk >= 0, 0.0, state.thk**2)
-                )
+                COST_HPO = 10**10 * tf.math.reduce_mean( tf.where(state.thk >= 0, 0.0, state.thk**2) )
             else:
                 COST_HPO = tf.Variable(0.0)
     
             # Here one adds a regularization terms for the bed toporgraphy to the cost function
             if "thk" in params.opti_control:
-                state.topg = state.usurf - state.thk
-                if params.opti_smooth_anisotropy_factor == 1:
-                    dbdx = (state.topg[:, 1:] - state.topg[:, :-1])/state.dx
-                    dbdy = (state.topg[1:, :] - state.topg[:-1, :])/state.dx
-                    
-                    if params.sole_mask:
-                        dbdx = tf.where( (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5) , dbdx, 0.0)
-                        dbdy = tf.where( (state.icemaskobs[1:, :] > 0.5) & (state.icemaskobs[:-1, :] > 0.5) , dbdy, 0.0)
- 
-                    REGU_H = (params.opti_regu_param_thk) * (
-                        tf.nn.l2_loss(dbdx) + tf.nn.l2_loss(dbdy)
-                        - gamma * tf.math.reduce_sum(state.thk)
-                    )
-                else:
-                    dbdx = (state.topg[:, 1:] - state.topg[:, :-1])/state.dx
-                    dbdx = (dbdx[1:, :] + dbdx[:-1, :]) / 2.0
-                    dbdy = (state.topg[1:, :] - state.topg[:-1, :])/state.dx
-                    dbdy = (dbdy[:, 1:] + dbdy[:, :-1]) / 2.0
-                    
-                    if params.sole_mask:
-                        MASK = (state.icemaskobs[1:, 1:] > 0.5) & (state.icemaskobs[1:, :-1] > 0.5) & (state.icemaskobs[:-1, 1:] > 0.5) & (state.icemaskobs[:-1, :-1] > 0.5)
-                        dbdx = tf.where( MASK, dbdx, 0.0)
-                        dbdy = tf.where( MASK, dbdy, 0.0)
-                    
-                    REGU_H = (params.opti_regu_param_thk) * (
-                        (1.0/np.sqrt(params.opti_smooth_anisotropy_factor))
-                        * tf.nn.l2_loss((dbdx * state.flowdirx + dbdy * state.flowdiry))
-                        + np.sqrt(params.opti_smooth_anisotropy_factor)
-                        * tf.nn.l2_loss((dbdx * state.flowdiry - dbdy * state.flowdirx))
-                        - gamma * tf.math.reduce_sum(state.thk)
-                    )
+                REGU_H = regu_thk(params, state)
             else:
                 REGU_H = tf.Variable(0.0)
 
             # Here one adds a regularization terms for slidingco to the cost function
             if "slidingco" in params.opti_control:
-
-#                if not hasattr(state, "flowdirx"):
-                dadx = (state.slidingco[:, 1:] - state.slidingco[:, :-1])/state.dx
-                dady = (state.slidingco[1:, :] - state.slidingco[:-1, :])/state.dx
-
-                if params.sole_mask:                
-                    dadx = tf.where( (state.icemaskobs[:, 1:] == 1) & (state.icemaskobs[:, :-1] == 1) , dadx, 0.0)
-                    dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
-                
-                REGU_S = (params.opti_regu_param_slidingco) * (
-                    tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
-                )
-                + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
-                # this last line serve to enforce non-negative slidingco
-                
- #               else:
-                    # dadx = (state.slidingco[:, 1:] - state.slidingco[:, :-1])/state.dx
-                    # dadx = (dadx[1:, :] + dadx[:-1, :]) / 2.0
-                    # dady = (state.slidingco[1:, :] - state.slidingco[:-1, :])/state.dx
-                    # dady = (dady[:, 1:] + dady[:, :-1]) / 2.0
-                    
-                    # if params.sole_mask:
-                    #     MASK = (state.icemaskobs[1:, 1:] > 0.5) & (state.icemaskobs[1:, :-1] > 0.5) & (state.icemaskobs[:-1, 1:] > 0.5) & (state.icemaskobs[:-1, :-1] > 0.5)
-                    #     dadx = tf.where( MASK, dadx, 0.0)
-                    #     dady = tf.where( MASK, dady, 0.0)
-                    
-                    # REGU_S = (params.opti_regu_param_slidingco) * (
-                    #     (1.0/np.sqrt(params.opti_smooth_anisotropy_factor))
-                    #     * tf.nn.l2_loss((dadx * state.flowdirx + dady * state.flowdiry))
-                    #     + np.sqrt(params.opti_smooth_anisotropy_factor)
-                    #     * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx))
-                    # )
+                REGU_S = regu_slidingco(params, state)
             else:
                 REGU_S = tf.Variable(0.0)
-                
-            ACT = state.icemaskobs > 0.5
-            mean_slidingco = tf.math.reduce_mean(state.slidingco[ACT])
-
+ 
             # sum all component into the main cost function
-            COST = (
-                COST_U + COST_H + COST_D + COST_S + COST_O + COST_HPO + REGU_H + REGU_S
-            )
+            COST = COST_U + COST_H + COST_D + COST_S + COST_O + COST_HPO + REGU_H + REGU_S
 
-            vol = np.sum(state.thk) * (state.dx**2) / 10**9
+            # Here one allow retraining of the ice flow emaultor
+            if params.opti_retrain_iceflow_model:
+                COST_GLEN = iceflow_energy_XY(params, X, Y)
+                
+                grads = s.gradient(COST_GLEN, state.iceflow_model.trainable_variables)
 
-            ################
-
-            COST_GLEN = iceflow_energy_XY(params, X, Y)
-
-            grads = s.gradient(COST_GLEN, state.iceflow_model.trainable_variables)
-
-            opti_retrain.apply_gradients(
-                zip(grads, state.iceflow_model.trainable_variables)
-            )
-
-            ###############
-
-            if i == 0:
-                print(
-                    "                   Step  |  ICE_VOL |  COST_U  |  COST_H  |  COST_D  |  COST_S  |   REGU_H |   REGU_S | COST_GLEN | MEAN_SLIDCO   "
+                opti_retrain.apply_gradients(
+                    zip(grads, state.iceflow_model.trainable_variables)
                 )
-
-            if i % params.opti_output_freq == 0:
-                print(
-                    "OPTI %s :   %6.0f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.4f |"
-                    % (
-                        datetime.datetime.now().strftime("%H:%M:%S"),
-                        i,
-                        vol,
-                        COST_U.numpy(),
-                        COST_H.numpy(),
-                        COST_D.numpy(),
-                        COST_S.numpy(),
-                        REGU_H.numpy(),
-                        REGU_S.numpy(),
-                        COST_GLEN.numpy(),
-                        mean_slidingco.numpy()
-                    )
-                )
-
+            else:
+                COST_GLEN = tf.Variable(0.0)
+   
+            print_costs(params, state, COST_U, COST_H, COST_D, COST_S, REGU_H, REGU_S, COST_GLEN, i)
+ 
             state.costs.append(
                 [
                     COST_U.numpy(),
@@ -650,6 +496,207 @@ def initialize(params, state):
     _plot_cost_functions(params, state, state.costs)
 
     plt.close("all")
+    
+    save_costs(params, state)
+    
+    save_rms_std(params, state)
+ 
+    # Flag so we can check if initialize was already called
+    state.optimize_initializer_called = True
+
+
+def update(params, state):
+    pass
+
+
+def finalize(params, state):
+    if params.iflo_save_model:
+        save_iceflow_model(params, state) 
+        
+####################################
+
+def misfit_velsurf(params,state):
+    
+    velsurf    = tf.stack([state.uvelsurf,    state.vvelsurf],    axis=-1) 
+    velsurfobs = tf.stack([state.uvelsurfobs, state.vvelsurfobs], axis=-1)
+    
+    ACT = ~tf.math.is_nan(velsurfobs)
+    
+    return 0.5 * tf.reduce_mean(
+           ( (velsurfobs[ACT] - velsurf[ACT]) / params.opti_velsurfobs_std  )** 2
+    )
+    
+def misfit_thk(params,state):
+    
+    ACT = ~tf.math.is_nan(state.thkobs)
+    
+    return 0.5 * tf.reduce_mean( state.dens_thkobs[ACT] * 
+        ((state.thkobs[ACT] - state.thk[ACT]) / params.opti_thkobs_std) ** 2
+    )
+    
+def cost_divflux(params,state,i):
+
+    divflux = compute_divflux(
+        state.ubar, state.vbar, state.thk, state.dx, state.dx, method=params.opti_divflux_method
+    )
+    
+    # divflux = tf.where(ACT, divflux, 0.0)
+
+    if "divfluxfcz" in params.opti_cost:
+        ACT = state.icemaskobs > 0.5
+        if i % 10 == 0:
+            # his does not need to be comptued any iteration as this is expensive
+            state.res = stats.linregress(
+                state.usurf[ACT], divflux[ACT]
+            )  # this is a linear regression (usually that's enough)
+        # or you may go for polynomial fit (more gl, but may leads to errors)
+        #  weights = np.polyfit(state.usurf[ACT],divflux[ACT], 2)
+        divfluxtar = tf.where(
+            ACT, state.res.intercept + state.res.slope * state.usurf, 0.0
+        )
+    #   divfluxtar = tf.where(ACT, np.poly1d(weights)(state.usurf) , 0.0 )
+    
+    if "divfluxobs" in params.opti_cost:
+        divfluxtar = state.divfluxobs
+
+    ACT = state.icemaskobs > 0.5
+    
+    if ("divfluxobs" in params.opti_cost) | ("divfluxfcz" in params.opti_cost):
+        COST_D = 0.5 * tf.reduce_mean(
+            ((divfluxtar[ACT] - divflux[ACT]) / params.opti_divfluxobs_std) ** 2
+        )
+
+    if ("divfluxpen" in params.opti_cost):
+        dddx = (divflux[:, 1:] - divflux[:, :-1])/state.dx
+        dddy = (divflux[1:, :] - divflux[:-1, :])/state.dx
+        COST_D = (params.opti_regu_param_div) * ( tf.nn.l2_loss(dddx) + tf.nn.l2_loss(dddy) )
+        
+    if params.opti_force_zero_sum_divflux:
+            COST_D += 0.5 * 1000 * tf.reduce_mean(divflux[ACT] / params.opti_divfluxobs_std) ** 2
+            
+    return COST_D
+
+def misfit_usurf(params,state):
+    
+    ACT = state.icemaskobs > 0.5
+    
+    return 0.5 * tf.reduce_mean(
+        (
+            (state.usurf[ACT] - state.usurfobs[ACT])
+            / params.opti_usurfobs_std
+        )
+        ** 2
+    )
+
+def regu_thk(params,state):
+    
+    areaicemask = tf.reduce_sum(tf.where(state.icemask>0.5,1.0,0.0))*state.dx**2
+
+    # here we had factor 8*np.pi*0.04, which is equal to 1
+    gamma = params.opti_convexity_weight * areaicemask**(params.opti_convexity_power-2.0)
+    
+    state.topg = state.usurf - state.thk
+    
+    if params.opti_smooth_anisotropy_factor == 1:
+        dbdx = (state.topg[:, 1:] - state.topg[:, :-1])/state.dx
+        dbdy = (state.topg[1:, :] - state.topg[:-1, :])/state.dx
+        
+        if params.sole_mask:
+            dbdx = tf.where( (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5) , dbdx, 0.0)
+            dbdy = tf.where( (state.icemaskobs[1:, :] > 0.5) & (state.icemaskobs[:-1, :] > 0.5) , dbdy, 0.0)
+
+        REGU_H = (params.opti_regu_param_thk) * (
+            tf.nn.l2_loss(dbdx) + tf.nn.l2_loss(dbdy)
+            - gamma * tf.math.reduce_sum(state.thk)
+        )
+    else:
+        dbdx = (state.topg[:, 1:] - state.topg[:, :-1])/state.dx
+        dbdx = (dbdx[1:, :] + dbdx[:-1, :]) / 2.0
+        dbdy = (state.topg[1:, :] - state.topg[:-1, :])/state.dx
+        dbdy = (dbdy[:, 1:] + dbdy[:, :-1]) / 2.0
+        
+        if params.sole_mask:
+            MASK = (state.icemaskobs[1:, 1:] > 0.5) & (state.icemaskobs[1:, :-1] > 0.5) & (state.icemaskobs[:-1, 1:] > 0.5) & (state.icemaskobs[:-1, :-1] > 0.5)
+            dbdx = tf.where( MASK, dbdx, 0.0)
+            dbdy = tf.where( MASK, dbdy, 0.0)
+        
+        REGU_H = (params.opti_regu_param_thk) * (
+            (1.0/np.sqrt(params.opti_smooth_anisotropy_factor))
+            * tf.nn.l2_loss((dbdx * state.flowdirx + dbdy * state.flowdiry))
+            + np.sqrt(params.opti_smooth_anisotropy_factor)
+            * tf.nn.l2_loss((dbdx * state.flowdiry - dbdy * state.flowdirx))
+            - gamma * tf.math.reduce_sum(state.thk)
+        )
+        
+    return REGU_H
+        
+def regu_slidingco(params,state):
+
+#    if not hasattr(state, "flowdirx"):
+    dadx = (state.slidingco[:, 1:] - state.slidingco[:, :-1])/state.dx
+    dady = (state.slidingco[1:, :] - state.slidingco[:-1, :])/state.dx
+
+    if params.sole_mask:                
+        dadx = tf.where( (state.icemaskobs[:, 1:] == 1) & (state.icemaskobs[:, :-1] == 1) , dadx, 0.0)
+        dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
+    
+    REGU_S = (params.opti_regu_param_slidingco) * (
+        tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
+    )
+    + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
+    # this last line serve to enforce non-negative slidingco
+    
+#               else:
+        # dadx = (state.slidingco[:, 1:] - state.slidingco[:, :-1])/state.dx
+        # dadx = (dadx[1:, :] + dadx[:-1, :]) / 2.0
+        # dady = (state.slidingco[1:, :] - state.slidingco[:-1, :])/state.dx
+        # dady = (dady[:, 1:] + dady[:, :-1]) / 2.0
+        
+        # if params.sole_mask:
+        #     MASK = (state.icemaskobs[1:, 1:] > 0.5) & (state.icemaskobs[1:, :-1] > 0.5) & (state.icemaskobs[:-1, 1:] > 0.5) & (state.icemaskobs[:-1, :-1] > 0.5)
+        #     dadx = tf.where( MASK, dadx, 0.0)
+        #     dady = tf.where( MASK, dady, 0.0)
+        
+        # REGU_S = (params.opti_regu_param_slidingco) * (
+        #     (1.0/np.sqrt(params.opti_smooth_anisotropy_factor))
+        #     * tf.nn.l2_loss((dadx * state.flowdirx + dady * state.flowdiry))
+        #     + np.sqrt(params.opti_smooth_anisotropy_factor)
+        #     * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx))
+        
+    return REGU_S
+
+##################################
+
+def print_costs(params, state, COST_U, COST_H, COST_D, COST_S, REGU_H, REGU_S, COST_GLEN, i):
+            
+    vol = np.sum(state.thk) * (state.dx**2) / 10**9
+    
+    mean_slidingco = tf.math.reduce_mean(state.slidingco[state.icemaskobs > 0.5])
+
+    if i == 0:
+        print(
+            "                   Step  |  ICE_VOL |  COST_U  |  COST_H  |  COST_D  |  COST_S  |   REGU_H |   REGU_S | COST_GLEN | MEAN_SLIDCO   "
+        )
+
+    if i % params.opti_output_freq == 0:
+        print(
+            "OPTI %s :   %6.0f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.2f |   %6.4f |"
+            % (
+                datetime.datetime.now().strftime("%H:%M:%S"),
+                i,
+                vol,
+                COST_U.numpy(),
+                COST_H.numpy(),
+                COST_D.numpy(),
+                COST_S.numpy(),
+                REGU_H.numpy(),
+                REGU_S.numpy(),
+                COST_GLEN.numpy(),
+                mean_slidingco.numpy()
+            )
+        )
+        
+def save_costs(params, state):
 
     np.savetxt(
         "costs.dat",
@@ -657,6 +704,12 @@ def initialize(params, state):
         fmt="%.10f",
         header="        COST_U        COST_H      COST_D       COST_S       REGU_H       REGU_S          HPO           COSTGLEN ",
     )
+    
+    os.system(
+        "echo rm " + "costs.dat" + " >> clean.sh"
+    )
+    
+def save_rms_std(params, state):
 
     np.savetxt(
         "rms_std.dat",
@@ -680,22 +733,6 @@ def initialize(params, state):
     os.system(
         "echo rm " + "rms_std.dat" + " >> clean.sh"
     )
-    os.system(
-        "echo rm " + "costs.dat" + " >> clean.sh"
-    )
-
-    # Flag so we can check if initialize was already called
-    state.optimize_initializer_called = True
-
-
-def update(params, state):
-    pass
-
-
-def finalize(params, state):
-    if params.iflo_save_model:
-        save_iceflow_model(params, state) 
-
 
 def create_density_matrix(data, kernel_size):
     # Convert data to binary mask (1 for valid data, 0 for NaN)

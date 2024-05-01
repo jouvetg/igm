@@ -243,6 +243,7 @@ def initialize(params, state):
     initialize_iceflow(params, state)
     
     state.it = -1
+    
     _update_iceflow_emulator(params, state)
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
@@ -276,9 +277,14 @@ def initialize(params, state):
         state.dens_thkobs = state.dens_thkobs / tf.reduce_mean(state.dens_thkobs[state.dens_thkobs>0])
     else:
         state.dens_thkobs = tf.ones_like(state.thkobs)
+        
+    # force zero slidingco in the floating areas
+    state.slidingco = tf.where( state.icemaskobs == 2, 0.0, state.slidingco)
     
-    ###### PREPARE OPIMIZER
-
+    _optimize(params, state)
+ 
+def _optimize(params, state):
+    
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
         optimizer = tf.keras.optimizers.Adam(learning_rate=params.opti_step_size)
         opti_retrain = tf.keras.optimizers.Adam(
@@ -289,14 +295,7 @@ def initialize(params, state):
         opti_retrain = tf.keras.optimizers.legacy.Adam(
             learning_rate=params.iflo_retrain_emulator_lr
         )
-        
-    #######################################
-    
-    # force zero slidingco in the floating areas
-    state.slidingco = tf.where( state.icemaskobs == 2, 0.0, state.slidingco)
-
-    ###### PREPARE VARIABLES TO OPTIMIZE
-
+ 
     state.costs = []
 
     state.tcomp_optimize = []
@@ -333,19 +332,22 @@ def initialize(params, state):
 
             # evalutae th ice flow emulator                
             if params.iflo_multiple_window_size==0:
-                Y = state.iceflow_model(X)
+                 Y = state.iceflow_model(X)
             else:
-                Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
+                 Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
 
             U, V = Y_to_UV(params, Y)
 
             U = U[0]
             V = V[0]
-
-            state.U.assign(U)
-            state.V.assign(V)
-            
-            update_2d_iceflow_variables(params, state)
+           
+            # this is strange, but it having state.U instead of U, slidingco is not more optimized ....
+            state.uvelbase = U[0, :, :]
+            state.vvelbase = V[0, :, :]
+            state.ubar = tf.reduce_sum(U * state.vert_weight, axis=0)
+            state.vbar = tf.reduce_sum(V * state.vert_weight, axis=0)
+            state.uvelsurf = U[-1, :, :]
+            state.vvelsurf = V[-1, :, :]
  
             if not params.opti_smooth_anisotropy_factor == 1:
                 _compute_flow_direction_for_anisotropic_smoothing(state)

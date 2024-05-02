@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import os, glob, shutil, scipy
 from netCDF4 import Dataset
 import tensorflow as tf
+import pandas as pd
 from igm.modules.utils import str2bool
 
 from igm.modules.utils import complete_data
@@ -71,7 +72,12 @@ def params(parser):
         default=True,
         help="Write prepared data into a geology file",
     )
-
+    parser.add_argument(
+        "--oggm_remove_RGI_folder",
+        type=str2bool,
+        default=False,
+        help="oggm_remove_RGI_folder",
+    )
 
 def initialize(params, state):
     import json
@@ -152,17 +158,28 @@ def initialize(params, state):
     thkobs = np.zeros_like(thk) * np.nan
 
     if params.oggm_incl_glathida:
-        with open(os.path.join(params.oggm_RGI_ID, "glacier_grid.json"), "r") as f:
-            data = json.load(f)
-        proj = data["proj"]
-
-        try:
-            thkobs = _read_glathida(
-                x, y, usurfobs, proj, params.oggm_path_glathida, state
-            )
-            thkobs = np.where(icemaskobs, thkobs, np.nan)
-        except:
-            thkobs = np.zeros_like(thk) * np.nan
+        if params.oggm_RGI_version==6:
+            with open(os.path.join(params.oggm_RGI_ID, "glacier_grid.json"), "r") as f:
+                data = json.load(f)
+            proj = data["proj"]
+    
+            try:
+                thkobs = _read_glathida(
+                    x, y, usurfobs, proj, params.oggm_path_glathida, state
+                )
+                thkobs = np.where(icemaskobs, thkobs, np.nan)
+            except:
+                thkobs = np.zeros_like(thk) * np.nan
+        elif params.oggm_RGI_version==7:
+            path_glathida = os.path.join(params.oggm_RGI_ID, "glathida_data.csv")
+    
+            try:
+                thkobs = _read_glathida_v7(
+                    x, y, path_glathida
+                )
+                thkobs = np.where(icemaskobs, thkobs, np.nan)
+            except:
+                thkobs = np.zeros_like(thk) * np.nan
 
     nc.close()
 
@@ -193,7 +210,9 @@ def initialize(params, state):
         var_info["icemask"] = ["Ice mask", "no unit"]
         var_info["dhdt"] = ["Ice thickness change", "m/y"]
 
-        nc = Dataset( "input_saved.nc", "w", format="NETCDF4" )
+        nc = Dataset(
+            os.path.join("input_saved.nc"), "w", format="NETCDF4"
+        )
 
         nc.createDimension("y", len(y))
         yn = nc.createVariable("y", np.dtype("float32").char, ("y",))
@@ -229,8 +248,12 @@ def update(params, state):
     pass
 
 
-def finalize(params, state):
-    pass
+def finalize(params, state): 
+    try:
+        shutil.rmtree(params.oggm_RGI_ID) 
+    except Exception as error:
+        print("Error: ", error)
+
 
 
 #########################################################################
@@ -286,7 +309,7 @@ def _oggm_util(RGIs, params):
                 # Start from level 3 if you want some climate data in them
                 rgi_ids,
                 prepro_border=40,
-                from_prepro_level=2,
+                from_prepro_level=3,
                 prepro_rgi_version='70C',
                 prepro_base_url=base_url,
             )
@@ -386,7 +409,7 @@ def _oggm_util(RGIs, params):
 
 def _read_glathida(x, y, usurf, proj, path_glathida, state):
     """
-    Function written by Ethan Welthy & Guillaume Jouvet
+    Function written by Ethan Welthy, Guillaume Jouvet and Samuel Cook
     """
 
     from pyproj import Transformer
@@ -402,12 +425,8 @@ def _read_glathida(x, y, usurf, proj, path_glathida, state):
         if hasattr(state, "logger"):
             state.logger.info("glathida data already at " + path_glathida)
 
-    files = [os.path.join(path_glathida, "glathida", "data", "point.csv")]
-    files += glob.glob(
-        os.path.join(path_glathida, "glathida", "submissions", "*", "point.csv")
-    )
-    # Glathida has changed the folder structure, this would need to look like :
-    # os.path.join(path_glathida, "data", "*", "point.csv")
+    files = glob.glob(os.path.join(path_glathida, "glathida", "data", "*", "point.csv"))
+    files += glob.glob(os.path.join(path_glathida, "glathida", "data", "point.csv"))
    
     os.path.expanduser
 
@@ -425,11 +444,13 @@ def _read_glathida(x, y, usurf, proj, path_glathida, state):
     df = pd.concat(
         [pd.read_csv(file, low_memory=False) for file in files], ignore_index=True
     )
+    
+    
     mask = (
-        (lonmin <= df["lon"])
-        & (df["lon"] <= lonmax)
-        & (latmin <= df["lat"])
-        & (df["lat"] <= latmax)
+        (lonmin <= df["longitude"])
+        & (df["longitude"] <= lonmax)
+        & (latmin <= df["latitude"])
+        & (df["latitude"] <= latmax)
         & df["elevation"].notnull()
         & df["date"].notnull()
         & df["elevation_date"].notnull()
@@ -456,7 +477,7 @@ def _read_glathida(x, y, usurf, proj, path_glathida, state):
         if hasattr(state, "logger"):
             state.logger.info("Nb of profiles found : " + str(df.index.shape[0]))
 
-        xx, yy = transformer.transform(df["lon"], df["lat"])
+        xx, yy = transformer.transform(df["longitude"], df["latitude"])
         bedrock = df["elevation"] - df["thickness"]
         elevation_normalized = fsurf(xx, yy, grid=False)
         thickness_normalized = np.maximum(elevation_normalized - bedrock, 0)
@@ -474,6 +495,26 @@ def _read_glathida(x, y, usurf, proj, path_glathida, state):
             .mean()
         )
         thkobs = np.full((y.shape[0], x.shape[0]), np.nan)
+        thickness_gridded[thickness_gridded == 0] = np.nan
         thkobs[tuple(zip(*thickness_gridded.index))] = thickness_gridded
 
+    return thkobs
+
+def _read_glathida_v7(x, y, path_glathida):
+    #Function written by Samuel Cook
+    
+    #Read GlaThiDa file
+    gdf = pd.read_csv(path_glathida)
+    
+    gdf_sel = gdf.loc[gdf.thickness > 0]  # you may not want to do that, but be aware of: https://gitlab.com/wgms/glathida/-/issues/25
+    gdf_per_grid = gdf_sel.groupby(by='ij_grid')[['i_grid', 'j_grid', 'elevation', 'thickness', 'thickness_uncertainty']].mean()  # just average per grid point
+    # Average does not preserve ints
+    gdf_per_grid['i_grid'] = gdf_per_grid['i_grid'].astype(int)
+    gdf_per_grid['j_grid'] = gdf_per_grid['j_grid'].astype(int)
+    
+    #Get GlaThiDa data onto model grid  
+    thkobs = np.full((y.shape[0], x.shape[0]), np.nan)
+    thkobs[gdf_per_grid['j_grid'],gdf_per_grid['i_grid']] = gdf_per_grid['thickness']
+    thkobs = np.flipud(thkobs)
+    
     return thkobs

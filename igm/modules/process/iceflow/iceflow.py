@@ -356,7 +356,7 @@ def initialize(params, state):
         )
 
     if not params.iflo_type == "solved":
-        if int(tf.__version__.split(".")[1]) <= 10:
+        if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
             state.opti_retrain = tf.keras.optimizers.Adam(
                 learning_rate=params.iflo_retrain_emulator_lr
             )
@@ -454,20 +454,13 @@ def initialize(params, state):
     Ny = state.thk.shape[0]
     Nx = state.thk.shape[1]
 
-    # In case of a U-net, must make sure the I/O size is multiple of 2**N
-    if params.iflo_multiple_window_size > 0:
-        NNy = params.iflo_multiple_window_size * math.ceil(
-            Ny / params.iflo_multiple_window_size
-        )
-        NNx = params.iflo_multiple_window_size * math.ceil(
-            Nx / params.iflo_multiple_window_size
-        )
-        state.PAD = [[0, NNy - Ny], [0, NNx - Nx]]
-    else:
-        state.PAD = [[0, 0], [0, 0]]
+    state.PAD = compute_PAD(params,Nx,Ny)
 
     if not params.iflo_type == "solved":
         _update_iceflow_emulated(params, state)
+        
+    # Currently it is not supported to have the two working simulatanoutly
+    assert (params.iflo_exclude_borders==0) | (params.iflo_multiple_window_size==0)
 
 
 def update(params, state):
@@ -668,10 +661,12 @@ def _iceflow_energy(
 
     # Vertical discretization
     if Nz > 1:
-        zeta = np.arange(Nz) / (Nz - 1)
+        zeta = np.arange(Nz) / (Nz - 1)  # formerly ...
+        #zeta = tf.range(Nz, dtype=tf.float32) / (Nz - 1)
         temp = (zeta / vert_spacing) * (1.0 + (vert_spacing - 1.0) * zeta)
         temd = temp[1:] - temp[:-1]
-        dz = tf.stack([_stag4(thk) * z for z in temd], axis=1)
+        dz = tf.stack([_stag4(thk) * z for z in temd], axis=1)  # formerly ..
+        #dz = (tf.expand_dims(tf.expand_dims(temd,axis=-1),axis=-1)*tf.expand_dims(_stag4(thk),axis=0))
     else:
         dz = tf.expand_dims(_stag4(thk), axis=0)
 
@@ -702,17 +697,20 @@ def _iceflow_energy(
     )
     
     sr = srx + srz
-    
-    sr = tf.clip_by_value(sr, min_sr**2, max_sr**2)
 
     sr = tf.where(COND, sr, 0.0)
+    
+    srcapped = tf.clip_by_value(sr, min_sr**2, max_sr**2)
+
+    srcapped = tf.where(COND, srcapped, 0.0)
+ 
 
     # C_shear is unit  Mpa y^(1/n) y^(-1-1/n) * m^3 = Mpa y^(-1) m^3
     if len(B.shape) == 3:
         C_shear = (
             tf.reduce_mean(
                 _stag4(B)
-                * tf.reduce_sum(dz * ((sr + regu_glen**2) ** (p / 2)), axis=1),
+                * tf.reduce_sum(dz * ((srcapped + regu_glen**2) ** ((p-2) / 2)) * sr, axis=1),
                 axis=(-1, -2),
             )
             / p
@@ -721,7 +719,7 @@ def _iceflow_energy(
         C_shear = (
             tf.reduce_mean(
                 tf.reduce_sum(
-                    _stag8(B) * dz * ((sr + regu_glen**2) ** (p / 2)), axis=1
+                    _stag8(B) * dz * ((srcapped + regu_glen**2) ** ((p-2) / 2)) * sr, axis=1
                 ),
                 axis=(-1, -2),
             )
@@ -1021,6 +1019,9 @@ def update_2d_iceflow_variables(params, state):
 def _update_iceflow_emulated(params, state):
     # Define the input of the NN, include scaling
 
+    Ny, Nx = state.thk.shape
+    N = params.iflo_Nz
+
     fieldin = [vars(state)[f] for f in params.iflo_fieldin]
 
     X = fieldin_to_X(params, fieldin)
@@ -1028,17 +1029,17 @@ def _update_iceflow_emulated(params, state):
     if params.iflo_exclude_borders>0:
         iz = params.iflo_exclude_borders
         X = tf.pad(X, [[0, 0], [iz, iz], [iz, iz], [0, 0]], "SYMMETRIC")
-
-    Y = state.iceflow_model(X)
+        
+    if params.iflo_multiple_window_size==0:
+        Y = state.iceflow_model(X)
+    else:
+        Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
 
     if params.iflo_exclude_borders>0:
         iz = params.iflo_exclude_borders
         Y = Y[:, iz:-iz, iz:-iz, :]
 
-    Ny, Nx = state.thk.shape
-    N = params.iflo_Nz
-
-    U, V = Y_to_UV(params, Y[:, :Ny, :Nx, :])
+    U, V = Y_to_UV(params, Y)
     U = U[0]
     V = V[0]
 
@@ -1075,6 +1076,11 @@ def _update_iceflow_emulator(params, state):
         XX = fieldin_to_X(params, fieldin)
 
         X = _split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
+        
+        Ny = X.shape[1]
+        Nx = X.shape[2]
+        
+        PAD = compute_PAD(params,Nx,Ny)
 
         state.COST_EMULATOR = []
 
@@ -1089,8 +1095,9 @@ def _update_iceflow_emulator(params, state):
 
             for i in range(X.shape[0]):
                 with tf.GradientTape() as t:
-                    Y = state.iceflow_model(X[i : i + 1, :, :, :])
 
+                    Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
+                    
                     if iz>0:
                         COST = iceflow_energy_XY(params, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
                     else:
@@ -1265,6 +1272,8 @@ def unet(params, nb_inputs, nb_outputs):
 
 def save_iceflow_model(params, state):
     directory = "iceflow-model"
+    
+    import shutil
 
     if os.path.exists(directory):
         shutil.rmtree(directory)
@@ -1290,3 +1299,17 @@ def save_iceflow_model(params, state):
         % (params.iflo_vert_spacing, "# param for vertical spacing (vert_spacing)")
     )
     fid.close()
+
+def compute_PAD(params,Nx,Ny):
+
+    # In case of a U-net, must make sure the I/O size is multiple of 2**N
+    if params.iflo_multiple_window_size > 0:
+        NNy = params.iflo_multiple_window_size * math.ceil(
+            Ny / params.iflo_multiple_window_size
+        )
+        NNx = params.iflo_multiple_window_size * math.ceil(
+            Nx / params.iflo_multiple_window_size
+        )
+        return [[0, 0], [0, NNy - Ny], [0, NNx - Nx], [0, 0]]
+    else:
+        return [[0, 0], [0, 0], [0, 0], [0, 0]]

@@ -361,6 +361,8 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
             dX = tf.ones_like(thk) * (x[1] - x[0]) * co
 
             nn, ny, nx = thk.shape
+            
+            PAD = compute_PAD(params,nx,ny)
 
             if params.iflo_dim_arrhenius == 3:
                 arrhenius = tf.ones((1, params.iflo_Nz, ny, nx)) * val_A
@@ -375,8 +377,13 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
 
             with tf.GradientTape() as t:
                 t.watch(state.iceflow_model.trainable_variables)
+                
+                X = tf.pad(X, PAD, "CONSTANT")
 
                 Y = state.iceflow_model(X)
+                
+                X = X[:,:ny,:nx,:]
+                Y = Y[:,:ny,:nx,:]
 
                 COST = iceflow_energy_XY(params, X, Y)
 
@@ -424,9 +431,19 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
                     + str(int(par[4]))
                 )
 
-                path = os.path.join(state.direct_name, code)
+                path = os.path.join(state.direct_name, code)                
+
+                Ny = X.shape[1]
+                Nx = X.shape[2]
+
+                PAD = compute_PAD(params,Nx,Ny)
+                
+                X = tf.pad(X, PAD, "CONSTANT")
 
                 YP = state.iceflow_model(X)
+                
+                X  =  X[:,:Ny,:Nx,:]
+                YP = YP[:,:Ny,:Nx,:]
 
                 COST = iceflow_energy_XY(params, X, YP)
 
@@ -717,19 +734,3 @@ def _plot_iceflow_Glen(params, state, X, Y, YP, tit, path):
     plt.tight_layout()
     plt.savefig(os.path.join(path, "DIFF_" + tit + ".png"), pad_inches=0)
     plt.close("all")
-
-
-# def iceflow_model_generic(state,X):
-
-#     if params.iflo_network == "unet":
-#         Ny = X.shape[1]
-#         Nx = X.shape[2]
-#         multiple_window_size = 8  # maybe this 2**(nb_layers-1)
-#         NNy = multiple_window_size * math.ceil(Ny / multiple_window_size)
-#         NNx = multiple_window_size * math.ceil(Nx / multiple_window_size)
-#         PAD = [[0, 0],[0, NNy - Ny], [0, NNx - Nx],[0, 0]]
-#         XX = tf.pad(X, PAD, "CONSTANT")
-#         YY = state.iceflow_model(XX)
-#         return YY[:,:Ny,:Nx,:]
-#     else:
-#         return  state.iceflow_model(X)

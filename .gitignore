@@ -7,6 +7,7 @@ fig/
 biblio.bib
 pix2pixhd-texture-model/
 texture-aif-test
+tests/examples/texture-test/
 checkpoints/
 logdir/
 # texture/
@@ -28,5 +29,6 @@ params_saved.json
 smb_accpdd/
 clim_glacialindex/
 input_saved.nc
-RGI*/
+RGI60-*/
 .vscode/
+data

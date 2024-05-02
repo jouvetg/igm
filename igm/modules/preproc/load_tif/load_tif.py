@@ -47,13 +47,20 @@ def params(parser):
         help="crop_ymax",
         default=10**20,
     )
-
-
+    parser.add_argument(
+        "--ltif_folder",
+        type=str,
+        help="ltif_folder",
+        default="",
+    )
+    
 def initialize(params, state):
     import rasterio
 
-    files = glob.glob("*.tif")
-
+    files = glob.glob(os.path.join(params.ltif_folder, "*.tif"))
+    
+    print(files)
+    
     for file in files:
         var = os.path.split(file)[-1].split(".")[0]
         if os.path.exists(file):

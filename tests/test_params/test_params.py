@@ -70,6 +70,8 @@ def test_params_core():
         "gpu_info": False,
         "gpu_id": 0,
         "saved_params_filename": "params_saved",
+        "url_data": "",
+        "folder_data": "data",
     }
 
 # def test_params_core_overwrite():

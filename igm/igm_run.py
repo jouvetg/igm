@@ -14,7 +14,8 @@ from igm import (
     setup_igm_modules,
     setup_igm_params,
     print_gpu_info,
-    add_logger
+    add_logger,
+    download_unzip_and_store
 )
 
 
@@ -35,6 +36,9 @@ def main() -> None:
 
     if params.print_params:
         print_params(params=params)
+        
+    if not params.url_data=="":
+        download_unzip_and_store(params.url_data,params.folder_data)
 
     # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
     with tf.device(f"/GPU:{params.gpu_id}"):  # type: ignore for linting checks

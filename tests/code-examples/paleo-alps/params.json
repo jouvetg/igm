@@ -9,6 +9,8 @@
                        "plot2d",
                        "print_info",
                        "print_comp"],
+  "ltif_folder": "data",
+  "url_data": "https://www.dropbox.com/scl/fi/7pib29dhsuo2t80yplu2j/paleo-alps-v1.zip?rlkey=jsyz0qseyv9jqk63vz3lk6mf0&dl=0",
   "time_start": -30000.0,
   "time_end": -25000.0,
   "time_save": 100.0,

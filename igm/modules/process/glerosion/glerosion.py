@@ -36,7 +36,7 @@ def params(parser):
 
 def initialize(params, state):
     state.tcomp_glerosion = []
-    state.tlast_erosion = tf.Variable(params.time_start)
+    state.tlast_erosion = tf.Variable(params.time_start, dtype=tf.float32)
 
 
 def update(params, state):

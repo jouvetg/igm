@@ -15,7 +15,7 @@ from .common import (
     load_modules,
     add_logger,
     print_params,
-    load_dependent_modules,
+#    load_dependent_modules,
     get_modules_list,
     load_user_defined_params,
     run_intializers,
@@ -24,5 +24,6 @@ from .common import (
     setup_igm_modules,
     setup_igm_params,
     add_logger,
-    print_gpu_info
+    print_gpu_info,
+    download_unzip_and_store    
 )

@@ -1,0 +1,9 @@
+{
+  "modules_preproc": ["load_ncdf"],
+  "modules_process": ["time",
+                      "iceflow"
+                    ],
+  "modules_postproc": [],
+  "time_start": 1900.0,
+  "time_end": 2200.0
+}

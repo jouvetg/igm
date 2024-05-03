@@ -13,7 +13,6 @@ logdir/
 # texture/
 smb_accpdd/
 clim_glacialindex/
-igm_performance/
 erosion/checkpoints/
 erosion-test/
 
@@ -35,3 +34,7 @@ input_saved.nc
 RGI60-*/
 .vscode/
 data
+
+*.nsys-rep
+*.nc
+*.sqlite

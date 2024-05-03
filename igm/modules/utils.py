@@ -25,7 +25,7 @@ def str2bool(v):
     return v.lower() in ("true", "1")
 
 
-@tf.function()
+@tf.function(jit_compile=True)
 def getmag(u, v):
     """
     return the norm of a 2D vector, e.g. to compute velbase_mag
@@ -36,7 +36,7 @@ def getmag(u, v):
     )
 
 
-@tf.function()
+@tf.function(jit_compile=True)
 def getmag3d(u, v):
     """
     return the norm of a 3D vector, e.g. to compute velbase_mag
@@ -47,7 +47,7 @@ def getmag3d(u, v):
     )
 
 
-@tf.function()
+@tf.function(jit_compile=True)
 def compute_gradient_tf(s, dx, dy):
     """
     compute spatial 2D gradient of a given field
@@ -82,7 +82,7 @@ def compute_gradient_tf(s, dx, dy):
     return diffx, diffy
 
 
-@tf.function()
+@tf.function(jit_compile=True)
 def compute_divflux(u, v, h, dx, dy, method='upwind'):
     """
     upwind computation of the divergence of the flux : d(u h)/dx + d(v h)/dy
@@ -133,7 +133,7 @@ def minmod(a, b):
 def maxmod(a, b):
     return tf.where( (tf.abs(a)<tf.abs(b))&(a*b>0.0), b, tf.where((tf.abs(a)>tf.abs(b))&(a*b>0.0),a,0))
 
-@tf.function()
+@tf.function(jit_compile=True)
 def compute_divflux_slope_limiter(u, v, h, dx, dy, dt, slope_type):
     """
     upwind computation of the divergence of the flux : d(u h)/dx + d(v h)/dy
@@ -191,7 +191,7 @@ def compute_divflux_slope_limiter(u, v, h, dx, dy, dt, slope_type):
      
     return (Qx[:, 1:] - Qx[:, :-1]) / dx + (Qy[1:, :] - Qy[:-1, :]) / dy  
 
-@tf.function()
+@tf.function(jit_compile=True)
 def interp1d_tf(xs, ys, x):
     """
     This is a 1D interpolation tensorflow implementation
@@ -262,7 +262,7 @@ def complete_data(state):
     if not hasattr(state, "usurf"): 
         state.usurf = tf.Variable(state.topg + state.thk) 
 
-@tf.function
+@tf.function(jit_compile=True)
 def interpolate_bilinear_tf(
     grid: tf.Tensor,
     query_points: tf.Tensor,

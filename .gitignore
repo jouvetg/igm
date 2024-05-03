@@ -13,6 +13,9 @@ logdir/
 # texture/
 smb_accpdd/
 clim_glacialindex/
+igm_performance/
+erosion/checkpoints/
+erosion-test/
 
 # hide output files and data
 input_saved.nc

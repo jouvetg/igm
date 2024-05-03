@@ -48,6 +48,7 @@ import igm
 from igm import emulators
 import importlib_resources
 
+from igm.modules.utils import srange, erange
 ############################################
 
 
@@ -415,7 +416,7 @@ def initialize(params, state):
             state.iceflow_model = tf.keras.models.load_model(
                 os.path.join(dirpath, "model.h5"), compile=False
             )
-            state.iceflow_model.compile()
+            state.iceflow_model.compile(jit_compile=True)
         else:
             nb_inputs = len(params.iflo_fieldin) + (params.iflo_dim_arrhenius == 3) * (
                 params.iflo_Nz - 1
@@ -462,21 +463,28 @@ def initialize(params, state):
     # Currently it is not supported to have the two working simulatanoutly
     assert (params.iflo_exclude_borders==0) | (params.iflo_multiple_window_size==0)
 
-
 def update(params, state):
     if hasattr(state, "logger"):
         state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
+    rng = srange(message="tcomp_iceflow append", color="white")
     state.tcomp_iceflow.append(time.time())
-
+    erange(rng)
+    
     if params.iflo_type == "emulated":
         if params.iflo_retrain_emulator_freq > 0:
+            rng = srange(message="_update_iceflow_emulator", color="yellow")
             _update_iceflow_emulator(params, state)
+            erange(rng)
 
+        rng = srange(message="_update_iceflow_emulated", color="black")
         _update_iceflow_emulated(params, state)
-
+        erange(rng)
+        
     elif params.iflo_type == "solved":
+        rng = srange(message="_update_iceflow_solved", color="orange")
         _update_iceflow_solved(params, state)
+        erange(rng)
 
     elif params.iflo_type == "diagnostic":
         _update_iceflow_diagnostic(params, state)
@@ -835,16 +843,21 @@ def _iceflow_energy(
 
 # @tf.function(experimental_relax_shapes=True)
 def iceflow_energy_XY(params, X, Y):
-    U, V = Y_to_UV(params, Y)
+    U, V = Y_to_UV(params.iflo_Nz, Y)
 
-    fieldin = X_to_fieldin(params, X)
-
+    fieldin = X_to_fieldin(params.iflo_dim_arrhenius, params.iflo_Nz, X)
     return iceflow_energy(params, U, V, fieldin)
 
 
-def Y_to_UV(params, Y):
-    N = params.iflo_Nz
+@tf.function(jit_compile=True)
+def Y_to_UV(N, Y):
+    
+    # N = params.iflo_Nz
 
+    # U = tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1])
+    # V = tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1])
+
+    # return U, V
     U = tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1])
     V = tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1])
 
@@ -879,25 +892,59 @@ def fieldin_to_X(params, fieldin):
     return tf.expand_dims(tf.concat(X, axis=-1), axis=0)
 
 
-def X_to_fieldin(params, X):
+# @tf.function
+def X_to_fieldin(iflo_dim_arrhenius, iflo_Nz, X):
+# def X_to_fieldin(params, X):
+    # print(tf.cast(tf.equal(iflo_dim_arrhenius, 3), tf.int32))
+    # # exit()
+    # # arrhenius_is_3 = tf.cast(tf.equal(iflo_dim_arrhenius, 3), tf.int32)
+    # fieldin_dim = tf.constant([0, 0, 1 * (iflo_dim_arrhenius == 3), 0, 0])
+
+    # n = tf.size(fieldin_dim)
+    # fieldin = tf.TensorArray(tf.float32, size=n, dynamic_size=False, clear_after_read=False)
+
+    # i = 0
+    # for s in fieldin_dim:
+    #     if tf.equal(s, 0):
+    #         print(X[:, :, :, i].shape)
+    #         fieldin = fieldin.write(i, X[:, :, :, i])
+    #         i += 1
+    #     else:
+    #         print(tf.experimental.numpy.moveaxis(
+    #                 X[:, :, :, i : i + iflo_Nz], [-1], [1]
+    #             ).shape)
+    #         fieldin = fieldin.write(i,
+    #             tf.experimental.numpy.moveaxis(
+    #                 X[:, :, :, i : i + iflo_Nz], [-1], [1]
+    #             )
+    #         )
+    #         i += iflo_Nz
+
+    # return fieldin
     i = 0
 
-    fieldin_dim = [0, 0, 1 * (params.iflo_dim_arrhenius == 3), 0, 0]
+    # print(params.iflo_dim_arrhenius)
+    # print(params.iflo_dim_arrhenius.shape)
+    # exit()
+    # tf.print("hi")
+    fieldin_dim = tf.constant([0, 0, 1 * (iflo_dim_arrhenius == 3), 0, 0])
 
     fieldin = []
 
-    for f, s in zip(params.iflo_fieldin, fieldin_dim):
+    for s in fieldin_dim:
         if s == 0:
             fieldin.append(X[:, :, :, i])
+            
             i += 1
         else:
             fieldin.append(
                 tf.experimental.numpy.moveaxis(
-                    X[:, :, :, i : i + params.iflo_Nz], [-1], [1]
+                    X[:, :, :, i : i + iflo_Nz], [-1], [1]
                 )
             )
-            i += params.iflo_Nz
+            i += iflo_Nz
 
+    # print("done")
     return fieldin
 
 
@@ -1022,27 +1069,34 @@ def _update_iceflow_emulated(params, state):
     Ny, Nx = state.thk.shape
     N = params.iflo_Nz
 
+    rng = srange(message="fieldin list compression", color="blue")
     fieldin = [vars(state)[f] for f in params.iflo_fieldin]
-
+    erange(rng)
+    
+    rng = srange(message="fieldin_to_X", color="red")
     X = fieldin_to_X(params, fieldin)
-
+    erange(rng)
+    
     if params.iflo_exclude_borders>0:
         iz = params.iflo_exclude_borders
         X = tf.pad(X, [[0, 0], [iz, iz], [iz, iz], [0, 0]], "SYMMETRIC")
         
+    rng = srange(message="compute Y", color="yellow")
     if params.iflo_multiple_window_size==0:
         Y = state.iceflow_model(X)
     else:
         Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
-
+    erange(rng)
+    
     if params.iflo_exclude_borders>0:
         iz = params.iflo_exclude_borders
         Y = Y[:, iz:-iz, iz:-iz, :]
 
-    U, V = Y_to_UV(params, Y)
+    rng = srange(message="Y_to_UV", color="pink")
+    U, V = Y_to_UV(N, Y)
     U = U[0]
     V = V[0]
-
+    erange(rng)
     #    U = tf.where(state.thk > 0, U, 0)
 
     state.U.assign(U)
@@ -1050,7 +1104,9 @@ def _update_iceflow_emulated(params, state):
 
     # If requested, the speeds are artifically upper-bounded
     if params.iflo_force_max_velbar > 0:
+        rng = srange(message="getmag3d", color="purple")
         velbar_mag = getmag3d(state.U, state.V)
+        erange(rng)
         state.U.assign(
             tf.where(
                 velbar_mag >= params.iflo_force_max_velbar,
@@ -1066,22 +1122,32 @@ def _update_iceflow_emulated(params, state):
             )
         )
 
+    rng = srange(message="update variables", color="green")
     update_2d_iceflow_variables(params, state)
+    erange(rng)
 
 
 def _update_iceflow_emulator(params, state):
     if (state.it < 0) | (state.it % params.iflo_retrain_emulator_freq == 0):
+        rng = srange(message="fieldin list compression", color="blue")
         fieldin = [vars(state)[f] for f in params.iflo_fieldin]
+        erange(rng)
 
+        rng = srange(message="fieldin_to_X", color="green")
         XX = fieldin_to_X(params, fieldin)
-
+        erange(rng)
+        
+        rng = srange(message="fieldin_to_X", color="red")
         X = _split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
+        erange(rng)
         
         Ny = X.shape[1]
         Nx = X.shape[2]
         
+        rng = srange(message="compute_PAD", color="pink")
         PAD = compute_PAD(params,Nx,Ny)
-
+        erange(rng)
+        
         state.COST_EMULATOR = []
 
         nbit = (state.it >= 0) * params.iflo_retrain_emulator_nbit + (
@@ -1090,39 +1156,48 @@ def _update_iceflow_emulator(params, state):
 
         iz = params.iflo_exclude_borders 
 
+
+        rng_outer = srange(message="loop", color="black")
         for epoch in range(nbit):
             cost_emulator = tf.Variable(0.0)
 
             for i in range(X.shape[0]):
                 with tf.GradientTape() as t:
 
+                    rng = srange(message="iceflow_model: compute_Y", color="yellow")
                     Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
+                    erange(rng)
                     
+                    rng = srange(message="iceflow_energy_XY", color="red")
                     if iz>0:
                         COST = iceflow_energy_XY(params, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
                     else:
                         COST = iceflow_energy_XY(params, X[i : i + 1, :, :, :], Y[:, :, :, :])
-
+                    erange(rng)
+                    
                     cost_emulator = cost_emulator + COST
 
                     if (epoch + 1) % 100 == 0:
-                        U, V = Y_to_UV(params, Y)
+                        U, V = Y_to_UV(params.iflo_Nz, Y)
                         U = U[0]
                         V = V[0]
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
-                        print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
+                        # print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 
+                rng = srange(message="gradients", color="pink")
                 grads = t.gradient(COST, state.iceflow_model.trainable_variables)
 
                 state.opti_retrain.apply_gradients(
                     zip(grads, state.iceflow_model.trainable_variables)
                 )
-
+                erange(rng)
+                
                 state.opti_retrain.lr = params.iflo_retrain_emulator_lr * (
                     0.95 ** (epoch / 1000)
                 )
 
             state.COST_EMULATOR.append(cost_emulator)
+        erange(rng_outer)
 
 
 def _split_into_patches(X, nbmax):

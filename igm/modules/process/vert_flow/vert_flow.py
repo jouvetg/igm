@@ -8,7 +8,7 @@ import datetime, time
 import tensorflow as tf
 
 from igm.modules.utils import *
-
+from igm.modules.utils import srange, erange
 
 def params(parser):
     parser.add_argument(
@@ -31,21 +31,29 @@ def update(params, state):
 
     state.tcomp_vert_flow.append(time.time())
 
+    rng_outer = srange(message="Computing vertical flow", color="green")
     if params.vflo_method == "kinematic":
+        rng = srange(message="_compute_vertical_velocity_kinematic", color="white")
         state.W = _compute_vertical_velocity_kinematic(
             params, state, state.U, state.V, state.thk, state.dX
         )
+        erange(rng)
     else:
+        rng = srange(message="_compute_vertical_velocity_incompressibility", color="blue")
         state.W = _compute_vertical_velocity_incompressibility(
             params, state, state.U, state.V, state.thk, state.dX
         )
-
+        erange(rng)
+        
+    erange(rng_outer)
+    
+    rng = srange(message="writing to state variables", color="red")
     state.wvelbase = state.W[0]
     state.wvelsurf = state.W[-1]
 
     state.tcomp_vert_flow[-1] -= time.time()
     state.tcomp_vert_flow[-1] *= -1
-
+    erange(rng)
 
 def finalize(params, state):
     pass
@@ -62,26 +70,42 @@ def _compute_vertical_velocity_kinematic(params, state, U, V, thk, dX):
     temd = temp[1:] - temp[:-1]
     dz = tf.stack([state.thk * z for z in temd], axis=0)
 
+    rng = srange(message="compute_gradient_tf", color="red")
     sloptopgx, sloptopgy = compute_gradient_tf(state.topg, state.dx, state.dx)
+    erange(rng)
     
     sloplayx = [sloptopgx]
     sloplayy = [sloptopgy]
     divfl    = [tf.zeros_like(state.thk)]
     
+    rng_loop = srange(message="loop", color="black")
     for l in range(1,U.shape[0]):
 
         cumdz = tf.reduce_sum(dz[:l], axis=0)
          
+        rng = srange(message="compute_gradient_tf", color="red")
         sx, sy = compute_gradient_tf(state.topg + cumdz, state.dx, state.dx)
+        erange(rng)
         
+        rng = srange(message="appending", color="pink")
         sloplayx.append(sx)
         sloplayy.append(sy)
-
+        erange(rng)
+        
+        rng = srange(message="ub, vb", color="purple")
         ub = tf.reduce_sum(state.vert_weight[:l] * state.U[:l], axis=0) / tf.reduce_sum(state.vert_weight[:l], axis=0)
         vb = tf.reduce_sum(state.vert_weight[:l] * state.V[:l], axis=0) / tf.reduce_sum(state.vert_weight[:l], axis=0)         
+        erange(rng)
+        
+        rng = srange(message="compute_divflux", color="yellow")
         div = compute_divflux(ub, vb, cumdz, state.dx, state.dx, method='centered')
-
+        erange(rng)
+        
+        rng = srange(message="appending div", color="white")
         divfl.append(div)
+        erange(rng)
+    
+    erange(rng_loop)
     
     sloplayx = tf.stack(sloplayx, axis=0)
     sloplayy = tf.stack(sloplayy, axis=0)

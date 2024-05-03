@@ -1,0 +1,162 @@
+{
+  "modules_preproc": ["load_ncdf"],
+  "modules_process": ["clim_glacialindex",
+                      "smb_accpdd_tanc",
+                      "iceflow",
+                      "time",
+                      "thk",
+                      "vert_flow",
+                      "enthalpy"
+                     ],
+  "modules_postproc": ["write_ts",
+                       "print_info",
+                       "print_comp",
+                       "write_ncdf"],
+
+# time parameters                       
+  "time_start": -35000.0,
+  "time_end": -34900.0,
+  "time_save": 50.0,
+  "time_cfl": 0.3,
+  "time_step_max": 10.0,
+  
+  "logging": false,
+  "logging_file": "",
+  "print_params": true,
+
+# vertical flow method
+  "vflo_method" : "incompressibility",
+  
+# Avalanche module parameters  
+#  "avalanche_angleOfRepose": 45,
+#  "avalanche_update_freq": 5,
+
+#plotting live (expensive)  
+#  "plt2d_live": false,
+
+#plotting section parameters
+#  "plsc_var":"tpa",
+  
+# input climate data parameters   
+  "clim_update_freq": 100,
+  "climate_0_file": "data/climate.nc",
+  "climate_1_file": "data/climate1.nc",
+  "climate_signal_file": "data/GI.dat",
+
+# Gflex module parameters   
+#  "gflex_update_freq": 50.0,
+#  "gflex_default_Te": 42000,
+#  "gflex_dx" : 2000,
+
+# SMB PDD module parameters    
+  "smb_accpdd_update_freq": 1,
+  "smb_accpdd_refreeze_factor": 0.6,
+  "smb_accpdd_thr_temp_snow": 0.0,
+  "smb_accpdd_thr_temp_rain": 2.0,
+  "smb_accpdd_melt_factor_snow": 1.204095326380,
+  "smb_accpdd_melt_factor_ice": 2.9000000000,
+  "smb_accpdd_shift_hydro_year": 0.75,
+  "smb_accpdd_ice_density": 910.0,
+  "smb_accpdd_wat_density": 1000.0,
+  
+# Enthalpy module parameters (including yield stress parameterisation (Ntill and phi) of mohr_coulomb style)  
+  "enth_water_density": 1000,
+  "enth_spy": 31556926,
+  "enth_ki": 2.1,
+  "enth_ci": 2009,
+  "enth_Lh": 334000.0,
+  "enth_KtdivKc": 0.1,
+  "enth_claus_clape": 7.9e-08,
+  "enth_melt_temp": 273.15,
+  "enth_ref_temp": 223.15,
+  "enth_till_friction_angle": 30,
+  "enth_till_friction_angle_bed_min" : -200,
+  "enth_till_friction_angle_bed_max" : 2700,
+  "enth_till_friction_angle_phi_min" : 10,
+  "enth_till_friction_angle_phi_max" : 50,
+  "enth_uthreshold": 1000,
+  "enth_tauc_min": 1.0e4,
+  "enth_tauc_max": 1.0e10,
+  "enth_drain_rate": 0.001,
+  "enth_till_wat_max": 2,
+  "enth_drain_ice_column": true,
+  "enth_default_bheatflx": 0.065,
+  "temperature_offset_air_to_ice": 2.0,
+  
+# Ice flow law parameters (includes sliding parameters)  
+  "iflo_retrain_emulator_freq": 7,
+  "iflo_retrain_emulator_nbit": 1,
+  "iflo_retrain_emulator_nbit_init": 1,
+  "iflo_retrain_emulator_lr": 1e-05,
+  "iflo_retrain_emulator_framesizemax": 1200,
+  "iflo_emulator": "",
+  "iflo_regu": 0.0,
+  "iflo_max_sr": 1.0,
+  "iflo_min_sr": 1.0e-5,
+  "iflo_dim_arrhenius": 3,
+  "iflo_new_friction_param": true,
+  "iflo_init_slidingco": 0.05,
+  "iflo_init_arrhenius": 78,
+  "iflo_regu_glen": 0.0,
+  "iflo_regu_weertman": 1e-10,
+  "iflo_exp_glen": 3,
+  "iflo_enhancement_factor": 1.0,
+  "iflo_exp_weertman": 4.0,
+  "iflo_gravity_cst": 9.81,
+  "iflo_ice_density": 910,
+  "iflo_Nz": 10,
+  "iflo_vert_spacing": 4.0,
+  "iflo_thr_ice_thk": 0.1,
+  "iflo_solve_step_size": 1,
+  "iflo_solve_nbitmax": 100,
+  "iflo_solve_stop_if_no_decrease": true,
+  "iflo_fieldin": [
+    "thk",
+    "usurf",
+    "arrhenius",
+    "slidingco",
+    "dX"
+  ],
+  "iflo_multiple_window_size": 0,
+  "iflo_force_max_velbar": 3000,
+  "iflo_network": "cnn",
+  "iflo_activation": "lrelu",
+  "iflo_nb_layers": 16,
+  "iflo_nb_blocks": 4,
+  "iflo_nb_out_filter": 32,
+  "iflo_conv_ker_size": 3,
+  "iflo_dropout_rate": 0,
+  
+# input topography parameters  
+  "lncd_input_file": "data/input-300.nc",
+  "lncd_coarsen": 0,
+  "thk_default_sealevel": -5000.0,
+
+# input precipitation offset file 
+  "offset_input_file": "precip_offset_300.nc",
+
+# The following cropping permits to treat the Rhine catchment only
+
+  # original crop
+  "lncd_crop": false,
+  "lncd_xmin": 485000,
+  "lncd_xmax": 590000,
+  "lncd_ymin": 5153000,
+  "lncd_ymax": 5332000,
+#  "lncd_xmin": 240000,
+#  "lncd_xmax": 600000,
+#  "lncd_ymin": 5070000,
+#  "lncd_ymax": 5332000,
+
+# output variables to produce
+#  "plt2d_varmax": 1000,
+  "wts_output_file": "output_ts.nc",
+#  "print_ela": false,
+  "wncd_output_file": "output_ex.nc",
+  "wncd_vars_to_save" : ["topg", "topg_initial", "usurf", "thk",
+                         "velbar_mag", "velsurf_mag", "velbase_mag",
+                         "tillwat", "tauc", "temppabase"],
+                         
+  "iflo_save_model": false
+}
+

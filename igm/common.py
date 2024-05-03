@@ -165,11 +165,25 @@ def run_intializers(modules: List, params: Any, state: State) -> None:
         module.initialize(params, state)
 
 
+import nvtx
+
+module_colors = {
+    #"oggm_shop": "blue",
+    "iceflow": "blue",
+    "time": "green",
+    "vert_flow": "red",
+    "load_ncdf": "purple",
+    # "plot2d": "yellow",
+    "enthalpy": "pink",
+}
 def run_processes(modules: List, params: Any, state: State) -> None:
     if hasattr(state, "t"):
         while state.t < params.time_end:
             for module in modules:
+                name = module.__name__.split(".")[-1]
+                rng = nvtx.start_range(message=name, color=module_colors[name])     
                 module.update(params, state)
+                nvtx.end_range(rng)
 
 
 def run_finalizers(modules: List, params: Any, state: State) -> None:

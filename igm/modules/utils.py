@@ -21,6 +21,15 @@ __all__ = [
     "interpolate_bilinear_tf"
 ]
 
+import nvtx
+def srange(message, color):
+    tf.test.experimental.sync_devices()
+    return nvtx.start_range(message, color)
+
+def erange(rng):
+    tf.test.experimental.sync_devices()
+    nvtx.end_range(rng) 
+
 def str2bool(v):
     return v.lower() in ("true", "1")
 

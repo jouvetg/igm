@@ -544,7 +544,7 @@ def misfit_velsurf(params,state):
         # Reference : Inversion of basal friction in Antarctica using exact and incompleteadjoints of a higher-order model
         # M. Morlighem, H. Seroussi, E. Larour, and E. Rignot, JGR, 2013
         cost += 0.5 * 100 * tf.reduce_mean(
-            tf.math.log( (tf.norm(velsurf[ACT],-1)+1) / (tf.norm(velsurfobs[ACT],-1)+1) )** 2
+            tf.math.log( (tf.norm(velsurf[ACT],axis=-1)+1) / (tf.norm(velsurfobs[ACT],axis=-1)+1) )** 2
         )
     
     return cost

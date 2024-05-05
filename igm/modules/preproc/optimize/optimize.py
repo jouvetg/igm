@@ -232,9 +232,19 @@ def params(parser):
         default=True,
         help="Retrain the iceflow model simulatounously ?",
     ) 
-    
-    
-
+    parser.add_argument(
+        "--opti_to_regularize",
+        type=str,
+        default='topg',
+        help="Field to regularize : topg or thk",
+    )
+    parser.add_argument(
+        "--opti_include_low_speed_term",
+        type=str2bool,
+        default=False,
+        help="opti_include_low_speed_term",
+    ) 
+     
 def initialize(params, state):
     """
     This function does the data assimilation (inverse modelling) to optimize thk, slidingco ans usurf from data
@@ -523,10 +533,22 @@ def misfit_velsurf(params,state):
     velsurfobs = tf.stack([state.uvelsurfobs, state.vvelsurfobs], axis=-1)
     
     ACT = ~tf.math.is_nan(velsurfobs)
-    
-    return 0.5 * tf.reduce_mean(
+
+    cost = 0.5 * tf.reduce_mean(
            ( (velsurfobs[ACT] - velsurf[ACT]) / params.opti_velsurfobs_std  )** 2
     )
+    
+    if params.opti_include_low_speed_term:
+        
+        # This terms penalize the cost function when the velocity is low
+        # Reference : Inversion of basal friction in Antarctica using exact and incompleteadjoints of a higher-order model
+        # M. Morlighem, H. Seroussi, E. Larour, and E. Rignot, JGR, 2013
+        cost += 0.5 * 100 * tf.reduce_mean(
+            tf.math.log( (tf.norm(velsurf[ACT],-1)+1) / (tf.norm(velsurfobs[ACT],-1)+1) )** 2
+        )
+    
+    return cost
+
     
 def misfit_thk(params,state):
     
@@ -597,11 +619,14 @@ def regu_thk(params,state):
     # here we had factor 8*np.pi*0.04, which is equal to 1
     gamma = params.opti_convexity_weight * areaicemask**(params.opti_convexity_power-2.0)
     
-    state.topg = state.usurf - state.thk
+    if params.opti_to_regularize == 'topg':
+        field = state.usurf - state.thk
+    elif params.opti_to_regularize == 'thk':
+        field = state.thk
     
     if params.opti_smooth_anisotropy_factor == 1:
-        dbdx = (state.topg[:, 1:] - state.topg[:, :-1])/state.dx
-        dbdy = (state.topg[1:, :] - state.topg[:-1, :])/state.dx
+        dbdx = (field[:, 1:] - field[:, :-1])/state.dx
+        dbdy = (field[1:, :] - field[:-1, :])/state.dx
         
         if params.sole_mask:
             dbdx = tf.where( (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5) , dbdx, 0.0)
@@ -612,9 +637,9 @@ def regu_thk(params,state):
             - gamma * tf.math.reduce_sum(state.thk)
         )
     else:
-        dbdx = (state.topg[:, 1:] - state.topg[:, :-1])/state.dx
+        dbdx = (field[:, 1:] - field[:, :-1])/state.dx
         dbdx = (dbdx[1:, :] + dbdx[:-1, :]) / 2.0
-        dbdy = (state.topg[1:, :] - state.topg[:-1, :])/state.dx
+        dbdy = (field[1:, :] - field[:-1, :])/state.dx
         dbdy = (dbdy[:, 1:] + dbdy[:, :-1]) / 2.0
         
         if params.sole_mask:

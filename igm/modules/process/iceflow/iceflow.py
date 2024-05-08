@@ -317,6 +317,19 @@ def params(parser):
         default=10**(20),
         help="Maximum strain rate",
     )
+    
+    parser.add_argument(
+        "--iflo_optimizer_solver",
+        type=str,
+        default='Adam',
+        help="Tpe of Optimizer for the solver",
+    )
+    parser.add_argument(
+        "--iflo_optimizer_emulator",
+        type=str,
+        default='Adam',
+        help="Tpe of Optimizer for the emulator",
+    )
 
 
 
@@ -357,11 +370,11 @@ def initialize(params, state):
 
     if not params.iflo_type == "solved":
         if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-            state.opti_retrain = tf.keras.optimizers.Adam(
+            state.opti_retrain = getattr(tf.keras.optimizers,params.iflo_optimizer_emulator)(
                 learning_rate=params.iflo_retrain_emulator_lr
             )
         else:
-            state.opti_retrain = tf.keras.optimizers.legacy.Adam(
+            state.opti_retrain = getattr(tf.keras.optimizers.legacy,params.iflo_optimizer_emulator)( 
                 learning_rate=params.iflo_retrain_emulator_lr
             )
 
@@ -431,11 +444,11 @@ def initialize(params, state):
 
     if not params.iflo_type == "emulated":
         if int(tf.__version__.split(".")[1]) <= 10:
-            state.optimizer = tf.keras.optimizers.Adam(
+            state.optimizer = getattr(tf.keras.optimizers,params.iflo_optimizer_solver)(
                 learning_rate=params.iflo_solve_step_size
             )
         else:
-            state.optimizer = tf.keras.optimizers.legacy.Adam(
+            state.optimizer = getattr(tf.keras.optimizers.legacy,params.iflo_optimizer_solver)(
                 learning_rate=params.iflo_solve_step_size
             )
 

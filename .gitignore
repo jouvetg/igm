@@ -32,4 +32,9 @@ input_saved.nc
 RGI60-*/
 .vscode/
 data
+<<<<<<< HEAD
 thk_MG
+=======
+
+.history/
+>>>>>>> ee9e262c22e6866290875ff977e2f3a1251b0fcb

@@ -218,14 +218,29 @@ def load_json_file(
     dic_params = json.loads(json_text)
     return dic_params
 
+import yaml
+def load_yaml_file(
+    param_file: str
+) -> Dict[str, Any]:
+    with open(param_file, "r") as file:
+        dic_params = yaml.safe_load(file)
+
+    return dic_params
+
 
 def get_modules_list(params_path: str) -> dict[str, List[str]]:
     try:
-        with open(params_path) as f:
-            # params_dict = json.load(f) #re-instate if you want to enforce no comments in the json file(remove all the lines that load the clean json in this case...)
-            json_text = f.read()
-            json_cleaned = remove_comments(json_text)
-            params_dict = json.loads(json_cleaned)
+        with open(params_path, "r") as file:
+            if params_path.endswith(".json"):
+                json_text = file.read()
+                json_cleaned = remove_comments(json_text)
+                params_dict = json.loads(json_cleaned)
+            elif params_path.endswith(".yaml") or params_path.endswith(".yml"):
+                params_dict = yaml.safe_load(file)
+            else:
+                raise ValueError(
+                    f"File type not supported. Please use a .json or .yaml file."
+                )
             module_dict = {
                 "modules_preproc": params_dict["modules_preproc"],
                 "modules_process": params_dict["modules_process"],
@@ -239,11 +254,13 @@ def get_modules_list(params_path: str) -> dict[str, List[str]]:
             doc=e.doc,
             pos=e.pos,
         )
+    # Create a custom error message for the YAML file (using yaml.YAMLError base exception)
 
 
 def load_user_defined_params(param_file: str, params_dict: dict[str, Any]):
     try:
-        json_defined_params = load_json_file(param_file=param_file)
+        json_defined_params = load_yaml_file(param_file=param_file)
+
     except JSONDecodeError as e:
         raise JSONDecodeError(
             msg=f"Error decoding JSON: Please make sure your file path is correct or your json is properly formatted.",
@@ -317,8 +334,8 @@ def load_modules_from_directory(
                 )
                 try:
                     module = importlib.import_module(module_name)
-                except:
-                    module = importlib.import_module("modules_custom."+module_name)
+                except ModuleNotFoundError:
+                    module = importlib.import_module("modules_custom." + module_name)
             except ModuleNotFoundError:
                 raise ModuleNotFoundError(
                     f"Can not find module {module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/{module_folder} directory or 2) in your current working directory."

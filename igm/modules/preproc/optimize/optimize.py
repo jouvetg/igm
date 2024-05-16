@@ -269,7 +269,8 @@ def initialize(params, state):
     ###### PREPARE DATA PRIOR OPTIMIZATIONS
  
     if "divfluxobs" in params.opti_cost:
-        state.divfluxobs = state.smb - state.dhdt
+        if not hasattr(state, "divfluxobs"):
+            state.divfluxobs = state.smb - state.dhdt
 
     if hasattr(state, "thkinit"):
         state.thk = state.thkinit
@@ -579,13 +580,16 @@ def cost_divflux(params,state,i):
             ACT, state.res.intercept + state.res.slope * state.usurf, 0.0
         )
     #   divfluxtar = tf.where(ACT, np.poly1d(weights)(state.usurf) , 0.0 )
-    
-    if "divfluxobs" in params.opti_cost:
+     
+    if ("divfluxfcz" in params.opti_cost):
+        ACT = state.icemaskobs > 0.5
+        COST_D = 0.5 * tf.reduce_mean(
+            ((divfluxtar[ACT] - divflux[ACT]) / params.opti_divfluxobs_std) ** 2
+        )
+        
+    if ("divfluxobs" in params.opti_cost):
         divfluxtar = state.divfluxobs
-
-    ACT = state.icemaskobs > 0.5
-    
-    if ("divfluxobs" in params.opti_cost) | ("divfluxfcz" in params.opti_cost):
+        ACT = ~tf.math.is_nan(divfluxtar)
         COST_D = 0.5 * tf.reduce_mean(
             ((divfluxtar[ACT] - divflux[ACT]) / params.opti_divfluxobs_std) ** 2
         )
@@ -596,6 +600,7 @@ def cost_divflux(params,state,i):
         COST_D = (params.opti_regu_param_div) * ( tf.nn.l2_loss(dddx) + tf.nn.l2_loss(dddy) )
         
     if params.opti_force_zero_sum_divflux:
+            ACT = state.icemaskobs > 0.5
             COST_D += 0.5 * 1000 * tf.reduce_mean(divflux[ACT] / params.opti_divfluxobs_std) ** 2
             
     return COST_D

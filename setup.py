@@ -42,6 +42,7 @@ setup(
         "geopandas",
         "oggm",
         "salem",
+        "pyyaml",
         "importlib_resources",
     ],
 )

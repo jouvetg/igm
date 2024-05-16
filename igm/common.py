@@ -317,7 +317,7 @@ def load_modules_from_directory(
                 )
                 try:
                     module = importlib.import_module(module_name)
-                except:
+                except ModuleNotFoundError:
                     module = importlib.import_module("modules_custom."+module_name)
             except ModuleNotFoundError:
                 raise ModuleNotFoundError(

@@ -32,3 +32,5 @@ input_saved.nc
 RGI60-*/
 .vscode/
 data
+
+.history/

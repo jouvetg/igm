@@ -1,3 +1,7 @@
+# Here is an example params file using YAML format.
+
+# Highly recommended for readability and flexibilitiy :)
+
 modules_preproc:
   - load_ncdf
 modules_process:
@@ -12,7 +16,6 @@ modules_postproc:
   - plot2d
   - print_info
   - print_comp
-  - texture
 smb_simple_array:
   - ["time", "gradabl", "gradacc", "ela", "accmax"]
   - [1900, 0.009, 0.005, 2800, 2.0]

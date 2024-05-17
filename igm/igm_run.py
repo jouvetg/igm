@@ -3,6 +3,7 @@
 # Copyright (C) 2021-2023 Guillaume Jouvet <guillaume.jouvet@unil.ch>
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
+import os
 import tensorflow as tf
 from igm import (
     State,
@@ -39,6 +40,8 @@ def main() -> None:
         
     if not params.url_data=="":
         download_unzip_and_store(params.url_data,params.folder_data)
+        
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(params.gpu_id)        
 
     # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
     with tf.device(f"/GPU:{params.gpu_id}"):  # type: ignore for linting checks

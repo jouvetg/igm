@@ -23,5 +23,7 @@ smb_simple_array:
   - [2100, 0.009, 0.005, 3300, 2.0]
 time_start: 1900.0
 time_end: 2000.0
+url_data: https://www.dropbox.com/scl/fo/kd7dix5j1tm75nj941pvi/h?rlkey=q7jtmf9yn3a970cqygdwne25j&dl=0
+lncd_input_file: data/input.nc
 plt2d_live: true
 time_save: 10.0

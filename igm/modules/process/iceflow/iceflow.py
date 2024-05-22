@@ -331,7 +331,17 @@ def params(parser):
         help="Tpe of Optimizer for the emulator",
     )
 
-
+    parser.add_argument(
+        "--save_cost_emulator",
+        type=str2bool,
+        default=False
+    )
+    parser.add_argument(
+        "--save_cost_solver",
+        type=str2bool,
+        default=False
+    )
+    
 
 
 def initialize(params, state):
@@ -430,6 +440,7 @@ def initialize(params, state):
             )
             state.iceflow_model.compile()
         else:
+            print("No pretrained emulator, start from scratch.")
             nb_inputs = len(params.iflo_fieldin) + (params.iflo_dim_arrhenius == 3) * (
                 params.iflo_Nz - 1
             )
@@ -1007,6 +1018,9 @@ def _update_iceflow_solved(params, state):
                 state.V,
             )
         )
+        
+    if params.save_cost_solver:
+        np.savetxt('cost-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")
 
     state.COST_Glen = Cost_Glen[-1].numpy()
 
@@ -1136,6 +1150,10 @@ def _update_iceflow_emulator(params, state):
                 )
 
             state.COST_EMULATOR.append(cost_emulator)
+            
+    
+    if params.save_cost_emulator:
+        np.savetxt('cost-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
 
 
 def _split_into_patches(X, nbmax):

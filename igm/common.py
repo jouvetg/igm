@@ -258,8 +258,16 @@ def get_modules_list(params_path: str) -> dict[str, List[str]]:
 
 
 def load_user_defined_params(param_file: str, params_dict: dict[str, Any]):
+    if param_file.endswith(".json"):
+        loading_function = load_json_file
+    elif param_file.endswith(".yaml") or param_file.endswith(".yml"):
+        loading_function = load_yaml_file
+    else:
+        raise ValueError(
+            f"File type not supported. Please use a .json or .yaml file."
+        )
     try:
-        json_defined_params = load_yaml_file(param_file=param_file)
+        json_defined_params = loading_function(param_file=param_file)
 
     except JSONDecodeError as e:
         raise JSONDecodeError(

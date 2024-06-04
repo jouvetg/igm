@@ -15,7 +15,7 @@ def params(parser):
     parser.add_argument(
         "--wpar_add_topography",
         type=str2bool,
-        default=False,
+        default=True,
         help="Add topg",
     )
 
@@ -49,22 +49,24 @@ def update(params, state):
             "traj-" + "{:06d}".format(int(state.t.numpy())) + ".csv",
         )
 
-        ID = tf.cast(tf.range(state.xpos.shape[0]), dtype="float32")
+        ID = tf.cast(tf.range(state.particle_x.shape[0]), dtype="float32")
         array = tf.transpose(
             tf.stack(
                 [
                     ID,
-                    state.xpos,
-                    state.ypos,
-                    state.zpos,
-                    state.rhpos,
-                    state.tpos,
-                    state.englt,
+                    state.particle_x,
+                    state.particle_y,
+                    state.particle_z,
+                    state.particle_r,
+                    state.particle_t,
+                    state.particle_englt,
+                    state.particle_topg,
+                    state.particle_thk
                 ],
                 axis=0,
             )
         )
-        np.savetxt(f, array, delimiter=",", fmt="%.2f", header="Id,x,y,z,rh,t,englt")
+        np.savetxt(f, array, delimiter=",", fmt="%.2f", header="Id,x,y,z,rh,t,englt,topg,thk")
 
         ft = os.path.join("trajectories", "time.dat")
         with open(ft, "a") as f:

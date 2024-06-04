@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import datetime, time
 import tensorflow as tf
 import igm
+from netCDF4 import Dataset
 
 from igm.modules.utils import *
 
@@ -40,13 +41,18 @@ def initialize(params, state):
     state.tcomp_particles = []
 
     # initialize trajectories
-    state.xpos = tf.Variable([])
-    state.ypos = tf.Variable([])
-    state.zpos = tf.Variable([])
-    state.rhpos = tf.Variable([])
-    state.wpos = tf.Variable([])  # this is to give a weight to the particle
-    state.tpos = tf.Variable([])
-    state.englt = tf.Variable([])  # this copute the englacial time
+    state.particle_x = tf.Variable([])
+    state.particle_y = tf.Variable([])
+    state.particle_z = tf.Variable([])
+    state.particle_r = tf.Variable([])
+    state.particle_w = tf.Variable([])  # this is to give a weight to the particle
+    state.particle_t = tf.Variable([])
+    state.particle_englt = tf.Variable([])  # this computes the englacial time
+    state.particle_topg = tf.Variable([])
+    state.particle_thk = tf.Variable([])
+    
+    state.pswvelbase = tf.Variable(tf.zeros_like(state.thk))
+    state.pswvelsurf = tf.Variable(tf.zeros_like(state.thk))
 
     # build the gridseed, we don't want to seed all pixels!
     state.gridseed = np.zeros_like(state.thk) == 1
@@ -62,23 +68,26 @@ def update(params, state):
         seeding_particles(params, state)
 
         # merge the new seeding points with the former ones
-        state.xpos = tf.Variable(tf.concat([state.xpos, state.nxpos], axis=-1))
-        state.ypos = tf.Variable(tf.concat([state.ypos, state.nypos], axis=-1))
-        state.zpos = tf.Variable(tf.concat([state.zpos, state.nzpos], axis=-1))
-        state.rhpos = tf.Variable(tf.concat([state.rhpos, state.nrhpos], axis=-1))
-        state.wpos = tf.Variable(tf.concat([state.wpos, state.nwpos], axis=-1))
-        state.tpos = tf.Variable(tf.concat([state.tpos, state.ntpos], axis=-1))
-        state.englt = tf.Variable(tf.concat([state.englt, state.nenglt], axis=-1))
-
+        state.particle_x = tf.Variable(tf.concat([state.particle_x, state.nparticle_x], axis=-1))
+        state.particle_y = tf.Variable(tf.concat([state.particle_y, state.nparticle_y], axis=-1))
+        state.particle_z = tf.Variable(tf.concat([state.particle_z, state.nparticle_z], axis=-1))
+        state.particle_r = tf.Variable(tf.concat([state.particle_r, state.nparticle_r], axis=-1))
+        state.particle_w = tf.Variable(tf.concat([state.particle_w, state.nparticle_w], axis=-1))
+        state.particle_t = tf.Variable(tf.concat([state.particle_t, state.nparticle_t], axis=-1))
+        state.particle_englt = tf.Variable(tf.concat([state.particle_englt, state.nparticle_englt], axis=-1))
+        state.particle_topg = tf.Variable(tf.concat([state.particle_topg, state.nparticle_topg], axis=-1))
+        state.particle_thk = tf.Variable(tf.concat([state.particle_thk, state.nparticle_thk], axis=-1))
+        
         state.tlast_seeding = state.t.numpy()
 
-    if (state.xpos.shape[0]>0)&(state.it >= 0):
+    if (state.particle_x.shape[0]>0)&(state.it >= 0):
         state.tcomp_particles.append(time.time())
 
         # find the indices of trajectories
-        # these indicies are real values to permit 2D interpolations
-        i = (state.xpos - state.x[0]) / state.dx
-        j = (state.ypos - state.y[0]) / state.dx
+        # these indicies are real values to permit 2D interpolations (particles are not necessary on points of the grid)
+        i = (state.particle_x - state.x[0]) / state.dx
+        j = (state.particle_y - state.y[0]) / state.dx
+        
 
         indices = tf.expand_dims(
             tf.concat(
@@ -104,12 +113,14 @@ def update(params, state):
             indices,
             indexing="ij",
         )[0, :, 0]
+        state.particle_thk = thk
 
         topg = interpolate_bilinear_tf(
             tf.expand_dims(tf.expand_dims(state.topg, axis=0), axis=-1),
             indices,
             indexing="ij",
         )[0, :, 0]
+        state.particle_topg = topg
 
         smb = interpolate_bilinear_tf(
             tf.expand_dims(tf.expand_dims(state.smb, axis=0), axis=-1),
@@ -117,7 +128,10 @@ def update(params, state):
             indexing="ij",
         )[0, :, 0]
 
-        zeta = _rhs_to_zeta(params, state.rhpos)  # get the position in the column
+        
+
+
+        zeta = _rhs_to_zeta(params, state.particle_r)  # get the position in the column
         I0 = tf.cast(tf.math.floor(zeta * (params.iflo_Nz - 1)), dtype="int32")
         I0 = tf.minimum(
             I0, params.iflo_Nz - 2
@@ -131,27 +145,32 @@ def update(params, state):
         ind0 = tf.transpose(tf.stack([I0, tf.range(I0.shape[0])]))
         ind1 = tf.transpose(tf.stack([I1, tf.range(I1.shape[0])]))
 
+
         wei = tf.zeros_like(u)
         wei = tf.tensor_scatter_nd_add(wei, indices=ind0, updates=1 - lamb)
         wei = tf.tensor_scatter_nd_add(wei, indices=ind1, updates=lamb)
 
         if params.part_tracking_method == "simple":
-            # adjust the relative height within the ice column with smb
-            state.rhpos = tf.where(
+            # adjust the relative height within the ice column with smb 
+            state.particle_r = tf.where(
                 thk > 0.1,
-                tf.clip_by_value(state.rhpos * (thk - smb * state.dt) / thk, 0, 1),
+                tf.clip_by_value(state.particle_r * (thk - smb * state.dt) / thk, 0, 1),
                 1,
             )
 
-            state.xpos = state.xpos + state.dt * tf.reduce_sum(wei * u, axis=0)
-            state.ypos = state.ypos + state.dt * tf.reduce_sum(wei * v, axis=0)
-            state.zpos = topg + thk * state.rhpos
+            state.particle_x = state.particle_x + state.dt * tf.reduce_sum(wei * u, axis=0)
+            state.particle_y = state.particle_y + state.dt * tf.reduce_sum(wei * v, axis=0)
+            state.particle_z = topg + thk * state.particle_r
 
         elif params.part_tracking_method == "3d":
-            # make sure the particle remian withi the ice body
-            state.zpos = tf.clip_by_value(state.zpos, topg, topg + thk)
+            # uses the vertical velocity w computed in the vert_flow module
 
-            state.rhpos = (state.zpos - topg) / thk
+            # make sure the particle vertically remain within the ice body
+            state.particle_z = tf.clip_by_value(state.particle_z, topg, topg + thk)
+
+            state.particle_r = (state.particle_z - topg) / thk
+            #if thk=0, state.rhpos takes value nan, so we set rhpos value to one in this case :
+            state.particle_r = tf.where(thk== 0, tf.ones_like(state.particle_r), state.particle_r) 
 
             w = interpolate_bilinear_tf(
                 tf.expand_dims(state.W, axis=-1),
@@ -159,13 +178,13 @@ def update(params, state):
                 indexing="ij",
             )[:, :, 0]
 
-            state.xpos = state.xpos + state.dt * tf.reduce_sum(wei * u, axis=0)
-            state.ypos = state.ypos + state.dt * tf.reduce_sum(wei * v, axis=0)
-            state.zpos = state.zpos + state.dt * tf.reduce_sum(wei * w, axis=0)
+            state.particle_x = state.particle_x + state.dt * tf.reduce_sum(wei * u, axis=0)
+            state.particle_y = state.particle_y + state.dt * tf.reduce_sum(wei * v, axis=0)
+            state.particle_z = state.particle_z + state.dt * tf.reduce_sum(wei * w, axis=0)
 
         # make sur the particle remains in the horiz. comp. domain
-        state.xpos = tf.clip_by_value(state.xpos, state.x[0], state.x[-1])
-        state.ypos = tf.clip_by_value(state.ypos, state.y[0], state.y[-1])
+        state.particle_x = tf.clip_by_value(state.particle_x, state.x[0], state.x[-1])
+        state.particle_y = tf.clip_by_value(state.particle_y, state.y[0], state.y[-1])
 
         indices = tf.concat(
             [
@@ -174,16 +193,17 @@ def update(params, state):
             ],
             axis=-1,
         )
-        updates = tf.cast(tf.where(state.rhpos == 1, state.wpos, 0), dtype="float32")
+        updates = tf.cast(tf.where(state.particle_r == 1, state.particle_w, 0), dtype="float32")
 
+        
         # this computes the sum of the weight of particles on a 2D grid
         state.weight_particles = tf.tensor_scatter_nd_add(
             tf.zeros_like(state.thk), indices, updates
         )
 
         # compute the englacial time
-        state.englt = state.englt + tf.cast(
-            tf.where(state.rhpos < 1, state.dt, 0.0), dtype="float32"
+        state.particle_englt = state.particle_englt + tf.cast(
+            tf.where(state.particle_r < 1, state.dt, 0.0), dtype="float32"
         )
 
         #    if int(state.t)%10==0:
@@ -242,13 +262,18 @@ def seeding_particles(params, state):
 
     #        J = (thk>1)
 
-    I = (
-        (state.thk > 10) & (state.smb > -2) & state.gridseed
-    )  # seed where thk>10, smb>-2, on a coarse grid
-    state.nxpos = state.X[I]
-    state.nypos = state.Y[I]
-    state.nzpos = state.usurf[I]
-    state.nrhpos = tf.ones_like(state.X[I])
-    state.nwpos = tf.ones_like(state.X[I])
-    state.ntpos = tf.ones_like(state.X[I]) * state.t
-    state.nenglt = tf.zeros_like(state.X[I])
+    
+    # here we seed where i) thickness is higher than 1 m
+    #                    ii) the seeding field of geology.nc is active
+    #                    iii) on the gridseed (which permit to control the seeding density)
+    #                    iv) on the accumulation area
+    I = (state.thk>1)&state.gridseed &(state.smb>0)         # here you may redefine how you want to seed particles
+    state.nparticle_x  = state.X[I]                         # x position of the particle
+    state.nparticle_y  = state.Y[I]                         # y position of the particle
+    state.nparticle_z  = state.usurf[I]                     # z position of the particle
+    state.nparticle_r = tf.ones_like(state.X[I])            # relative position in the ice column
+    state.nparticle_w  = tf.ones_like(state.X[I])           # weight of the particle
+    state.nparticle_t  = tf.ones_like(state.X[I]) * state.t # "date of birth" of the particle (useful to compute its age)
+    state.nparticle_englt = tf.zeros_like(state.X[I])       # time spent by the particle burried in the glacier
+    state.nparticle_thk = state.thk[I]                      # ice thickness at position of the particle
+    state.nparticle_topg = state.topg[I]                    # z position of the bedrock under the particle

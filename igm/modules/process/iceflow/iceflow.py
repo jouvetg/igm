@@ -333,13 +333,13 @@ def params(parser):
 
     parser.add_argument(
         "--save_cost_emulator",
-        type=str2bool,
-        default=False
+        type=str,
+        default=""
     )
     parser.add_argument(
         "--save_cost_solver",
-        type=str2bool,
-        default=False
+        type=str,
+        default=""
     )
     
 
@@ -1019,8 +1019,8 @@ def _update_iceflow_solved(params, state):
             )
         )
         
-    if params.save_cost_solver:
-        np.savetxt('cost-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")
+    if len(params.save_cost_solver)>0:
+        np.savetxt(params.save_cost_solver+'-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")
 
     state.COST_Glen = Cost_Glen[-1].numpy()
 
@@ -1152,8 +1152,8 @@ def _update_iceflow_emulator(params, state):
             state.COST_EMULATOR.append(cost_emulator)
             
     
-    if params.save_cost_emulator:
-        np.savetxt('cost-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
+    if len(params.save_cost_emulator)>0:
+        np.savetxt(params.save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
 
 
 def _split_into_patches(X, nbmax):

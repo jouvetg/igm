@@ -245,7 +245,7 @@ def params(parser):
     parser.add_argument(
         "--iflo_activation",
         type=str,
-        default="lrelu",
+        default="LeakyReLU",
         help="Activation function, it can be lrelu, relu, tanh, sigmoid, etc.",
     )
     parser.add_argument(
@@ -1236,10 +1236,10 @@ def cnn(params, nb_inputs, nb_outputs):
 
     conv = inputs
 
-    if params.iflo_activation == "lrelu":
+    if params.iflo_activation == "LeakyReLU":
         activation = tf.keras.layers.LeakyReLU(alpha=0.01)
     else:
-        activation = tf.keras.layers.ReLU()
+        activation = getattr(tf.keras.layers,params.iflo_activation)()      
 
     for i in range(int(params.iflo_nb_layers)):
         conv = tf.keras.layers.Conv2D(
@@ -1285,7 +1285,7 @@ def unet(params, nb_inputs, nb_outputs):
         n_labels=nb_outputs,
         stack_num_down=2,
         stack_num_up=2,
-        activation="LeakyReLU",
+        activation=params.iflo_activation,
         output_activation=None,
         batch_norm=False,
         pool="max",

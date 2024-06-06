@@ -54,8 +54,8 @@ def update(params, state):
             tf.stack(
                 [
                     ID,
-                    state.particle_x,
-                    state.particle_y,
+                    state.particle_x.numpy().astype(np.float64) + state.x[0].numpy().astype(np.float64),
+                    state.particle_y.numpy().astype(np.float64) + state.y[0].numpy().astype(np.float64),
                     state.particle_z,
                     state.particle_r,
                     state.particle_t,

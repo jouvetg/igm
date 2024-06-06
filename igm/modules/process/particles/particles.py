@@ -85,8 +85,8 @@ def update(params, state):
 
         # find the indices of trajectories
         # these indicies are real values to permit 2D interpolations (particles are not necessary on points of the grid)
-        i = (state.particle_x - state.x[0]) / state.dx
-        j = (state.particle_y - state.y[0]) / state.dx
+        i = (state.particle_x) / state.dx
+        j = (state.particle_y) / state.dx
         
 
         indices = tf.expand_dims(
@@ -183,8 +183,8 @@ def update(params, state):
             state.particle_z = state.particle_z + state.dt * tf.reduce_sum(wei * w, axis=0)
 
         # make sur the particle remains in the horiz. comp. domain
-        state.particle_x = tf.clip_by_value(state.particle_x, state.x[0], state.x[-1])
-        state.particle_y = tf.clip_by_value(state.particle_y, state.y[0], state.y[-1])
+        state.particle_x = tf.clip_by_value(state.particle_x, 0, state.x[-1] - state.x[0])
+        state.particle_y = tf.clip_by_value(state.particle_y, 0, state.y[-1] - state.y[0])
 
         indices = tf.concat(
             [
@@ -268,8 +268,8 @@ def seeding_particles(params, state):
     #                    iii) on the gridseed (which permit to control the seeding density)
     #                    iv) on the accumulation area
     I = (state.thk>1)&state.gridseed &(state.smb>0)         # here you may redefine how you want to seed particles
-    state.nparticle_x  = state.X[I]                         # x position of the particle
-    state.nparticle_y  = state.Y[I]                         # y position of the particle
+    state.nparticle_x  = state.X[I] - state.x[0]            # x position of the particle
+    state.nparticle_y  = state.Y[I] - state.y[0]            # y position of the particle
     state.nparticle_z  = state.usurf[I]                     # z position of the particle
     state.nparticle_r = tf.ones_like(state.X[I])            # relative position in the ice column
     state.nparticle_w  = tf.ones_like(state.X[I])           # weight of the particle

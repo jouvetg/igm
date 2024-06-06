@@ -100,8 +100,8 @@ def update(params, state):
                     state.ip.set_visible(False)
                 r = 1
                 state.ip = state.ax.scatter(
-                    x = state.particle_x[::r],
-                    y = state.particle_y[::r],
+                    x = state.particle_x[::r] + state.x[0],
+                    y = state.particle_y[::r] + state.y[0],
                     c = 1 - state.particle_r[::r].numpy(), #or r ?
                     vmin=0,
                     vmax=1,

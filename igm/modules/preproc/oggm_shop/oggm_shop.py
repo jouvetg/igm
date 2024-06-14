@@ -310,7 +310,7 @@ def _oggm_util(RGIs, params):
                 rgi_ids,
                 prepro_border=40,
                 from_prepro_level=3,
-                prepro_rgi_version='70C',
+                prepro_rgi_version='70' + params.oggm_RGI_ID[13], # "C" for glacier complexes, "G" for individual glaciers
                 prepro_base_url=base_url,
             )
 

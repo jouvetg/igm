@@ -70,15 +70,14 @@ def update(params, state):
 
     state.tcomp_time.append(time.time())
 
-    # compute maximum ice velocitiy magnitude
-    velomax = max(
-        tf.math.reduce_max(tf.math.abs(state.ubar)),
-        tf.math.reduce_max(tf.math.abs(state.vbar)),
+    # compute maximum ice velocitiy magnitude 
+    velomax = tf.maximum(
+        tf.reduce_max(tf.abs(state.ubar)),
+        tf.reduce_max(tf.abs(state.vbar)),
     )
-
     # dt_target account for both cfl and dt_max
     if (velomax > 0) & (params.time_cfl>0):
-        state.dt_target = min(
+        state.dt_target =  tf.minimum(
             params.time_cfl * state.dx / velomax, params.time_step_max
         )
     else:

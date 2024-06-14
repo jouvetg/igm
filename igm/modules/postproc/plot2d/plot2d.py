@@ -95,14 +95,14 @@ def update(params, state):
                 extent=state.extent,
             )
         if params.plt2d_particles:
-            if hasattr(state, "xpos"):
+            if hasattr(state, "particle_x"):
                 if hasattr(state, "ip"):
                     state.ip.set_visible(False)
                 r = 1
                 state.ip = state.ax.scatter(
-                    x=state.xpos[::r],
-                    y=state.ypos[::r],
-                    c=1 - state.rhpos[::r].numpy(),
+                    x = state.particle_x[::r] + state.x[0],
+                    y = state.particle_y[::r] + state.y[0],
+                    c = 1 - state.particle_r[::r].numpy(), #or r ?
                     vmin=0,
                     vmax=1,
                     s=0.5,

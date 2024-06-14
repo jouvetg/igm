@@ -38,3 +38,5 @@ data
 *.nsys-rep
 *.nc
 *.sqlite
+thk_MG
+.history/

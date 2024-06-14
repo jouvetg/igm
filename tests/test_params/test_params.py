@@ -9,11 +9,39 @@ def test_load_json_params_with_comments():
     """Tests that adding comments to the json will not fail with a decode error."""
 
     igm.get_modules_list("./test_params/param_files/params_comments.json")
+    
+def test_load_yaml_params_with_comments():
+    """Tests that adding comments to the json will not fail with a decode error."""
+
+    igm.get_modules_list("./test_params/param_files/params_comments.yaml")
 
 
-def test_load_igm_modules():
+def test_load_igm_modules_json():
     """Tests that the core igm modules LIST loaded from the params.json file are loaded."""
     modules_dict = igm.get_modules_list("./test_params/param_files/params.json")
+
+    preproc_modules = modules_dict["modules_preproc"]
+    process_modules = modules_dict["modules_process"]
+    postproc_modules = modules_dict["modules_postproc"]
+
+    igm_core_preproc_modules = ["load_ncdf"]
+    igm_core_process_modules = [
+        "iceflow",
+        "time",
+        "thk",
+        "rockflow",
+        "vert_flow",
+        "particles",
+    ]
+    igm_core_postproc_modules = ["write_ncdf", "plot2d", "print_info", "print_comp"]
+
+    assert set(igm_core_preproc_modules).issubset(preproc_modules)
+    assert set(igm_core_process_modules).issubset(process_modules)
+    assert set(igm_core_postproc_modules).issubset(postproc_modules)
+
+def test_load_igm_modules_yaml():
+    """Tests that the core igm modules LIST loaded from the params.json file are loaded."""
+    modules_dict = igm.get_modules_list("./test_params/param_files/params.yaml")
 
     preproc_modules = modules_dict["modules_preproc"]
     process_modules = modules_dict["modules_process"]
@@ -55,6 +83,7 @@ def test_load_modules():
 
 
 def test_params_core():
+    """Tests that the core igm parameters are loaded."""
     parser = igm.params_core()
     params, __ = parser.parse_known_args()
 

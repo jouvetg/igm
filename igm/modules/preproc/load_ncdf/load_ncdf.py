@@ -89,7 +89,6 @@ def initialize(params, state):
         if not var in ["x", "y", "z", "time"]:
             if istheretime:
                 vars()[var] = np.squeeze(nc.variables[var][I]).astype("float32")
-                print(var, vars()[var].shape)
             else:
                 vars()[var] = np.squeeze(nc.variables[var]).astype("float32")
             vars()[var] = np.where(vars()[var] > 10**35, np.nan, vars()[var])

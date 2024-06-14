@@ -30,7 +30,7 @@ def params(parser):
         "--glerosion_update_freq",
         type=float,
         default=1,
-        help="Update the erosion only each X years (Default: 100)",
+        help="Update the erosion only each X years (Default: 1)",
     )
 
 

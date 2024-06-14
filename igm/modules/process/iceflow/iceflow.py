@@ -246,7 +246,7 @@ def params(parser):
     parser.add_argument(
         "--iflo_activation",
         type=str,
-        default="lrelu",
+        default="LeakyReLU",
         help="Activation function, it can be lrelu, relu, tanh, sigmoid, etc.",
     )
     parser.add_argument(
@@ -318,8 +318,31 @@ def params(parser):
         default=10**(20),
         help="Maximum strain rate",
     )
+    
+    parser.add_argument(
+        "--iflo_optimizer_solver",
+        type=str,
+        default='Adam',
+        help="Tpe of Optimizer for the solver",
+    )
+    parser.add_argument(
+        "--iflo_optimizer_emulator",
+        type=str,
+        default='Adam',
+        help="Tpe of Optimizer for the emulator",
+    )
 
-
+    parser.add_argument(
+        "--save_cost_emulator",
+        type=str,
+        default=""
+    )
+    parser.add_argument(
+        "--save_cost_solver",
+        type=str,
+        default=""
+    )
+    
 
 
 def initialize(params, state):
@@ -358,11 +381,11 @@ def initialize(params, state):
 
     if not params.iflo_type == "solved":
         if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-            state.opti_retrain = tf.keras.optimizers.Adam(
+            state.opti_retrain = getattr(tf.keras.optimizers,params.iflo_optimizer_emulator)(
                 learning_rate=params.iflo_retrain_emulator_lr
             )
         else:
-            state.opti_retrain = tf.keras.optimizers.legacy.Adam(
+            state.opti_retrain = getattr(tf.keras.optimizers.legacy,params.iflo_optimizer_emulator)( 
                 learning_rate=params.iflo_retrain_emulator_lr
             )
 
@@ -418,6 +441,7 @@ def initialize(params, state):
             )
             state.iceflow_model.compile(jit_compile=True)
         else:
+            print("No pretrained emulator, start from scratch.")
             nb_inputs = len(params.iflo_fieldin) + (params.iflo_dim_arrhenius == 3) * (
                 params.iflo_Nz - 1
             )
@@ -432,11 +456,11 @@ def initialize(params, state):
 
     if not params.iflo_type == "emulated":
         if int(tf.__version__.split(".")[1]) <= 10:
-            state.optimizer = tf.keras.optimizers.Adam(
+            state.optimizer = getattr(tf.keras.optimizers,params.iflo_optimizer_solver)(
                 learning_rate=params.iflo_solve_step_size
             )
         else:
-            state.optimizer = tf.keras.optimizers.legacy.Adam(
+            state.optimizer = getattr(tf.keras.optimizers.legacy,params.iflo_optimizer_solver)(
                 learning_rate=params.iflo_solve_step_size
             )
 
@@ -1041,6 +1065,9 @@ def _update_iceflow_solved(params, state):
                 state.V,
             )
         )
+        
+    if len(params.save_cost_solver)>0:
+        np.savetxt(params.save_cost_solver+'-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")
 
     state.COST_Glen = Cost_Glen[-1].numpy()
 
@@ -1198,6 +1225,10 @@ def _update_iceflow_emulator(params, state):
 
             state.COST_EMULATOR.append(cost_emulator)
         erange(rng_outer)
+            
+    
+    if len(params.save_cost_emulator)>0:
+        np.savetxt(params.save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
 
 
 def _split_into_patches(X, nbmax):
@@ -1280,10 +1311,10 @@ def cnn(params, nb_inputs, nb_outputs):
 
     conv = inputs
 
-    if params.iflo_activation == "lrelu":
+    if params.iflo_activation == "LeakyReLU":
         activation = tf.keras.layers.LeakyReLU(alpha=0.01)
     else:
-        activation = tf.keras.layers.ReLU()
+        activation = getattr(tf.keras.layers,params.iflo_activation)()      
 
     for i in range(int(params.iflo_nb_layers)):
         conv = tf.keras.layers.Conv2D(
@@ -1329,7 +1360,7 @@ def unet(params, nb_inputs, nb_outputs):
         n_labels=nb_outputs,
         stack_num_down=2,
         stack_num_up=2,
-        activation="LeakyReLU",
+        activation=params.iflo_activation,
         output_activation=None,
         batch_norm=False,
         pool="max",

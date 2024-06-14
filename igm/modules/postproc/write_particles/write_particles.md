@@ -7,10 +7,12 @@ This IGM module writes particle time-position in csv files computed by module `p
 The data are stored in folder 'trajectory' (created if does not exist). Files 'traj-TIME.csv' reports the space-time position of the particles at time TIME with the following structure:
 
 ```
-ID,  state.xpos,  state.ypos,  state.zpos, state.rhpos,  state.tpos, state.englt
-X,            X,           X,           X,           X,           X,           X,
-X,            X,           X,           X,           X,           X,           X,
-X,            X,           X,           X,           X,           X,           X,
+ID,  state.particle_x,  state.particle_y,  state.particle_z, state.particle_r,  state.particle_t, state.particle_englt, state.particle_topg, state.particle_thk,
+X,                  X,                 X,                 X,                X,                 X,                    X,                   X,                  X,
+X,                  X,                 X,                 X,                X,                 X,                    X,                   X,                  X,
+X,                  X,                 X,                 X,                X,                 X,                    X,                   X,                  X,
 ```
 
-providing in turn the particle ID, x,y,z positions, the relative height within the ice column, the seeding time, and the englacial time.
+providing in turn the particle ID, x,y,z positions, the relative height within the ice column, the seeding time, the englacial time, the bedrock altitude and the ice thickness at the position of the particle.
+
+Code originally written by G. Jouvet, improved and tested by Claire-mathilde Stucki

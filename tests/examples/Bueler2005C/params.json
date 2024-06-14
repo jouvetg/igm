@@ -1,5 +1,5 @@
 {
-  "modules_preproc": ["load_tif"],
+  "modules_preproc": [ ],
   "modules_process": ["Buelersmb",
                       "iceflow",
                       "time",
@@ -13,7 +13,18 @@
   "time_end": 1000.0,
   "time_save": 100.0,
   "iflo_init_arrhenius": 100.0,
-  "iflo_init_slidingco": 0.0,
+  "iflo_init_slidingco": 0.0001,
+#  "iflo_retrain_emulator_lr": 0.0001,
+  "iflo_retrain_emulator_nbit": 10,
+  "iflo_retrain_emulator_freq": 1,
+
+#  "iflo_type": "solved",
+#  "iflo_solve_nbitmax": 10,
+#  "iflo_solve_step_size": 1,
+#  "iflo_solve_stop_if_no_decrease": true,
+
+"wncd_vars_to_save" : ["topg", "usurf", "thk", "smb", "velbar_mag", "velsurf_mag", "velbase_mag"],
+
   "time_cfl": 0.125,
   "plt2d_live": false
 }

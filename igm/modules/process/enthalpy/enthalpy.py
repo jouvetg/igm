@@ -9,7 +9,7 @@ import tensorflow as tf
 import time
 
 from igm.modules.utils import *
-
+from igm.modules.utils import srange, erange
 
 def params(parser):
     parser.add_argument(
@@ -196,17 +196,22 @@ def update(params, state):
     state.tcomp_enthalpy.append(time.time())
 
     # compute the surface temperature taken the negative part of the mean air temperature
+    rng = srange(message="compute the surface temperature", color="green")
     surftemp = (
         tf.minimum(tf.math.reduce_mean(state.air_temp + params.temperature_offset_air_to_ice, axis=0), 0)
         + params.enth_melt_temp
     )  # [K]
-
+    erange(rng)
+    
+    rng = srange(message="vertically_discretize_tf", color="red")
     # get the vertical discretization
     depth, dz = vertically_discretize_tf(
         state.thk, params.iflo_Nz, params.iflo_vert_spacing
     )
-
+    erange(rng)
+    
     # compute temperature and enthalpy at the pressure melting point
+    rng = srange(message="TpmpEpmp_from_depth_tf", color="yellow")
     Tpmp, Epmp = TpmpEpmp_from_depth_tf(
         depth,
         params.iflo_gravity_cst,
@@ -216,7 +221,9 @@ def update(params, state):
         params.enth_ci,
         params.enth_ref_temp,
     )
-
+    erange(rng)
+    
+    rng = srange(message="temperature_from_enthalpy_tf", color="purple")
     # get the temperature from the enthalpy
     state.T, state.omega = temperature_from_enthalpy_tf(
         state.E,
@@ -226,6 +233,7 @@ def update(params, state):
         params.enth_ref_temp,
         params.enth_Lh,
     )
+    erange(rng)
     
     # pressure adjusted temperature
     state.Tpa = state.T + params.enth_claus_clape * params.iflo_ice_density * params.iflo_gravity_cst * depth
@@ -233,19 +241,22 @@ def update(params, state):
     state.temppabase = state.Tpa[0]
     state.temppasurf = state.Tpa[-1]
 
+    rng = srange(message="arrhenius_from_temp_tf", color="white")
     # get the arrhenius factor from temperature and and enthalpy
     state.arrhenius = arrhenius_from_temp_tf(
         state.Tpa,
         state.omega
     ) * params.iflo_enhancement_factor
- 
+    erange(rng)
+    
     if hasattr(state, "W"):
         # correct vertical velocity corrected (therefore Wc) from melting rate
         Wc = state.W - tf.expand_dims(state.basalMeltRate, axis=0)
     else:
         # if the vertical velocity is not given, we assume it is zero
         Wc = tf.zeros_like(state.U) - tf.expand_dims(state.basalMeltRate, axis=0)
-        
+    
+    rng = srange(message="compute_strainheat_tf AND compute_frictheat_tf", color="black")
     # compute the strainheat is in [W m-3]
     state.strainheat = compute_strainheat_tf(
         state.U / params.enth_spy,
@@ -267,17 +278,23 @@ def update(params, state):
         params.iflo_exp_weertman,
         params.iflo_new_friction_param,
     )
-
+    erange(rng)
+    
+    rng = srange(message="surf_enthalpy_from_temperature_tf", color="red")
     # compute the surface enthalpy
     surfenth = surf_enthalpy_from_temperature_tf(
         surftemp, params.enth_melt_temp, params.enth_ci, params.enth_ref_temp
     )
-
+    erange(rng)
+    
+    rng = srange(message="compute_upwind_tf", color="green")
     # one explicit step for the horizonal advection
     state.E = state.E - state.dt * compute_upwind_tf(
         state.U, state.V, state.E, state.dx
     )
-
+    erange(rng)
+    
+    rng = srange(message="compute_enthalpy_basalmeltrate", color="red")
     # update the enthalpy and the basal melt rate (implicit scheme)
     state.E, state.basalMeltRate = compute_enthalpy_basalmeltrate(
         state.E,
@@ -301,7 +318,9 @@ def update(params, state):
         params.enth_KtdivKc,
         params.enth_drain_ice_column,
     )
-
+    erange(rng)
+    
+    rng = srange(message="rest", color="blue")
     state.basalMeltRate = tf.clip_by_value(state.basalMeltRate, 0.0, 10.0**10)
 
     # update the till water content
@@ -332,6 +351,7 @@ def update(params, state):
                  * 1e+6 * (365.25*24*3600)**(1/3)  # unit is Pa s**(1/3)
                  
     state.arrheniusav = tf.reduce_sum(state.arrhenius * state.vert_weight, axis=0)
+    erange(rng)
     
     state.tcomp_enthalpy[-1] -= time.time()
     state.tcomp_enthalpy[-1] *= -1
@@ -606,7 +626,7 @@ def solve_TDMA(L, M, U, R):
     # Tridiagonal Matrix Algorithm (TDMA) or Thomas Algorithm
     # https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
     # Here L = Lower Diag, M = Main Diag, U = Upper Diag, R = Right Hand Side
-
+    print("tracing")
     nz = M.shape[0]
 
     w = []
@@ -775,7 +795,9 @@ def compute_enthalpy_basalmeltrate(
     )
 
     # return the results of the solving of the boundary value problem (tridiagonal pb)
+    rng = srange(message="solve_TDMA", color="black")
     E = solve_TDMA(L, M, U, R)
+    erange(rng)
 
     # lower-bound at T = -30°C
     Emin = ci * (243.15 - ref_temp)

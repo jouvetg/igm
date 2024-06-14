@@ -58,6 +58,7 @@ def update(params, state):
 def finalize(params, state):
     pass
 
+
 def _compute_vertical_velocity_kinematic(params, state, U, V, thk, dX):
  
     # use the formula w = u dot \nabla l + \nable \cdot (u l)

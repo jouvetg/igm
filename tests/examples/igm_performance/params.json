@@ -1,10 +1,7 @@
 {
   "modules_preproc": ["load_ncdf"],
   "modules_process": ["time",
-#		      "smb_simple",
-                      "iceflow",
-		      "vert_flow"
-#		      "enthalpy"
+                      "iceflow"
                     ],
   "modules_postproc": [],
   "time_start": -35000.0,

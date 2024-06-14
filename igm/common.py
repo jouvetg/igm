@@ -168,12 +168,15 @@ def run_intializers(modules: List, params: Any, state: State) -> None:
 import nvtx
 
 module_colors = {
-    #"oggm_shop": "blue",
+    "smb_accmelt": "white",
     "iceflow": "blue",
     "time": "green",
+    "thk": "green",
     "vert_flow": "red",
+    "smb_simple": "red",
     "load_ncdf": "purple",
-    # "plot2d": "yellow",
+    "print_info": "yellow",
+    "clim_aletsch": "purple",
     "enthalpy": "pink",
 }
 def run_processes(modules: List, params: Any, state: State) -> None:

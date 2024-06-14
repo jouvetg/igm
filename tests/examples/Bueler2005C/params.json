@@ -1,0 +1,19 @@
+{
+  "modules_preproc": ["load_tif"],
+  "modules_process": ["Buelersmb",
+                      "iceflow",
+                      "time",
+                      "thk"
+                      ],
+  "modules_postproc": ["write_ncdf",
+                       "plot2d",
+                       "print_info",
+                       "print_comp"],                
+  "time_start": 0.0,
+  "time_end": 1000.0,
+  "time_save": 100.0,
+  "iflo_init_arrhenius": 100.0,
+  "iflo_init_slidingco": 0.0,
+  "time_cfl": 0.125,
+  "plt2d_live": false
+}

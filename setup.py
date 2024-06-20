@@ -35,7 +35,7 @@ setup(
         "tensorflow[and-cuda]==2.14.0",
         "matplotlib",
         "scipy",
-        "netCDF4",
+        "netCDF4==1.6.5",
         "xarray",
         "rasterio",
         "pyproj",

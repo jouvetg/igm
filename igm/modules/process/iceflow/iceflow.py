@@ -317,7 +317,13 @@ def params(parser):
         default=10**(20),
         help="Maximum strain rate",
     )
-    
+    parser.add_argument(
+        "--iflo_force_negative_gravitational_energy",
+        type=str2bool,
+        default=False,
+        help="Force energy gravitational term to be negative",
+    )
+
     parser.add_argument(
         "--iflo_optimizer_solver",
         type=str,
@@ -520,7 +526,6 @@ def finalize(params, state):
 ########################################################################
 ########################################################################
 
-
 @tf.function(experimental_relax_shapes=True)
 def _compute_gradient_stag(s, dX, dY):
     """
@@ -644,7 +649,8 @@ def iceflow_energy(params, U, V, fieldin):
         params.iflo_cf_eswn,
         params.iflo_regu,
         params.iflo_min_sr,
-        params.iflo_max_sr
+        params.iflo_max_sr,
+        params.iflo_force_negative_gravitational_energy
     )
 
 
@@ -672,6 +678,7 @@ def _iceflow_energy(
     iflo_regu,
     min_sr,
     max_sr,
+    iflo_force_negative_gravitational_energy
 ):
     # warning, the energy is here normalized dividing by int_Omega
 
@@ -729,50 +736,20 @@ def _iceflow_energy(
     srcapped = tf.where(COND, srcapped, 0.0)
  
 
-    # C_shear is unit  Mpa y^(1/n) y^(-1-1/n) * m^3 = Mpa y^(-1) m^3
+    # C_shear is unit  Mpa y^(1/n) y^(-1-1/n) * m = Mpa m/y
     if len(B.shape) == 3:
-        C_shear = (
-            tf.reduce_mean(
-                _stag4(B)
-                * tf.reduce_sum(dz * ((srcapped + regu_glen**2) ** ((p-2) / 2)) * sr, axis=1),
-                axis=(-1, -2),
-            )
-            / p
-        )
+        C_shear = _stag4(B) * tf.reduce_sum(dz * ((srcapped + regu_glen**2) ** ((p-2) / 2)) * sr, axis=1 ) / p
     else:
-        C_shear = (
-            tf.reduce_mean(
-                tf.reduce_sum(
-                    _stag8(B) * dz * ((srcapped + regu_glen**2) ** ((p-2) / 2)) * sr, axis=1
-                ),
-                axis=(-1, -2),
-            )
-            / p
-        )
+        C_shear = tf.reduce_sum( _stag8(B) * dz * ((srcapped + regu_glen**2) ** ((p-2) / 2)) * sr, axis=1 ) / p
         
     if iflo_regu > 0:
         
         srx = tf.where(COND, srx, 0.0)
  
         if len(B.shape) == 3:
-            C_shear_2 = ( 
-                tf.reduce_mean(
-                    _stag4(B)
-                    * tf.reduce_sum(dz * ((srx + regu_glen**2) ** (p / 2)), axis=1),
-                    axis=(-1, -2),
-                )
-                / p
-            )
+            C_shear_2 = _stag4(B) * tf.reduce_sum(dz * ((srx + regu_glen**2) ** (p / 2)), axis=1 ) / p
         else:
-            C_shear_2 = ( 
-                tf.reduce_mean(
-                    tf.reduce_sum(
-                        _stag8(B) * dz * ((srx + regu_glen**2) ** (p / 2)), axis=1
-                    ),
-                    axis=(-1, -2),
-                )
-                / p
-            )
+            C_shear_2 = tf.reduce_sum( _stag8(B) * dz * ((srx + regu_glen**2) ** (p / 2)), axis=1 ) / p 
 
         C_shear = C_shear + iflo_regu*C_shear_2
         
@@ -780,13 +757,13 @@ def _iceflow_energy(
 
     sloptopgx, sloptopgy = _compute_gradient_stag(lsurf, dX, dX)
 
-    # C_slid is unit Mpa y^m m^(-m) * m^(1+m) * y^(-1-m) * m*2 = Mpa y^(-1) m^3
+    # C_slid is unit Mpa y^m m^(-m) * m^(1+m) * y^(-1-m)  = Mpa  m/y
     N = (
         _stag4(U[:, 0, :, :] ** 2 + V[:, 0, :, :] ** 2)
         + regu_weertman**2
         + (_stag4(U[:, 0, :, :]) * sloptopgx + _stag4(V[:, 0, :, :]) * sloptopgy) ** 2
     )
-    C_slid = tf.reduce_mean(_stag4(C) * N ** (s / 2), axis=(-1, -2)) / s
+    C_slid = _stag4(C) * N ** (s / 2) / s
 
     slopsurfx, slopsurfy = _compute_gradient_stag(usurf, dX, dX)
     slopsurfx = tf.expand_dims(slopsurfx, axis=1)
@@ -795,66 +772,101 @@ def _iceflow_energy(
     if Nz > 1:
         uds = _stag8(U) * slopsurfx + _stag8(V) * slopsurfy
     else:
-        uds = _stag4b(U) * slopsurfx + _stag4b(V) * slopsurfy
+        uds = _stag4b(U) * slopsurfx + _stag4b(V) * slopsurfy  
+
+    if iflo_force_negative_gravitational_energy:
+        uds = tf.minimum(uds, 0.0) # force non-postiveness
 
     uds = tf.where(COND, uds, 0.0)
 
+    # C_slid is unit Mpa m^-1 m/y m = Mpa m/y
     C_grav = (
         ice_density
         * gravity_cst
         * 10 ** (-6)
-        * tf.reduce_mean(tf.reduce_sum(dz * uds, axis=1), axis=(-1, -2))
+        * tf.reduce_sum(dz * uds, axis=1)
     )
 
     # if activae this applies the stress condition along the calving front
     if iflo_cf_cond:
+
+        ################################################################
         
         lsurf = usurf - thk
         
-    #   Check formula (17) in [Jouvet and Graeser 2012]
-        P = tf.where(lsurf<0, 0.5 * 10 ** (-6) * 9.81 * 910 * ( thk**2 - (1000/910)*lsurf**2 ) , 0.0)
+    #   Check formula (17) in [Jouvet and Graeser 2012], Unit is Mpa 
+        P =tf.where(lsurf<0, 0.5 * 10 ** (-6) * 9.81 * 910 * ( thk**2 - (1000/910)*lsurf**2 ) , 0.0)  / dX[:, 0, 0] 
         
         if len(iflo_cf_eswn) == 0:
             thkext = tf.pad(thk,[[0,0],[1,1],[1,1]],"CONSTANT",constant_values=1)
+            lsurfext = tf.pad(lsurf,[[0,0],[1,1],[1,1]],"CONSTANT",constant_values=1)
         else:
             thkext = thk
             thkext = tf.pad(thkext,[[0,0],[1,0],[0,0]],"CONSTANT",constant_values=1.0*('S' not in iflo_cf_eswn))
             thkext = tf.pad(thkext,[[0,0],[0,1],[0,0]],"CONSTANT",constant_values=1.0*('N' not in iflo_cf_eswn))
             thkext = tf.pad(thkext,[[0,0],[0,0],[1,0]],"CONSTANT",constant_values=1.0*('W' not in iflo_cf_eswn))
             thkext = tf.pad(thkext,[[0,0],[0,0],[0,1]],"CONSTANT",constant_values=1.0*('E' not in iflo_cf_eswn)) 
+            lsurfext = lsurf
+            lsurfext = tf.pad(lsurfext,[[0,0],[1,0],[0,0]],"CONSTANT",constant_values=1.0*('S' not in iflo_cf_eswn))
+            lsurfext = tf.pad(lsurfext,[[0,0],[0,1],[0,0]],"CONSTANT",constant_values=1.0*('N' not in iflo_cf_eswn))
+            lsurfext = tf.pad(lsurfext,[[0,0],[0,0],[1,0]],"CONSTANT",constant_values=1.0*('W' not in iflo_cf_eswn))
+            lsurfext = tf.pad(lsurfext,[[0,0],[0,0],[0,1]],"CONSTANT",constant_values=1.0*('E' not in iflo_cf_eswn)) 
         
         # this permits to locate the calving front in a cell in the 4 directions
-        CF_W = tf.where((thk>0)&(thkext[:,1:-1,:-2]==0),1.0,0.0)
-        CF_E = tf.where((thk>0)&(thkext[:,1:-1,2:]==0),1.0,0.0) 
-        CF_S = tf.where((thk>0)&(thkext[:,:-2,1:-1]==0),1.0,0.0)
-        CF_N = tf.where((thk>0)&(thkext[:,2:,1:-1]==0),1.0,0.0)
-
+        CF_W = tf.where((lsurf<0)&(thk>0)&(thkext[:,1:-1,:-2]==0)&(lsurfext[:,1:-1,:-2]<=0),1.0,0.0)
+        CF_E = tf.where((lsurf<0)&(thk>0)&(thkext[:,1:-1,2:]==0)&(lsurfext[:,1:-1,2:]<=0),1.0,0.0) 
+        CF_S = tf.where((lsurf<0)&(thk>0)&(thkext[:,:-2,1:-1]==0)&(lsurfext[:,:-2,1:-1]<=0),1.0,0.0)
+        CF_N = tf.where((lsurf<0)&(thk>0)&(thkext[:,2:,1:-1]==0)&(lsurfext[:,2:,1:-1]<=0),1.0,0.0)
+ 
         if Nz > 1:
             # Blatter-Pattyn
-            dz0 = tf.stack([tf.ones_like(thk) * z for z in temd], axis=1)
-            C_front = (
-                tf.reduce_sum( P * tf.reduce_sum(dz0 * _stag2(U), axis=1) * CF_W, axis=(-2,-1) ) 
-                - tf.reduce_sum( P * tf.reduce_sum(dz0 * _stag2(U), axis=1) * CF_E, axis=(-2,-1) ) 
-                + tf.reduce_sum( P * tf.reduce_sum(dz0 * _stag2(V), axis=1) * CF_S, axis=(-2,-1) ) 
-                - tf.reduce_sum( P * tf.reduce_sum(dz0 * _stag2(V), axis=1) * CF_N, axis=(-2,-1) ) 
-            ) * dX[:, 0, 0]
+            weight = tf.stack([tf.ones_like(thk) * z for z in temd], axis=1) # dimensionless, 
+            C_float = (
+                  P * tf.reduce_sum(weight * _stag2(U), axis=1) * CF_W
+                - P * tf.reduce_sum(weight * _stag2(U), axis=1) * CF_E 
+                + P * tf.reduce_sum(weight * _stag2(V), axis=1) * CF_S 
+                - P * tf.reduce_sum(weight * _stag2(V), axis=1) * CF_N 
+            ) 
         else:
             # SSA
-            C_front = (
-                tf.reduce_sum(P * U * CF_W, axis=(-2,-1) ) 
-                - tf.reduce_sum(P * U * CF_E, axis=(-2,-1) ) 
-                + tf.reduce_sum(P * V * CF_S, axis=(-2,-1) ) 
-                - tf.reduce_sum(P * V * CF_N, axis=(-2,-1) ) 
-            ) * dX[:, 0, 0]
-    
-        C_front = C_front / ( tf.reduce_sum(tf.ones_like(thk),axis=(-2,-1)) * dX[:, 0, 0]**2 )
+            C_float = ( P * U * CF_W - P * U * CF_E  + P * V * CF_S - P * V * CF_N )  
+
+        ###########################################################
+
+        # ddz = tf.stack([thk * z for z in temd], axis=1) 
+
+        # zzz = tf.expand_dims(lsurf, axis=1) + tf.math.cumsum(ddz, axis=1)
+
+        # f = 10 ** (-6) * ( 910 * 9.81 * (tf.expand_dims(usurf, axis=1) - zzz) + 1000 * 9.81 * tf.minimum(0.0, zzz) )  # Mpa m^(-1) 
+
+        # C_float = (
+        #       tf.reduce_sum(ddz * f * _stag2(U), axis=1) * CF_W
+        #     - tf.reduce_sum(ddz * f * _stag2(U), axis=1) * CF_E 
+        #     + tf.reduce_sum(ddz * f * _stag2(V), axis=1) * CF_S 
+        #     - tf.reduce_sum(ddz * f * _stag2(V), axis=1) * CF_N 
+        # )   # Mpa m / y
+        
+        ###########################################################
+
+        # f = 10 ** (-6) * ( 910 * 9.81 * thk + 1000 * 9.81 * tf.minimum(0.0, lsurf) ) # Mpa 
+
+ 
+        # sloptopgx, sloptopgy = compute_gradient_tf(lsurf[0], dX[0, 0, 0], dX[0, 0, 0])
+        # slopn = (sloptopgx**2 + sloptopgy**2)**0.5
+        # nx = tf.expand_dims(sloptopgx/slopn,0)
+        # ny = tf.expand_dims(sloptopgy/slopn,0)
+            
+        # C_float_2 = tf.where( (thk>0)&(slidingco==0), f * (U[:,0] * nx + V[:,0] * ny ) , 0.0 ) # Mpa m/y
+
+        # C_float is unit  Mpa m * (m/y) / m + Mpa m / y = Mpa m / y    
+        # C_float = C_float_1 #  + C_float_2  
         
     else:
-        C_front = tf.zeros_like(C_shear)
+        C_float = tf.zeros_like(C_shear)
 
-#    print(C_shear[0].numpy(),C_slid[0].numpy(),C_grav[0].numpy(),C_front[0].numpy())
+    # print(C_shear[0].numpy(),C_slid[0].numpy(),C_grav[0].numpy(),C_float[0].numpy())
 
-    return tf.reduce_mean(C_shear + C_slid + C_grav + C_front)
+    return C_shear, C_slid, C_grav, C_float
 
 
 # @tf.function(experimental_relax_shapes=True)
@@ -968,11 +980,22 @@ def solve_iceflow(params, state, U, V):
                 tf.expand_dims(vars(state)[f], axis=0) for f in params.iflo_fieldin
             ]
 
-            COST = iceflow_energy(
+            C_shear, C_slid, C_grav, C_float = iceflow_energy(
                 params, tf.expand_dims(U, axis=0), tf.expand_dims(V, axis=0), fieldin
             )
 
+            COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
+                 + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
+
             Cost_Glen.append(COST)
+
+            if (i + 1) % 100 == 0:
+                print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
+
+#            state.C_shear = tf.pad(C_shear[0],[[0,1],[0,1]],"CONSTANT")
+#            state.C_slid  = tf.pad(C_slid[0],[[0,1],[0,1]],"CONSTANT")
+#            state.C_grav  = tf.pad(C_grav[0],[[0,1],[0,1]],"CONSTANT")
+#            state.C_float = C_float[0] 
 
             # Stop if the cost no longer decreases
             if params.iflo_solve_stop_if_no_decrease:
@@ -1100,6 +1123,17 @@ def _update_iceflow_emulator(params, state):
     if (state.it < 0) | (state.it % params.iflo_retrain_emulator_freq == 0):
         fieldin = [vars(state)[f] for f in params.iflo_fieldin]
 
+########################
+
+        # thkext = tf.pad(state.thk,[[1,1],[1,1]],"CONSTANT",constant_values=1)
+        # # this permits to locate the calving front in a cell in the 4 directions
+        # state.CF_W = tf.where((state.thk>0)&(thkext[1:-1,:-2]==0),1.0,0.0)
+        # state.CF_E = tf.where((state.thk>0)&(thkext[1:-1,2:]==0),1.0,0.0) 
+        # state.CF_S = tf.where((state.thk>0)&(thkext[:-2,1:-1]==0),1.0,0.0)
+        # state.CF_N = tf.where((state.thk>0)&(thkext[2:,1:-1]==0),1.0,0.0)
+
+########################
+
         XX = fieldin_to_X(params, fieldin)
 
         X = _split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
@@ -1126,9 +1160,22 @@ def _update_iceflow_emulator(params, state):
                     Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
                     
                     if iz>0:
-                        COST = iceflow_energy_XY(params, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
+                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
                     else:
-                        COST = iceflow_energy_XY(params, X[i : i + 1, :, :, :], Y[:, :, :, :])
+                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X[i : i + 1, :, :, :], Y[:, :, :, :])
+ 
+                    COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
+                         + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
+                    
+                    if (epoch + 1) % 100 == 0:
+                        print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
+
+#                    state.C_shear = tf.pad(C_shear[0],[[0,1],[0,1]],"CONSTANT")
+#                    state.C_slid  = tf.pad(C_slid[0],[[0,1],[0,1]],"CONSTANT")
+#                    state.C_grav  = tf.pad(C_grav[0],[[0,1],[0,1]],"CONSTANT")
+#                    state.C_float = C_float[0] 
+
+                    # print(state.C_shear.shape, state.C_slid.shape, state.C_grav.shape, state.C_float.shape,state.thk.shape )
 
                     cost_emulator = cost_emulator + COST
 

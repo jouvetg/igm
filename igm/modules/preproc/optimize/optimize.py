@@ -61,7 +61,13 @@ def params(parser):
         "--opti_regu_param_slidingco",
         type=float,
         default=1,
-        help="Regularization weight for the strflowctrl field in the optimization",
+        help="Regularization weight for the slidingco field in the optimization",
+    )
+    parser.add_argument(
+        "--opti_regu_param_arrhenius",
+        type=float,
+        default=10.0,
+        help="Regularization weight for the arrhenius field in the optimization",
     )
     parser.add_argument(
         "--opti_regu_param_div",
@@ -133,13 +139,19 @@ def params(parser):
         "--opti_scaling_usurf",
         type=float,
         default=0.5,
-        help="Scaling factor for the ice thickness in the optimization, serve to adjust step-size of each controls relative to each other",
+        help="Scaling factor for the top ice surface in the optimization, serve to adjust step-size of each controls relative to each other",
     )
     parser.add_argument(
         "--opti_scaling_slidingco",
         type=float,
         default=0.0001,
-        help="Scaling factor for the ice thickness in the optimization, serve to adjust step-size of each controls relative to each other",
+        help="Scaling factor for the slidingco in the optimization, serve to adjust step-size of each controls relative to each other",
+    )
+    parser.add_argument(
+        "--opti_scaling_arrhenius",
+        type=float,
+        default=0.1,
+        help="Scaling factor for the Arrhenius in the optimization, serve to adjust step-size of each controls relative to each other",
     )
     parser.add_argument(
         "--opti_control",
@@ -316,6 +328,7 @@ def _optimize(params, state):
     sc["thk"] = params.opti_scaling_thk
     sc["usurf"] = params.opti_scaling_usurf
     sc["slidingco"] = params.opti_scaling_slidingco
+    sc["arrhenius"] = params.opti_scaling_arrhenius
     
     Ny, Nx = state.thk.shape
 
@@ -410,9 +423,15 @@ def _optimize(params, state):
                 REGU_S = regu_slidingco(params, state)
             else:
                 REGU_S = tf.Variable(0.0)
+
+            # Here one adds a regularization terms for arrhenius to the cost function
+            if "arrhenius" in params.opti_control:
+                REGU_A = regu_arrhenius(params, state)
+            else:
+                REGU_A = tf.Variable(0.0)
  
             # sum all component into the main cost function
-            COST = COST_U + COST_H + COST_D + COST_S + COST_O + COST_HPO + REGU_H + REGU_S
+            COST = COST_U + COST_H + COST_D + COST_S + COST_O + COST_HPO + REGU_H + REGU_S + REGU_A
 
             # Here one allow retraining of the ice flow emaultor
             if params.opti_retrain_iceflow_model:
@@ -697,6 +716,24 @@ def regu_slidingco(params,state):
         #     * tf.nn.l2_loss((dadx * state.flowdirx + dady * state.flowdiry))
         #     + np.sqrt(params.opti_smooth_anisotropy_factor)
         #     * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx))
+        
+    return REGU_S
+
+def regu_arrhenius(params,state):
+
+#    if not hasattr(state, "flowdirx"):
+    dadx = (state.arrhenius[:, 1:] - state.arrhenius[:, :-1])/state.dx
+    dady = (state.arrhenius[1:, :] - state.arrhenius[:-1, :])/state.dx
+
+    if params.sole_mask:                
+        dadx = tf.where( (state.icemaskobs[:, 1:] == 1) & (state.icemaskobs[:, :-1] == 1) , dadx, 0.0)
+        dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
+    
+    REGU_S = (params.opti_regu_param_arrhenius) * (
+        tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
+    )
+    + 10**10 * tf.math.reduce_mean( tf.where(state.arrhenius >= 0, 0.0, state.arrhenius**2) ) 
+    # this last line serve to enforce non-negative arrhenius 
         
     return REGU_S
 

@@ -27,7 +27,7 @@ def params(parser):
         "--oggm_preprocess", type=str2bool, default=True, help="Use preprocessing"
     )
     parser.add_argument(
-        "--oggm_RGI_version", type=int, default=6, help="this is temporary fix, is 6 or 7"
+        "--oggm_RGI_version", type=int, default=7, help="this is temporary fix, is 6 or 7"
     )
     parser.add_argument(
         "--oggm_dx",
@@ -63,8 +63,8 @@ def params(parser):
         "--oggm_path_glathida",
         type=str,
         default="",
-        help="Path where the Glathida Folder is store, so that you don't need \
-              to redownload it at any use of the script, if empty it will be in the home directory",
+        help="Path where the Glathida Folder is stored, so that you don't need \
+              to redownload it at every use of the script, if empty it will be in the home directory (only relevant for RGI6.0)",
     )
     parser.add_argument(
         "--oggm_save_in_ncdf",
@@ -103,6 +103,7 @@ def initialize(params, state):
     try:
         _oggm_util([params.oggm_RGI_ID], params)
     except:
+        print('Server data issue?: '+params.oggm_RGI_ID)
         return
 
     if hasattr(state, "logger"):
@@ -112,9 +113,14 @@ def initialize(params, state):
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.flip(np.squeeze(nc.variables["y"]).astype("float32"))
-    if len(x)*len(y) >= 160000:
-        print('Skipping this one: '+params.oggm_RGI_ID)
-        return
+    
+    #If you know that grids above a certain size are going to make your GPU memory explode,
+    #activating this commented block and setting the number in the if statement to your
+    #maximum threshold will cause IGM to skip execution and move on to the next one
+    #(only relevant if using igm_run_batch, hence why I've not made it a parameter yet)
+    # if len(x)*len(y) >= 160000:
+    #     print('Skipping this one: '+params.oggm_RGI_ID)
+    #     return
 
     try:
         thk = np.flipud(np.squeeze(nc.variables[params.oggm_thk_source]).astype("float32"))
@@ -122,10 +128,14 @@ def initialize(params, state):
     except:
         thk = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
         thk = np.where(True,0,0)
+        print('Thickness 0 everywhere?: '+params.oggm_RGI_ID)
 
     usurf = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
     usurfobs = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
 
+    #This will set up some additional masks that are necessary for infer_params in optimize.
+    #One of individually numbered RGI7.0G entities within each RGI7.0C and one for which entities
+    #(for any RGI version used) are tidewater glaciers as identified in the RGI
     if params.oggm_sub_entity_mask == True:
         if params.oggm_RGI_product == "C":
             icemask = np.flipud(np.squeeze(nc.variables["sub_entities"]).astype("float32"))
@@ -573,10 +583,11 @@ def _read_glathida_v7(x, y, path_glathida):
 
 def _get_tidewater_termini_and_slopes(tidewatermask, slopes, RGIs, params):
     #Function written by Samuel Cook
-    #Identify which glaciers in a complex are tidewater
+    #Identify which glaciers in a complex are tidewater and also return average slope (both needed for infer_params in optimize)
     
     from oggm import utils, workflow, tasks, graphics
     import xarray as xr
+    import matplotlib.pyplot as plt
     
     rgi_ids = RGIs
     base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v3" )
@@ -601,10 +612,9 @@ def _get_tidewater_termini_and_slopes(tidewatermask, slopes, RGIs, params):
                 else:
                     tidewatermask[tidewatermask==i] = 0
     else:
-        gdf = gdirs[0]
-        print(gdf)
-        slopes[slopes==1] = gdf.slope_deg
-        if gdf.term_type == 1:
+        gdf = gdirs[0].read_shapefile('outlines')
+        slopes[slopes==1] = gdf.loc[0].slope_deg
+        if gdf.loc[0].term_type == '1':
             tidewatermask[tidewatermask==1] = 1
         else:
             tidewatermask[tidewatermask==1] = 0

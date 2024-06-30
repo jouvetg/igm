@@ -6,6 +6,7 @@
   "modules_process": [],
   "modules_postproc": [],
   "oggm_RGI_ID": "RGI60-11.01238",
+  "oggm_RGI_version": 6,
   "opti_control": [
     "thk",
     "usurf",

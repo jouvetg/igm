@@ -8,6 +8,7 @@
                       "particles"],
   "modules_postproc": [],
   "oggm_RGI_ID": "RGI60-11.01238",
+  "oggm_RGI_version": 6,
   "oggm_remove_RGI_folder": true,
   "oggm_save_in_ncdf" : false,
   "time_start": 2000.0,

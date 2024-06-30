@@ -16,7 +16,7 @@ def params(parser):
             "usurf",
             "thk",
         ],
-        help="List of variables to be recorded in the NetCDF file",
+        help="List of variables to be saved as geotiff files",
     )
 
 
@@ -37,8 +37,8 @@ def update(params, state):
                 with rasterio.open(file, mode="w", **state.profile_tif_file) as src:
                     src.write(np.flipud(vars(state)[var]), 1)
             else:
-                xres = (state.x[-1] - state.x[0]) / len(state.x)
-                yres = (state.y[-1] - state.y[0]) / len(state.y)
+                xres = state.dx
+                yres = state.dx 
                 transform = rasterio.Affine.translation(
                     state.x[0] - xres / 2, state.y[0] - yres / 2
                 ) * rasterio.Affine.scale(xres, yres)
@@ -53,7 +53,7 @@ def update(params, state):
                     dtype=np.float32,
                     transform=transform,
                 ) as src:
-                    src.write(np.flipud(vars(state)[var]), 1)
+                    src.write(vars(state)[var], 1)
 
             del src
 

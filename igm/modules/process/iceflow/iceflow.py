@@ -331,6 +331,13 @@ def params(parser):
         help="Tpe of Optimizer for the solver",
     )
     parser.add_argument(
+        "--iflo_optimizer_lbfgs",
+        type=str2bool,
+        default=False,
+        help="iflo_optimizer_lbfgs",
+    )
+    
+    parser.add_argument(
         "--iflo_optimizer_emulator",
         type=str,
         default='Adam',
@@ -1018,10 +1025,60 @@ def solve_iceflow(params, state, U, V):
 
     return U, V, Cost_Glen
 
+def solve_iceflow_lbfgs(params, state, U, V):
+
+    import tensorflow_probability as tfp
+
+    Cost_Glen = []
+ 
+    def COST(UV):
+
+        U = UV[0]
+        V = UV[1]
+
+        fieldin = [
+            tf.expand_dims(vars(state)[f], axis=0) for f in params.iflo_fieldin
+        ]
+
+        C_shear, C_slid, C_grav, C_float = iceflow_energy(
+            params, tf.expand_dims(U, axis=0), tf.expand_dims(V, axis=0), fieldin
+        )
+
+        COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
+             + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
+            
+        return COST
+
+    def loss_and_gradients_function(UV):
+        with tf.GradientTape() as tape:
+            tape.watch(UV)
+            loss = COST(UV)
+            Cost_Glen.append(loss)
+            gradients = tape.gradient(loss, UV)
+        return loss, gradients
+    
+    UV = tf.stack([U, V], axis=0) 
+
+    optimizer = tfp.optimizer.lbfgs_minimize(
+            value_and_gradients_function=loss_and_gradients_function,
+            initial_position=UV,
+            max_iterations=params.iflo_solve_nbitmax,
+            tolerance=1e-8)
+    
+    UV = optimizer.position
+
+    U = UV[0]
+    V = UV[1]
+ 
+    return U, V, Cost_Glen
 
 def _update_iceflow_solved(params, state):
-    U, V, Cost_Glen = solve_iceflow(params, state, state.U, state.V)
 
+    if params.iflo_optimizer_lbfgs:
+        U, V, Cost_Glen = solve_iceflow_lbfgs(params, state, state.U, state.V)
+    else:
+        U, V, Cost_Glen = solve_iceflow(params, state, state.U, state.V)
+ 
     state.U.assign(U)
     state.V.assign(V)
     
@@ -1201,6 +1258,49 @@ def _update_iceflow_emulator(params, state):
     
     if len(params.save_cost_emulator)>0:
         np.savetxt(params.save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
+
+
+
+# def _update_iceflow_emulator_lbfgs(params, state):
+
+#     import tensorflow_probability as tfp
+
+#     Cost_Glen = [0]
+ 
+#     def COST(iceflow_model):
+
+#         fieldin = [vars(state)[f] for f in params.iflo_fieldin]
+ 
+#         X = fieldin_to_X(params, fieldin) 
+
+#         Y = iceflow_model(X)
+        
+#         C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X, Y)
+
+#         COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
+#              + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
+           
+#         return COST
+
+#     def loss_and_gradients_function(trainable_variables):
+#         with tf.GradientTape() as tape:
+#             tape.watch(trainable_variables)
+#             loss = COST(iceflow_model)
+#             gradients = tape.gradient(loss, trainable_variables)
+#         return loss, gradients
+    
+#     if (state.it < 0) | (state.it % params.iflo_retrain_emulator_freq == 0):
+  
+#         state.COST_EMULATOR = [0]
+  
+#         trainable_variables = tfp.optimizer.lbfgs_minimize(
+#                 value_and_gradients_function=loss_and_gradients_function,
+#                 initial_position=trainable_variables,
+#                 max_iterations=params.iflo_retrain_emulator_nbit,
+#                 tolerance=1e-8)
+
+# #    if len(params.save_cost_emulator)>0:
+# #        np.savetxt(params.save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
 
 
 def _split_into_patches(X, nbmax):

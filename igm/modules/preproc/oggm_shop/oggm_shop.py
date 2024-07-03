@@ -75,7 +75,7 @@ def params(parser):
     parser.add_argument(
         "--oggm_remove_RGI_folder",
         type=str2bool,
-        default=False,
+        default=True,
         help="oggm_remove_RGI_folder",
     )
     parser.add_argument(
@@ -309,10 +309,12 @@ def update(params, state):
 
 
 def finalize(params, state):
-    try:
-        shutil.rmtree(params.oggm_RGI_ID) 
-    except Exception as error:
-        print("Error: ", error)
+
+    if params.oggm_remove_RGI_folder:
+        try:
+            shutil.rmtree(params.oggm_RGI_ID) 
+        except Exception as error:
+            print("Error: ", error)
 
 
 #########################################################################

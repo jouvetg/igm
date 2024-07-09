@@ -245,3 +245,9 @@ def params_optimize(parser):
         default=1000.0,
         help="Confidence/STD of the volume estimates from volume-area scaling",
     )
+    parser.add_argument(
+        "--fix_opti_normalization_issue",
+        type=str2bool,
+        default=False,
+        help="formerly, the oce was mixing reduce_mean and l2_loss leadinf to dependence to the resolution of the grid",
+    )

@@ -372,7 +372,7 @@ def cost_divflux(params,state,i):
     if ("divfluxpen" in params.opti_cost):
         dddx = (divflux[:, 1:] - divflux[:, :-1])/state.dx
         dddy = (divflux[1:, :] - divflux[:-1, :])/state.dx
-        COST_D = (params.opti_regu_param_div) * ( tf.nn.l2_loss(dddx) + tf.nn.l2_loss(dddy) )
+        COST_D = (params.opti_regu_param_div) * 0.5 * ( tf.reduce_mean(dddx**2) + tf.reduce_mean(dddy**2) )
 
     if params.opti_force_zero_sum_divflux:
             ACT = state.icemaskobs > 0.5
@@ -431,10 +431,16 @@ def regu_thk(params,state):
             dbdx = tf.where( (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5) , dbdx, 0.0)
             dbdy = tf.where( (state.icemaskobs[1:, :] > 0.5) & (state.icemaskobs[:-1, :] > 0.5) , dbdy, 0.0)
 
-        REGU_H = (params.opti_regu_param_thk) * (
-            tf.nn.l2_loss(dbdx) + tf.nn.l2_loss(dbdy)
-            - gamma * tf.math.reduce_sum(state.thk)
-        )
+        if params.fix_opti_normalization_issue:
+            REGU_H = (params.opti_regu_param_thk) * 0.5 * (
+                tf.math.reduce_mean(dbdx**2) + tf.math.reduce_mean(dbdy**2)
+                - gamma * tf.math.reduce_mean(state.thk)
+            )
+        else:
+            REGU_H = (params.opti_regu_param_thk) * (
+                tf.nn.l2_loss(dbdx) + tf.nn.l2_loss(dbdy)
+                - gamma * tf.math.reduce_sum(state.thk)
+            )
     else:
         dbdx = (field[:, 1:] - field[:, :-1])/state.dx
         dbdx = (dbdx[1:, :] + dbdx[:-1, :]) / 2.0
@@ -445,14 +451,14 @@ def regu_thk(params,state):
             MASK = (state.icemaskobs[1:, 1:] > 0.5) & (state.icemaskobs[1:, :-1] > 0.5) & (state.icemaskobs[:-1, 1:] > 0.5) & (state.icemaskobs[:-1, :-1] > 0.5)
             dbdx = tf.where( MASK, dbdx, 0.0)
             dbdy = tf.where( MASK, dbdy, 0.0)
-
-        if params.opti_infer_params:
-            REGU_H = (params.opti_regu_param_thk) * (
+ 
+        if params.fix_opti_normalization_issue:
+            REGU_H = (params.opti_regu_param_thk) * 0.5 * (
                 (1.0/np.sqrt(params.opti_smooth_anisotropy_factor))
-                * tf.nn.l2_loss((dbdx * state.flowdirx + dbdy * state.flowdiry))
+                * tf.math.reduce_mean((dbdx * state.flowdirx + dbdy * state.flowdiry)**2)
                 + np.sqrt(params.opti_smooth_anisotropy_factor)
-                * tf.nn.l2_loss((dbdx * state.flowdiry - dbdy * state.flowdirx))
-                - tf.math.reduce_sum(gamma*state.thk)
+                * tf.math.reduce_mean((dbdx * state.flowdiry - dbdy * state.flowdirx)**2)
+                - tf.math.reduce_mean(gamma*state.thk)
             )
         else:
             REGU_H = (params.opti_regu_param_thk) * (
@@ -460,7 +466,7 @@ def regu_thk(params,state):
                 * tf.nn.l2_loss((dbdx * state.flowdirx + dbdy * state.flowdiry))
                 + np.sqrt(params.opti_smooth_anisotropy_factor)
                 * tf.nn.l2_loss((dbdx * state.flowdiry - dbdy * state.flowdirx))
-                - gamma * tf.math.reduce_sum(state.thk)
+                - tf.math.reduce_sum(gamma*state.thk)
             )
 
     return REGU_H
@@ -475,10 +481,17 @@ def regu_slidingco(params,state):
         dadx = tf.where( (state.icemaskobs[:, 1:] == 1) & (state.icemaskobs[:, :-1] == 1) , dadx, 0.0)
         dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
 
-    REGU_S = (params.opti_regu_param_slidingco) * (
-        tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
-    )
-    + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
+
+    if params.fix_opti_normalization_issue:
+        REGU_S = (params.opti_regu_param_slidingco) * 0.5 * (
+            tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
+        )
+    else:
+        REGU_S = (params.opti_regu_param_slidingco) * (
+            tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
+        )
+
+    REGU_S = REGU_S + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
     # this last line serve to enforce non-negative slidingco
 
 #               else:
@@ -510,10 +523,16 @@ def regu_arrhenius(params,state):
         dadx = tf.where( (state.icemaskobs[:, 1:] == 1) & (state.icemaskobs[:, :-1] == 1) , dadx, 0.0)
         dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
     
-    REGU_S = (params.opti_regu_param_arrhenius) * (
-        tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
-    )
-    + 10**10 * tf.math.reduce_mean( tf.where(state.arrhenius >= 0, 0.0, state.arrhenius**2) ) 
+    if params.fix_opti_normalization_issue:
+        REGU_S = (params.opti_regu_param_arrhenius) * 0.5 * (
+            tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
+        )
+    else:
+        REGU_S = (params.opti_regu_param_arrhenius) * (
+            tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
+        )
+
+    REGU_S = REGU_S + 10**10 * tf.math.reduce_mean( tf.where(state.arrhenius >= 0, 0.0, state.arrhenius**2) ) 
     # this last line serve to enforce non-negative arrhenius 
         
     return REGU_S

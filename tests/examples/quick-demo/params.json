@@ -17,6 +17,7 @@
                         [ 2100,           4.0,         1.0]
                                  ],
   "oggm_RGI_ID": "RGI60-11.01450",
+  "oggm_RGI_version": 6,
   "time_start": 1800.0,
   "time_end": 2100.0,
   "plt2d_live": true,

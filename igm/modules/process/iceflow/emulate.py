@@ -57,9 +57,9 @@ def initialize_iceflow_emulator(params,state):
         else:
             if os.path.exists(params.iflo_emulator):
                 dirpath = params.iflo_emulator
-                print("Found pretrained emulator: " + params.iflo_emulator)
+                print("----------------------------------> Found pretrained emulator: " + params.iflo_emulator)
             else:
-                print("No pretrained emulator found ")
+                print("----------------------------------> No pretrained emulator found ")
 
         fieldin = []
         fid = open(os.path.join(dirpath, "fieldin.dat"), "r")
@@ -71,9 +71,9 @@ def initialize_iceflow_emulator(params,state):
         state.iceflow_model = tf.keras.models.load_model(
             os.path.join(dirpath, "model.h5"), compile=False
         )
-        state.iceflow_model.compile()
+        state.iceflow_model.compile() 
     else:
-        print("No pretrained emulator, start from scratch.")
+        print("----------------------------------> No pretrained emulator, start from scratch.") 
         nb_inputs = len(params.iflo_fieldin) + (params.iflo_dim_arrhenius == 3) * (
             params.iflo_Nz - 1
         )

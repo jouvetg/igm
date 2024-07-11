@@ -90,7 +90,7 @@ def initialize(params, state):
     define_vertical_weight(params, state)
 
     # padding is necessary when using U-net emulator
-    state.PAD = compute_PAD(params,state.thk.shape[0],state.thk.shape[1])
+    state.PAD = compute_PAD(params,state.thk.shape[1],state.thk.shape[0])
 
     if not params.iflo_type == "solved":
         update_iceflow_emulated(params, state)

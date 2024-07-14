@@ -130,20 +130,19 @@ def output_ncdf_optimize_final(params, state):
     )
 
 
-def plot_cost_functions(params, state, costs):
+def plot_cost_functions(costs, label):
+
     costs = np.stack(costs)
 
     for i in range(costs.shape[1]):
         costs[:, i] -= np.min(costs[:, i])
         costs[:, i] /= np.where(np.max(costs[:, i]) == 0, 1.0, np.max(costs[:, i]))
 
+    colors = ["k", "r", "b", "g", "c", "m", "k", "r", "b", "g", "c", "m"]
+  
     fig = plt.figure(figsize=(10, 10))
-    plt.plot(costs[:, 0], "-k", label="COST U")
-    plt.plot(costs[:, 1], "-r", label="COST H")
-    plt.plot(costs[:, 2], "-b", label="COST D")
-    plt.plot(costs[:, 3], "-g", label="COST S")
-    plt.plot(costs[:, 4], "--c", label="REGU H")
-    plt.plot(costs[:, 5], "--m", label="REGU A")
+    for i in range(costs.shape[1]):
+        plt.plot(costs[:, i], label=label[i], c=colors[i])
     plt.ylim(0, 1)
     plt.legend()
 

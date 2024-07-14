@@ -1,5 +1,6 @@
 import numpy as np 
 import tensorflow as tf 
+from igm.modules.utils import *
 
 
 @tf.function(experimental_relax_shapes=True)
@@ -322,20 +323,20 @@ def _iceflow_energy(
         #     - tf.reduce_sum(ddz * f * _stag2(V), axis=1) * CF_N 
         # )   # Mpa m / y
         
-        ###########################################################
+        ##########################################################
 
         # f = 10 ** (-6) * ( 910 * 9.81 * thk + 1000 * 9.81 * tf.minimum(0.0, lsurf) ) # Mpa 
 
  
         # sloptopgx, sloptopgy = compute_gradient_tf(lsurf[0], dX[0, 0, 0], dX[0, 0, 0])
-        # slopn = (sloptopgx**2 + sloptopgy**2)**0.5
+        # slopn = (sloptopgx**2 + sloptopgy**2 + 1.e-10 )**0.5
         # nx = tf.expand_dims(sloptopgx/slopn,0)
         # ny = tf.expand_dims(sloptopgy/slopn,0)
             
-        # C_float_2 = tf.where( (thk>0)&(slidingco==0), f * (U[:,0] * nx + V[:,0] * ny ) , 0.0 ) # Mpa m/y
+        # C_float_2 = - tf.where( (thk>0)&(slidingco==0), - f * (U[:,0] * nx + V[:,0] * ny), 0.0 ) # Mpa m/y
 
-        # C_float is unit  Mpa m * (m/y) / m + Mpa m / y = Mpa m / y    
-        # C_float = C_float_1 #  + C_float_2  
+        # #C_float is unit  Mpa m * (m/y) / m + Mpa m / y = Mpa m / y    
+        # C_float = C_float + C_float_2 
         
     else:
         C_float = tf.zeros_like(C_shear)

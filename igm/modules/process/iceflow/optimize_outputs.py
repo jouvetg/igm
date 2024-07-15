@@ -130,7 +130,17 @@ def output_ncdf_optimize_final(params, state):
     )
 
 
-def plot_cost_functions(costs, label):
+def plot_cost_functions():
+
+#    costs = np.stack(costs)
+
+    file_path = 'costs.dat'
+
+    # Read the file and process the contents
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+        label = lines[0].strip().split()
+        costs = [np.array(line.strip().split(), dtype=float) for line in lines[1:]]
 
     costs = np.stack(costs)
 

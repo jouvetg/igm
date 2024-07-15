@@ -73,8 +73,6 @@ def optimize(params, state):
         opti_retrain = tf.keras.optimizers.legacy.Adam(
             learning_rate=params.iflo_retrain_emulator_lr
         )
- 
-    state.costs = []
 
     state.tcomp_optimize = []
 
@@ -195,8 +193,6 @@ def optimize(params, state):
                 )
 
             print_costs(params, state, cost, i)
- 
-            state.costs.append( [v.numpy() for v in cost.values()] )
 
             #################
 
@@ -263,11 +259,9 @@ def optimize(params, state):
     if not params.opti_save_result_in_ncdf=="":
         output_ncdf_optimize_final(params, state)
 
-    plot_cost_functions(state.costs, label = list(cost.keys()))
+    plot_cost_functions() 
 
     plt.close("all")
-
-    save_costs(state.costs, label = list(cost.keys()))
 
     save_rms_std(params, state)
 
@@ -525,7 +519,9 @@ def regu_arrhenius(params,state):
 def print_costs(params, state, cost, i):
 
     vol = ( np.sum(state.thk) * (state.dx**2) / 10**9 ).numpy()
-    #    mean_slidingco = tf.math.reduce_mean(state.slidingco[state.icemaskobs > 0.5])
+    # mean_slidingco = tf.math.reduce_mean(state.slidingco[state.icemaskobs > 0.5])
+
+    f = open('costs.dat','a')
 
     def bound(x):
         return min(x, 9999999)
@@ -534,27 +530,17 @@ def print_costs(params, state, cost, i):
     if i == 0:
         L = [f"{key:>8}" for key in ["it","vol"]] + [f"{key:>12}" for key in keys]
         print("Costs:     " + "   ".join(L))
+        print("   ".join([f"{key:>12}" for key in keys]),file=f)
 
     if i % params.opti_output_freq == 0:
         L = [datetime.datetime.now().strftime("%H:%M:%S"),f"{i:0>{8}}",f"{vol:>8.4f}"] \
           + [f"{bound(cost[key].numpy()):>12.4f}" for key in keys]
         print("   ".join(L))
 
+    print("   ".join([f"{bound(cost[key].numpy()):>12.4f}" for key in keys]),file=f)
 
-def save_costs(costs, label):
- 
-    np.savetxt(
-        "costs.dat",
-        np.minimum(np.stack(costs),9999999),
-        fmt="%8.4f",
-        delimiter="   ",
-        header="   ".join([f"{l:>8}" for l in label]),
-    )
+    os.system("echo rm " + "costs.dat" + " >> clean.sh")
 
-    os.system(
-        "echo rm " + "costs.dat" + " >> clean.sh"
-    )
-    
 def save_rms_std(params, state):
 
     np.savetxt(

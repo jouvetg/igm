@@ -152,18 +152,19 @@ def params(parser):
 def initialize(params, state):
     Ny, Nx = state.thk.shape
 
-    state.basalMeltRate = tf.Variable(tf.zeros_like(state.thk))
-    state.T = tf.Variable(tf.ones((params.iflo_Nz, Ny, Nx)) * params.enth_melt_temp)
-    state.omega = tf.Variable(tf.zeros_like(state.T))
+    state.basalMeltRate = tf.Variable(tf.zeros_like(state.thk),trainable=False)
+    state.T = tf.Variable(tf.ones((params.iflo_Nz, Ny, Nx)) * params.enth_melt_temp,trainable=False)
+    state.omega = tf.Variable(tf.zeros_like(state.T),trainable=False)
     state.E = tf.Variable(
         tf.ones_like(state.T)
-        * (params.enth_ci * (params.enth_melt_temp - params.enth_ref_temp))
+        * (params.enth_ci * (params.enth_melt_temp - params.enth_ref_temp)),
+        trainable=False
     )
-    state.tillwat = 0.0 * tf.Variable(tf.ones_like(state.thk))
+    state.tillwat = 0.0 * tf.Variable(tf.ones_like(state.thk),trainable=False)
 
     if not hasattr(state, "bheatflx"):
         state.bheatflx = tf.Variable(
-            tf.ones_like(state.thk) * params.enth_default_bheatflx
+            tf.ones_like(state.thk) * params.enth_default_bheatflx, trainable=False
         )
 
     state.phi = compute_phi(params,state)
@@ -796,10 +797,10 @@ def compute_enthalpy_basalmeltrate(
     )
 
     # initiatlize to zero the FD matrices to solve the boundary value problem
-    L = tf.Variable(tf.zeros((nz - 1, ny, nx)))
-    M = tf.Variable(tf.zeros((nz, ny, nx)))
-    U = tf.Variable(tf.zeros((nz - 1, ny, nx)))
-    R = tf.Variable(tf.zeros((nz, ny, nx)))
+    L = tf.Variable(tf.zeros((nz - 1, ny, nx)),trainable=False)
+    M = tf.Variable(tf.zeros((nz, ny, nx)),trainable=False)
+    U = tf.Variable(tf.zeros((nz - 1, ny, nx)),trainable=False)
+    R = tf.Variable(tf.zeros((nz, ny, nx)),trainable=False)
 
     # fill the FD matrices to solve the boundary value problem
     # d E / d t  + w * dE /dz = K * ( d^2 E / d^2 z ) + f of unit [E s^{-1}] or [W kg-1]

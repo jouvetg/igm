@@ -51,8 +51,8 @@ def initialize(params, state):
     state.particle_topg = tf.Variable([])
     state.particle_thk = tf.Variable([])
     
-    state.pswvelbase = tf.Variable(tf.zeros_like(state.thk))
-    state.pswvelsurf = tf.Variable(tf.zeros_like(state.thk))
+    state.pswvelbase = tf.Variable(tf.zeros_like(state.thk),trainable=False)
+    state.pswvelsurf = tf.Variable(tf.zeros_like(state.thk),trainable=False)
 
     # build the gridseed, we don't want to seed all pixels!
     state.gridseed = np.zeros_like(state.thk) == 1
@@ -68,15 +68,15 @@ def update(params, state):
         seeding_particles(params, state)
 
         # merge the new seeding points with the former ones
-        state.particle_x = tf.Variable(tf.concat([state.particle_x, state.nparticle_x], axis=-1))
-        state.particle_y = tf.Variable(tf.concat([state.particle_y, state.nparticle_y], axis=-1))
-        state.particle_z = tf.Variable(tf.concat([state.particle_z, state.nparticle_z], axis=-1))
-        state.particle_r = tf.Variable(tf.concat([state.particle_r, state.nparticle_r], axis=-1))
-        state.particle_w = tf.Variable(tf.concat([state.particle_w, state.nparticle_w], axis=-1))
-        state.particle_t = tf.Variable(tf.concat([state.particle_t, state.nparticle_t], axis=-1))
-        state.particle_englt = tf.Variable(tf.concat([state.particle_englt, state.nparticle_englt], axis=-1))
-        state.particle_topg = tf.Variable(tf.concat([state.particle_topg, state.nparticle_topg], axis=-1))
-        state.particle_thk = tf.Variable(tf.concat([state.particle_thk, state.nparticle_thk], axis=-1))
+        state.particle_x = tf.Variable(tf.concat([state.particle_x, state.nparticle_x], axis=-1),trainable=False)
+        state.particle_y = tf.Variable(tf.concat([state.particle_y, state.nparticle_y], axis=-1),trainable=False)
+        state.particle_z = tf.Variable(tf.concat([state.particle_z, state.nparticle_z], axis=-1),trainable=False)
+        state.particle_r = tf.Variable(tf.concat([state.particle_r, state.nparticle_r], axis=-1),trainable=False)
+        state.particle_w = tf.Variable(tf.concat([state.particle_w, state.nparticle_w], axis=-1),trainable=False)
+        state.particle_t = tf.Variable(tf.concat([state.particle_t, state.nparticle_t], axis=-1),trainable=False)
+        state.particle_englt = tf.Variable(tf.concat([state.particle_englt, state.nparticle_englt], axis=-1),trainable=False)
+        state.particle_topg = tf.Variable(tf.concat([state.particle_topg, state.nparticle_topg], axis=-1),trainable=False)
+        state.particle_thk = tf.Variable(tf.concat([state.particle_thk, state.nparticle_thk], axis=-1),trainable=False)
         
         state.tlast_seeding = state.t.numpy()
 

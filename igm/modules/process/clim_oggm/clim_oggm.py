@@ -100,18 +100,18 @@ def initialize(params, state):
     # intitalize air_temp and precipitation fields
     state.air_temp = tf.Variable(
         tf.zeros((nb_m, state.y.shape[0], state.x.shape[0])),
-        dtype="float32",
+        dtype="float32", trainable=False
     )
     state.air_temp_std = tf.Variable(
         tf.zeros((nb_m, state.y.shape[0], state.x.shape[0])),
-        dtype="float32",
+        dtype="float32", trainable=False
     )
     state.precipitation = tf.Variable(
         tf.zeros((nb_m, state.y.shape[0], state.x.shape[0])),
-        dtype="float32",
+        dtype="float32", trainable=False
     )
 
-    state.tlast_clim_oggm = tf.Variable(-(10**10), dtype="float32")
+    state.tlast_clim_oggm = tf.Variable(-(10**10), dtype="float32", trainable=False)
     state.tcomp_clim_oggm = []
 
     if params.clim_oggm_clim_trend_array == []:

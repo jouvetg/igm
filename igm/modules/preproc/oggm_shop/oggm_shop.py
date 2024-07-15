@@ -248,7 +248,7 @@ def initialize(params, state):
         vars(state)[var] = tf.constant(vars()[var].astype("float32"))
 
     for var in vars_to_save:
-        vars(state)[var] = tf.Variable(vars()[var].astype("float32"))
+        vars(state)[var] = tf.Variable(vars()[var].astype("float32"), trainable=False)
 
     complete_data(state)
 

@@ -272,17 +272,17 @@ def complete_data(state):
     
     # if thickness is not defined in the netcdf, then it is set to zero
     if not hasattr(state, "thk"):
-        state.thk = tf.Variable(tf.zeros((state.y.shape[0], state.x.shape[0])))
+        state.thk = tf.Variable(tf.zeros((state.y.shape[0], state.x.shape[0])), trainable=False)
         
     assert hasattr(state, "topg") | hasattr(state, "usurf")
     
     # case usurf defined, topg is not defined
     if not hasattr(state, "topg"):
-        state.topg = tf.Variable(state.usurf - state.thk) 
+        state.topg = tf.Variable(state.usurf - state.thk, trainable=False) 
 
     # case usurf not defined, topg is defined
     if not hasattr(state, "usurf"): 
-        state.usurf = tf.Variable(state.topg + state.thk) 
+        state.usurf = tf.Variable(state.topg + state.thk, trainable=False) 
 
 @tf.function
 def interpolate_bilinear_tf(

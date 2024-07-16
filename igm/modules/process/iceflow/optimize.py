@@ -402,7 +402,8 @@ def regu_thk(params,state):
 
         if params.fix_opti_normalization_issue:
             REGU_H = (params.opti_regu_param_thk) * 0.5 * (
-                tf.math.reduce_mean(dbdx**2 + dbdy**2 - gamma * state.thk)
+                tf.math.reduce_mean(dbdx**2) + tf.math.reduce_mean(dbdy**2)
+                - gamma * tf.math.reduce_mean(state.thk)
             )
         else:
             REGU_H = (params.opti_regu_param_thk) * (
@@ -423,11 +424,10 @@ def regu_thk(params,state):
         if params.fix_opti_normalization_issue:
             REGU_H = (params.opti_regu_param_thk) * 0.5 * (
                 (1.0/np.sqrt(params.opti_smooth_anisotropy_factor))
-                * tf.math.reduce_mean(
-                        (dbdx * state.flowdirx + dbdy * state.flowdiry)**2
-                        + np.sqrt(params.opti_smooth_anisotropy_factor)*(dbdx * state.flowdiry - dbdy * state.flowdirx)**2
-                        - gamma*state.thk  
-                                     )
+                * tf.math.reduce_mean((dbdx * state.flowdirx + dbdy * state.flowdiry)**2)
+                + np.sqrt(params.opti_smooth_anisotropy_factor)
+                * tf.math.reduce_mean((dbdx * state.flowdiry - dbdy * state.flowdirx)**2)
+                - tf.math.reduce_mean(gamma*state.thk)
             )
         else:
             REGU_H = (params.opti_regu_param_thk) * (
@@ -453,7 +453,7 @@ def regu_slidingco(params,state):
 
     if params.fix_opti_normalization_issue:
         REGU_S = (params.opti_regu_param_slidingco) * 0.5 * (
-            tf.math.reduce_mean(dadx**2 + dady**2)
+            tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
         )
     else:
         REGU_S = (params.opti_regu_param_slidingco) * (
@@ -494,7 +494,7 @@ def regu_arrhenius(params,state):
     
     if params.fix_opti_normalization_issue:
         REGU_S = (params.opti_regu_param_arrhenius) * 0.5 * (
-            tf.math.reduce_mean(dadx**2 + dady**2)
+            tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
         )
     else:
         REGU_S = (params.opti_regu_param_arrhenius) * (

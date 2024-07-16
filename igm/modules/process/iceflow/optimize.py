@@ -475,7 +475,7 @@ def regu_slidingco(params,state):
             dady = tf.where( MASK, dady, 0.0)
  
         if params.fix_opti_normalization_issue:
-            REGU_S = (params.opti_regu_param_thk) * 0.5 * (
+            REGU_S = (params.opti_regu_param_slidingco) * 0.5 * (
                 (1.0/np.sqrt(params.opti_smooth_anisotropy_factor_sl))
                 * tf.math.reduce_mean((dadx * state.flowdirx + dady * state.flowdiry)**2)
                 + np.sqrt(params.opti_smooth_anisotropy_factor_sl)

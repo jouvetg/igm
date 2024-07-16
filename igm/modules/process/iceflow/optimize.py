@@ -133,12 +133,7 @@ def optimize(params, state):
                  
             # misfit between surface velocity
             if "velsurf" in params.opti_cost:
-                cost["velsurf"] = misfit_velsurf(opti_velsurfobs_std=params.opti_velsurfobs_std,
-                                                 opti_include_low_speed_term=params.opti_include_low_speed_term,
-                                                 uvelsurf=state.uvelsurf,
-                                                 vvelsurf=state.vvelsurf,
-                                                 uvelsurfobs=state.uvelsurfobs,
-                                                 vvelsurfobs=state.vvelsurfobs)
+                cost["velsurf"] = misfit_velsurf(params,state)
 
             # misfit between ice thickness profiles
             if "thk" in params.opti_cost:
@@ -270,20 +265,18 @@ def optimize(params, state):
  
 ####################################
 
-@tf.function()
-def misfit_velsurf(opti_velsurfobs_std,opti_include_low_speed_term,
-                   uvelsurf,vvelsurf,uvelsurfobs,vvelsurfobs):
+def misfit_velsurf(params,state):
 
-    velsurf    = tf.stack([uvelsurf,    vvelsurf],    axis=-1) 
-    velsurfobs = tf.stack([uvelsurfobs, vvelsurfobs], axis=-1)
+    velsurf    = tf.stack([state.uvelsurf,    state.vvelsurf],    axis=-1) 
+    velsurfobs = tf.stack([state.uvelsurfobs, state.vvelsurfobs], axis=-1)
 
     ACT = ~tf.math.is_nan(velsurfobs)
 
     cost = 0.5 * tf.reduce_mean(
-           ( (velsurfobs[ACT] - velsurf[ACT]) / opti_velsurfobs_std  )** 2
+           ( (velsurfobs[ACT] - velsurf[ACT]) / params.opti_velsurfobs_std  )** 2
     )
 
-    if opti_include_low_speed_term:
+    if params.opti_include_low_speed_term:
 
         # This terms penalize the cost function when the velocity is low
         # Reference : Inversion of basal friction in Antarctica using exact and incompleteadjoints of a higher-order model
@@ -293,7 +286,6 @@ def misfit_velsurf(opti_velsurfobs_std,opti_include_low_speed_term,
         )
 
     return cost
-
 
 def misfit_thk(params,state):
 
@@ -410,8 +402,7 @@ def regu_thk(params,state):
 
         if params.fix_opti_normalization_issue:
             REGU_H = (params.opti_regu_param_thk) * 0.5 * (
-                tf.math.reduce_mean(dbdx**2) + tf.math.reduce_mean(dbdy**2)
-                - gamma * tf.math.reduce_mean(state.thk)
+                tf.math.reduce_mean(dbdx**2 + dbdy**2 - gamma * state.thk)
             )
         else:
             REGU_H = (params.opti_regu_param_thk) * (
@@ -432,10 +423,11 @@ def regu_thk(params,state):
         if params.fix_opti_normalization_issue:
             REGU_H = (params.opti_regu_param_thk) * 0.5 * (
                 (1.0/np.sqrt(params.opti_smooth_anisotropy_factor))
-                * tf.math.reduce_mean((dbdx * state.flowdirx + dbdy * state.flowdiry)**2)
-                + np.sqrt(params.opti_smooth_anisotropy_factor)
-                * tf.math.reduce_mean((dbdx * state.flowdiry - dbdy * state.flowdirx)**2)
-                - tf.math.reduce_mean(gamma*state.thk)
+                * tf.math.reduce_mean(
+                        (dbdx * state.flowdirx + dbdy * state.flowdiry)**2
+                        + np.sqrt(params.opti_smooth_anisotropy_factor)*(dbdx * state.flowdiry - dbdy * state.flowdirx)**2
+                        - gamma*state.thk  
+                                     )
             )
         else:
             REGU_H = (params.opti_regu_param_thk) * (
@@ -461,7 +453,7 @@ def regu_slidingco(params,state):
 
     if params.fix_opti_normalization_issue:
         REGU_S = (params.opti_regu_param_slidingco) * 0.5 * (
-            tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
+            tf.math.reduce_mean(dadx**2 + dady**2)
         )
     else:
         REGU_S = (params.opti_regu_param_slidingco) * (
@@ -502,7 +494,7 @@ def regu_arrhenius(params,state):
     
     if params.fix_opti_normalization_issue:
         REGU_S = (params.opti_regu_param_arrhenius) * 0.5 * (
-            tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
+            tf.math.reduce_mean(dadx**2 + dady**2)
         )
     else:
         REGU_S = (params.opti_regu_param_arrhenius) * (

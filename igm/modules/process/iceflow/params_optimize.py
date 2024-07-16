@@ -54,6 +54,12 @@ def params_optimize(parser):
         help="Smooth anisotropy factor for the ice thickness regularization in the optimization",
     )
     parser.add_argument(
+        "--opti_smooth_anisotropy_factor_sl",
+        type=float,
+        default=1.0,
+        help="Smooth anisotropy factor for the slidingco regularization in the optimization",
+    )
+    parser.add_argument(
         "--opti_convexity_weight",
         type=float,
         default=0.002,

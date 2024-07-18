@@ -534,6 +534,7 @@ def print_costs(params, state, cost, i):
         L = [f"{key:>8}" for key in ["it","vol"]] + [f"{key:>12}" for key in keys]
         print("Costs:     " + "   ".join(L))
         print("   ".join([f"{key:>12}" for key in keys]),file=f)
+        os.system("echo rm costs.dat >> clean.sh")
 
     if i % params.opti_output_freq == 0:
         L = [datetime.datetime.now().strftime("%H:%M:%S"),f"{i:0>{8}}",f"{vol:>8.4f}"] \
@@ -541,8 +542,6 @@ def print_costs(params, state, cost, i):
         print("   ".join(L))
 
     print("   ".join([f"{bound(cost[key].numpy()):>12.4f}" for key in keys]),file=f)
-
-    os.system("echo rm " + "costs.dat" + " >> clean.sh")
 
 def save_rms_std(params, state):
 

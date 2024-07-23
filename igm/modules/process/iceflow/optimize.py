@@ -249,8 +249,8 @@ def optimize(params, state):
             #     if np.mean(cost[-10:])>np.mean(cost[-20:-10]):
             #         break;
 
-    for f in params.opti_control:
-        vars(state)[f] = vars()[f] * sc[f]
+#    for f in params.opti_control:
+#        vars(state)[f] = vars()[f] * sc[f]
 
     # now that the ice thickness is optimized, we can fix the bed once for all! (ONLY FOR GROUNDED ICE)
     state.topg = state.usurf - state.thk

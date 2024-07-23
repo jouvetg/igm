@@ -86,7 +86,15 @@ def initialize_iceflow_emulator(params,state):
         elif params.iflo_network=='unet':
             state.iceflow_model = unet(params, nb_inputs, nb_outputs)
 
-
+    # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
+    # dirpath = importlib_resources.files(emulators).joinpath(direct_name)
+    # iceflow_model_pretrained = tf.keras.models.load_model(
+    #     os.path.join(dirpath, "model.h5"), compile=False
+    # )
+    # N=16
+    # pretrained_weights = [layer.get_weights() for layer in iceflow_model_pretrained.layers[:N]]
+    # for i in range(N):
+    #     state.iceflow_model.layers[i].set_weights(pretrained_weights[i])
 
 def update_iceflow_emulated(params, state):
     # Define the input of the NN, include scaling

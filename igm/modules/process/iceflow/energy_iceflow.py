@@ -75,7 +75,7 @@ def _compute_strainrate_Glen_tf(U, V, thk, slidingco, dX, ddz, sloptopgx, slopto
 
 
 def _stag2(B):
-    return (B[:, 1:] + B[:, :1]) / 2
+    return (B[:, 1:] + B[:, :-1]) / 2
 
 
 def _stag4(B):

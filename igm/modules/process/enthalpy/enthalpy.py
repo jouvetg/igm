@@ -804,15 +804,15 @@ def compute_enthalpy_basalmeltrate(
 
     # fill the FD matrices to solve the boundary value problem
     # d E / d t  + w * dE /dz = K * ( d^2 E / d^2 z ) + f of unit [E s^{-1}] or [W kg-1]
-    L, M, U, R = assembly_diffusion_advection_tf(
-        E, dt, tf.maximum(dz, thr), w, K, f, BCB, VB, VS, L, M, U, R
-    )
+#    L, M, U, R = assembly_diffusion_advection_tf(
+#        E, dt, tf.maximum(dz, thr), w, K, f, BCB, VB, VS, L, M, U, R
+#    )
 
-#    L, M, U, R = assembly_diffusion_advection_tf_new( E, dt, tf.maximum(dz, thr), w, K, f, BCB, VB, VS )
+    L, M, U, R = assembly_diffusion_advection_tf_new( E, dt, tf.maximum(dz, thr), w, K, f, BCB, VB, VS )
 
     # return the results of the solving of the boundary value problem (tridiagonal pb)
-    E = solve_TDMA(L, M, U, R)
-#    E = solve_TDMA_new(L, M, U, R)
+#    E = solve_TDMA(L, M, U, R)
+    E = solve_TDMA_new(L, M, U, R)
 
     # lower-bound at T = -30°C
     Emin = ci * (243.15 - ref_temp)

@@ -19,8 +19,8 @@ def params(parser):
     parser.add_argument(
         "--part_tracking_method",
         type=str,
-        default="simple",
-        help="Method for tracking particles (simple or 3d)",
+        default="3d",
+        help="Method for tracking particles (3d or simple)",
     )
     parser.add_argument(
         "--part_frequency_seeding",
@@ -34,7 +34,13 @@ def params(parser):
         default=0.2,
         help="Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)",
     )
-
+    parser.add_argument(
+        "--tlast_seeding_init",
+        type=int,
+        default=-1.0e5000,
+        help="Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value alouds to differ it"
+    )
+    
 
 def initialize(params, state):
     state.tlast_seeding = -1.0e5000
@@ -56,6 +62,7 @@ def initialize(params, state):
 
     # build the gridseed, we don't want to seed all pixels!
     state.gridseed = np.zeros_like(state.thk) == 1
+    # uniform seeding on the grid
     rr = int(1.0 / params.part_density_seeding)
     state.gridseed[::rr, ::rr] = True
 
@@ -165,13 +172,6 @@ def update(params, state):
         elif params.part_tracking_method == "3d":
             # uses the vertical velocity w computed in the vert_flow module
 
-            # make sure the particle vertically remain within the ice body
-            state.particle_z = tf.clip_by_value(state.particle_z, topg, topg + thk)
-
-            state.particle_r = (state.particle_z - topg) / thk
-            #if thk=0, state.rhpos takes value nan, so we set rhpos value to one in this case :
-            state.particle_r = tf.where(thk== 0, tf.ones_like(state.particle_r), state.particle_r) 
-
             w = interpolate_bilinear_tf(
                 tf.expand_dims(state.W, axis=-1),
                 indices,
@@ -181,6 +181,16 @@ def update(params, state):
             state.particle_x = state.particle_x + state.dt * tf.reduce_sum(wei * u, axis=0)
             state.particle_y = state.particle_y + state.dt * tf.reduce_sum(wei * v, axis=0)
             state.particle_z = state.particle_z + state.dt * tf.reduce_sum(wei * w, axis=0)
+
+            # make sure the particle vertically remain within the ice body
+            state.particle_z = tf.clip_by_value(state.particle_z, topg, topg + thk)
+            # relative height of the particle within the glacier
+            state.particle_r = (state.particle_z - topg) / thk
+            #if thk=0, state.rhpos takes value nan, so we set rhpos value to one in this case :
+            state.particle_r = tf.where(thk== 0, tf.ones_like(state.particle_r), state.particle_r) 
+        
+        else:
+            print("Error : Name of the particles tracking method not recognised")
 
         # make sur the particle remains in the horiz. comp. domain
         state.particle_x = tf.clip_by_value(state.particle_x, 0, state.x[-1] - state.x[0])

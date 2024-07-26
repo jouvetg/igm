@@ -142,8 +142,8 @@ def update_iceflow_solved(params, state):
             )
         )
         
-    if len(params.save_cost_solver)>0:
-        np.savetxt(params.save_cost_solver+'-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")
+    if len(params.iflo_save_cost_solver)>0:
+        np.savetxt(params.iflo_output_directory+params.iflo_save_cost_solver+'-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")
 
     state.COST_Glen = Cost_Glen[-1].numpy()
 

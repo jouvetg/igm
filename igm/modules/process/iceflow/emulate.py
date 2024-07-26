@@ -175,9 +175,9 @@ def update_iceflow_emulator(params, state):
 
         state.COST_EMULATOR = []
 
-        nbit = (state.it >= 0) * params.iflo_retrain_emulator_nbit + (
+        nbit = int((state.it >= 0) * params.iflo_retrain_emulator_nbit + (
             state.it < 0
-        ) * params.iflo_retrain_emulator_nbit_init
+        ) * params.iflo_retrain_emulator_nbit_init)
 
         iz = params.iflo_exclude_borders 
 
@@ -229,8 +229,8 @@ def update_iceflow_emulator(params, state):
             state.COST_EMULATOR.append(cost_emulator)
             
     
-    if len(params.save_cost_emulator)>0:
-        np.savetxt(params.save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
+    if len(params.iflo_save_cost_emulator)>0:
+        np.savetxt(params.iflo_output_directory+params.iflo_save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
 
 
 
@@ -272,8 +272,9 @@ def update_iceflow_emulator(params, state):
 #                 max_iterations=params.iflo_retrain_emulator_nbit,
 #                 tolerance=1e-8)
 
-# #    if len(params.save_cost_emulator)>0:
-# #        np.savetxt(params.save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
+# #    if len(params.iflo_save_cost_emulator)>0:
+# #         np.savetxt(params.iflo_output_directory+params.iflo_save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
+ 
 
 
 def _split_into_patches(X, nbmax):

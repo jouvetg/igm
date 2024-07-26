@@ -310,14 +310,18 @@ def params_iceflow(parser):
     )
 
     parser.add_argument(
-        "--save_cost_emulator",
+        "--iflo_save_cost_emulator",
         type=str,
         default=""
     )
     parser.add_argument(
-        "--save_cost_solver",
+        "--iflo_save_cost_solver",
         type=str,
         default=""
     )
-    
+    parser.add_argument(
+        "--iflo_output_directory",
+        type=str,
+        default=""
+    )
 

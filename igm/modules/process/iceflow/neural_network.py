@@ -19,6 +19,7 @@ def cnn(params, nb_inputs, nb_outputs):
         conv = tf.keras.layers.Conv2D(
             filters=params.iflo_nb_out_filter,
             kernel_size=(params.iflo_conv_ker_size, params.iflo_conv_ker_size),
+            kernel_initializer=params.iflo_weight_initialization,
             padding="same",
         )(conv)
 
@@ -34,6 +35,7 @@ def cnn(params, nb_inputs, nb_outputs):
             1,
             1,
         ),
+        kernel_initializer=params.iflo_weight_initialization,
         activation=None,
     )(outputs)
 

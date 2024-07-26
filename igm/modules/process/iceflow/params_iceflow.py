@@ -244,6 +244,12 @@ def params_iceflow(parser):
         help="Dropout rate in the CNN",
     )
     parser.add_argument(
+        "--iflo_weight_initialization",
+        type=str,
+        default="glorot_uniform",
+        help="glorot_uniform, he_normal, lecun_normal",
+    )
+    parser.add_argument(
         "--iflo_exclude_borders",
         type=int,
         default=0,
@@ -308,7 +314,6 @@ def params_iceflow(parser):
         default='Adam',
         help="Tpe of Optimizer for the emulator",
     )
-
     parser.add_argument(
         "--iflo_save_cost_emulator",
         type=str,

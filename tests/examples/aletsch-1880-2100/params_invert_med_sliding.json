@@ -1,7 +1,8 @@
 {
-  "modules_preproc": ["load_ncdf","optimize"],
-  "modules_process": [],
+  "modules_preproc": ["load_ncdf"],
+  "modules_process": ["iceflow"],
   "modules_postproc": [],
+  "iflo_run_data_assimilation": true,
    
   "lncd_input_file": "data/input.nc",
 

@@ -152,18 +152,19 @@ def params(parser):
 def initialize(params, state):
     Ny, Nx = state.thk.shape
 
-    state.basalMeltRate = tf.Variable(tf.zeros_like(state.thk))
-    state.T = tf.Variable(tf.ones((params.iflo_Nz, Ny, Nx)) * params.enth_melt_temp)
-    state.omega = tf.Variable(tf.zeros_like(state.T))
+    state.basalMeltRate = tf.Variable(tf.zeros_like(state.thk),trainable=False)
+    state.T = tf.Variable(tf.ones((params.iflo_Nz, Ny, Nx)) * params.enth_melt_temp,trainable=False)
+    state.omega = tf.Variable(tf.zeros_like(state.T),trainable=False)
     state.E = tf.Variable(
         tf.ones_like(state.T)
-        * (params.enth_ci * (params.enth_melt_temp - params.enth_ref_temp))
+        * (params.enth_ci * (params.enth_melt_temp - params.enth_ref_temp)),
+        trainable=False
     )
-    state.tillwat = 0.0 * tf.Variable(tf.ones_like(state.thk))
+    state.tillwat = 0.0 * tf.Variable(tf.ones_like(state.thk),trainable=False)
 
     if not hasattr(state, "bheatflx"):
         state.bheatflx = tf.Variable(
-            tf.ones_like(state.thk) * params.enth_default_bheatflx
+            tf.ones_like(state.thk) * params.enth_default_bheatflx, trainable=False
         )
 
     state.phi = compute_phi(params,state)
@@ -619,7 +620,37 @@ def compute_upwind_tf(U, V, E, dx):
 
     ##  Final shape is (nz,ny,nx)
     return Rx + Ry
+ 
 
+@tf.function()
+def solve_TDMA_new(L, M, U, R):
+    # Tridiagonal Matrix Algorithm (TDMA) or Thomas Algorithm
+    # https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
+    # Here L = Lower Diag, M = Main Diag, U = Upper Diag, R = Right Hand Side
+
+    nz = tf.shape(M)[0]
+
+    w = tf.TensorArray(dtype=tf.float32, size=nz-1)
+    g = tf.TensorArray(dtype=tf.float32, size=nz)
+    p = tf.TensorArray(dtype=tf.float32, size=nz)
+
+    # Forward sweep
+    w = w.write(0, U[0] / M[0])
+    g = g.write(0, R[0] / M[0])
+
+    for i in tf.range(1, nz-1):
+        w = w.write(i, U[i] / (M[i] - L[i-1] * w.read(i-1)))
+
+    for i in tf.range(1, nz):
+        g = g.write(i, (R[i] - L[i-1] * g.read(i-1)) / (M[i] - L[i-1] * w.read(i-1)))
+
+    # Backward substitution
+    p = p.write(nz-1, g.read(nz-1))
+
+    for i in tf.range(nz-2, -1, -1):
+        p = p.write(i, g.read(i) - w.read(i) * p.read(i+1))
+
+    return p.stack() 
 
 @tf.function()
 def solve_TDMA(L, M, U, R):
@@ -652,52 +683,13 @@ def solve_TDMA(L, M, U, R):
     return tf.stack(p)
 
 
-# @tf.function()
-# def assembly_diffusion_advection_tf_old(E, dt, dz, w, K, f, BCB, VB, VS, L, M, U, R):
-#     # dE/dt  + w * dE/dz = K * ( d^2 E / d^2 z ) + f
-#     # This is a FD scheme , which is equi. to FE with mass lumping
-#     # Neuman  BC: E'(0) = VB    OR    Dirichlet BC: E(0) = VB
-#     # Dirichlet BC: E(H)  = VS
-#     # E, w and f is P1. K and dz are P0. BCB, VB and VS are scalar
-
-#     nz = E.shape[0]
-
-#     s = K / (dz * dz)  # this is a P0 quantity
-
-#     # Assembly the matrix and the RHS
-#     M.assign(M + 1.0 / dt)
-#     M[1:nz].assign(M[1:nz] + s)
-#     M[0 : nz - 1].assign(M[0 : nz - 1] + s)
-#     L.assign(L - s)
-#     U.assign(U - s)
-#     R.assign(R + (E / dt) + f)
-
-#     # BOTTOM BC (BCB is either 'neumann' (1) or 'dirichlet' (0))
-#     M[0].assign(tf.where(BCB == 1, -tf.ones_like(BCB), tf.ones_like(BCB)))
-#     U[0].assign(tf.where(BCB == 1, tf.ones_like(BCB), tf.zeros_like(BCB)))
-#     R[0].assign(tf.where(BCB == 1, VB * dz[0], VB))
-
-#     # SURFACE BC
-#     M[-1].assign(tf.ones_like(BCB))
-#     L[-1].assign(tf.zeros_like(BCB))
-#     R[-1].assign(VS)
-
-#     # UPWIND SCHEME FOR THE ADVECTION TERM (TREATED IMPLICITLY)
-#     wdivdz = (w[1:] + w[:-1]) / (2.0 * dz)  # this is a P0 quantity
-#     L[:-1].assign(L[:-1] + tf.where(w[1:-1] > 0, -wdivdz[:-1], 0))
-#     M[1:-1].assign(M[1:-1] + tf.where(w[1:-1] > 0, wdivdz[:-1], -wdivdz[1:]))
-#     U[1:].assign(U[1:] + tf.where(w[1:-1] <= 0, wdivdz[1:], 0))
-
-#     return L, M, U, R
-
-
 @tf.function()
 def assembly_diffusion_advection_tf(E, dt, dz, w, K, f, BCB, VB, VS, L, M, U, R):
     # dE/dt  + w * dE/dz = K * ( d^2 E / d^2 z ) + f
     # This is a FD scheme , which is equi. to FE with mass lumping
     # Neuman  BC: E'(0) = VB    OR    Dirichlet BC: E(0) = VB
     # Dirichlet BC: E(H)  = VS
-    # E, w and f is P1. K and dz are P0. BCB, VB and VS are scalar
+     # E, w and f is P1 (have shape (nz,ny,nx)). K and dz are P0 (have shape (nz-1,ny,nx)). BCB, VB and VS are scalar (have shape (ny,nx)).
 
     nz = E.shape[0]
 
@@ -730,6 +722,48 @@ def assembly_diffusion_advection_tf(E, dt, dz, w, K, f, BCB, VB, VS, L, M, U, R)
     return L, M, U, R
 
 
+@tf.function()
+def assembly_diffusion_advection_tf_new(E, dt, dz, w, K, f, BCB, VB, VS):
+    # dE/dt  + w * dE/dz = K * ( d^2 E / d^2 z ) + f
+    # This is a FD scheme , which is equi. to FE with mass lumping
+    # Neuman  BC: E'(0) = VB    OR    Dirichlet BC: E(0) = VB
+    # Dirichlet BC: E(H)  = VS
+    # E, w and f is P1 (have shape (nz,ny,nx)). K and dz are P0 (have shape (nz-1,ny,nx)). BCB, VB and VS are scalar (have shape (ny,nx)).
+  
+    nz, ny, nx = E.shape
+    s = dt * K / (dz * dz)  # P0 quantity, shape (nz-1, ny, nx)
+
+    # Initialize L, M, U, R tensors
+    L = tf.zeros((nz - 1, ny, nx))
+    M = tf.ones((nz, ny, nx))
+    U = tf.zeros((nz - 1, ny, nx))
+    R = E + dt * f
+
+    # Assembly the matrix and the RHS
+    M = M + tf.concat([s, tf.zeros((1, ny, nx))], axis=0)
+    M = M + tf.concat([tf.zeros((1, ny, nx)), s], axis=0)
+    L = L - s
+    U = U - s
+
+    # BOTTOM BC (BCB is either 'neumann' (1) or 'dirichlet' (0))
+    M = tf.concat([tf.where(BCB == 1, -tf.ones_like(BCB), tf.ones_like(BCB))[None, :, :], M[1:]], axis=0)
+    U = tf.concat([tf.where(BCB == 1, tf.ones_like(BCB), tf.zeros_like(BCB))[None, :, :], U[1:]], axis=0)
+    R = tf.concat([tf.where(BCB == 1, VB * dz[0], VB)[None, :, :], R[1:]], axis=0)
+
+    # SURFACE BC
+    M = tf.concat([M[:-1], tf.ones_like(BCB)[None, :, :]], axis=0)
+    L = tf.concat([L[:-1], tf.zeros_like(BCB)[None, :, :]], axis=0)
+    R = tf.concat([R[:-1], VS[None, :, :]], axis=0)
+
+    # UPWIND SCHEME FOR THE ADVECTION TERM (TREATED IMPLICITLY)
+    wdivdz = dt * (w[1:] + w[:-1]) / (2.0 * dz)  # P0 quantity, shape (nz-1, ny, nx)
+    L = tf.concat([L[:-1] + tf.where(w[1:-1] > 0, -wdivdz[:-1], 0), L[-1:]], axis=0)
+    M = tf.concat([M[:1], M[1:-1] + tf.where(w[1:-1] > 0, wdivdz[:-1], -wdivdz[1:]), M[-1:]], axis=0)
+    U = tf.concat([U[:1], U[1:] + tf.where(w[1:-1] <= 0, wdivdz[1:], 0)], axis=0)
+
+    return L, M, U, R
+
+# @tf.function()
 def compute_enthalpy_basalmeltrate(
     E,  # [E] or [W s kg-1]
     Epmp,  # [E] or [W s kg-1]
@@ -783,20 +817,23 @@ def compute_enthalpy_basalmeltrate(
     )
 
     # initiatlize to zero the FD matrices to solve the boundary value problem
-    L = tf.Variable(tf.zeros((nz - 1, ny, nx)))
-    M = tf.Variable(tf.zeros((nz, ny, nx)))
-    U = tf.Variable(tf.zeros((nz - 1, ny, nx)))
-    R = tf.Variable(tf.zeros((nz, ny, nx)))
+    L = tf.Variable(tf.zeros((nz - 1, ny, nx)),trainable=False)
+    M = tf.Variable(tf.zeros((nz, ny, nx)),trainable=False)
+    U = tf.Variable(tf.zeros((nz - 1, ny, nx)),trainable=False)
+    R = tf.Variable(tf.zeros((nz, ny, nx)),trainable=False)
 
     # fill the FD matrices to solve the boundary value problem
     # d E / d t  + w * dE /dz = K * ( d^2 E / d^2 z ) + f of unit [E s^{-1}] or [W kg-1]
-    L, M, U, R = assembly_diffusion_advection_tf(
-        E, dt, tf.maximum(dz, thr), w, K, f, BCB, VB, VS, L, M, U, R
-    )
+#    L, M, U, R = assembly_diffusion_advection_tf(
+#        E, dt, tf.maximum(dz, thr), w, K, f, BCB, VB, VS, L, M, U, R
+#    )
+
+    L, M, U, R = assembly_diffusion_advection_tf_new( E, dt, tf.maximum(dz, thr), w, K, f, BCB, VB, VS )
 
     # return the results of the solving of the boundary value problem (tridiagonal pb)
     rng = srange(message="solve_TDMA", color="black")
-    E = solve_TDMA(L, M, U, R)
+#    E = solve_TDMA(L, M, U, R)
+    E = solve_TDMA_new(L, M, U, R)
     erange(rng)
 
     # lower-bound at T = -30°C

@@ -1,9 +1,11 @@
 {
-  "modules_preproc": ["oggm_shop", "optimize"],
-  "modules_process": [],
+  "modules_preproc": ["oggm_shop"],
+  "modules_process": ["iceflow"],
   "modules_postproc": [],
-  
+  "iflo_run_data_assimilation": true,
+
   "oggm_RGI_ID": "RGI60-11.01238",
+  "oggm_RGI_version": 6,
 
   "opti_control": ["thk", "usurf","slidingco"],
   "opti_cost": ["velsurf","icemask", "usurf", "thk", "divfluxfcz"],

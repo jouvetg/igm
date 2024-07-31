@@ -9,95 +9,16 @@ import tensorflow as tf
 import datetime
 import os
 import xarray
-
-from igm.modules.process.iceflow import params as params_iceflow
-from igm.modules.process.iceflow.iceflow import *
-from igm.modules.utils import *
-
+import sys
  
-def params(parser):
-    
-    # dependency on iceflow parameters...
-    params_iceflow(parser)
-
-    parser.add_argument(
-        "--data_dir",
-        type=str,
-        default="surflib3d_shape_100",
-        help="Directory of the data of the glacier catalogu",
-    )
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        default=1,
-        help="Batch size",
-    )
-    parser.add_argument(
-        "--freq_test",
-        type=int,
-        default=20,
-        help="Frequence of the test",
-    )
-    parser.add_argument(
-        "--train_iceflow_emulator_restart_lr",
-        type=int,
-        default=2500,
-        help="Restart frequency for the learning rate",
-    )
-    parser.add_argument(
-        "--epochs",
-        type=int,
-        default=5000,
-        help="Number of epochs",
-    )
-
-    parser.add_argument(
-        "--min_arrhenius",
-        type=float,
-        default=5,
-        help="Minium Arrhenius factor",
-    )
-    parser.add_argument(
-        "--max_arrhenius",
-        type=float,
-        default=151,
-        help="Maximum Arrhenius factor",
-    )
-    parser.add_argument(
-        "--min_slidingco",
-        type=float,
-        default=0,
-        help="Minimum sliding coefficient",
-    )
-    parser.add_argument(
-        "--max_slidingco",
-        type=float,
-        default=20000,
-        help="Maximum sliding coefficient",
-    )
-    parser.add_argument(
-        "--min_coarsen",
-        type=int,
-        default=0,
-        help="Minimum coarsening factor",
-    )
-    parser.add_argument(
-        "--max_coarsen",
-        type=int,
-        default=2,
-        help="Maximum coarsening factor",
-    )
-
-    parser.add_argument(
-        "--soft_begining",
-        type=int,
-        default=500,
-        help="soft_begining, if 0 explore all parameters btwe min and max, otherwise, \
-              only explore from this iteration while keeping mid-value fir the first it.",
-    )
-
-
-def initialize(params, state):
+from igm.modules.utils import *
+from .utils import *
+from .emulate import *
+from .solve import *
+from .energy_iceflow import *
+from .diagnostic import *
+ 
+def pretraining(params, state):
     state.direct_name = (
         "pinnbp"
         + "_"
@@ -157,18 +78,15 @@ def initialize(params, state):
 
     train_iceflow_emulator(params, state, subdatasetpath_train)
 
+    print("pretraining done, the code stop here, as the emulator is trained")
+    print("pretraining can not be followed with a run now.")
 
-def update(params, state):
-    pass
-
-
-def finalize(params, state):
-    pass
+    sys.exit()
 
 
+ 
 ######################################
-
-
+ 
 def compute_solutions(params, state):
     state.solutions = []
     state.solutions_cost = []
@@ -385,7 +303,10 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
                 X = X[:,:ny,:nx,:]
                 Y = Y[:,:ny,:nx,:]
 
-                COST = iceflow_energy_XY(params, X, Y)
+                C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X, Y)
+ 
+                COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
+                       + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
 
             grads = t.gradient(COST, state.iceflow_model.trainable_variables)
 
@@ -445,8 +366,11 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
                 X  =  X[:,:Ny,:Nx,:]
                 YP = YP[:,:Ny,:Nx,:]
 
-                COST = iceflow_energy_XY(params, X, YP)
-
+                C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X, YP)
+ 
+                COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
+                     + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
+                
                 nl1, nl2, nbarl1, nbarl1a = _computemisfitall(params, state, X, Y, YP)
 
                 if epoch % (params.epochs // 20) == 0:
@@ -611,7 +535,7 @@ def _aug(M, ri):
 
 
 def _plot_one_Glen(params, X, Y, path):
-    from matplotlib import cm
+
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
     #    N    = params.iflo_Nz
@@ -640,7 +564,7 @@ def _plot_one_Glen(params, X, Y, path):
         origin="lower",
         vmin=minvar,
         vmax=maxvar,
-        cmap=cm.get_cmap("viridis", 8),
+        cmap="viridis",
     )
     divider = make_axes_locatable(ax1)
     cax1 = divider.append_axes("right", size="5%", pad=0.05)
@@ -653,7 +577,7 @@ def _plot_one_Glen(params, X, Y, path):
 
 
 def _plot_iceflow_Glen(params, state, X, Y, YP, tit, path):
-    from matplotlib import cm
+
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
     #    N    = params.iflo_Nz
@@ -698,7 +622,7 @@ def _plot_iceflow_Glen(params, state, X, Y, YP, tit, path):
         origin="lower",
         vmin=minvar,
         vmax=maxvar,
-        cmap=cm.get_cmap("viridis", 8),
+        cmap="viridis",
     )
     divider = make_axes_locatable(ax1)
     cax1 = divider.append_axes("right", size="5%", pad=0.05)
@@ -711,7 +635,7 @@ def _plot_iceflow_Glen(params, state, X, Y, YP, tit, path):
         origin="lower",
         vmin=minvar,
         vmax=maxvar,
-        cmap=cm.get_cmap("viridis", 8),
+        cmap="viridis",
     )
     divider = make_axes_locatable(ax2)
     cax2 = divider.append_axes("right", size="5%", pad=0.05)
@@ -724,7 +648,7 @@ def _plot_iceflow_Glen(params, state, X, Y, YP, tit, path):
         origin="lower",
         vmin=minvardiff,
         vmax=maxvardiff,
-        cmap=cm.get_cmap("RdBu", 10),
+        cmap="RdBu",
     )
     divider = make_axes_locatable(ax3)
     cax3 = divider.append_axes("right", size="5%", pad=0.05)

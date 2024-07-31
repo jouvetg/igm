@@ -139,7 +139,7 @@ def initialize(params, state):
             if var in ["x", "y"]:
                 vars(state)[var] = tf.constant(vars()[var].astype("float32"))
             else:
-                vars(state)[var] = tf.Variable(vars()[var].astype("float32"))
+                vars(state)[var] = tf.Variable(vars()[var].astype("float32"), trainable=False)
 
     nc.close()
 

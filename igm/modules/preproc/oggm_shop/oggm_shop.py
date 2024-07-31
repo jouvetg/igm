@@ -27,7 +27,7 @@ def params(parser):
         "--oggm_preprocess", type=str2bool, default=True, help="Use preprocessing"
     )
     parser.add_argument(
-        "--oggm_RGI_version", type=int, default=6, help="this is temporary fix, is 6 or 7"
+        "--oggm_RGI_version", type=int, default=7, help="this is temporary fix, is 6 or 7"
     )
     parser.add_argument(
         "--oggm_dx",
@@ -63,8 +63,8 @@ def params(parser):
         "--oggm_path_glathida",
         type=str,
         default="",
-        help="Path where the Glathida Folder is store, so that you don't need \
-              to redownload it at any use of the script, if empty it will be in the home directory",
+        help="Path where the Glathida Folder is stored, so that you don't need \
+              to redownload it at every use of the script, if empty it will be in the home directory (only relevant for RGI6.0)",
     )
     parser.add_argument(
         "--oggm_save_in_ncdf",
@@ -75,14 +75,36 @@ def params(parser):
     parser.add_argument(
         "--oggm_remove_RGI_folder",
         type=str2bool,
-        default=False,
+        default=True,
         help="oggm_remove_RGI_folder",
+    )
+    parser.add_argument(
+        "--oggm_sub_entity_mask",
+        type=str2bool,
+        default=False,
+        help="Ice mask shows individual RGI 7.0G entities within each larger RGI 7.0C complex",
+    )
+    parser.add_argument(
+        "--oggm_RGI_product",
+        type=str,
+        default="G",
+        help="Glacier complexes (C) or individual basins (G) (default is G, individual basins)",
+    )
+    parser.add_argument(
+        "--oggm_run_batch",
+        type=str2bool,
+        default=False,
+        help="Run all the glaciers in the world",
     )
 
 def initialize(params, state):
     import json
 
-    _oggm_util([params.oggm_RGI_ID], params)
+    try:
+        _oggm_util([params.oggm_RGI_ID], params)
+    except:
+        print('Server data issue?: '+params.oggm_RGI_ID)
+        return
 
     if hasattr(state, "logger"):
         state.logger.info("Prepare data using oggm and glathida")
@@ -91,18 +113,48 @@ def initialize(params, state):
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.flip(np.squeeze(nc.variables["y"]).astype("float32"))
+    
+    #If you know that grids above a certain size are going to make your GPU memory explode,
+    #activating this commented block and setting the number in the if statement to your
+    #maximum threshold will cause IGM to skip execution and move on to the next one
+    #(only relevant if using igm_run_batch, hence why I've not made it a parameter yet)
+    # if len(x)*len(y) >= 160000:
+    #     print('Skipping this one: '+params.oggm_RGI_ID)
+    #     return
 
-    thk = np.flipud(np.squeeze(nc.variables[params.oggm_thk_source]).astype("float32"))
-    thk = np.where(np.isnan(thk), 0, thk)
+    try:
+        thk = np.flipud(np.squeeze(nc.variables[params.oggm_thk_source]).astype("float32"))
+        thk = np.where(np.isnan(thk), 0, thk)
+    except:
+        thk = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
+        thk = np.where(True,0,0)
+        print('Thickness 0 everywhere?: '+params.oggm_RGI_ID)
 
     usurf = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
-
-    icemask = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
-
     usurfobs = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
-    icemaskobs = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
 
-    vars_to_save = ["usurf", "thk", "icemask", "usurfobs", "thkobs", "icemaskobs"]
+    #This will set up some additional masks that are necessary for infer_params in optimize.
+    #One of individually numbered RGI7.0G entities within each RGI7.0C and one for which entities
+    #(for any RGI version used) are tidewater glaciers as identified in the RGI
+    if params.oggm_sub_entity_mask == True:
+        if params.oggm_RGI_product == "C":
+            icemask = np.flipud(np.squeeze(nc.variables["sub_entities"]).astype("float32"))
+            icemaskobs = np.flipud(np.squeeze(nc.variables["sub_entities"]).astype("float32"))
+            icemask = np.where(icemask > -1, icemask+1, icemask)
+            icemaskobs = np.where(icemaskobs > -1, icemaskobs+1, icemaskobs)
+            tidewatermask = icemask.copy()
+            slopes = icemask.copy()
+        else:
+            icemask = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
+            icemaskobs = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
+            tidewatermask = icemask.copy()
+            slopes = icemask.copy()
+        _get_tidewater_termini_and_slopes(tidewatermask, slopes, [params.oggm_RGI_ID], params)
+        vars_to_save = ["usurf", "thk", "icemask", "usurfobs", "thkobs", "icemaskobs", "tidewatermask", "slopes"]
+    else:
+        icemask = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
+        icemaskobs = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
+        vars_to_save = ["usurf", "thk", "icemask", "usurfobs", "thkobs", "icemaskobs"]
 
     if params.oggm_vel_source == "millan_ice_velocity":
         if "millan_vx" in nc.variables:
@@ -119,6 +171,11 @@ def initialize(params, state):
             )
             vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)            
             vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
+            vars_to_save += ["vvelsurfobs"]
+        else:
+            uvelsurfobs = np.where(icemaskobs, 0, 0)
+            vvelsurfobs = np.where(icemaskobs, 0, 0)
+            vars_to_save += ["uvelsurfobs"]
             vars_to_save += ["vvelsurfobs"]
     else:
         if "itslive_vx" in nc.variables:
@@ -191,7 +248,7 @@ def initialize(params, state):
         vars(state)[var] = tf.constant(vars()[var].astype("float32"))
 
     for var in vars_to_save:
-        vars(state)[var] = tf.Variable(vars()[var].astype("float32"))
+        vars(state)[var] = tf.Variable(vars()[var].astype("float32"), trainable=False)
 
     complete_data(state)
 
@@ -209,6 +266,9 @@ def initialize(params, state):
         var_info["vvelsurfobs"] = ["y surface velocity of ice", "m/y"]
         var_info["icemask"] = ["Ice mask", "no unit"]
         var_info["dhdt"] = ["Ice thickness change", "m/y"]
+        if params.oggm_sub_entity_mask == True:
+            var_info["tidewatermask"] = ["Tidewater glacier mask", "no unit"]
+            var_info["slopes"] = ["Average glacier surface slope", "deg"]
 
         nc = Dataset(
             os.path.join("input_saved.nc"), "w", format="NETCDF4"
@@ -248,12 +308,13 @@ def update(params, state):
     pass
 
 
-def finalize(params, state): 
-    try:
-        shutil.rmtree(params.oggm_RGI_ID) 
-    except Exception as error:
-        print("Error: ", error)
+def finalize(params, state):
 
+    if params.oggm_remove_RGI_folder:
+        try:
+            shutil.rmtree(params.oggm_RGI_ID) 
+        except Exception as error:
+            print("Error: ", error)
 
 
 #########################################################################
@@ -266,6 +327,7 @@ def _oggm_util(RGIs, params):
 
     import oggm.cfg as cfg
     from oggm import utils, workflow, tasks, graphics
+    import xarray as xr
 
     if params.oggm_preprocess:
         # This uses OGGM preprocessed directories
@@ -310,9 +372,11 @@ def _oggm_util(RGIs, params):
                 rgi_ids,
                 prepro_border=40,
                 from_prepro_level=3,
-                prepro_rgi_version='70C',
+                prepro_rgi_version='70'+params.oggm_RGI_product,
                 prepro_base_url=base_url,
             )
+            if (params.oggm_sub_entity_mask == True) & (params.oggm_RGI_product == "C"):
+                tasks.rgi7g_to_complex(gdirs[0])
 
     else:
         # Note: if you start from here you'll need most of the packages
@@ -518,3 +582,41 @@ def _read_glathida_v7(x, y, path_glathida):
     thkobs = np.flipud(thkobs)
     
     return thkobs
+
+def _get_tidewater_termini_and_slopes(tidewatermask, slopes, RGIs, params):
+    #Function written by Samuel Cook
+    #Identify which glaciers in a complex are tidewater and also return average slope (both needed for infer_params in optimize)
+    
+    from oggm import utils, workflow, tasks, graphics
+    import xarray as xr
+    import matplotlib.pyplot as plt
+    
+    rgi_ids = RGIs
+    base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v3" )
+    gdirs = workflow.init_glacier_directories(
+        # Start from level 3 if you want some climate data in them
+        rgi_ids,
+        prepro_border=40,
+        from_prepro_level=3,
+        prepro_rgi_version='70'+params.oggm_RGI_product,
+        prepro_base_url=base_url,
+    )
+    if params.oggm_RGI_product == "C":
+        tasks.rgi7g_to_complex(gdirs[0])
+        gdf = gdirs[0].read_shapefile('complex_sub_entities')
+        with xr.open_dataset(gdirs[0].get_filepath('gridded_data')) as ds:
+            ds = ds.load()
+            NumEntities = np.max(ds.sub_entities.values)+1
+            for i in range(1,NumEntities+1):
+                slopes[slopes==i] = gdf.loc[i-1].slope_deg
+                if gdf.loc[i-1].term_type == 1:
+                    tidewatermask[tidewatermask==i] = 1
+                else:
+                    tidewatermask[tidewatermask==i] = 0
+    else:
+        gdf = gdirs[0].read_shapefile('outlines')
+        slopes[slopes==1] = gdf.loc[0].slope_deg
+        if gdf.loc[0].term_type == '1':
+            tidewatermask[tidewatermask==1] = 1
+        else:
+            tidewatermask[tidewatermask==1] = 0

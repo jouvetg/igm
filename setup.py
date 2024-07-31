@@ -32,10 +32,10 @@ setup(
     long_description_content_type="text/markdown",
     python_requires="<3.11",
     install_requires=[
-        "tensorflow[and-cuda]==2.14.0",
+        "tensorflow[and-cuda]==2.15.1",
         "matplotlib",
         "scipy",
-        "netCDF4",
+        "netCDF4==1.6.0",
         "xarray",
         "rasterio",
         "pyproj",

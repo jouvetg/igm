@@ -18,25 +18,25 @@ from .solve import *
 from .energy_iceflow import *
 from .diagnostic import *
  
-def pretraining(params, state):
+def pretraining(cfg, state):
     state.direct_name = (
         "pinnbp"
         + "_"
-        + str(params.iflo_Nz)
+        + str(cfg.iceflow.iceflow.iceflow.iflo_Nz)
         + "_"
-        + str(int(params.iflo_vert_spacing))
-        + "_"
-    )
-    state.direct_name += (
-        params.iflo_network
-        + "_"
-        + str(params.iflo_nb_layers)
-        + "_"
-        + str(params.iflo_nb_out_filter)
+        + str(int(cfg.iceflow.iceflow.iflo_vert_spacing))
         + "_"
     )
     state.direct_name += (
-        str(params.iflo_dim_arrhenius) + "_" + str(int(params.iflo_new_friction_param))
+        cfg.iceflow.iceflow.iflo_network
+        + "_"
+        + str(cfg.iceflow.iceflow.iflo_nb_layers)
+        + "_"
+        + str(cfg.iceflow.iceflow.iflo_nb_out_filter)
+        + "_"
+    )
+    state.direct_name += (
+        str(cfg.iceflow.iceflow.iflo_dim_arrhenius) + "_" + str(int(cfg.iceflow.iceflow.iflo_new_friction_param))
     )
 
     os.makedirs( state.direct_name, exist_ok=True)
@@ -48,33 +48,33 @@ def pretraining(params, state):
     )
 
     subdatasetname_train, subdatasetpath_train = _findsubdata(
-        os.path.join(params.data_dir, "train")
+        os.path.join(cfg.pretraining.data_dir, "train")
     )
 
     subdatasetname_test, subdatasetpath_test = _findsubdata(
-        os.path.join(params.data_dir, "test")
+        os.path.join(cfg.pretraining.data_dir, "test")
     )
 
     for p in subdatasetpath_test:
         state.PAR = []
         it = 3
-        midva2 = 0.50 * params.min_arrhenius + 0.50 * params.max_arrhenius
-        midvs2 = 0.50 * params.min_slidingco + 0.50 * params.max_slidingco
-        state.PAR.append([p, it, midva2, midvs2, params.min_coarsen])
-        if params.min_arrhenius < params.max_arrhenius:
-            midva1 = 0.25 * params.min_arrhenius + 0.75 * params.max_arrhenius
-            midva3 = 0.75 * params.min_arrhenius + 0.25 * params.max_arrhenius
-            state.PAR.append([p, it, midva1, midvs2, params.min_coarsen])
-            state.PAR.append([p, it, midva3, midvs2, params.min_coarsen])
-        if params.min_slidingco < params.max_slidingco:
-            midvs1 = 0.25 * params.min_slidingco + 0.75 * params.max_slidingco
-            midvs3 = 0.75 * params.min_slidingco + 0.25 * params.max_slidingco
-            state.PAR.append([p, it, midva2, midvs1, params.min_coarsen])
-            state.PAR.append([p, it, midva2, midvs3, params.min_coarsen])
-        if params.min_coarsen < params.max_coarsen:
-            state.PAR.append([p, it, midva2, midvs2, params.min_coarsen + 1])
+        midva2 = 0.50 * cfg.iceflow.pretraining.min_arrhenius + 0.50 * cfg.iceflow.pretraining.max_arrhenius
+        midvs2 = 0.50 * cfg.iceflow.pretraining.min_slidingco + 0.50 * cfg.iceflow.pretraining.max_slidingco
+        state.PAR.append([p, it, midva2, midvs2, cfg.iceflow.pretraining.min_coarsen])
+        if cfg.iceflow.pretraining.min_arrhenius < cfg.iceflow.pretraining.max_arrhenius:
+            midva1 = 0.25 * cfg.iceflow.pretraining.min_arrhenius + 0.75 * cfg.iceflow.pretraining.max_arrhenius
+            midva3 = 0.75 * cfg.iceflow.pretraining.min_arrhenius + 0.25 * cfg.iceflow.pretraining.max_arrhenius
+            state.PAR.append([p, it, midva1, midvs2, cfg.iceflow.pretraining.min_coarsen])
+            state.PAR.append([p, it, midva3, midvs2, cfg.iceflow.pretraining.min_coarsen])
+        if cfg.iceflow.pretraining.min_slidingco < cfg.iceflow.pretraining.max_slidingco:
+            midvs1 = 0.25 * cfg.iceflow.pretraining.min_slidingco + 0.75 * cfg.iceflow.pretraining.max_slidingco
+            midvs3 = 0.75 * cfg.iceflow.pretraining.min_slidingco + 0.25 * cfg.iceflow.pretraining.max_slidingco
+            state.PAR.append([p, it, midva2, midvs1, cfg.iceflow.pretraining.min_coarsen])
+            state.PAR.append([p, it, midva2, midvs3, cfg.iceflow.pretraining.min_coarsen])
+        if cfg.iceflow.pretraining.min_coarsen < cfg.iceflow.pretraining.max_coarsen:
+            state.PAR.append([p, it, midva2, midvs2, cfg.iceflow.pretraining.min_coarsen + 1])
 
-    compute_solutions(params, state)
+    compute_solutions(cfg, state)
 
     train_iceflow_emulator(params, state, subdatasetpath_train)
 
@@ -87,17 +87,17 @@ def pretraining(params, state):
  
 ######################################
  
-def compute_solutions(params, state):
+def compute_solutions(cfg, state):
     state.solutions = []
     state.solutions_cost = []
 
     if int(tf.__version__.split(".")[1]) <= 10:
         state.optimizer = tf.keras.optimizers.Adam(
-            learning_rate=params.iflo_solve_step_size
+            learning_rate=cfg.iceflow.iceflow.iflo_solve_step_size
         )
     else:
         state.optimizer = tf.keras.optimizers.legacy.Adam(
-            learning_rate=params.iflo_solve_step_size
+            learning_rate=cfg.iceflow.iceflow.iflo_solve_step_size
         )
 
     for par in state.PAR:
@@ -113,30 +113,30 @@ def compute_solutions(params, state):
         resol = float((x[1] - x[0]) * co)
         dX = tf.ones_like(thk) * resol
 
-        if params.iflo_dim_arrhenius == 3:
-            arrhenius = tf.ones((params.iflo_Nz, thk.shape[0], thk.shape[1])) * val_A
+        if cfg.iceflow.iceflow.iflo_dim_arrhenius == 3:
+            arrhenius = tf.ones((cfg.iceflow.iceflow.iflo_Nz, thk.shape[0], thk.shape[1])) * val_A
         else:
             arrhenius = tf.ones_like(thk) * val_A
 
         slidingco = tf.ones_like(thk) * val_C
 
-        for f in params.iflo_fieldin:
+        for f in cfg.iceflow.iceflow.iflo_fieldin:
             vars(state)[f] = vars()[f]
 
         fieldin = [thk, usurf, arrhenius, slidingco, dX]
 
-        X = fieldin_to_X(params, fieldin)
+        X = fieldin_to_X(cfg.iceflow.iceflow, fieldin)
 
         U = tf.Variable(
-            tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+            tf.zeros((cfg.iceflow.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
         )
         V = tf.Variable(
-            tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+            tf.zeros((cfg.iceflow.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
         )
 
-        U, V, MISFIT = solve_iceflow(params, state, U, V)
+        U, V, MISFIT = solve_iceflow(cfg, state, U, V)
 
-        Y = UV_to_Y(params, U, V)
+        Y = UV_to_Y(cfg, U, V)
 
         code = (
             p.split("/")[-1]
@@ -170,7 +170,7 @@ def compute_solutions(params, state):
         #        np.save(os.path.join(path, 'X-stokes.npy'),X.numpy())
         #        np.save(os.path.join(path, 'Y-stokes.npy'),Y.numpy())
 
-        _plot_one_Glen(params, X, Y, path)
+        _plot_one_Glen(cfg, X, Y, path)
 
         state.solutions.append([X, Y])
 
@@ -534,7 +534,7 @@ def _aug(M, ri):
     return M
 
 
-def _plot_one_Glen(params, X, Y, path):
+def _plot_one_Glen(cfg, X, Y, path):
 
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -542,7 +542,7 @@ def _plot_one_Glen(params, X, Y, path):
     #    ut   = Y[0,:,:,N-1] ; #tf.reduce_mean( Y[0,:,:,:N] , axis=-1)
     #    vt   = Y[0,:,:,2*N-1]  ; #tf.reduce_mean( Y[0,:,:,N:] , axis=-1)
 
-    U, V = Y_to_UV(params, Y)
+    U, V = Y_to_UV(cfg, Y)
     ut = U[0, -1]
     vt = V[0, -1]
 

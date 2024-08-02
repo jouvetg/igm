@@ -10,41 +10,41 @@ from .neural_network import *
 from igm import emulators
 import importlib_resources
   
-def initialize_iceflow_emulator(params,state):
+def initialize_iceflow_emulator(cfg, state):
 
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-        state.opti_retrain = getattr(tf.keras.optimizers,params.iflo_optimizer_emulator)(
-            learning_rate=params.iflo_retrain_emulator_lr
+        state.opti_retrain = getattr(tf.keras.optimizers,cfg.iceflow.iceflow.iflo_optimizer_emulator)(
+            learning_rate=cfg.iceflow.iceflow.iflo_retrain_emulator_lr
         )
     else:
-        state.opti_retrain = getattr(tf.keras.optimizers.legacy,params.iflo_optimizer_emulator)( 
-            learning_rate=params.iflo_retrain_emulator_lr
+        state.opti_retrain = getattr(tf.keras.optimizers.legacy,cfg.iceflow.iceflow.iflo_optimizer_emulator)( 
+            learning_rate=cfg.iceflow.iceflow.iflo_retrain_emulator_lr
         )
 
     direct_name = (
         "pinnbp"
         + "_"
-        + str(params.iflo_Nz)
+        + str(cfg.iceflow.iceflow.iflo_Nz)
         + "_"
-        + str(int(params.iflo_vert_spacing))
-        + "_"
-    )
-    direct_name += (
-        params.iflo_network
-        + "_"
-        + str(params.iflo_nb_layers)
-        + "_"
-        + str(params.iflo_nb_out_filter)
+        + str(int(cfg.iceflow.iceflow.iflo_vert_spacing))
         + "_"
     )
     direct_name += (
-        str(params.iflo_dim_arrhenius)
+        cfg.iceflow.iceflow.iflo_network
         + "_"
-        + str(int(params.iflo_new_friction_param))
+        + str(cfg.iceflow.iceflow.iflo_nb_layers)
+        + "_"
+        + str(cfg.iceflow.iceflow.iflo_nb_out_filter)
+        + "_"
+    )
+    direct_name += (
+        str(cfg.iceflow.iceflow.iflo_dim_arrhenius)
+        + "_"
+        + str(int(cfg.iceflow.iceflow.iflo_new_friction_param))
     )
 
-    if params.iflo_pretrained_emulator:
-        if params.iflo_emulator == "":
+    if cfg.iceflow.iceflow.iflo_pretrained_emulator:
+        if cfg.iceflow.iceflow.iflo_emulator == "":
             if os.path.exists(
                 importlib_resources.files(emulators).joinpath(direct_name)
             ):
@@ -55,9 +55,9 @@ def initialize_iceflow_emulator(params,state):
             else:
                 print("No pretrained emulator found in the igm package")
         else:
-            if os.path.exists(params.iflo_emulator):
-                dirpath = params.iflo_emulator
-                print("----------------------------------> Found pretrained emulator: " + params.iflo_emulator)
+            if os.path.exists(cfg.iceflow.iceflow.iflo_emulator):
+                dirpath = cfg.iceflow.iceflow.iflo_emulator
+                print("----------------------------------> Found pretrained emulator: " + cfg.iceflow.iceflow.iflo_emulator)
             else:
                 print("----------------------------------> No pretrained emulator found ")
 
@@ -67,24 +67,24 @@ def initialize_iceflow_emulator(params,state):
             part = fileline.split()
             fieldin.append(part[0])
         fid.close()
-        assert params.iflo_fieldin == fieldin
+        assert cfg.iceflow.iceflow.iflo_fieldin == fieldin
         state.iceflow_model = tf.keras.models.load_model(
             os.path.join(dirpath, "model.h5"), compile=False
         )
         state.iceflow_model.compile() 
     else:
         print("----------------------------------> No pretrained emulator, start from scratch.") 
-        nb_inputs = len(params.iflo_fieldin) + (params.iflo_dim_arrhenius == 3) * (
-            params.iflo_Nz - 1
+        nb_inputs = len(cfg.iceflow.iceflow.iflo_fieldin) + (cfg.iceflow.iceflow.iflo_dim_arrhenius == 3) * (
+            cfg.iceflow.iceflow.iflo_Nz - 1
         )
-        nb_outputs = 2 * params.iflo_Nz
-        # state.iceflow_model = getattr(igm, params.iflo_network)(
-        #     params, nb_inputs, nb_outputs
+        nb_outputs = 2 * cfg.iceflow.iceflow.iflo_Nz
+        # state.iceflow_model = getattr(igm, cfg.iceflow.iceflow.iflo_network)(
+        #     cfg.iceflow.iceflow, nb_inputs, nb_outputs
         # )
-        if params.iflo_network=='cnn':
-            state.iceflow_model = cnn(params, nb_inputs, nb_outputs)
-        elif params.iflo_network=='unet':
-            state.iceflow_model = unet(params, nb_inputs, nb_outputs)
+        if cfg.iceflow.iceflow.iflo_network=='cnn':
+            state.iceflow_model = cnn(cfg, nb_inputs, nb_outputs)
+        elif cfg.iceflow.iceflow.iflo_network=='unet':
+            state.iceflow_model = unet(cfg, nb_inputs, nb_outputs)
 
     # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
     # dirpath = importlib_resources.files(emulators).joinpath(direct_name)
@@ -96,30 +96,30 @@ def initialize_iceflow_emulator(params,state):
     # for i in range(N):
     #     state.iceflow_model.layers[i].set_weights(pretrained_weights[i])
 
-def update_iceflow_emulated(params, state):
+def update_iceflow_emulated(cfg, state):
     # Define the input of the NN, include scaling
 
     Ny, Nx = state.thk.shape
-    N = params.iflo_Nz
+    N = cfg.iceflow.iceflow.iflo_Nz
 
-    fieldin = [vars(state)[f] for f in params.iflo_fieldin]
+    fieldin = [vars(state)[f] for f in cfg.iceflow.iceflow.iflo_fieldin]
 
-    X = fieldin_to_X(params, fieldin)
+    X = fieldin_to_X(cfg, fieldin)
 
-    if params.iflo_exclude_borders>0:
-        iz = params.iflo_exclude_borders
+    if cfg.iceflow.iceflow.iflo_exclude_borders>0:
+        iz = cfg.iceflow.iceflow.iflo_exclude_borders
         X = tf.pad(X, [[0, 0], [iz, iz], [iz, iz], [0, 0]], "SYMMETRIC")
         
-    if params.iflo_multiple_window_size==0:
+    if cfg.iceflow.iceflow.iflo_multiple_window_size==0:
         Y = state.iceflow_model(X)
     else:
         Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
 
-    if params.iflo_exclude_borders>0:
-        iz = params.iflo_exclude_borders
+    if cfg.iceflow.iceflow.iflo_exclude_borders>0:
+        iz = cfg.iceflow.iceflow.iflo_exclude_borders
         Y = Y[:, iz:-iz, iz:-iz, :]
 
-    U, V = Y_to_UV(params, Y)
+    U, V = Y_to_UV(cfg, Y)
     U = U[0]
     V = V[0]
 
@@ -129,29 +129,29 @@ def update_iceflow_emulated(params, state):
     state.V.assign(V)
 
     # If requested, the speeds are artifically upper-bounded
-    if params.iflo_force_max_velbar > 0:
+    if cfg.iceflow.iceflow.iflo_force_max_velbar > 0:
         velbar_mag = getmag3d(state.U, state.V)
         state.U.assign(
             tf.where(
-                velbar_mag >= params.iflo_force_max_velbar,
-                params.iflo_force_max_velbar * (state.U / velbar_mag),
+                velbar_mag >= cfg.iceflow.iceflow.iflo_force_max_velbar,
+                cfg.iceflow.iceflow.iflo_force_max_velbar * (state.U / velbar_mag),
                 state.U,
             )
         )
         state.V.assign(
             tf.where(
-                velbar_mag >= params.iflo_force_max_velbar,
-                params.iflo_force_max_velbar * (state.V / velbar_mag),
+                velbar_mag >= cfg.iceflow.iceflow.iflo_force_max_velbar,
+                cfg.iceflow.iceflow.iflo_force_max_velbar * (state.V / velbar_mag),
                 state.V,
             )
         )
 
-    update_2d_iceflow_variables(params, state)
+    update_2d_iceflow_variables(cfg, state)
 
 
-def update_iceflow_emulator(params, state):
-    if (state.it < 0) | (state.it % params.iflo_retrain_emulator_freq == 0):
-        fieldin = [vars(state)[f] for f in params.iflo_fieldin]
+def update_iceflow_emulator(cfg, state):
+    if (state.it < 0) | (state.it % cfg.iceflow.iceflow.iflo_retrain_emulator_freq == 0):
+        fieldin = [vars(state)[f] for f in cfg.iceflow.iceflow.iflo_fieldin]
 
 ########################
 
@@ -164,22 +164,22 @@ def update_iceflow_emulator(params, state):
 
 ########################
 
-        XX = fieldin_to_X(params, fieldin)
+        XX = fieldin_to_X(cfg, fieldin)
 
-        X = _split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
+        X = _split_into_patches(XX, cfg.iceflow.iceflow.iflo_retrain_emulator_framesizemax)
         
         Ny = X.shape[1]
         Nx = X.shape[2]
         
-        PAD = compute_PAD(params,Nx,Ny)
+        PAD = compute_PAD(cfg,Nx,Ny)
 
         state.COST_EMULATOR = []
 
-        nbit = int((state.it >= 0) * params.iflo_retrain_emulator_nbit + (
+        nbit = int((state.it >= 0) * cfg.iceflow.iceflow.iflo_retrain_emulator_nbit + (
             state.it < 0
-        ) * params.iflo_retrain_emulator_nbit_init)
+        ) * cfg.iceflow.iceflow.iflo_retrain_emulator_nbit_init)
 
-        iz = params.iflo_exclude_borders 
+        iz = cfg.iceflow.iceflow.iflo_exclude_borders 
 
         for epoch in range(nbit):
             cost_emulator = tf.Variable(0.0)
@@ -190,9 +190,9 @@ def update_iceflow_emulator(params, state):
                     Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
                     
                     if iz>0:
-                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
+                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
                     else:
-                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X[i : i + 1, :, :, :], Y[:, :, :, :])
+                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, :, :, :], Y[:, :, :, :])
  
                     COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
                          + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
@@ -210,7 +210,7 @@ def update_iceflow_emulator(params, state):
                     cost_emulator = cost_emulator + COST
 
                     if (epoch + 1) % 100 == 0:
-                        U, V = Y_to_UV(params, Y)
+                        U, V = Y_to_UV(cfg, Y)
                         U = U[0]
                         V = V[0]
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
@@ -222,15 +222,15 @@ def update_iceflow_emulator(params, state):
                     zip(grads, state.iceflow_model.trainable_variables)
                 )
 
-                state.opti_retrain.lr = params.iflo_retrain_emulator_lr * (
+                state.opti_retrain.lr = cfg.iceflow.iceflow.iflo_retrain_emulator_lr * (
                     0.95 ** (epoch / 1000)
                 )
 
             state.COST_EMULATOR.append(cost_emulator)
             
     
-    if len(params.iflo_save_cost_emulator)>0:
-        np.savetxt(params.iflo_output_directory+params.iflo_save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
+    if len(cfg.iceflow.iceflow.iflo_save_cost_emulator)>0:
+        np.savetxt(cfg.iceflow.iceflow.iflo_output_directory+cfg.iceflow.iceflow.iflo_save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
 
 
 

@@ -1,0 +1,80 @@
+
+# param_file: params.json
+# saved_params_filename: params_saved
+
+# logging: False
+# logging_level: 30
+# logging_file: ""
+# print_params: True
+# gpu_info: True
+# gpu_id: 0
+# url_data: ""
+# folder_data: data
+
+# cwd: ${cwd_test:0}
+
+# defaults:
+#   # - _self_
+#   - modules:
+#     - time
+#   # - modules:
+#   # - oggm_shop
+#     # - smb_simple
+#     - iceflow
+#   - params@_here_
+#     # - time
+#     # - thk
+#   # - thk
+#   # - write_ncdf
+#   # - plot2d
+#   # - print_info
+
+# hydra:
+#   searchpath:
+#     - file:///${cwd}
+#     # - file:///home/bfinley/Documents/IGM/igm/tests/examples/minimial
+#     # - file://${oc.env:HOME}
+#     # - pkg:${hydra:runtime.cwd} #/params.yaml # change to be dynamic path and name
+
+cwd: ${get_cwd:0} #0 is a dummy input since resolvers require callables
+
+core:
+  # Input / Output
+  param_file: params.json
+  saved_params_filename: params_saved
+  url_data: ""
+  folder_data: data
+  logging_file: ""
+
+  # Logging
+  logging: False
+  logging_level: 30
+
+  # Hardware
+  gpu_id: 0
+  gpu_info: True
+
+  # Misc
+  print_params: True
+# config_name: ${hydra:job.name}
+
+defaults:
+  - _self_
+  - modules:
+    - time
+    - iceflow
+    # - print_info
+    # - oggm_shop
+    # - smb_simple
+  - params@_here_ # is this necessary with experiment?
+    # - thk
+    # - write_ncdf
+    # - plot2d
+
+hydra:
+  searchpath:
+    - file:///${cwd}
+    # - file:///home/bfinley/Documents/IGM/igm/tests/examples/minimial
+    # - file://${oc.env:HOME}
+    # - pkg:${hydra:runtime.cwd} #/params.yaml # change to be dynamic path and name
+

@@ -1,0 +1,3 @@
+Temporary solution as making hydra import a filename and merging configs induces a circluar dependency...
+
+This requires all param files to be named `params.` Ideally, we would get rid of this (i.e. experiments)

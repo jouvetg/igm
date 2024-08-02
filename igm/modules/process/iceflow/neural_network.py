@@ -1,7 +1,7 @@
 import numpy as np 
 import tensorflow as tf 
 
-def cnn(params, nb_inputs, nb_outputs):
+def cnn(cfg, nb_inputs, nb_outputs):
     """
     Routine serve to build a convolutional neural network
     """
@@ -10,22 +10,22 @@ def cnn(params, nb_inputs, nb_outputs):
 
     conv = inputs
 
-    if params.iflo_activation == "LeakyReLU":
+    if cfg.iceflow.iceflow.iflo_activation == "LeakyReLU":
         activation = tf.keras.layers.LeakyReLU(alpha=0.01)
     else:
-        activation = getattr(tf.keras.layers,params.iflo_activation)()      
+        activation = getattr(tf.keras.layers,cfg.iceflow.iceflow.iflo_activation)()      
 
-    for i in range(int(params.iflo_nb_layers)):
+    for i in range(int(cfg.iceflow.iceflow.iflo_nb_layers)):
         conv = tf.keras.layers.Conv2D(
-            filters=params.iflo_nb_out_filter,
-            kernel_size=(params.iflo_conv_ker_size, params.iflo_conv_ker_size),
-            kernel_initializer=params.iflo_weight_initialization,
+            filters=cfg.iceflow.iceflow.iflo_nb_out_filter,
+            kernel_size=(cfg.iceflow.iceflow.iflo_conv_ker_size, cfg.iceflow.iceflow.iflo_conv_ker_size),
+            kernel_initializer=cfg.iceflow.iceflow.iflo_weight_initialization,
             padding="same",
         )(conv)
 
         conv = activation(conv)
 
-        conv = tf.keras.layers.Dropout(params.iflo_dropout_rate)(conv)
+        conv = tf.keras.layers.Dropout(cfg.iceflow.iceflow.iflo_dropout_rate)(conv)
 
     outputs = conv
 
@@ -35,7 +35,7 @@ def cnn(params, nb_inputs, nb_outputs):
             1,
             1,
         ),
-        kernel_initializer=params.iflo_weight_initialization,
+        kernel_initializer=cfg.iceflow.iceflow.iflo_weight_initialization,
         activation=None,
     )(outputs)
 

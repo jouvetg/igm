@@ -11,10 +11,10 @@ from . import modules, emulators
 
 from .common import (
     State,
-    params_core,
+    # params_core,
     load_modules,
     add_logger,
-    print_params,
+    save_params,
 #    load_dependent_modules,
     get_modules_list,
     load_user_defined_params,

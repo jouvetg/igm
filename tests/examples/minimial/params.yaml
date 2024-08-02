@@ -1,0 +1,41 @@
+defaults:
+  - _self_
+
+param_file: params.json
+logging: False
+logging_level: 30
+logging_file: ""
+print_params: True
+gpu_info: True
+gpu_id: 0
+saved_params_filename: params_savedd
+url_data: ""
+folder_data: data
+
+modules:
+  time:
+    time_start: 2000.0
+    time_end: 2500.0
+    time_save: 11.0
+  smb_simple:
+    smb_simple_array:
+      - ["time", "gradabl", "gradacc", "ela", "accmax"]
+      - [ 1900,      0.009,     0.005,  2800,      2.0]
+      - [ 2000,      0.009,     0.005,  2900,      2.0]
+      - [ 2100,      0.009,     0.005,  3300,      2.0]
+  # thk:
+    # thk_slope_type: linear
+  # iceflow:
+  #   iceflow:
+  #     iflo_dim_arrhenius: 99999
+
+
+# defaults:
+# - smb_simple:
+# - thk
+# - smb_simple_array:
+# - ["time", "gradabl", "gradacc", "ela", "accmax"]
+# - [ 1900,      0.009,     0.005,  2800,      2.0]
+# - [ 2000,      0.009,     0.005,  2900,      2.0]
+# - [ 2100,      0.009,     0.005,  3300,      2.0]
+# - iceflow

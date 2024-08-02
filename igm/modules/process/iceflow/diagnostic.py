@@ -5,17 +5,17 @@ from .utils import *
 from .solve import *
 from .emulate import *
 
-def initialize_iceflow_diagnostic(params,state):
+def initialize_iceflow_diagnostic(cfg,state):
 
-    initialize_iceflow_emulator(params,state)
+    initialize_iceflow_emulator(cfg,state)
     
-    initialize_iceflow_solver(params,state)
+    initialize_iceflow_solver(cfg,state)
 
     state.UT = tf.Variable(
-        tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+        tf.zeros((cfg.iceflow.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
     )
     state.VT = tf.Variable(
-        tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+        tf.zeros((cfg.iceflow.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
     )
 
 def update_iceflow_diagnostic(params, state):

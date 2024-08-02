@@ -3,35 +3,35 @@ import tensorflow as tf
 from .utils import *
 from .energy_iceflow import *
 
-def initialize_iceflow_solver(params,state):
+def initialize_iceflow_solver(cfg,state):
 
     if int(tf.__version__.split(".")[1]) <= 10:
-        state.optimizer = getattr(tf.keras.optimizers,params.iflo_optimizer_solver)(
-            learning_rate=params.iflo_solve_step_size
+        state.optimizer = getattr(tf.keras.optimizers,cfg.iceflow.iceflow.iflo_optimizer_solver)(
+            learning_rate=cfg.iceflow.iceflow.iflo_solve_step_size
         )
     else:
-        state.optimizer = getattr(tf.keras.optimizers.legacy,params.iflo_optimizer_solver)(
-            learning_rate=params.iflo_solve_step_size
+        state.optimizer = getattr(tf.keras.optimizers.legacy,cfg.iceflow.iceflow.iflo_optimizer_solver)(
+            learning_rate=cfg.iceflow.iceflow.iflo_solve_step_size
         )
 
-def solve_iceflow(params, state, U, V):
+def solve_iceflow(cfg, state, U, V):
     """
     solve_iceflow
     """
 
     Cost_Glen = []
 
-    for i in range(params.iflo_solve_nbitmax):
+    for i in range(cfg.iceflow.iceflow.iflo_solve_nbitmax):
         with tf.GradientTape() as t:
             t.watch(U)
             t.watch(V)
 
             fieldin = [
-                tf.expand_dims(vars(state)[f], axis=0) for f in params.iflo_fieldin
+                tf.expand_dims(vars(state)[f], axis=0) for f in cfg.iceflow.iceflow.iflo_fieldin
             ]
 
             C_shear, C_slid, C_grav, C_float = iceflow_energy(
-                params, tf.expand_dims(U, axis=0), tf.expand_dims(V, axis=0), fieldin
+                cfg, tf.expand_dims(U, axis=0), tf.expand_dims(V, axis=0), fieldin
             )
 
             COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
@@ -48,7 +48,7 @@ def solve_iceflow(params, state, U, V):
 #            state.C_float = C_float[0] 
 
             # Stop if the cost no longer decreases
-            if params.iflo_solve_stop_if_no_decrease:
+            if cfg.iceflow.iceflow.iflo_solve_stop_if_no_decrease:
                 if i > 1:
                     if Cost_Glen[-1] >= Cost_Glen[-2]:
                         break

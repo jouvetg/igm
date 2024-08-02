@@ -43,99 +43,100 @@ class State:
     pass
 
 
-# this create core parameters for any IGM run
-def params_core() -> argparse.ArgumentParser:
-    parser = ArgumentParser(
-        description=IGM_DESCRIPTION,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        conflict_handler="resolve",
-    )  # automatically overrides repeated/older parameters! Valid solution?
+# # this create core parameters for any IGM run
+# def params_core() -> argparse.ArgumentParser:
+#     parser = ArgumentParser(
+#         description=IGM_DESCRIPTION,
+#         formatter_class=argparse.RawDescriptionHelpFormatter,
+#         conflict_handler="resolve",
+#     )  # automatically overrides repeated/older parameters! Valid solution?
 
-    parser.add_argument(
-        "--param_file",
-        type=str,
-        default="params.json",
-        help="Path for the JSON parameter file. (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--modules_preproc",
-        type=list,
-        default=["oggm_shop"],
-        help="List of pre-processing modules (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--modules_process",
-        type=list,
-        default=["iceflow", "time", "thk"],
-        help="List of processing modules (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--modules_postproc",
-        type=list,
-        default=["write_ncdf", "plot2d", "print_info"],
-        help="List of post-processing modules (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--logging",
-        action="store_true",
-        default=False,
-        help="Activates the logging (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--logging_level",
-        default=30,
-        type=int,
-        help="Determine logging level used for logger (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--logging_file",
-        type=str,
-        default="",
-        help="Logging file name, if empty it prints in the screen (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--print_params",
-        action="store_false",
-        default=True,
-        help="Print definitive parameters in a file for record (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--gpu_info",
-        action="store_true",
-        default=False,
-        help="Print CUDA and GPU information to the screen (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--gpu_id",
-        type=int,
-        default=0,
-        help="Id of the GPU to use (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--saved_params_filename",
-        type=str,
-        default="params_saved",
-        help="Name of the file to store the parameters used in the run (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--url_data",
-        type=str,
-        default="",
-        help="The URL of the ZIP file to download and unzip (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--folder_data",
-        type=str,
-        default="data",
-        help="The name of the folder where are stored the data (default: %(default)s)",
-    )
+#     parser.add_argument(
+#         "--param_file",
+#         type=str,
+#         default="params.json",
+#         help="Path for the JSON parameter file. (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--modules_preproc",
+#         type=list,
+#         default=["oggm_shop"],
+#         help="List of pre-processing modules (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--modules_process",
+#         type=list,
+#         default=["iceflow", "time", "thk"],
+#         help="List of processing modules (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--modules_postproc",
+#         type=list,
+#         default=["write_ncdf", "plot2d", "print_info"],
+#         help="List of post-processing modules (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--logging",
+#         action="store_true",
+#         default=False,
+#         help="Activates the logging (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--logging_level",
+#         default=30,
+#         type=int,
+#         help="Determine logging level used for logger (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--logging_file",
+#         type=str,
+#         default="",
+#         help="Logging file name, if empty it prints in the screen (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--print_params",
+#         action="store_false",
+#         default=True,
+#         help="Print definitive parameters in a file for record (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--gpu_info",
+#         action="store_true",
+#         default=False,
+#         help="Print CUDA and GPU information to the screen (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--gpu_id",
+#         type=int,
+#         default=0,
+#         help="Id of the GPU to use (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--saved_params_filename",
+#         type=str,
+#         default="params_saved",
+#         help="Name of the file to store the parameters used in the run (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--url_data",
+#         type=str,
+#         default="",
+#         help="The URL of the ZIP file to download and unzip (default: %(default)s)",
+#     )
+#     parser.add_argument(
+#         "--folder_data",
+#         type=str,
+#         default="data",
+#         help="The name of the folder where are stored the data (default: %(default)s)",
+#     )
 
-    return parser
+#     return parser
 
+from omegaconf import DictConfig, OmegaConf
 
-def setup_igm_modules(params: Namespace) -> List[ModuleType]:
+def setup_igm_modules(cfg) -> List[ModuleType]:
 
-    modules_dict = get_modules_list(params.param_file)
+    modules_dict = get_modules_list(cfg.param_file)
     imported_modules = load_modules(modules_dict)
 #    imported_modules = load_dependent_modules(imported_modules) this is no more in used
 
@@ -160,9 +161,9 @@ def setup_igm_params(
     return params
 
 
-def run_intializers(modules: List, params: Any, state: State) -> None:
+def run_intializers(modules: List, cfg: Any, state: State) -> None:
     for module in modules:
-        module.initialize(params, state)
+        module.initialize(cfg, state)
 
 
 def run_processes(modules: List, params: Any, state: State) -> None:
@@ -177,20 +178,20 @@ def run_finalizers(modules: List, params: Any, state: State) -> None:
         module.finalize(params, state)
 
 
-def add_logger(params, state) -> None:
-    if params.logging_file == "":
+def add_logger(cfg, state) -> None:
+    if cfg.logging_file == "":
         pathf = ""
     else:
-        pathf = params.logging_file
+        pathf = cfg.logging_file
 
     logging.basicConfig(
         filename=pathf,
         encoding="utf-8",
         filemode="w",
-        level=params.logging_level,
+        level=cfg.logging_level,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
-    logging.root.setLevel(params.logging_level)
+    logging.root.setLevel(cfg.logging_level)
 
     state.logger = logging.getLogger("igm_logger")
     if not pathf == "":
@@ -408,15 +409,22 @@ def print_gpu_info() -> None:
 
 
 # Print parameters in screen and a dedicated file
-def print_params(params: Namespace) -> None:
-    param_file = params.saved_params_filename
-    param_file = param_file + ".json"
+# def print_params(params: Namespace) -> None:
+#     param_file = params.saved_params_filename
+#     param_file = param_file + ".json"
 
+#     # load the given parameters
+#     with open(param_file, "w") as json_file:
+#         json.dump(params.__dict__, json_file, indent=2)
+
+#     os.system("echo rm " + param_file + " >> clean.sh")
+
+def save_params(cfg, extension='yaml') -> None:
+    param_file = f"{cfg.saved_params_filename}.{extension}"
+    yaml_params = OmegaConf.to_yaml(cfg)
     # load the given parameters
-    with open(param_file, "w") as json_file:
-        json.dump(params.__dict__, json_file, indent=2)
-
-    os.system("echo rm " + param_file + " >> clean.sh")
+    with open(param_file, 'w') as file:
+        yaml.dump(yaml_params, file)
 
 
 def download_unzip_and_store(url, folder_name='data') -> None:

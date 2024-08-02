@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf 
 import matplotlib.pyplot as plt
   
-def infer_params_cook(state, params):
+def infer_params_cook(state, cfg):
     #This function allows for both parameters to be specified as varying 2D fields (you could compute them pixel-wise from VelMag by swapping in VelMag for VelPerc).
     #This is probably not a good idea, because the values of both parameters do not depend solely on the velocity at that point. But feel free to try! If you do
     #want to do that, you'll also need to un-comment the code block for smoothing and then converting the smoothed weights back to tensors (you may also want to
@@ -17,7 +17,7 @@ def infer_params_cook(state, params):
     state.convexity_weights = tf.experimental.numpy.copy(state.icemaskobs)
     state.volumes = tf.experimental.numpy.copy(state.icemaskobs)
     state.volume_weights = tf.experimental.numpy.copy(state.icemaskobs)
-    state.volume_weights = tf.where(state.icemaskobs > 0, params.opti_vol_std, 0.0)
+    state.volume_weights = tf.where(state.icemaskobs > 0, cfg.iceflow.optimize.opti_vol_std, 0.0)
     
     
     #Get some initial information
@@ -92,7 +92,7 @@ def infer_params_cook(state, params):
         AvgSlope = np.round(tf.reduce_max(state.slopes[state.icemaskobs==i]).numpy(), decimals=1)
         #print("Average Slope is: ", AvgSlope)
         
-        Tidewater = params.opti_tidewater_glacier
+        Tidewater = cfg.iceflow.optimize.opti_tidewater_glacier
         
         #Do regressions
         if hasattr(state, "tidewatermask"):

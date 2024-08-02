@@ -18,7 +18,7 @@ from .emulate import *
 from .optimize_outputs import *
 from .optimize_params_cook import *
  
-def optimize(params, state):
+def optimize(cfg, state):
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
 
@@ -27,16 +27,16 @@ def optimize(params, state):
     # state.usurf    = tf.Variable(gaussian_filter(state.usurf.numpy(), 3, mode="reflect"))
 
     # make sure this condition is satisfied
-    assert ("usurf" in params.opti_cost) == ("usurf" in params.opti_control)
+    assert ("usurf" in cfg.iceflow.optimize.opti_cost) == ("usurf" in cfg.iceflow.optimize.opti_control)
 
     # make sure that there are lease some profiles in thkobs
     if tf.reduce_all(tf.math.is_nan(state.thkobs)):
-        if "thk" in params.opti_cost:
-            params.opti_cost.remove("thk")
+        if "thk" in cfg.iceflow.optimize.opti_cost:
+            cfg.iceflow.optimize.opti_cost.remove("thk")
 
     ###### PREPARE DATA PRIOR OPTIMIZATIONS
  
-    if "divfluxobs" in params.opti_cost:
+    if "divfluxobs" in cfg.iceflow.optimize.opti_cost:
         if not hasattr(state, "divfluxobs"):
             state.divfluxobs = state.smb - state.dhdt
 
@@ -45,11 +45,11 @@ def optimize(params, state):
     else:
         state.thk = tf.zeros_like(state.thk)
 
-    if params.opti_init_zero_thk:
+    if cfg.iceflow.optimize.opti_init_zero_thk:
         state.thk = state.thk*0.0
         
     # this is a density matrix that will be used to weight the cost function
-    if params.opti_uniformize_thkobs:
+    if cfg.iceflow.optimize.opti_uniformize_thkobs:
         state.dens_thkobs = create_density_matrix(state.thkobs, kernel_size=5)
         state.dens_thkobs = tf.where(state.dens_thkobs>0, 1.0/state.dens_thkobs, 0.0)
         state.dens_thkobs = tf.where(tf.math.is_nan(state.thkobs),0.0,state.dens_thkobs)
@@ -61,63 +61,63 @@ def optimize(params, state):
     state.slidingco = tf.where( state.icemaskobs == 2, 0.0, state.slidingco)
     
     # this will infer values for slidingco and convexity weight based on the ice velocity and an empirical relationship from test glaciers with thickness profiles
-    if params.opti_infer_params:
+    if cfg.iceflow.optimize.opti_infer_params:
         #Because OGGM will index icemask from 0
-        dummy = infer_params_cook(state, params)
+        dummy = infer_params_cook(state, cfg)
         if tf.reduce_max(state.icemask).numpy() < 1:
             return
     
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-        optimizer = tf.keras.optimizers.Adam(learning_rate=params.opti_step_size)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=cfg.iceflow.optimize.opti_step_size)
         opti_retrain = tf.keras.optimizers.Adam(
-            learning_rate=params.iflo_retrain_emulator_lr
+            learning_rate=cfg.iceflow.iceflow.iflo_retrain_emulator_lr
         )
     else:
-        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=params.opti_step_size)
+        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=cfg.iceflow.optimize.opti_step_size)
         opti_retrain = tf.keras.optimizers.legacy.Adam(
-            learning_rate=params.iflo_retrain_emulator_lr
+            learning_rate=cfg.iceflow.iceflow.iflo_retrain_emulator_lr
         )
 
     state.tcomp_optimize = []
 
     # this thing is outdated with using iflo_new_friction_param default as we use scaling of one.
     sc = {}
-    sc["thk"] = params.opti_scaling_thk
-    sc["usurf"] = params.opti_scaling_usurf
-    sc["slidingco"] = params.opti_scaling_slidingco
-    sc["arrhenius"] = params.opti_scaling_arrhenius
+    sc["thk"] = cfg.iceflow.optimize.opti_scaling_thk
+    sc["usurf"] = cfg.iceflow.optimize.opti_scaling_usurf
+    sc["slidingco"] = cfg.iceflow.optimize.opti_scaling_slidingco
+    sc["arrhenius"] = cfg.iceflow.optimize.opti_scaling_arrhenius
     
     Ny, Nx = state.thk.shape
 
-    for f in params.opti_control:
+    for f in cfg.iceflow.optimize.opti_control:
         vars()[f] = tf.Variable(vars(state)[f] / sc[f])
 
     # main loop
-    for i in range(params.opti_nbitmax):
+    for i in range(cfg.iceflow.optimize.opti_nbitmax):
         with tf.GradientTape() as t, tf.GradientTape() as s:
             state.tcomp_optimize.append(time.time())
             
-            if params.opti_step_size_decay < 1:
-                optimizer.lr = params.opti_step_size * (params.opti_step_size_decay ** (i / 100))
+            if cfg.iceflow.optimize.opti_step_size_decay < 1:
+                optimizer.lr = cfg.iceflow.optimize.opti_step_size * (cfg.iceflow.optimize.opti_step_size_decay ** (i / 100))
 
             # is necessary to remember all operation to derive the gradients w.r.t. control variables
-            for f in params.opti_control:
+            for f in cfg.iceflow.optimize.opti_control:
                 t.watch(vars()[f])
 
-            for f in params.opti_control:
+            for f in cfg.iceflow.optimize.opti_control:
                 vars(state)[f] = vars()[f] * sc[f]
 
-            fieldin = [vars(state)[f] for f in params.iflo_fieldin]
+            fieldin = [vars(state)[f] for f in cfg.iceflow.iceflow.iflo_fieldin]
 
-            X = fieldin_to_X(params, fieldin)
+            X = fieldin_to_X(cfg, fieldin)
 
             # evalutae th ice flow emulator                
-            if params.iflo_multiple_window_size==0:
+            if cfg.iceflow.iceflow.iflo_multiple_window_size==0:
                 Y = state.iceflow_model(X)
             else:
                 Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
 
-            U, V = Y_to_UV(params, Y)
+            U, V = Y_to_UV(cfg, Y)
 
             U = U[0]
             V = V[0]
@@ -130,13 +130,13 @@ def optimize(params, state):
             state.uvelsurf = U[-1, :, :]
             state.vvelsurf = V[-1, :, :]
  
-            if not params.opti_smooth_anisotropy_factor == 1:
+            if not cfg.iceflow.optimize.opti_smooth_anisotropy_factor == 1:
                 _compute_flow_direction_for_anisotropic_smoothing(state)
 
             cost = {} 
                  
             # misfit between surface velocity
-            if "velsurf" in params.opti_cost:
+            if "velsurf" in cfg.iceflow.optimize.opti_cost:
                 cost["velsurf"] = misfit_velsurf(params,state)
 
             # misfit between ice thickness profiles

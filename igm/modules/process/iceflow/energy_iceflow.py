@@ -101,7 +101,7 @@ def _stag8(B):
     ) / 8
 
 
-def iceflow_energy(params, U, V, fieldin):
+def iceflow_energy(cfg, U, V, fieldin):
     thk, usurf, arrhenius, slidingco, dX = fieldin
 
     return _iceflow_energy(
@@ -112,22 +112,22 @@ def iceflow_energy(params, U, V, fieldin):
         arrhenius,
         slidingco,
         dX,
-        params.iflo_Nz,
-        params.iflo_vert_spacing,
-        params.iflo_exp_glen,
-        params.iflo_exp_weertman,
-        params.iflo_regu_glen,
-        params.iflo_regu_weertman,
-        params.iflo_thr_ice_thk,
-        params.iflo_ice_density,
-        params.iflo_gravity_cst,
-        params.iflo_new_friction_param,
-        params.iflo_cf_cond,
-        params.iflo_cf_eswn,
-        params.iflo_regu,
-        params.iflo_min_sr,
-        params.iflo_max_sr,
-        params.iflo_force_negative_gravitational_energy
+        cfg.iceflow.iceflow.iflo_Nz,
+        cfg.iceflow.iceflow.iflo_vert_spacing,
+        cfg.iceflow.iceflow.iflo_exp_glen,
+        cfg.iceflow.iceflow.iflo_exp_weertman,
+        cfg.iceflow.iceflow.iflo_regu_glen,
+        cfg.iceflow.iceflow.iflo_regu_weertman,
+        cfg.iceflow.iceflow.iflo_thr_ice_thk,
+        cfg.iceflow.iceflow.iflo_ice_density,
+        cfg.iceflow.iceflow.iflo_gravity_cst,
+        cfg.iceflow.iceflow.iflo_new_friction_param,
+        cfg.iceflow.iceflow.iflo_cf_cond,
+        cfg.iceflow.iceflow.iflo_cf_eswn,
+        cfg.iceflow.iceflow.iflo_regu,
+        cfg.iceflow.iceflow.iflo_min_sr,
+        cfg.iceflow.iceflow.iflo_max_sr,
+        cfg.iceflow.iceflow.iflo_force_negative_gravitational_energy
     )
 
 
@@ -347,16 +347,16 @@ def _iceflow_energy(
 
 
 # @tf.function(experimental_relax_shapes=True)
-def iceflow_energy_XY(params, X, Y):
-    U, V = Y_to_UV(params, Y)
+def iceflow_energy_XY(cfg, X, Y):
+    U, V = Y_to_UV(cfg, Y)
 
-    fieldin = X_to_fieldin(params, X)
+    fieldin = X_to_fieldin(cfg, X)
 
-    return iceflow_energy(params, U, V, fieldin)
+    return iceflow_energy(cfg, U, V, fieldin)
 
 
-def Y_to_UV(params, Y):
-    N = params.iflo_Nz
+def Y_to_UV(cfg, Y):
+    N = cfg.iceflow.iceflow.iflo_Nz
 
     U = tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1])
     V = tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1])
@@ -364,7 +364,7 @@ def Y_to_UV(params, Y):
     return U, V
 
 
-def UV_to_Y(params, U, V):
+def UV_to_Y(cfg, U, V):
     UU = tf.experimental.numpy.moveaxis(U, [0], [-1])
     VV = tf.experimental.numpy.moveaxis(V, [0], [-1])
     RR = tf.expand_dims(
@@ -378,10 +378,10 @@ def UV_to_Y(params, U, V):
     return RR
 
 
-def fieldin_to_X(params, fieldin):
+def fieldin_to_X(cfg, fieldin):
     X = []
 
-    fieldin_dim = [0, 0, 1 * (params.iflo_dim_arrhenius == 3), 0, 0]
+    fieldin_dim = [0, 0, 1 * (cfg.iceflow.iceflow.iflo_dim_arrhenius == 3), 0, 0]
 
     for f, s in zip(fieldin, fieldin_dim):
         if s == 0:
@@ -392,23 +392,23 @@ def fieldin_to_X(params, fieldin):
     return tf.expand_dims(tf.concat(X, axis=-1), axis=0)
 
 
-def X_to_fieldin(params, X):
+def X_to_fieldin(cfg, X):
     i = 0
 
-    fieldin_dim = [0, 0, 1 * (params.iflo_dim_arrhenius == 3), 0, 0]
+    fieldin_dim = [0, 0, 1 * (cfg.iceflow.iceflow.iflo_dim_arrhenius == 3), 0, 0]
 
     fieldin = []
 
-    for f, s in zip(params.iflo_fieldin, fieldin_dim):
+    for f, s in zip(cfg.iceflow.iceflow.iflo_fieldin, fieldin_dim):
         if s == 0:
             fieldin.append(X[:, :, :, i])
             i += 1
         else:
             fieldin.append(
                 tf.experimental.numpy.moveaxis(
-                    X[:, :, :, i : i + params.iflo_Nz], [-1], [1]
+                    X[:, :, :, i : i + cfg.iceflow.iceflow.iflo_Nz], [-1], [1]
                 )
             )
-            i += params.iflo_Nz
+            i += cfg.iceflow.iceflow.iflo_Nz
 
     return fieldin

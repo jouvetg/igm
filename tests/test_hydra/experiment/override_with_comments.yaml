@@ -1,3 +1,4 @@
+# @package _global_
 # Random comments everything (and changed the True values to true)
 
 core:
@@ -12,8 +13,7 @@ core:
   folder_data: data_folder
   # gpu_id: -99999
 
-
-# THis should not change anything
+# This should not change anything
 modules:
   time:
     time_start: -2000.0

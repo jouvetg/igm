@@ -1,3 +1,5 @@
+# @package _global_
+
 core:
   logging: True
   logging_level: 10

@@ -3,7 +3,6 @@
 empty_core_expected = """
 cwd: ${get_cwd:0}
 core:
-  param_file: params.json
   saved_params_filename: params_saved
   url_data: ''
   folder_data: data
@@ -145,12 +144,12 @@ modules:
       min_coarsen: 0
       max_coarsen: 2
       soft_begining: 500
+experiment: {}
 """
 
 override_core_expected = """
 cwd: ${get_cwd:0}
 core:
-  param_file: params.json
   saved_params_filename: params_saved
   url_data: ''
   folder_data: data_folder
@@ -297,7 +296,6 @@ modules:
 override_core_expected_cli = """
 cwd: ${get_cwd:0}
 core:
-  param_file: params.json
   saved_params_filename: overriden_params_cli
   url_data: ''
   folder_data: data_folder

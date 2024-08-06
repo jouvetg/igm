@@ -1,6 +1,5 @@
 core:
   # Input / Output
-  param_file: params.json
   saved_params_filename: params_saved
   url_data: ""
   folder_data: data

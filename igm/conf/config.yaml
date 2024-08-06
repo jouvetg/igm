@@ -1,25 +1,26 @@
 cwd: ${get_cwd:0} #0 is a dummy input since resolvers require callables
 
-core:
-  # Input / Output
-  saved_params_filename: params_saved
-  url_data: ""
-  folder_data: data
-  logging_file: ""
+# core:
+#   # Input / Output
+#   saved_params_filename: params_saved
+#   url_data: ""
+#   folder_data: data
+#   logging_file: ""
 
-  # Logging
-  logging: False
-  logging_level: 30
+#   # Logging
+#   logging: False
+#   logging_level: 30
 
-  # Hardware
-  gpu_id: 0
-  gpu_info: True
+#   # Hardware
+#   gpu_id: 0
+#   gpu_info: True
 
-  # Misc
-  print_params: True
+#   # Misc
+#   print_params: True
 
 defaults:
   - _self_
+  - core
   - modules:
     - load_ncdf # ths should not be a module...
     - smb_simple

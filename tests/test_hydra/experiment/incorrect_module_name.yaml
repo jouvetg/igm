@@ -1,5 +1,9 @@
 # @package _global_
 
+# =======================================
+#NOT IMPLEMENTED YET
+# =======================================
+
 # These modules should be fine...
 core:
   logging: False
@@ -12,7 +16,7 @@ core:
   url_data: ""
   folder_data: data
 
-# this will not throw an error unless we use structured configs!
+# this will NOT throw an error unless we use structured configs!
 modules:
   this_module_does_not_exist:
     neither_does_this: 0

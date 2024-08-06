@@ -13,12 +13,19 @@ core:
   gpu_info: true
   print_params: true
 modules:
-  time:
-    time_start: 2000.0
-    time_end: 2100.0
-    time_save: 10.0
-    time_cfl: 0.3
-    time_step_max: 1.0
+  load_ncdf:
+    lncd_input_file: input.nc
+    lncd_method_coarsen: skipping
+    lncd_coarsen: 1
+    lncd_crop: false
+    lncd_xmin: -(10**20)
+    lncd_xmax: 10**20
+    lncd_ymin: -(10**20)
+    lncd_ymax: 10**20
+  smb_simple:
+    smb_simple_update_freq: 1.0
+    smb_simple_file: smb_simple_param.txt
+    smb_simple_array: []
   iceflow:
     iceflow:
       iflo_run_pretraining: false
@@ -29,8 +36,8 @@ modules:
       iflo_init_slidingco: 0.0464
       iflo_init_arrhenius: 78
       iflo_enhancement_factor: 1.0
-      iflo_regu_glen: 10 ** (-5)
-      iflo_regu_weertman: 10 ** (-10)
+      iflo_regu_glen: 1.0e-05
+      iflo_regu_weertman: 1.0e-10
       iflo_exp_glen: 3
       iflo_exp_weertman: 3
       iflo_gravity_cst: 9.81
@@ -69,8 +76,8 @@ modules:
       iflo_cf_eswn: []
       iflo_cf_cond: false
       iflo_regu: 0.0
-      iflo_min_sr: 10**(-20)
-      iflo_max_sr: 10**(20)
+      iflo_min_sr: 1.0e-20
+      iflo_max_sr: 1.0e+20
       iflo_force_negative_gravitational_energy: false
       iflo_optimizer_solver: Adam
       iflo_optimizer_lbfgs: false
@@ -144,11 +151,22 @@ modules:
       min_coarsen: 0
       max_coarsen: 2
       soft_begining: 500
+  time_igm:
+    time_start: 2000.0
+    time_end: 2100.0
+    time_save: 10.0
+    time_cfl: 0.3
+    time_step_max: 1.0
+  thk:
+    thk_slope_type: superbee
+    thk_ratio_density: 0.91
+    thk_default_sealevel: 0.0
+  print_info:
+    dummy_input: 0
 experiment: {}
 """
 
 override_core_expected = """
-cwd: ${get_cwd:0}
 core:
   saved_params_filename: params_saved
   url_data: ''
@@ -159,13 +177,23 @@ core:
   gpu_id: 2
   gpu_info: true
   print_params: true
+"""
+
+override_modules_expected = """
 modules:
-  time:
-    time_start: -2000.0
-    time_end: 10000.0
-    time_save: 100.0
-    time_cfl: 0.3
-    time_step_max: 1.0
+  load_ncdf:
+    lncd_input_file: input.nc
+    lncd_method_coarsen: skipping
+    lncd_coarsen: 1
+    lncd_crop: false
+    lncd_xmin: -(10**20)
+    lncd_xmax: 10**20
+    lncd_ymin: -(10**20)
+    lncd_ymax: 10**20
+  smb_simple:
+    smb_simple_update_freq: 1.0
+    smb_simple_file: smb_simple_param.txt
+    smb_simple_array: []
   iceflow:
     iceflow:
       iflo_run_pretraining: false
@@ -176,8 +204,8 @@ modules:
       iflo_init_slidingco: 0.0464
       iflo_init_arrhenius: 78
       iflo_enhancement_factor: 1.0
-      iflo_regu_glen: 10 ** (-5)
-      iflo_regu_weertman: 10 ** (-10)
+      iflo_regu_glen: 1.0e-05
+      iflo_regu_weertman: 1.0e-10
       iflo_exp_glen: 3
       iflo_exp_weertman: 3
       iflo_gravity_cst: 9.81
@@ -216,8 +244,8 @@ modules:
       iflo_cf_eswn: []
       iflo_cf_cond: false
       iflo_regu: 0.0
-      iflo_min_sr: 10**(-20)
-      iflo_max_sr: 10**(20)
+      iflo_min_sr: 1.0e-20
+      iflo_max_sr: 1.0e+20
       iflo_force_negative_gravitational_energy: false
       iflo_optimizer_solver: Adam
       iflo_optimizer_lbfgs: false
@@ -291,10 +319,21 @@ modules:
       min_coarsen: 0
       max_coarsen: 2
       soft_begining: 500
+  time_igm:
+    time_start: -2000.0
+    time_end: 10000.0
+    time_save: 100.0
+    time_cfl: 0.3
+    time_step_max: 1.0
+  thk:
+    thk_slope_type: superbee
+    thk_ratio_density: 0.91
+    thk_default_sealevel: 0.0
+  print_info:
+    dummy_input: 0
 """
 
 override_core_expected_cli = """
-cwd: ${get_cwd:0}
 core:
   saved_params_filename: overriden_params_cli
   url_data: ''
@@ -306,12 +345,19 @@ core:
   gpu_info: true
   print_params: true
 modules:
-  time:
-    time_start: -2000.0
-    time_end: 10000.0
-    time_save: 100.0
-    time_cfl: 0.3
-    time_step_max: 1.0
+  load_ncdf:
+    lncd_input_file: input.nc
+    lncd_method_coarsen: skipping
+    lncd_coarsen: 1
+    lncd_crop: false
+    lncd_xmin: -(10**20)
+    lncd_xmax: 10**20
+    lncd_ymin: -(10**20)
+    lncd_ymax: 10**20
+  smb_simple:
+    smb_simple_update_freq: 1.0
+    smb_simple_file: smb_simple_param.txt
+    smb_simple_array: []
   iceflow:
     iceflow:
       iflo_run_pretraining: false
@@ -322,8 +368,8 @@ modules:
       iflo_init_slidingco: 0.0464
       iflo_init_arrhenius: 78
       iflo_enhancement_factor: 1.0
-      iflo_regu_glen: 10 ** (-5)
-      iflo_regu_weertman: 10 ** (-10)
+      iflo_regu_glen: 1.0e-05
+      iflo_regu_weertman: 1.0e-10
       iflo_exp_glen: 3
       iflo_exp_weertman: 3
       iflo_gravity_cst: 9.81
@@ -359,8 +405,8 @@ modules:
       iflo_cf_eswn: []
       iflo_cf_cond: false
       iflo_regu: 0.0
-      iflo_min_sr: 10**(-20)
-      iflo_max_sr: 10**(20)
+      iflo_min_sr: 1.0e-20
+      iflo_max_sr: 1.0e+20
       iflo_force_negative_gravitational_energy: false
       iflo_optimizer_solver: Adam
       iflo_optimizer_lbfgs: false
@@ -434,4 +480,41 @@ modules:
       min_coarsen: 0
       max_coarsen: 2
       soft_begining: 500
+  time_igm:
+    time_start: 2000.0
+    time_end: 2100.0
+    time_save: 10.0
+    time_cfl: 0.3
+    time_step_max: 1.0
+  thk:
+    thk_slope_type: superbee
+    thk_ratio_density: 0.91
+    thk_default_sealevel: 0.0
+  print_info:
+    dummy_input: 0
+"""
+
+overriden_defaults_list_expected = """
+cwd: ${get_cwd:0}
+core:
+  saved_params_filename: params_saved
+  url_data: ''
+  folder_data: data_folder
+  logging_file: logging file directory
+  logging: true
+  logging_level: 10
+  gpu_id: 8
+  gpu_info: true
+  print_params: true
+modules:
+  time_igm:
+    time_start: 2000.0
+    time_end: 2100.0
+    time_save: 10.0
+    time_cfl: 0.3
+    time_step_max: 1.0
+  thk:
+    thk_slope_type: superbee
+    thk_ratio_density: 0.91
+    thk_default_sealevel: 0.0
 """

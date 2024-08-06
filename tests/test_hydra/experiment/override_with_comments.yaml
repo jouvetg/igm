@@ -12,10 +12,3 @@ core:
   url_data: ""
   folder_data: data_folder
   # gpu_id: -99999
-
-# This should not change anything
-modules:
-  time:
-    time_start: -2000.0
-    time_end: 10000.0
-    time_save: 100.0 # -> what is this? A comment!

@@ -1,3 +1,6 @@
+# comment causing this to fail
+
+# @package _global_ -> EVEN IF A COMMENT IS ABOVE, THE OVERRIDES WILL BE MESSED UP !
 
 core:
   logging: True

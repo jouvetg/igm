@@ -10,9 +10,3 @@ core:
   saved_params_filename: params_saved
   url_data: ""
   folder_data: data_folder
-
-modules:
-  time:
-    time_start: -2000.0
-    time_end: 10000.0
-    time_save: 100.0

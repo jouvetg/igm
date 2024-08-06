@@ -22,21 +22,21 @@ def pretraining(cfg, state):
     state.direct_name = (
         "pinnbp"
         + "_"
-        + str(cfg.iceflow.iceflow.iceflow.iflo_Nz)
+        + str(cfg.iceflow.iceflow.iflo_Nz)
         + "_"
-        + str(int(cfg.iceflow.iceflow.iflo_vert_spacing))
-        + "_"
-    )
-    state.direct_name += (
-        cfg.iceflow.iceflow.iflo_network
-        + "_"
-        + str(cfg.iceflow.iceflow.iflo_nb_layers)
-        + "_"
-        + str(cfg.iceflow.iceflow.iflo_nb_out_filter)
+        + str(int(cfg.iceflow.iflo_vert_spacing))
         + "_"
     )
     state.direct_name += (
-        str(cfg.iceflow.iceflow.iflo_dim_arrhenius) + "_" + str(int(cfg.iceflow.iceflow.iflo_new_friction_param))
+        cfg.iceflow.iflo_network
+        + "_"
+        + str(cfg.iceflow.iflo_nb_layers)
+        + "_"
+        + str(cfg.iceflow.iflo_nb_out_filter)
+        + "_"
+    )
+    state.direct_name += (
+        str(cfg.iceflow.iflo_dim_arrhenius) + "_" + str(int(cfg.iceflow.iflo_new_friction_param))
     )
 
     os.makedirs( state.direct_name, exist_ok=True)
@@ -93,11 +93,11 @@ def compute_solutions(cfg, state):
 
     if int(tf.__version__.split(".")[1]) <= 10:
         state.optimizer = tf.keras.optimizers.Adam(
-            learning_rate=cfg.iceflow.iceflow.iflo_solve_step_size
+            learning_rate=cfg.iceflow.iflo_solve_step_size
         )
     else:
         state.optimizer = tf.keras.optimizers.legacy.Adam(
-            learning_rate=cfg.iceflow.iceflow.iflo_solve_step_size
+            learning_rate=cfg.iceflow.iflo_solve_step_size
         )
 
     for par in state.PAR:
@@ -113,25 +113,25 @@ def compute_solutions(cfg, state):
         resol = float((x[1] - x[0]) * co)
         dX = tf.ones_like(thk) * resol
 
-        if cfg.iceflow.iceflow.iflo_dim_arrhenius == 3:
-            arrhenius = tf.ones((cfg.iceflow.iceflow.iflo_Nz, thk.shape[0], thk.shape[1])) * val_A
+        if cfg.iceflow.iflo_dim_arrhenius == 3:
+            arrhenius = tf.ones((cfg.iceflow.iflo_Nz, thk.shape[0], thk.shape[1])) * val_A
         else:
             arrhenius = tf.ones_like(thk) * val_A
 
         slidingco = tf.ones_like(thk) * val_C
 
-        for f in cfg.iceflow.iceflow.iflo_fieldin:
+        for f in cfg.iceflow.iflo_fieldin:
             vars(state)[f] = vars()[f]
 
         fieldin = [thk, usurf, arrhenius, slidingco, dX]
 
-        X = fieldin_to_X(cfg.iceflow.iceflow, fieldin)
+        X = fieldin_to_X(cfg.iceflow, fieldin)
 
         U = tf.Variable(
-            tf.zeros((cfg.iceflow.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+            tf.zeros((cfg.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
         )
         V = tf.Variable(
-            tf.zeros((cfg.iceflow.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+            tf.zeros((cfg.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
         )
 
         U, V, MISFIT = solve_iceflow(cfg, state, U, V)

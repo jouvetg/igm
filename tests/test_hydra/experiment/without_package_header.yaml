@@ -1,0 +1,18 @@
+# This module is the exact same as the override.yaml but without the package header
+
+core:
+  logging: True
+  logging_level: 10
+  logging_file: "logging file directory"
+  print_params: True
+  gpu_info: True
+  gpu_id: 2
+  saved_params_filename: params_saved
+  url_data: ""
+  folder_data: data_folder
+
+modules:
+  time:
+    time_start: -2000.0
+    time_end: 10000.0
+    time_save: 100.0

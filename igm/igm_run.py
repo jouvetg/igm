@@ -13,7 +13,7 @@ from igm import (
     run_processes,
     run_finalizers,
     setup_igm_modules,
-    setup_igm_params,
+    # setup_igm_params,
     print_gpu_info,
     add_logger,
     download_unzip_and_store
@@ -52,43 +52,43 @@ def main(cfg: DictConfig) -> None:
     
     # print("yee",cfg.search_path)
 
-    print(OmegaConf.to_yaml(cfg))
+    # print(OmegaConf.to_yaml(cfg))
     # print(cfg.testd)
     # import time
     # time.sleep(15)
     # exit()
 
-    # if cfg.core.gpu_info:
-    #     print_gpu_info()
+    if cfg.core.gpu_info:
+        print_gpu_info()
 
-    # if cfg.core.logging:
-    #     add_logger(cfg=cfg, state=state)
-    #     tf.get_logger().setLevel(cfg.logging_level)
+    if cfg.core.logging:
+        add_logger(cfg=cfg, state=state)
+        tf.get_logger().setLevel(cfg.logging_level)
         
-    # imported_modules = setup_igm_modules(cfg)
-    # # params = setup_igm_params(parser, imported_modules)
-    # # print(OmegaConf.to_yaml(cfg.modules.iceflow.iceflow))
-    # # print(imported_modules)
-    # if cfg.print_params:
-    #     print(OmegaConf.to_yaml(cfg))
-    #     # save_params(cfg) # already handled with logging it seems... (hydra specifically)
-
-        
-    # if not cfg.url_data=="":
-    #     download_unzip_and_store(cfg.url_data, cfg.folder_data)
-        
-    # os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.gpu_id)        
-
-    # # print(imported_modules)
+    imported_modules = setup_igm_modules(cfg)
     
-    # # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
+    # params = setup_igm_params(parser, imported_modules)
+    # print(OmegaConf.to_yaml(cfg.modules.iceflow.iceflow))
+    # print(imported_modules)
+    # exit()
+    if cfg.core.print_params:
+        print(OmegaConf.to_yaml(cfg))
+        # save_params(cfg) # already handled with logging it seems... (hydra specifically)
+        
+    if not cfg.core.url_data=="":
+        download_unzip_and_store(cfg.core.url_data, cfg.core.folder_data)
+        
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.core.gpu_id)        
+
+    # print(imported_modules)
     
-    # # exit()
-    # with tf.device(f"/GPU:{cfg.gpu_id}"):  # type: ignore for linting checks
-    #     run_intializers(imported_modules, cfg.modules, state)
-    #     exit()
-    #     run_processes(imported_modules, params, state)
-    #     run_finalizers(imported_modules, params, state)
+    # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
+    
+    # exit()
+    with tf.device(f"/GPU:{cfg.core.gpu_id}"):  # type: ignore for linting checks
+        run_intializers(imported_modules, cfg, state)
+        run_processes(imported_modules, cfg, state)
+        run_finalizers(imported_modules, cfg, state)
 
 
 if __name__ == "__main__":

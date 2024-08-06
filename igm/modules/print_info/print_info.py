@@ -13,13 +13,13 @@ def params(parser):
     pass
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     print(
         "IGM %s :         Iterations   |         Time (y)     |     Time Step (y)   |   Ice Volume (km^3) "
     )
 
 
-def update(params, state):
+def update(cfg, state):
     """
     This serves to print key info on the fly during computation
     """
@@ -36,5 +36,5 @@ def update(params, state):
         )
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

@@ -13,38 +13,38 @@ import importlib_resources
 def initialize_iceflow_emulator(cfg, state):
 
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-        state.opti_retrain = getattr(tf.keras.optimizers,cfg.iceflow.iceflow.iflo_optimizer_emulator)(
-            learning_rate=cfg.iceflow.iceflow.iflo_retrain_emulator_lr
+        state.opti_retrain = getattr(tf.keras.optimizers,cfg.iceflow.iflo_optimizer_emulator)(
+            learning_rate=cfg.iceflow.iflo_retrain_emulator_lr
         )
     else:
-        state.opti_retrain = getattr(tf.keras.optimizers.legacy,cfg.iceflow.iceflow.iflo_optimizer_emulator)( 
-            learning_rate=cfg.iceflow.iceflow.iflo_retrain_emulator_lr
+        state.opti_retrain = getattr(tf.keras.optimizers.legacy,cfg.iceflow.iflo_optimizer_emulator)( 
+            learning_rate=cfg.iceflow.iflo_retrain_emulator_lr
         )
 
     direct_name = (
         "pinnbp"
         + "_"
-        + str(cfg.iceflow.iceflow.iflo_Nz)
+        + str(cfg.iceflow.iflo_Nz)
         + "_"
-        + str(int(cfg.iceflow.iceflow.iflo_vert_spacing))
-        + "_"
-    )
-    direct_name += (
-        cfg.iceflow.iceflow.iflo_network
-        + "_"
-        + str(cfg.iceflow.iceflow.iflo_nb_layers)
-        + "_"
-        + str(cfg.iceflow.iceflow.iflo_nb_out_filter)
+        + str(int(cfg.iceflow.iflo_vert_spacing))
         + "_"
     )
     direct_name += (
-        str(cfg.iceflow.iceflow.iflo_dim_arrhenius)
+        cfg.iceflow.iflo_network
         + "_"
-        + str(int(cfg.iceflow.iceflow.iflo_new_friction_param))
+        + str(cfg.iceflow.iflo_nb_layers)
+        + "_"
+        + str(cfg.iceflow.iflo_nb_out_filter)
+        + "_"
+    )
+    direct_name += (
+        str(cfg.iceflow.iflo_dim_arrhenius)
+        + "_"
+        + str(int(cfg.iceflow.iflo_new_friction_param))
     )
 
-    if cfg.iceflow.iceflow.iflo_pretrained_emulator:
-        if cfg.iceflow.iceflow.iflo_emulator == "":
+    if cfg.iceflow.iflo_pretrained_emulator:
+        if cfg.iceflow.iflo_emulator == "":
             if os.path.exists(
                 importlib_resources.files(emulators).joinpath(direct_name)
             ):
@@ -55,9 +55,9 @@ def initialize_iceflow_emulator(cfg, state):
             else:
                 print("No pretrained emulator found in the igm package")
         else:
-            if os.path.exists(cfg.iceflow.iceflow.iflo_emulator):
-                dirpath = cfg.iceflow.iceflow.iflo_emulator
-                print("----------------------------------> Found pretrained emulator: " + cfg.iceflow.iceflow.iflo_emulator)
+            if os.path.exists(cfg.iceflow.iflo_emulator):
+                dirpath = cfg.iceflow.iflo_emulator
+                print("----------------------------------> Found pretrained emulator: " + cfg.iceflow.iflo_emulator)
             else:
                 print("----------------------------------> No pretrained emulator found ")
 
@@ -67,23 +67,23 @@ def initialize_iceflow_emulator(cfg, state):
             part = fileline.split()
             fieldin.append(part[0])
         fid.close()
-        assert cfg.iceflow.iceflow.iflo_fieldin == fieldin
+        assert cfg.iceflow.iflo_fieldin == fieldin
         state.iceflow_model = tf.keras.models.load_model(
             os.path.join(dirpath, "model.h5"), compile=False
         )
         state.iceflow_model.compile() 
     else:
         print("----------------------------------> No pretrained emulator, start from scratch.") 
-        nb_inputs = len(cfg.iceflow.iceflow.iflo_fieldin) + (cfg.iceflow.iceflow.iflo_dim_arrhenius == 3) * (
-            cfg.iceflow.iceflow.iflo_Nz - 1
+        nb_inputs = len(cfg.iceflow.iflo_fieldin) + (cfg.iceflow.iflo_dim_arrhenius == 3) * (
+            cfg.iceflow.iflo_Nz - 1
         )
-        nb_outputs = 2 * cfg.iceflow.iceflow.iflo_Nz
-        # state.iceflow_model = getattr(igm, cfg.iceflow.iceflow.iflo_network)(
-        #     cfg.iceflow.iceflow, nb_inputs, nb_outputs
+        nb_outputs = 2 * cfg.iceflow.iflo_Nz
+        # state.iceflow_model = getattr(igm, cfg.iceflow.iflo_network)(
+        #     cfg.iceflow, nb_inputs, nb_outputs
         # )
-        if cfg.iceflow.iceflow.iflo_network=='cnn':
+        if cfg.iceflow.iflo_network=='cnn':
             state.iceflow_model = cnn(cfg, nb_inputs, nb_outputs)
-        elif cfg.iceflow.iceflow.iflo_network=='unet':
+        elif cfg.iceflow.iflo_network=='unet':
             state.iceflow_model = unet(cfg, nb_inputs, nb_outputs)
 
     # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
@@ -100,23 +100,23 @@ def update_iceflow_emulated(cfg, state):
     # Define the input of the NN, include scaling
 
     Ny, Nx = state.thk.shape
-    N = cfg.iceflow.iceflow.iflo_Nz
+    N = cfg.iceflow.iflo_Nz
 
-    fieldin = [vars(state)[f] for f in cfg.iceflow.iceflow.iflo_fieldin]
+    fieldin = [vars(state)[f] for f in cfg.iceflow.iflo_fieldin]
 
     X = fieldin_to_X(cfg, fieldin)
 
-    if cfg.iceflow.iceflow.iflo_exclude_borders>0:
-        iz = cfg.iceflow.iceflow.iflo_exclude_borders
+    if cfg.iceflow.iflo_exclude_borders>0:
+        iz = cfg.iceflow.iflo_exclude_borders
         X = tf.pad(X, [[0, 0], [iz, iz], [iz, iz], [0, 0]], "SYMMETRIC")
         
-    if cfg.iceflow.iceflow.iflo_multiple_window_size==0:
+    if cfg.iceflow.iflo_multiple_window_size==0:
         Y = state.iceflow_model(X)
     else:
         Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
 
-    if cfg.iceflow.iceflow.iflo_exclude_borders>0:
-        iz = cfg.iceflow.iceflow.iflo_exclude_borders
+    if cfg.iceflow.iflo_exclude_borders>0:
+        iz = cfg.iceflow.iflo_exclude_borders
         Y = Y[:, iz:-iz, iz:-iz, :]
 
     U, V = Y_to_UV(cfg, Y)
@@ -129,19 +129,19 @@ def update_iceflow_emulated(cfg, state):
     state.V.assign(V)
 
     # If requested, the speeds are artifically upper-bounded
-    if cfg.iceflow.iceflow.iflo_force_max_velbar > 0:
+    if cfg.iceflow.iflo_force_max_velbar > 0:
         velbar_mag = getmag3d(state.U, state.V)
         state.U.assign(
             tf.where(
-                velbar_mag >= cfg.iceflow.iceflow.iflo_force_max_velbar,
-                cfg.iceflow.iceflow.iflo_force_max_velbar * (state.U / velbar_mag),
+                velbar_mag >= cfg.iceflow.iflo_force_max_velbar,
+                cfg.iceflow.iflo_force_max_velbar * (state.U / velbar_mag),
                 state.U,
             )
         )
         state.V.assign(
             tf.where(
-                velbar_mag >= cfg.iceflow.iceflow.iflo_force_max_velbar,
-                cfg.iceflow.iceflow.iflo_force_max_velbar * (state.V / velbar_mag),
+                velbar_mag >= cfg.iceflow.iflo_force_max_velbar,
+                cfg.iceflow.iflo_force_max_velbar * (state.V / velbar_mag),
                 state.V,
             )
         )
@@ -150,8 +150,8 @@ def update_iceflow_emulated(cfg, state):
 
 
 def update_iceflow_emulator(cfg, state):
-    if (state.it < 0) | (state.it % cfg.iceflow.iceflow.iflo_retrain_emulator_freq == 0):
-        fieldin = [vars(state)[f] for f in cfg.iceflow.iceflow.iflo_fieldin]
+    if (state.it < 0) | (state.it % cfg.iceflow.iflo_retrain_emulator_freq == 0):
+        fieldin = [vars(state)[f] for f in cfg.iceflow.iflo_fieldin]
 
 ########################
 
@@ -166,7 +166,7 @@ def update_iceflow_emulator(cfg, state):
 
         XX = fieldin_to_X(cfg, fieldin)
 
-        X = _split_into_patches(XX, cfg.iceflow.iceflow.iflo_retrain_emulator_framesizemax)
+        X = _split_into_patches(XX, cfg.iceflow.iflo_retrain_emulator_framesizemax)
         
         Ny = X.shape[1]
         Nx = X.shape[2]
@@ -175,11 +175,11 @@ def update_iceflow_emulator(cfg, state):
 
         state.COST_EMULATOR = []
 
-        nbit = int((state.it >= 0) * cfg.iceflow.iceflow.iflo_retrain_emulator_nbit + (
+        nbit = int((state.it >= 0) * cfg.iceflow.iflo_retrain_emulator_nbit + (
             state.it < 0
-        ) * cfg.iceflow.iceflow.iflo_retrain_emulator_nbit_init)
+        ) * cfg.iceflow.iflo_retrain_emulator_nbit_init)
 
-        iz = cfg.iceflow.iceflow.iflo_exclude_borders 
+        iz = cfg.iceflow.iflo_exclude_borders 
 
         for epoch in range(nbit):
             cost_emulator = tf.Variable(0.0)
@@ -222,15 +222,15 @@ def update_iceflow_emulator(cfg, state):
                     zip(grads, state.iceflow_model.trainable_variables)
                 )
 
-                state.opti_retrain.lr = cfg.iceflow.iceflow.iflo_retrain_emulator_lr * (
+                state.opti_retrain.lr = cfg.iceflow.iflo_retrain_emulator_lr * (
                     0.95 ** (epoch / 1000)
                 )
 
             state.COST_EMULATOR.append(cost_emulator)
             
     
-    if len(cfg.iceflow.iceflow.iflo_save_cost_emulator)>0:
-        np.savetxt(cfg.iceflow.iceflow.iflo_output_directory+cfg.iceflow.iceflow.iflo_save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
+    if len(cfg.iceflow.iflo_save_cost_emulator)>0:
+        np.savetxt(cfg.iceflow.iflo_output_directory+cfg.iceflow.iflo_save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
 
 
 
@@ -293,7 +293,7 @@ def _split_into_patches(X, nbmax):
     return tf.stack(XX, axis=0)
 
 
-def save_iceflow_model(params, state):
+def save_iceflow_model(cfg, state):
     directory = "iceflow-model"
     
     import shutil
@@ -305,20 +305,20 @@ def save_iceflow_model(params, state):
 
     state.iceflow_model.save(os.path.join(directory, "model.h5"))
 
-    #    fieldin_dim=[0,0,1*(params.iflo_dim_arrhenius==3),0,0]
+    #    fieldin_dim=[0,0,1*(cfg.iceflow.iflo_dim_arrhenius==3),0,0]
 
     fid = open(os.path.join(directory, "fieldin.dat"), "w")
-    #    for key,gg in zip(params.iflo_fieldin,fieldin_dim):
+    #    for key,gg in zip(cfg.iceflow.iflo_fieldin,fieldin_dim):
     #        fid.write("%s %.1f \n" % (key, gg))
-    for key in params.iflo_fieldin:
+    for key in cfg.iceflow.iflo_fieldin:
         print(key)
         fid.write("%s \n" % (key))
     fid.close()
 
     fid = open(os.path.join(directory, "vert_grid.dat"), "w")
-    fid.write("%4.0f  %s \n" % (params.iflo_Nz, "# number of vertical grid point (Nz)"))
+    fid.write("%4.0f  %s \n" % (cfg.iceflow.iflo_Nz, "# number of vertical grid point (Nz)"))
     fid.write(
         "%2.2f  %s \n"
-        % (params.iflo_vert_spacing, "# param for vertical spacing (vert_spacing)")
+        % (cfg.iceflow.iflo_vert_spacing, "# param for vertical spacing (vert_spacing)")
     )
     fid.close()

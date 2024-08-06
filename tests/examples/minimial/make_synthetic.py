@@ -16,6 +16,8 @@ def params(parser):
 
 def initialize(cfg, state):
 
+    print(cfg.core)
+    exit()
     x = np.arange(0, 100) * 100  # make x-axis, lenght 10 km, resolution 100 m
     y = np.arange(0, 200) * 100  # make y-axis, lenght 20 km, resolution 100 m
 

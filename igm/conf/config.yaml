@@ -21,14 +21,14 @@ core:
 defaults:
   - _self_
   - modules:
-    - time
+    - load_ncdf # ths should not be a module...
+    - smb_simple
     - iceflow
-    # - print_info
+    - time_igm # ths should not be a module...
+    - thk
+    - print_info # this should not be a module...
     # - oggm_shop
-    # - smb_simple
   # - params@_here_ # is this necessary with experiment? No !
-    # - thk
-    # - write_ncdf
     # - plot2d
 
 hydra:

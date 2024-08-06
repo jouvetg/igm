@@ -1,5 +1,5 @@
-from .thk import (
-    params,
+from .iceflow import (
+    # params,
     initialize,
     finalize,
     update

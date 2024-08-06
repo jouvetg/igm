@@ -1,4 +1,5 @@
 # @package _global_
+
 param_file: nope
 
 core:
@@ -13,7 +14,7 @@ core:
   folder_data: data
 
 modules:
-  time:
+  time_igm:
     time_start: 2000.0
     time_end: 2500.0
     time_save: 11.0

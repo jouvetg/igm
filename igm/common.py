@@ -136,46 +136,47 @@ from omegaconf import DictConfig, OmegaConf
 
 def setup_igm_modules(cfg) -> List[ModuleType]:
 
-    modules_dict = get_modules_list(cfg.param_file)
-    imported_modules = load_modules(modules_dict)
+    # modules_dict = get_modules_list(cfg.param_file)
+    imported_modules = load_modules(cfg.modules)
 #    imported_modules = load_dependent_modules(imported_modules) this is no more in used
 
     return imported_modules
 
 
-def setup_igm_params(
-    parser: ArgumentParser, imported_modules: List[ModuleType]
-) -> Namespace:
-    for module in imported_modules:
-        module.params(parser)
+# def setup_igm_params(
+#     parser: ArgumentParser, imported_modules: List[ModuleType]
+# ) -> Namespace:
+#     for module in imported_modules:
+#         module.params(parser)
 
-    core_and_module_params = parser.parse_args()
-    params = load_user_defined_params(
-        param_file=core_and_module_params.param_file,
-        params_dict=vars(core_and_module_params),
-    )
+#     core_and_module_params = parser.parse_args()
+#     params = load_user_defined_params(
+#         param_file=core_and_module_params.param_file,
+#         params_dict=vars(core_and_module_params),
+#     )
 
-    parser.set_defaults(**params)
-    params = parser.parse_args()
+#     parser.set_defaults(**params)
+#     params = parser.parse_args()
 
-    return params
+#     return params
 
 
 def run_intializers(modules: List, cfg: Any, state: State) -> None:
     for module in modules:
+        print(f"Initializing module: {module.__name__.split('.')[-1]}")
         module.initialize(cfg, state)
 
 
-def run_processes(modules: List, params: Any, state: State) -> None:
+def run_processes(modules: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
-        while state.t < params.time_end:
+        while state.t < cfg.modules.time_igm.time_end:
             for module in modules:
-                module.update(params, state)
+                module.update(cfg, state)
 
 
-def run_finalizers(modules: List, params: Any, state: State) -> None:
+def run_finalizers(modules: List, cfg: Any, state: State) -> None:
     for module in modules:
-        module.finalize(params, state)
+        module.finalize(cfg, state)
 
 
 def add_logger(cfg, state) -> None:
@@ -198,110 +199,108 @@ def add_logger(cfg, state) -> None:
         os.system("echo rm " + pathf + " >> clean.sh")
 
 
-def remove_comments(json_str) -> str:
-    lines = json_str.split("\n")
-    cleaned_lines = [
-        line for line in lines if not line.strip().startswith(("//", "#"))
-    ]  # ! TODO: Add blocks comments...
-    cleaned_text = "\n".join(cleaned_lines)
-    return cleaned_text
+# def remove_comments(json_str) -> str:
+#     lines = json_str.split("\n")
+#     cleaned_lines = [
+#         line for line in lines if not line.strip().startswith(("//", "#"))
+#     ]  # ! TODO: Add blocks comments...
+#     cleaned_text = "\n".join(cleaned_lines)
+#     return cleaned_text
 
 
-def load_json_file(
-    param_file: str, remove_param_comments: bool = True
-) -> Dict[str, Any]:
-    with open(param_file, "r") as json_file:
-        json_text = json_file.read()
+# def load_json_file(
+#     param_file: str, remove_param_comments: bool = True
+# ) -> Dict[str, Any]:
+#     with open(param_file, "r") as json_file:
+#         json_text = json_file.read()
 
-    if remove_param_comments:
-        json_text = remove_comments(json_text)
+#     if remove_param_comments:
+#         json_text = remove_comments(json_text)
 
-    dic_params = json.loads(json_text)
-    return dic_params
+#     dic_params = json.loads(json_text)
+#     return dic_params
 
-import yaml
-def load_yaml_file(
-    param_file: str
-) -> Dict[str, Any]:
-    with open(param_file, "r") as file:
-        dic_params = yaml.safe_load(file)
+# import yaml
+# def load_yaml_file(
+#     param_file: str
+# ) -> Dict[str, Any]:
+#     with open(param_file, "r") as file:
+#         dic_params = yaml.safe_load(file)
 
-    return dic_params
+#     return dic_params
 
 
-def get_modules_list(params_path: str) -> dict[str, List[str]]:
-    try:
-        with open(params_path, "r") as file:
-            if params_path.endswith(".json"):
-                json_text = file.read()
-                json_cleaned = remove_comments(json_text)
-                params_dict = json.loads(json_cleaned)
-            elif params_path.endswith(".yaml") or params_path.endswith(".yml"):
-                params_dict = yaml.safe_load(file)
-            else:
-                raise ValueError(
-                    f"File type not supported. Please use a .json or .yaml file."
-                )
-            module_dict = {
-                "modules_preproc": params_dict["modules_preproc"],
-                "modules_process": params_dict["modules_process"],
-                "modules_postproc": params_dict["modules_postproc"],
-            }
+# def get_modules_list(params_path: str) -> dict[str, List[str]]:
+#     try:
+#         with open(params_path, "r") as file:
+#             if params_path.endswith(".json"):
+#                 json_text = file.read()
+#                 json_cleaned = remove_comments(json_text)
+#                 params_dict = json.loads(json_cleaned)
+#             elif params_path.endswith(".yaml") or params_path.endswith(".yml"):
+#                 params_dict = yaml.safe_load(file)
+#             else:
+#                 raise ValueError(
+#                     f"File type not supported. Please use a .json or .yaml file."
+#                 )
+#             module_dict = {
+#                 "modules_preproc": params_dict["modules_preproc"],
+#                 "modules_process": params_dict["modules_process"],
+#                 "modules_postproc": params_dict["modules_postproc"],
+#             }
 
-            return module_dict
-    except JSONDecodeError as e:
-        raise JSONDecodeError(
-            msg="For the following line, please check the 1) JSON file structure and/or 2) make sure there are no comments (//, #, etc.)",
-            doc=e.doc,
-            pos=e.pos,
-        )
+#             return module_dict
+#     except JSONDecodeError as e:
+#         raise JSONDecodeError(
+#             msg="For the following line, please check the 1) JSON file structure and/or 2) make sure there are no comments (//, #, etc.)",
+#             doc=e.doc,
+#             pos=e.pos,
+#         )
     # Create a custom error message for the YAML file (using yaml.YAMLError base exception)
 
 
-def load_user_defined_params(param_file: str, params_dict: dict[str, Any]):
-    if param_file.endswith(".json"):
-        loading_function = load_json_file
-    elif param_file.endswith(".yaml") or param_file.endswith(".yml"):
-        loading_function = load_yaml_file
-    else:
-        raise ValueError(
-            f"File type not supported. Please use a .json or .yaml file."
-        )
-    try:
-        json_defined_params = loading_function(param_file=param_file)
+# def load_user_defined_params(param_file: str, params_dict: dict[str, Any]):
+#     if param_file.endswith(".json"):
+#         loading_function = load_json_file
+#     elif param_file.endswith(".yaml") or param_file.endswith(".yml"):
+#         loading_function = load_yaml_file
+#     else:
+#         raise ValueError(
+#             f"File type not supported. Please use a .json or .yaml file."
+#         )
+#     try:
+#         json_defined_params = loading_function(param_file=param_file)
 
-    except JSONDecodeError as e:
-        raise JSONDecodeError(
-            msg=f"Error decoding JSON: Please make sure your file path is correct or your json is properly formatted.",
-            doc=e.doc,
-            pos=e.pos,
-        )
+#     except JSONDecodeError as e:
+#         raise JSONDecodeError(
+#             msg=f"Error decoding JSON: Please make sure your file path is correct or your json is properly formatted.",
+#             doc=e.doc,
+#             pos=e.pos,
+#         )
 
-    unrecognized_json_arguments = {
-        k: v for k, v in json_defined_params.items() if k not in params_dict
-    }
-    params_dict.update(json_defined_params)
+#     unrecognized_json_arguments = {
+#         k: v for k, v in json_defined_params.items() if k not in params_dict
+#     }
+#     params_dict.update(json_defined_params)
 
-    for key in unrecognized_json_arguments.keys():
-        raise ValueError(
-            f"The following argument specified in the JSON file does not exist among the core arguments nor the modules you have chosen: {key}"
-        )
+#     for key in unrecognized_json_arguments.keys():
+#         raise ValueError(
+#             f"The following argument specified in the JSON file does not exist among the core arguments nor the modules you have chosen: {key}"
+#         )
 
-    return params_dict
+#     return params_dict
 
 
-def load_modules(modules_dict: Dict) -> List[ModuleType]:
+def load_modules(modules_list: list) -> List[ModuleType]:
     """Returns a list of actionable modules to then apply the update, initialize, finalize functions on for IGM."""
 
-    imported_preproc_modules = load_modules_from_directory(
-        modules_list=modules_dict["modules_preproc"], module_folder="preproc"
-    )
-    imported_process_modules = load_modules_from_directory(
-        modules_list=modules_dict["modules_process"], module_folder="process"
-    )
-    imported_postproc_modules = load_modules_from_directory(
-        modules_list=modules_dict["modules_postproc"], module_folder="postproc"
-    )
+    imported_preproc_modules = load_modules_from_directory(modules_list=modules_list)
+    # imported_process_modules = load_modules_from_directory(
+    #     modules_list=modules_dict["modules_process"], module_folder="process"
+    # )
+    # imported_postproc_modules = load_modules_from_directory(
+    #     modules_list=modules_dict["modules_postproc"], module_folder="postproc"
+    # )
     # ? Should we have custom modules in a seperate folder?
     # imported_custom_modules = load_modules_from_directory(
     #     modules_list=modules_dict.modules_custom, module_folder=params.modules_custom_folder
@@ -309,28 +308,29 @@ def load_modules(modules_dict: Dict) -> List[ModuleType]:
 
     return (
         imported_preproc_modules
-        + imported_process_modules
-        + imported_postproc_modules  # + imported_custom_modules ? (see above)
     )
+    #     + imported_process_modules
+    #     + imported_postproc_modules  # + imported_custom_modules ? (see above)
+    # )
 
 
 def validate_module(module) -> None:
     """Validates that a module has the required functions to be used in IGM."""
-    required_functions = ["params", "initialize", "finalize", "update"]
+    required_functions = ["initialize", "finalize", "update"]
     for function in required_functions:
         if not hasattr(module, function):
             raise AttributeError(
-                f"Module {module} is missing the required function ({function}). If it is a custom python package, make sure to include the 4 required functions: ['params', 'initialize', 'finalize', 'update'].",
+                f"Module {module} is missing the required function ({function}). If it is a custom python package, make sure to include the 3 required functions: ['initialize', 'finalize', 'update'].",
                 f"Please see https://github.com/jouvetg/igm/wiki/5.-Custom-modules-(coding) for more information on how to construct custom modules.",
             )
 
 
 def load_modules_from_directory(
-    modules_list: List[str], module_folder: str
+    modules_list: List[str]
 ) -> List[ModuleType]:
     imported_modules = []
     for module_name in modules_list:
-        module_path = f"igm.modules.{module_folder}.{module_name}"
+        module_path = f"igm.modules.{module_name}"
         try:
             module = importlib.import_module(module_path)
         except ModuleNotFoundError:
@@ -347,7 +347,7 @@ def load_modules_from_directory(
                     module = importlib.import_module("modules_custom." + module_name)
             except ModuleNotFoundError:
                 raise ModuleNotFoundError(
-                    f"Can not find module {module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/{module_folder} directory or 2) in your current working directory."
+                    f"Can not find module {module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/ directory or 2) in your current working directory."
                 )
 
         validate_module(module)

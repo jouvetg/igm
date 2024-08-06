@@ -112,22 +112,22 @@ def iceflow_energy(cfg, U, V, fieldin):
         arrhenius,
         slidingco,
         dX,
-        cfg.iceflow.iceflow.iflo_Nz,
-        cfg.iceflow.iceflow.iflo_vert_spacing,
-        cfg.iceflow.iceflow.iflo_exp_glen,
-        cfg.iceflow.iceflow.iflo_exp_weertman,
-        cfg.iceflow.iceflow.iflo_regu_glen,
-        cfg.iceflow.iceflow.iflo_regu_weertman,
-        cfg.iceflow.iceflow.iflo_thr_ice_thk,
-        cfg.iceflow.iceflow.iflo_ice_density,
-        cfg.iceflow.iceflow.iflo_gravity_cst,
-        cfg.iceflow.iceflow.iflo_new_friction_param,
-        cfg.iceflow.iceflow.iflo_cf_cond,
-        cfg.iceflow.iceflow.iflo_cf_eswn,
-        cfg.iceflow.iceflow.iflo_regu,
-        cfg.iceflow.iceflow.iflo_min_sr,
-        cfg.iceflow.iceflow.iflo_max_sr,
-        cfg.iceflow.iceflow.iflo_force_negative_gravitational_energy
+        cfg.iceflow.iflo_Nz,
+        cfg.iceflow.iflo_vert_spacing,
+        cfg.iceflow.iflo_exp_glen,
+        cfg.iceflow.iflo_exp_weertman,
+        cfg.iceflow.iflo_regu_glen,
+        cfg.iceflow.iflo_regu_weertman,
+        cfg.iceflow.iflo_thr_ice_thk,
+        cfg.iceflow.iflo_ice_density,
+        cfg.iceflow.iflo_gravity_cst,
+        cfg.iceflow.iflo_new_friction_param,
+        cfg.iceflow.iflo_cf_cond,
+        cfg.iceflow.iflo_cf_eswn,
+        cfg.iceflow.iflo_regu,
+        cfg.iceflow.iflo_min_sr,
+        cfg.iceflow.iflo_max_sr,
+        cfg.iceflow.iflo_force_negative_gravitational_energy
     )
 
 
@@ -356,7 +356,7 @@ def iceflow_energy_XY(cfg, X, Y):
 
 
 def Y_to_UV(cfg, Y):
-    N = cfg.iceflow.iceflow.iflo_Nz
+    N = cfg.iceflow.iflo_Nz
 
     U = tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1])
     V = tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1])
@@ -381,7 +381,7 @@ def UV_to_Y(cfg, U, V):
 def fieldin_to_X(cfg, fieldin):
     X = []
 
-    fieldin_dim = [0, 0, 1 * (cfg.iceflow.iceflow.iflo_dim_arrhenius == 3), 0, 0]
+    fieldin_dim = [0, 0, 1 * (cfg.iceflow.iflo_dim_arrhenius == 3), 0, 0]
 
     for f, s in zip(fieldin, fieldin_dim):
         if s == 0:
@@ -395,20 +395,20 @@ def fieldin_to_X(cfg, fieldin):
 def X_to_fieldin(cfg, X):
     i = 0
 
-    fieldin_dim = [0, 0, 1 * (cfg.iceflow.iceflow.iflo_dim_arrhenius == 3), 0, 0]
+    fieldin_dim = [0, 0, 1 * (cfg.iceflow.iflo_dim_arrhenius == 3), 0, 0]
 
     fieldin = []
 
-    for f, s in zip(cfg.iceflow.iceflow.iflo_fieldin, fieldin_dim):
+    for f, s in zip(cfg.iceflow.iflo_fieldin, fieldin_dim):
         if s == 0:
             fieldin.append(X[:, :, :, i])
             i += 1
         else:
             fieldin.append(
                 tf.experimental.numpy.moveaxis(
-                    X[:, :, :, i : i + cfg.iceflow.iceflow.iflo_Nz], [-1], [1]
+                    X[:, :, :, i : i + cfg.iceflow.iflo_Nz], [-1], [1]
                 )
             )
-            i += cfg.iceflow.iceflow.iflo_Nz
+            i += cfg.iceflow.iflo_Nz
 
     return fieldin

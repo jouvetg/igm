@@ -1,5 +1,5 @@
-from .time import (
-    params,
+from .thk import (
+    # params,
     initialize,
     finalize,
     update

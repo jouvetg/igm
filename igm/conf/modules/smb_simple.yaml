@@ -1,4 +1,4 @@
 smb_simple:
-  smb_simple_update_freq:
-  smb_simple_file:
-  smb_simple_array:
+  smb_simple_update_freq: 1.0 # help: Update the mass balance each X years (1)
+  smb_simple_file: smb_simple_param.txt # help: Name of the imput file for the simple mass balance model (time, gradabl, gradacc, ela, accmax)
+  smb_simple_array: [] # help: Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)

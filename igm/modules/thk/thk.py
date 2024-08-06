@@ -8,40 +8,41 @@ import tensorflow as tf
 
 from igm.modules.utils import compute_divflux_slope_limiter
 
-def params(parser):
-    parser.add_argument(
-        "--thk_slope_type",
-        type=str,
-        default="superbee",
-        help="Type of slope limiter for the ice thickness equation (godunov or superbee)",
-    )
-    parser.add_argument(
-        "--thk_ratio_density",
-        type=float,
-        default=0.910,
-        help="density of ice divided by density of water",
-    )
-    parser.add_argument(
-        "--thk_default_sealevel",
-        type=float,
-        default=0.0,
-        help="Default sea level if not provided by the user",
-    )
+# def params(parser):
+#     parser.add_argument(
+#         "--thk_slope_type",
+#         type=str,
+#         default="superbee",
+#         help="Type of slope limiter for the ice thickness equation (godunov or superbee)",
+#     )
+#     parser.add_argument(
+#         "--thk_ratio_density",
+#         type=float,
+#         default=0.910,
+#         help="density of ice divided by density of water",
+#     )
+#     parser.add_argument(
+#         "--thk_default_sealevel",
+#         type=float,
+#         default=0.0,
+#         help="Default sea level if not provided by the user",
+#     )
 
-def initialize(params, state):
-
+def initialize(cfg, state):
+    cfg = cfg.modules.thk
     # define the lower ice surface
     if hasattr(state, "sealevel"):
-        state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk + state.sealevel)
+        state.lsurf = tf.maximum(state.topg,-cfg.thk_ratio_density*state.thk + state.sealevel)
     else:
-        state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk + params.thk_default_sealevel)
+        state.lsurf = tf.maximum(state.topg,-cfg.thk_ratio_density*state.thk + cfg.thk_default_sealevel)
 
     # define the upper ice surface
     state.usurf = state.lsurf + state.thk
 
     state.tcomp_thk = []
 
-def update(params, state):
+def update(cfg, state):
+    cfg = cfg.modules.thk
     if state.it >= 0:
         if hasattr(state, "logger"):
             state.logger.info(
@@ -52,7 +53,7 @@ def update(params, state):
 
         # compute the divergence of the flux
         state.divflux = compute_divflux_slope_limiter(
-            state.ubar, state.vbar, state.thk, state.dx, state.dx, state.dt, slope_type=params.thk_slope_type
+            state.ubar, state.vbar, state.thk, state.dx, state.dx, state.dt, slope_type=cfg.thk_slope_type
         )
 
         # if not smb model is given, set smb to zero
@@ -64,9 +65,9 @@ def update(params, state):
 
         # define the lower ice surface
         if hasattr(state, "sealevel"):
-            state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk + state.sealevel)
+            state.lsurf = tf.maximum(state.topg,-cfg.thk_ratio_density*state.thk + state.sealevel)
         else:
-            state.lsurf = tf.maximum(state.topg,-params.thk_ratio_density*state.thk + params.thk_default_sealevel)
+            state.lsurf = tf.maximum(state.topg,-cfg.thk_ratio_density*state.thk + cfg.thk_default_sealevel)
 
         # define the upper ice surface
         state.usurf = state.lsurf + state.thk

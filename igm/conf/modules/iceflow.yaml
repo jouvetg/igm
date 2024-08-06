@@ -8,8 +8,8 @@ iceflow:
     iflo_init_slidingco: 0.0464
     iflo_init_arrhenius: 78
     iflo_enhancement_factor: 1.0
-    iflo_regu_glen: 10 ** (-5)
-    iflo_regu_weertman: 10 ** (-10)
+    iflo_regu_glen: 1e-5
+    iflo_regu_weertman: 1e-10
     iflo_exp_glen: 3
     iflo_exp_weertman: 3
     iflo_gravity_cst: 9.81
@@ -43,8 +43,8 @@ iceflow:
     iflo_cf_eswn: []
     iflo_cf_cond: False
     iflo_regu: 0.0
-    iflo_min_sr: 10**(-20)
-    iflo_max_sr: 10**(20)
+    iflo_min_sr: 1e-20
+    iflo_max_sr: 1e20
     iflo_force_negative_gravitational_energy: False
     iflo_optimizer_solver: 'Adam'
     iflo_optimizer_lbfgs: False

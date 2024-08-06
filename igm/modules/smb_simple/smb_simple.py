@@ -10,8 +10,8 @@ import tensorflow as tf
 from igm.modules.utils import interp1d_tf
 
 
-def params(parser):
-    pass
+# def params(parser):
+    # pass
 #     parser.add_argument(
 #         "--smb_simple_update_freq",
 #         type=float,
@@ -33,22 +33,24 @@ def params(parser):
 
 
 def initialize(cfg, state):
-    if cfg.smb_simple.smb_simple_array == []:
+    cfg = cfg.modules.smb_simple
+    if cfg.smb_simple_array == []:
         state.smbpar = np.loadtxt(
-            cfg.smb_simple.smb_simple_file,
+            cfg.smb_simple_file,
             skiprows=1,
             dtype=np.float32,
         )
     else:
-        state.smbpar = np.array(cfg.smb_simple.smb_simple_array[1:]).astype(np.float32)
+        state.smbpar = np.array(cfg.smb_simple_array[1:]).astype(np.float32)
 
     state.tcomp_smb_simple = []
     state.tlast_mb = tf.Variable(-1.0e5000)
 
 
-def update(params, state):
+def update(cfg, state):
+    cfg = cfg.modules.smb_simple
     # update smb each X years
-    if (state.t - state.tlast_mb) >= params.smb_simple_update_freq:
+    if (state.t - state.tlast_mb) >= cfg.smb_simple_update_freq:
         if hasattr(state, "logger"):
             state.logger.info(
                 "Construct mass balance at time : " + str(state.t.numpy())

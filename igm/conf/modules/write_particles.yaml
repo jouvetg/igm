@@ -1,0 +1,2 @@
+write_particles:
+    wpar_add_topography: True # help="Add topg"

@@ -1,0 +1,7 @@
+iceflow_v1:
+  init_strflowctrl: 78 # help="Initial strflowctrl"
+  iflo_emulator: f15_cfsflow_GJ_22_a # help="Directory path of the deep-learning ice flow model, create a new if empty string"
+  iflo_init_slidingco: 0 # help="Initial sliding coeeficient slidingco"
+  iflo_init_arrhenius: 78 # help="Initial arrhenius factor arrhenuis"
+  iflo_multiple_window_size: 0 # help="If a U-net, this force window size a multiple of 2**N"
+  iflo_force_max_velbar: 0 # help="This permits to artif. upper-bound velocities, active if > 0"

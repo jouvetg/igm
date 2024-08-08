@@ -1,0 +1,23 @@
+enthalpy:
+  enth_water_density: 1000 # help="Constant of the Water density [kg m-3]",
+  enth_spy: 31556926 # help="Number of seconds per years [s y-1]",
+  enth_ki: 2.1 # help="Conductivity of cold ice [W m-1 K-1] (Aschwanden and al, JOG, 2012)",
+  enth_ci: 2009 # help="Specific heat capacity of ice [W s kg-1 K-1] (Aschwanden and al, JOG, 2012)",
+  enth_Lh: 3.34 * 10 ** (5) # help="latent heat of fusion [W s kg-1] = [E] (Aschwanden and al, JOG, 2012)",
+  enth_KtdivKc: 10 ** (-1) # help="Ratio of temp vs cold ice diffusivity Kt / Kc [no unit] (Aschwanden and al, JOG, 2012)",
+  enth_claus_clape: 7.9 * 10 ** (-8) # help="Clausius-Clapeyron constant [K Pa-1] (Aschwanden and al, JOG, 2012)",
+  enth_melt_temp: 273.15 # help="Melting point at standart pressure [K] (Aschwanden and al, JOG, 2012)",
+  enth_ref_temp: 223.15 # help="Reference temperature [K] (Aschwanden and al, JOG, 2012)",
+  enth_till_friction_angle: 30 # help="Till friction angle in the Mohr-Coulomb friction law [deg]",
+  enth_till_friction_angle_bed_min: None # help="enth_till_friction_angle_bed_min",
+  enth_till_friction_angle_bed_max: None # help="enth_till_friction_angle_bed_max",
+  enth_till_friction_angle_phi_min: 15 # help="enth_till_friction_angle_phi_min",
+  enth_till_friction_angle_phi_max: 45 # help="enth_till_friction_angle_phi_max",
+  enth_uthreshold: 100 # help="uthreshold [m/y] # "--enth_uthreshold", type=float, default=100, help="uthreshold [m/y]"
+  enth_drain_rate: 0.001 # help="Drain rate at 1 mm/y  [m y-1] (Bueler and Pelt, GMD, 2015)",
+  enth_till_wat_max: 2 # help="Maximum water till tickness [m] (Bueler and Pelt, GMD, 2015)",
+  enth_drain_ice_column: True # help="Transform the water content beyond a thr=0.01 into water, drain it, and add it to basal melt rate",
+  enth_default_bheatflx: 0.065 # help="Geothermal heat flux [W m-2]",
+  temperature_offset_air_to_ice: 0.0 # help="This is the offset between the air temperature and the ice temperature as records show [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder than the temperature of ice to be given as boundary upper condition to the Enthlapy model",
+  enth_tauc_min: 10**5 # help="lower bound for tauc [Pa]"
+  enth_tauc_max: 10**10 # help="lower bound for tauc [Pa]"

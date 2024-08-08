@@ -19,4 +19,13 @@ modules:
   # iceflow
   # thk
 
+# experiment: params # can we make it work here?
 
+# defaults:
+# hydra/launcher: joblib # not working right now! Why???
+
+# defaults:
+  # - hydra/launcher@test:joblib
+  # - hydra/config: _self_
+  # - override job_logging@hydra: custom
+  # - override hydra/launcher: joblib

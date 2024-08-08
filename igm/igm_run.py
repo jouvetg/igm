@@ -24,6 +24,10 @@ import hydra
 
 OmegaConf.register_new_resolver("get_cwd", lambda x: os.getcwd())
 
+physical_devices = tf.config.list_physical_devices('GPU') 
+for gpu_instance in physical_devices: 
+    tf.config.experimental.set_memory_growth(gpu_instance, True)
+    
 # param_filename = OmegaConf.load("params.yaml")
 # OmegaConf.register_new_resolver("get_param_file", lambda x: "thk")
 

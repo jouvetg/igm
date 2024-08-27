@@ -113,6 +113,10 @@ def initialize(params, state):
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.flip(np.squeeze(nc.variables["y"]).astype("float32"))
+    try:
+        pyproj_srs = nc.pyproj_srs
+    except AttributeError:
+        pyproj_srs = 'not provided'
     
     #If you know that grids above a certain size are going to make your GPU memory explode,
     #activating this commented block and setting the number in the if statement to your
@@ -247,6 +251,8 @@ def initialize(params, state):
     for var in ["x", "y"]:
         vars(state)[var] = tf.constant(vars()[var].astype("float32"))
 
+    vars(state)["pyproj_srs"] = pyproj_srs
+
     for var in vars_to_save:
         vars(state)[var] = tf.Variable(vars()[var].astype("float32"), trainable=False)
 
@@ -289,6 +295,8 @@ def initialize(params, state):
         xn.standard_name = "x"
         xn.axis = "X"
         xn[:] = x
+
+        nc.pyproj_srs = pyproj_srs
 
         for v in vars_to_save:
             E = nc.createVariable(v, np.dtype("float32").char, ("y", "x"))

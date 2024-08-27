@@ -131,6 +131,11 @@ def update(params, state):
             E.axis = "X"
             E[:] = state.x.numpy()
 
+            try:
+                nc.pyproj_srs = state.pyproj_srs
+            except AttributeError:
+                nc.pyproj_srs = 'not provided'
+
             if hasattr(params, "iflo_Nz"):
                 nc.createDimension("z", params.iflo_Nz)
                 E = nc.createVariable("z", np.dtype("float32").char, ("z",))

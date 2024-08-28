@@ -131,10 +131,8 @@ def update(params, state):
             E.axis = "X"
             E[:] = state.x.numpy()
 
-            try:
+            if hasattr(state, 'pyproj_srs'):
                 nc.pyproj_srs = state.pyproj_srs
-            except AttributeError:
-                nc.pyproj_srs = 'not provided'
 
             if hasattr(params, "iflo_Nz"):
                 nc.createDimension("z", params.iflo_Nz)

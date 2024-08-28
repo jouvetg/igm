@@ -297,7 +297,8 @@ def initialize(params, state):
         xn.axis = "X"
         xn[:] = x
 
-        nc.pyproj_srs = pyproj_srs
+        if pyproj_srs is not None:
+            nc.pyproj_srs = pyproj_srs
 
         for v in vars_to_save:
             E = nc.createVariable(v, np.dtype("float32").char, ("y", "x"))

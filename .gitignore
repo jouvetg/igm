@@ -10,6 +10,8 @@ texture-aif-test
 tests/examples/texture-test/
 checkpoints/
 logdir/
+.DS_Store
+
 # texture/
 smb_accpdd/
 clim_glacialindex/

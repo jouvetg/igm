@@ -98,21 +98,29 @@ def params(parser):
     )
 
 def initialize(params, state):
+
     import json
 
-    try:
-        _oggm_util([params.oggm_RGI_ID], params)
-    except:
-        print('Server data issue?: '+params.oggm_RGI_ID)
+    # Fetch the data from OGGM
+    _oggm_util([params.oggm_RGI_ID], params)
+
+    ncpath = os.path.join(params.oggm_RGI_ID, "gridded_data.nc")
+    if not os.path.exists(ncpath):
+        msg = f'OGGM data issue with glacier {params.oggm_RGI_ID}'
+        if hasattr(state, "logger"):
+            state.logger.info(msg)
+        else:
+            print(msg)
         return
 
     if hasattr(state, "logger"):
         state.logger.info("Prepare data using oggm and glathida")
 
-    nc = Dataset(os.path.join(params.oggm_RGI_ID, "gridded_data.nc"), "r+")
+    nc = Dataset(ncpath, "r+")
 
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.flip(np.squeeze(nc.variables["y"]).astype("float32"))
+
     if hasattr(nc, 'pyproj_srs'):
         pyproj_srs = nc.pyproj_srs
     else:
@@ -166,14 +174,14 @@ def initialize(params, state):
                 np.squeeze(nc.variables["millan_vx"]).astype("float32")
             )
             uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
-            
+
             uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
             vars_to_save += ["uvelsurfobs"]
         if "millan_vy" in nc.variables:
             vvelsurfobs = np.flipud(
                 np.squeeze(nc.variables["millan_vy"]).astype("float32")
             )
-            vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)            
+            vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
             vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
             vars_to_save += ["vvelsurfobs"]
         else:
@@ -207,7 +215,7 @@ def initialize(params, state):
         thkinit = np.where(np.isnan(thkinit), 0, thkinit)
         thkinit = np.where(icemaskobs, thkinit, 0)
         vars_to_save += ["thkinit"]
-        
+
     if "hugonnet_dhdt" in nc.variables:
         dhdt = np.flipud(
             np.squeeze(nc.variables["hugonnet_dhdt"]).astype("float32")
@@ -223,7 +231,7 @@ def initialize(params, state):
             with open(os.path.join(params.oggm_RGI_ID, "glacier_grid.json"), "r") as f:
                 data = json.load(f)
             proj = data["proj"]
-    
+
             try:
                 thkobs = _read_glathida(
                     x, y, usurfobs, proj, params.oggm_path_glathida, state
@@ -233,7 +241,7 @@ def initialize(params, state):
                 thkobs = np.zeros_like(thk) * np.nan
         elif params.oggm_RGI_version==7:
             path_glathida = os.path.join(params.oggm_RGI_ID, "glathida_data.csv")
-    
+
             try:
                 thkobs = _read_glathida_v7(
                     x, y, path_glathida
@@ -322,7 +330,7 @@ def finalize(params, state):
 
     if params.oggm_remove_RGI_folder:
         try:
-            shutil.rmtree(params.oggm_RGI_ID) 
+            shutil.rmtree(params.oggm_RGI_ID)
         except Exception as error:
             print("Error: ", error)
 
@@ -355,7 +363,7 @@ def _oggm_util(RGIs, params):
         # Initialize OGGM and set up the default run parameters
         cfg.initialize_minimal()
 
-        cfg.PARAMS["continue_on_error"] = False
+        cfg.PARAMS["continue_on_error"] = True
         cfg.PARAMS["use_multiprocessing"] = False
 
         WD = "OGGM-prepro"
@@ -457,15 +465,15 @@ def _oggm_util(RGIs, params):
         from oggm.shop import bedtopo
 
         workflow.execute_entity_task(bedtopo.add_consensus_thickness, gdirs)
-        
+
         from oggm.shop import glathida
 
         workflow.execute_entity_task(glathida.glathida_to_gdir, gdirs)
-        
+
         from oggm.shop.w5e5 import process_w5e5_data
 
         workflow.execute_entity_task(process_w5e5_data, gdirs)
-        
+
         workflow.execute_entity_task(tasks.elevation_band_flowline, gdirs)
         workflow.execute_entity_task(tasks.fixed_dx_elevation_band_flowline, gdirs)
         workflow.execute_entity_task(tasks.mb_calibration_from_geodetic_mb,
@@ -501,7 +509,7 @@ def _read_glathida(x, y, usurf, proj, path_glathida, state):
 
     files = glob.glob(os.path.join(path_glathida, "glathida", "data", "*", "point.csv"))
     files += glob.glob(os.path.join(path_glathida, "glathida", "data", "point.csv"))
-   
+
     os.path.expanduser
 
     transformer = Transformer.from_crs(proj, "epsg:4326", always_xy=True)
@@ -518,8 +526,8 @@ def _read_glathida(x, y, usurf, proj, path_glathida, state):
     df = pd.concat(
         [pd.read_csv(file, low_memory=False) for file in files], ignore_index=True
     )
-    
-    
+
+
     mask = (
         (lonmin <= df["longitude"])
         & (df["longitude"] <= lonmax)
@@ -576,31 +584,31 @@ def _read_glathida(x, y, usurf, proj, path_glathida, state):
 
 def _read_glathida_v7(x, y, path_glathida):
     #Function written by Samuel Cook
-    
+
     #Read GlaThiDa file
     gdf = pd.read_csv(path_glathida)
-    
+
     gdf_sel = gdf.loc[gdf.thickness > 0]  # you may not want to do that, but be aware of: https://gitlab.com/wgms/glathida/-/issues/25
     gdf_per_grid = gdf_sel.groupby(by='ij_grid')[['i_grid', 'j_grid', 'elevation', 'thickness', 'thickness_uncertainty']].mean()  # just average per grid point
     # Average does not preserve ints
     gdf_per_grid['i_grid'] = gdf_per_grid['i_grid'].astype(int)
     gdf_per_grid['j_grid'] = gdf_per_grid['j_grid'].astype(int)
-    
-    #Get GlaThiDa data onto model grid  
+
+    #Get GlaThiDa data onto model grid
     thkobs = np.full((y.shape[0], x.shape[0]), np.nan)
     thkobs[gdf_per_grid['j_grid'],gdf_per_grid['i_grid']] = gdf_per_grid['thickness']
     thkobs = np.flipud(thkobs)
-    
+
     return thkobs
 
 def _get_tidewater_termini_and_slopes(tidewatermask, slopes, RGIs, params):
     #Function written by Samuel Cook
     #Identify which glaciers in a complex are tidewater and also return average slope (both needed for infer_params in optimize)
-    
+
     from oggm import utils, workflow, tasks, graphics
     import xarray as xr
     import matplotlib.pyplot as plt
-    
+
     rgi_ids = RGIs
     base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v3" )
     gdirs = workflow.init_glacier_directories(

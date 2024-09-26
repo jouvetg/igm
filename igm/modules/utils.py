@@ -56,7 +56,7 @@ def compute_upwind_gradient_tf(u, v, s, dx):
 
     ## Compute the product selcting the upwind quantities  :-2, 1:-1 , 2:
     Rx = u * tf.where(
-        v > 0,
+        u > 0,
         (Ex[:, 1:-1] - Ex[:, :-2]) / dx,
         (Ex[:, 2:] - Ex[:, 1:-1]) / dx,
     )  # has shape (ny,nx+1)

@@ -39,3 +39,4 @@ thk_MG
 .idea/
 energy_iceflow_DG.py
 emulate_DG.py
+optimize_fw.py

@@ -208,9 +208,9 @@ def initialize(params, state):
     uvelsurfobs = scipy.signal.medfilt2d(uvelsurfobs, kernel_size=3) # remove outliers
     vvelsurfobs = scipy.signal.medfilt2d(vvelsurfobs, kernel_size=3) # remove outliers
 
-    if "millan_ice_thickness" in nc.variables:
+    if params.oggm_thk_source in nc.variables: # either "millan_ice_thickness" or "consensus_ice_thickness"
         thkinit = np.flipud(
-            np.squeeze(nc.variables["millan_ice_thickness"]).astype("float32")
+            np.squeeze(nc.variables[params.oggm_thk_source]).astype("float32")
         )
         thkinit = np.where(np.isnan(thkinit), 0, thkinit)
         thkinit = np.where(icemaskobs, thkinit, 0)

@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 import copy
-
 import numpy as np
-import os
 import json
-from types import SimpleNamespace
 import xarray as xr
-from matplotlib.font_manager import json_load
 
 
 def params(parser):

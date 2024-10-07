@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 import copy
-
 import numpy as np
-import os
 import json
-from types import SimpleNamespace
 import xarray as xr
 
 
@@ -45,45 +42,11 @@ def finalize(params, state):
                         ],
                         style={"margin-bottom": "10px"},
                     ),
-                    # slider for camera-position in x-y-plane
-                    html.Div(
-                        dcc.Slider(
-                            id="camera_angle",
-                            step=9,
-                            value=45,
-                            min=0,
-                            max=180,
-                            marks=None,
-                            drag_value=45,
-                            included=False,
-                        )
-                    ),
+
                     # 3D surface plot
                     dcc.Graph(id="mnt_surface", figure=fig),
                 ],
-                style={"width": "95%", "height": "800px", "display": "inline-block"},
-            ),
-            # slider for camera-position on z-axis
-            html.Div(
-                children=[
-                    dcc.Slider(
-                        id="camera_height",
-                        step=0.2,
-                        value=1.5,
-                        min=0,
-                        max=2,
-                        vertical=True,
-                        drag_value=1.5,
-                        marks=None,
-                        verticalHeight=600,
-                        included=False,
-                    )
-                ],
-                style={
-                    "width": "5%",
-                    "display": "inline-block",
-                    "text_align": "center",
-                },
+                style={"width": "100%", "height": "800px", "display": "inline-block"},
             ),
         ],
         style={
@@ -96,18 +59,11 @@ def finalize(params, state):
     @app.callback(
         Output("mnt_surface", "figure"),
         Input("property", "value"),
-        Input("camera_angle", "drag_value"),
-        Input("camera_height", "drag_value"),
     )
-    def updata_graph(property, camera_angle, camera_height):
-        # load params
-        path_to_json_saved = "params_saved.json"
-        with open(path_to_json_saved, "r") as json_file:
-            json_text = json_file.read()
-        params = json.loads(json_text, object_hook=lambda d: SimpleNamespace(**d))
-
+    def updata_graph(property):
         # read output.nc
-        ds = xr.open_dataset("output.nc", engine="netcdf4")
+        output_file = params.wncd_output_file
+        ds = xr.open_dataset(output_file, engine="netcdf4")
 
         # get attributes from ds
         bedrock = np.array(ds.topg[0])
@@ -204,7 +160,7 @@ def finalize(params, state):
                 z=bedrock_border,
                 x=lat_range,
                 y=lon_range,
-                colorscale='speed_r',
+                colorscale='gray',
                 opacity=1,
                 showlegend=True,
                 name="bedrock",
@@ -261,40 +217,35 @@ def finalize(params, state):
         ratio_z = (max_bedrock - min_bedrock) / (bedrock.shape[0] * resolution)
         ratio_z *= 2  # emphasize z-axis to make mountians look twice as steep
 
-        # transform angle[0-180] into values between [0, 1] for camera postion
-        radians = math.radians(camera_angle - 180)
-        camera_x = math.sin(-radians)
-        camera_y = math.cos(-radians)
-
         fig_dict = dict(
             data=frames[0]["data"],
             frames=frames,
             layout=dict(  # width=1800,
-                height=800,
+                height=900,
                 margin=dict(l=0, r=0, t=30, b=0),
                 sliders=[sliders_dict],
                 title=title,
                 font=dict(family="monospace"),
                 legend={"orientation": "h", "yanchor": "bottom", "xanchor": "left"},
                 scene=dict(
-                    zaxis=dict(showbackground=True, showticklabels=False, title=""),
+                    zaxis=dict(showbackground=False, showticklabels=False, title=""),
                     xaxis=dict(
                         showbackground=False,
-                        showticklabels=True,
+                        showticklabels=False,
                         visible=True,
                         range=[lat_range[0], lat_range[-1]],
-                        title="Longitude",
+                        title=""#"Longitude",
                     ),
                     yaxis=dict(
                         showbackground=False,
-                        showticklabels=True,
+                        showticklabels=False,
                         visible=True,
                         range=[lon_range[0], lon_range[-1]],
-                        title="Latitude",
+                        title=""#"Latitude",
+
                     ),
                 ),
                 scene_aspectratio=dict(x=1, y=ratio_y, z=ratio_z),
-                scene_camera_eye=dict(x=camera_x, y=camera_y, z=camera_height),
                 updatemenus=[
                     dict(
                         buttons=[
@@ -347,4 +298,23 @@ def finalize(params, state):
 
 
 if __name__ == "__main__":
-    finalize_anim_plotly(None, None)
+    import argparse
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description="Load a JSON file and pass its content to finalize.")
+    parser.add_argument('--param_file',
+                        type=str,
+                        default='params_saved.json',
+                        help='Path to the JSON parameter file')
+
+    # Parse the command-line arguments
+    args = parser.parse_args()
+
+    # Load the JSON file
+    with open(args.param_file, 'r') as f:
+        param_dict = json.load(f)
+
+    # Convert the loaded JSON dictionary into a Namespace
+    param_data = argparse.Namespace(**param_dict)
+
+    # Call finalize with the loaded JSON data as the first argument
+    finalize(param_data, None)

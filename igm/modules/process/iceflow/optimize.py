@@ -249,6 +249,17 @@ def optimize(params, state):
             #     if np.mean(cost[-10:])>np.mean(cost[-20:-10]):
             #         break;
 
+	# for final iteration
+    i = params.opti_nbitmax
+
+    print_costs(params, state, cost, i)
+
+    if i % params.opti_output_freq == 0:
+        if params.opti_plot2d:
+            update_plot_inversion(params, state, i)
+        if params.opti_save_iterat_in_ncdf:
+            update_ncdf_optimize(params, state, i)
+
 #    for f in params.opti_control:
 #        vars(state)[f] = vars()[f] * sc[f]
 

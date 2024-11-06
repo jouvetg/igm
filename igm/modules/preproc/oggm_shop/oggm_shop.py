@@ -102,7 +102,8 @@ def initialize(params, state):
     import json
 
     # Fetch the data from OGGM
-    _oggm_util([params.oggm_RGI_ID], params)
+    if not os.path.exists(params.oggm_RGI_ID):
+        _oggm_util([params.oggm_RGI_ID], params)
 
     ncpath = os.path.join(params.oggm_RGI_ID, "gridded_data.nc")
     if not os.path.exists(ncpath):

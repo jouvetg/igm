@@ -343,6 +343,8 @@ def _iceflow_energy(
 
     # print(C_shear[0].numpy(),C_slid[0].numpy(),C_grav[0].numpy(),C_float[0].numpy())
 
+    # C_pen = 10000 * tf.where(thk>0,0.0, tf.reduce_sum( tf.abs(U), axis=1)**2 )
+
     return C_shear, C_slid, C_grav, C_float
 
 

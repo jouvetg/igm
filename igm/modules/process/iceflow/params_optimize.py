@@ -257,3 +257,11 @@ def params_optimize(parser):
         default=False,
         help="formerly, the oce was mixing reduce_mean and l2_loss leadinf to dependence to the resolution of the grid",
     )
+    parser.add_argument(
+        "--opti_velsurfobs_thr",
+        type=float,
+        default=0.0,
+        help="Threshold for the surface ice velocities as input data for the optimization, anything below this value will be ignored",
+    )
+
+    

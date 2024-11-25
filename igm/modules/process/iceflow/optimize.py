@@ -90,12 +90,14 @@ def optimize(params, state):
     Ny, Nx = state.thk.shape
 
     for f in params.opti_control:
-        vars()[f] = tf.Variable(vars(state)[f] / sc[f])
+        vars()[f] = tf.Variable(vars(state)[f] / sc[f]) 
 
     # main loop
     for i in range(params.opti_nbitmax):
-        with tf.GradientTape() as t, tf.GradientTape() as s:
-            state.tcomp_optimize.append(time.time())
+
+        state.tcomp_optimize.append(time.time())
+
+        with tf.GradientTape() as t:
             
             if params.opti_step_size_decay < 1:
                 optimizer.lr = params.opti_step_size * (params.opti_step_size_decay ** (i / 100))
@@ -177,21 +179,9 @@ def optimize(params, state):
                 cost["arrh_regu"] = regu_arrhenius(params, state) 
   
             cost_total = tf.reduce_sum(tf.convert_to_tensor(list(cost.values())))
-
-            # Here one allow retraining of the ice flow emaultor
-            if params.opti_retrain_iceflow_model:
-                C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X, Y)
-
-                cost["glen"] = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
-                             + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
-                
-                grads = s.gradient(cost["glen"], state.iceflow_model.trainable_variables)
-
-                opti_retrain.apply_gradients(
-                    zip(grads, state.iceflow_model.trainable_variables)
-                )
-
-            print_costs(params, state, cost, i)
+ 
+            # gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+            # print(f"C : GPU memory: {gpu_info['current'] / 1024**2:.2f} MB")
 
             #################
 
@@ -219,6 +209,9 @@ def optimize(params, state):
                 zip([grads[i] for i in range(grads.shape[0])], var_to_opti)
             )
 
+            for f in params.opti_control:
+                vars(state)[f] = vars()[f] * sc[f]
+
             ###################
 
             # get back optimized variables in the pool of state.variables
@@ -234,14 +227,41 @@ def optimize(params, state):
 
             _compute_rms_std_optimization(state, i)
 
-            state.tcomp_optimize[-1] -= time.time()
-            state.tcomp_optimize[-1] *= -1
+        # Here one allow retraining of the ice flow emaultor
+        if params.opti_retrain_iceflow_model:
+            with tf.GradientTape() as s:
 
-            if i % params.opti_output_freq == 0:
-                if params.opti_plot2d:
-                    update_plot_inversion(params, state, i)
-                if params.opti_save_iterat_in_ncdf:
-                    update_ncdf_optimize(params, state, i)
+                fieldin = [vars(state)[f] for f in params.iflo_fieldin]
+
+                X = fieldin_to_X(params, fieldin)
+
+                # evalutae th ice flow emulator                
+                if params.iflo_multiple_window_size==0:
+                    Y = state.iceflow_model(X)
+                else:
+                    Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
+ 
+                C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X, Y)
+
+                cost["glen"] = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
+                             + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
+                
+                grads = s.gradient(cost["glen"], state.iceflow_model.trainable_variables) 
+
+                opti_retrain.apply_gradients(
+                    zip(grads, state.iceflow_model.trainable_variables)
+                )
+
+        print_costs(params, state, cost, i)
+
+        state.tcomp_optimize[-1] -= time.time()
+        state.tcomp_optimize[-1] *= -1
+ 
+        if i % params.opti_output_freq == 0:
+            if params.opti_plot2d:
+                update_plot_inversion(params, state, i)
+            if params.opti_save_iterat_in_ncdf:
+                update_ncdf_optimize(params, state, i)
 
             # stopping criterion: stop if the cost no longer decrease
             # if i>params.opti_nbitmin:

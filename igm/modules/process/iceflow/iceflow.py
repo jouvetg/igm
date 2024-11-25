@@ -50,6 +50,7 @@ from .params_iceflow import *
 from .emulate import *
 from .solve import *
 from .diagnostic import *
+from .mixed import *
 from .utils import *
 from .optimize import *
 from .pretraining import *
@@ -86,6 +87,10 @@ def initialize(params, state):
         # define the second velocity field
         initialize_iceflow_diagnostic(params,state)
 
+    elif params.iflo_type == "mixed":
+        # define the second velocity field
+        initialize_iceflow_mixed(params,state)
+
     # create the vertica discretization
     define_vertical_weight(params, state)
 
@@ -121,10 +126,20 @@ def update(params, state):
     elif params.iflo_type == "diagnostic":
         update_iceflow_diagnostic(params, state)
 
+    elif params.iflo_type == "mixed":
+        update_iceflow_mixed(params, state)
+
     state.tcomp_iceflow[-1] -= time.time()
     state.tcomp_iceflow[-1] *= -1
 
 def finalize(params, state):
+
+    if params.iflo_type == "mixed":
+        finalize_iceflow_mixed(params, state)
+
+    if params.iflo_type == "diagnostic":
+        finalize_iceflow_diagnostic(params, state)
+
     if params.iflo_save_model:
         save_iceflow_model(params, state)
    

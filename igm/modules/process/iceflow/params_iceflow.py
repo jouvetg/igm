@@ -330,3 +330,57 @@ def params_iceflow(parser):
         default=""
     )
 
+    #################################################3
+
+    parser.add_argument(
+        "--iflo_solve_rel_min_delta",
+        type=float,
+        default=2e-3,
+        help="iflo_solve_rel_min_delta",
+    )
+    parser.add_argument(
+        "--iflo_solve_patience",
+        type=int,
+        default=2,
+        help="iflo_solve_patience",
+    )
+
+    parser.add_argument(
+        "--iflo_emulate_misfit_rel_min_delta",
+        type=float,
+        default=1e-2,
+        help="iflo_emulate_misfit_rel_min_delta",
+    )
+    parser.add_argument(
+        "--iflo_emulate_misfit_patience",
+        type=int,
+        default=100,
+        help="iflo_emulate_misfit_patience",
+    )
+
+    parser.add_argument(
+        "--iflo_emulate_rel_min_delta",
+        type=float,
+        default=1e-2,
+        help="iflo_emulate_rel_min_delta",
+    )
+    parser.add_argument(
+        "--iflo_emulate_patience",
+        type=int,
+        default=100,
+        help="iflo_emulate_patience",
+    )
+ 
+    parser.add_argument(
+        "--iflo_pretraining_nbit",
+        type=int,
+        default=1,
+        help="iflo_pretraining_nbit",
+    )
+    parser.add_argument(
+        "--iflow_track_error",
+        type=str2bool,
+        default=False,
+        help="iflow_track_error",
+    )
+  

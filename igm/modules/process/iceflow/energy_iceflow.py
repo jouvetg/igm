@@ -104,31 +104,48 @@ def _stag8(B):
 def iceflow_energy(params, U, V, fieldin):
     thk, usurf, arrhenius, slidingco, dX = fieldin
 
-    return _iceflow_energy(
-        U,
-        V,
-        thk,
-        usurf,
-        arrhenius,
-        slidingco,
-        dX,
-        params.iflo_Nz,
-        params.iflo_vert_spacing,
-        params.iflo_exp_glen,
-        params.iflo_exp_weertman,
-        params.iflo_regu_glen,
-        params.iflo_regu_weertman,
-        params.iflo_thr_ice_thk,
-        params.iflo_ice_density,
-        params.iflo_gravity_cst,
-        params.iflo_new_friction_param,
-        params.iflo_cf_cond,
-        params.iflo_cf_eswn,
-        params.iflo_regu,
-        params.iflo_min_sr,
-        params.iflo_max_sr,
-        params.iflo_force_negative_gravitational_energy
-    )
+    if params.iflo_Nz <= 2:
+        return _iceflow_energy_sia_profile(
+            U,
+            V,
+            thk,
+            usurf,
+            arrhenius,
+            slidingco,
+            dX,
+            params.iflo_exp_glen,
+            params.iflo_exp_weertman,
+            params.iflo_regu_glen,
+            params.iflo_regu_weertman,
+            params.iflo_ice_density,
+            params.iflo_gravity_cst
+        )
+    else:
+        return _iceflow_energy(
+            U,
+            V,
+            thk,
+            usurf,
+            arrhenius,
+            slidingco,
+            dX,
+            params.iflo_Nz,
+            params.iflo_vert_spacing,
+            params.iflo_exp_glen,
+            params.iflo_exp_weertman,
+            params.iflo_regu_glen,
+            params.iflo_regu_weertman,
+            params.iflo_thr_ice_thk,
+            params.iflo_ice_density,
+            params.iflo_gravity_cst,
+            params.iflo_new_friction_param,
+            params.iflo_cf_cond,
+            params.iflo_cf_eswn,
+            params.iflo_regu,
+            params.iflo_min_sr,
+            params.iflo_max_sr,
+            params.iflo_force_negative_gravitational_energy
+        )
 
 
 @tf.function(experimental_relax_shapes=True)
@@ -347,6 +364,132 @@ def _iceflow_energy(
 
     return C_shear, C_slid, C_grav, C_float
 
+
+@tf.function(experimental_relax_shapes=True)
+def _iceflow_energy_sia_profile(
+    U,
+    V,
+    thk,
+    usurf,
+    arrhenius,
+    slidingco,
+    dX, 
+    exp_glen,
+    exp_weertman,
+    regu_glen,
+    regu_weertman,
+    ice_density,
+    gravity_cst
+):
+    
+    ord_gauss = 3
+
+    Nz = U.shape[1]
+
+    if ord_gauss == 3:
+        n = np.array([0.11270, 0.5,     0.88730])
+        w = np.array([0.27778, 0.44444, 0.27778])
+    elif ord_gauss == 5:
+        n = np.array([0.04691, 0.23077, 0.5,     0.76923, 0.95309])
+        w = np.array([0.11847, 0.23932, 0.28444, 0.23932, 0.11847])
+    elif ord_gauss == 7:
+        n = np.array([0.025446, 0.129234, 0.297078,      0.5, 0.702922, 0.870766, 0.974554])
+        w = np.array([0.064742, 0.139852, 0.190915, 0.208979, 0.190915, 0.139852, 0.064742])
+
+    # B has Unit Mpa y^(1/n)
+    B = 2.0 * arrhenius ** (-1.0 / exp_glen)
+    C = 1.0 * slidingco
+ 
+    p = 1.0 + 1.0 / exp_glen
+    s = 1.0 + 1.0 / exp_weertman
+
+    dUdx = (U[:, :, :, 1:] - U[:, :, :, :-1]) / dX[0, 0, 0]
+    dVdx = (V[:, :, :, 1:] - V[:, :, :, :-1]) / dX[0, 0, 0]
+    dUdy = (U[:, :, 1:, :] - U[:, :, :-1, :]) / dX[0, 0, 0]
+    dVdy = (V[:, :, 1:, :] - V[:, :, :-1, :]) / dX[0, 0, 0]
+
+    dUdx = (dUdx[:, :, :-1, :] + dUdx[:, :, 1:, :]) / 2
+    dVdx = (dVdx[:, :, :-1, :] + dVdx[:, :, 1:, :]) / 2
+    dUdy = (dUdy[:, :, :, :-1] + dUdy[:, :, :, 1:]) / 2
+    dVdy = (dVdy[:, :, :, :-1] + dVdy[:, :, :, 1:]) / 2
+
+    Um = (U[:, :, 1:, 1:] + U[:, :, 1:, :-1] + U[:, :, :-1, 1:] + U[:, :, :-1, :-1]) / 4
+    Vm = (V[:, :, 1:, 1:] + V[:, :, 1:, :-1] + V[:, :, :-1, 1:] + V[:, :, :-1, :-1]) / 4
+
+    exp = exp_glen
+
+    # this was an attempt to allow a variable exponent, but it is not working
+    # if Nz == 2:
+    #     exp = exp_glen
+    # else:
+    #     exp = ( (U[:, -1, :, :] - U[:, 0, :, :]) - 2*(U[:, 1, :, :]  - U[:, 0, :, :]) ) \
+    #         / ( (U[:,  1, :, :] - U[:, 0, :, :]) -   (U[:, -1, :, :] - U[:, 0, :, :]) + 1.0 )
+    #     exp = (exp[:, 1:, 1:] + exp[:, :-1, 1:] + exp[:, 1:, :-1] + exp[:, :-1, :-1]) / 4
+    #     exp = tf.clip_by_value(exp,  1, 5)
+
+    def f(zeta):
+        return ( 1 - (1 - zeta) ** (exp + 1) )
+    
+    def fp(zeta):
+        return (exp + 1) * (1 - zeta) ** exp
+
+    def p_term(zeta):
+  
+        UDX = (dUdx[:, 0, :, :] + (dUdx[:, -1, :, :]-dUdx[:, 0, :, :]) * f(zeta))
+        VDY = (dVdy[:, 0, :, :] + (dVdy[:, -1, :, :]-dVdy[:, 0, :, :]) * f(zeta))
+        UDY = (dUdy[:, 0, :, :] + (dUdy[:, -1, :, :]-dUdy[:, 0, :, :]) * f(zeta))
+        VDX = (dVdx[:, 0, :, :] + (dVdx[:, -1, :, :]-dVdx[:, 0, :, :]) * f(zeta))
+        UDZ = (Um[:, -1, :, :]-Um[:, 0, :, :]) * fp(zeta) / tf.maximum( _stag4(thk) , 1)
+        VDZ = (Vm[:, -1, :, :]-Vm[:, 0, :, :]) * fp(zeta) / tf.maximum( _stag4(thk) , 1)
+        
+        Exx = UDX
+        Eyy = VDY
+        Ezz = - UDX - VDY
+        Exy = 0.5 * VDX + 0.5 * UDY
+        Exz = 0.5 * UDZ
+        Eyz = 0.5 * VDZ
+    
+        sr2 = 0.5 * ( Exx**2 + Exy**2 + Exy**2 + Eyy**2 + Ezz**2 + Exz**2 + Eyz**2 + Exz**2 + Eyz**2 )
+
+        return (sr2 + regu_glen**2) ** (p / 2) / p
+  
+    # C_shear is unit  Mpa y^(1/n) y^(-1-1/n) * m = Mpa m/y
+    C_shear = _stag4(B) * _stag4(thk) * sum(w[i] * p_term(n[i]) for i in range(len(n)))
+        
+    lsurf = usurf - thk
+
+#    sloptopgx, sloptopgy = _compute_gradient_stag(lsurf, dX, dX)
+
+    # C_slid is unit Mpa y^m m^(-m) * m^(1+m) * y^(-1-m)  = Mpa  m/y
+    N = (
+        _stag4(U[:, 0, :, :] ** 2 + V[:, 0, :, :] ** 2)
+        + regu_weertman**2
+#        + (_stag4(U[:, 0, :, :]) * sloptopgx + _stag4(V[:, 0, :, :]) * sloptopgy) ** 2
+    )
+    C_slid = _stag4(C) * N ** (s / 2) / s
+
+    slopsurfx, slopsurfy = _compute_gradient_stag(usurf, dX, dX)
+
+#    slopsurfx = tf.clip_by_value( slopsurfx , -0.25, 0.25)
+#    slopsurfy = tf.clip_by_value( slopsurfy , -0.25, 0.25)
+
+    def uds(zeta):
+
+        return (Um[:, 0, :, :] + (Um[:, -1, :, :]-Um[:, 0, :, :]) * f(zeta)) * slopsurfx \
+             + (Vm[:, 0, :, :] + (Vm[:, -1, :, :]-Vm[:, 0, :, :]) * f(zeta)) * slopsurfy
+ 
+    # C_slid is unit Mpa m^-1 m/y m = Mpa m/y
+    C_grav = (
+        ice_density
+        * gravity_cst
+        * 10 ** (-6)
+        * _stag4(thk) 
+        * sum(w[i] * uds(n[i]) for i in range(len(n)))
+    )
+ 
+    C_float = tf.zeros_like(C_shear)
+
+    return C_shear, C_slid, C_grav, C_float
 
 # @tf.function(experimental_relax_shapes=True)
 def iceflow_energy_XY(params, X, Y):

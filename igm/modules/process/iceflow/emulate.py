@@ -14,11 +14,17 @@ def initialize_iceflow_emulator(params,state):
 
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
         state.opti_retrain = getattr(tf.keras.optimizers,params.iflo_optimizer_emulator)(
-            learning_rate=params.iflo_retrain_emulator_lr
+            learning_rate=params.iflo_retrain_emulator_lr, # Default is 0.001
+#            beta_1=0.9,           # Change beta1 from default 0.9
+#            beta_2=0.999,         # Default is 0.999
+#            epsilon=1e-3          # Default is 1e-7
         )
     else:
         state.opti_retrain = getattr(tf.keras.optimizers.legacy,params.iflo_optimizer_emulator)( 
-            learning_rate=params.iflo_retrain_emulator_lr
+            learning_rate=params.iflo_retrain_emulator_lr, # Default is 0.001
+#            beta_1=0.9,           # Change beta1 from default 0.9
+#            beta_2=0.999,         # Default is 0.999
+#            epsilon=1e-3         # Default is 1e-7
         )
 
     direct_name = (
@@ -85,6 +91,8 @@ def initialize_iceflow_emulator(params,state):
             state.iceflow_model = cnn(params, nb_inputs, nb_outputs)
         elif params.iflo_network=='unet':
             state.iceflow_model = unet(params, nb_inputs, nb_outputs)
+        elif params.iflo_network=='fourier':
+            state.iceflow_model = fourier(params, nb_inputs, nb_outputs)
 
     # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
     # dirpath = importlib_resources.files(emulators).joinpath(direct_name)
@@ -150,6 +158,10 @@ def update_iceflow_emulated(params, state):
 
 
 def update_iceflow_emulator(params, state):
+
+    early_stopping = EarlyStopping(relative_min_delta=params.iflo_emulate_misfit_rel_min_delta, 
+                                   patience=params.iflo_emulate_misfit_patience)
+    
     if (state.it < 0) | (state.it % params.iflo_retrain_emulator_freq == 0):
         fieldin = [vars(state)[f] for f in params.iflo_fieldin]
 
@@ -163,6 +175,8 @@ def update_iceflow_emulator(params, state):
         # state.CF_N = tf.where((state.thk>0)&(thkext[2:,1:-1]==0),1.0,0.0)
 
 ########################
+
+        track_mem = False
 
         XX = fieldin_to_X(params, fieldin)
 
@@ -185,20 +199,32 @@ def update_iceflow_emulator(params, state):
             cost_emulator = tf.Variable(0.0)
 
             for i in range(X.shape[0]):
-                with tf.GradientTape() as t:
+                with tf.GradientTape() as tape:
+
+                    if track_mem:
+                        gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+                        gp0 = gpu_info['current']
 
                     Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
+ 
+                    if track_mem:
+                        gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+                        gp1 = gpu_info['current']
                     
                     if iz>0:
                         C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
                     else:
                         C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X[i : i + 1, :, :, :], Y[:, :, :, :])
+
+                    if track_mem:
+                        gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+                        gp2 = gpu_info['current']
  
                     COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
                          + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
                     
-                    if (epoch + 1) % 100 == 0:
-                        print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
+                    # if (epoch + 1) % 100 == 0:
+                    #     print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
 
 #                    state.C_shear = tf.pad(C_shear[0],[[0,1],[0,1]],"CONSTANT")
 #                    state.C_slid  = tf.pad(C_slid[0],[[0,1],[0,1]],"CONSTANT")
@@ -209,14 +235,23 @@ def update_iceflow_emulator(params, state):
 
                     cost_emulator = cost_emulator + COST
 
-                    if (epoch + 1) % 100 == 0:
-                        U, V = Y_to_UV(params, Y)
-                        U = U[0]
-                        V = V[0]
-                        velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
-                        print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
+                    # if (epoch + 1) % 100 == 0:
+                    #     U, V = Y_to_UV(params, Y)
+                    #     U = U[0]
+                    #     V = V[0]
+                    #     velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
+                    #     print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 
-                grads = t.gradient(COST, state.iceflow_model.trainable_variables)
+                    if track_mem:
+                        print(f"GPU memory consum for NN and COST: {(gp1 - gp0) / 1024**2:.2f} MB and {(gp2 - gp1) / 1024**2:.2f} MB")
+
+                # gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+                # print(f"Emulate Peak GPU memory: {gpu_info['current'] / 1024**2:.2f} MB")
+
+                grads = tape.gradient(COST, state.iceflow_model.trainable_variables)
+ 
+                #if (epoch + 1) % 100 == 0:
+                #    print("Gradient norm:", tf.linalg.global_norm(grads).numpy())
 
                 state.opti_retrain.apply_gradients(
                     zip(grads, state.iceflow_model.trainable_variables)
@@ -227,13 +262,16 @@ def update_iceflow_emulator(params, state):
                 )
 
             state.COST_EMULATOR.append(cost_emulator)
-            
+
+            if early_stopping.should_stop(np.sqrt(COST.numpy())):
+                break
     
+        # print("Emule : ", epoch, ": ", COST.numpy())
+
     if len(params.iflo_save_cost_emulator)>0:
         np.savetxt(params.iflo_output_directory+params.iflo_save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
 
-
-
+ 
 # def _update_iceflow_emulator_lbfgs(params, state):
 
 #     import tensorflow_probability as tfp

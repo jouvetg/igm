@@ -19,9 +19,7 @@ def solve_iceflow(params, state, U, V):
     solve_iceflow
     """
 
-    Cost_Glen = []
-
-    track_mem = False
+    Cost_Glen = [] 
 
     fieldin = [
         tf.expand_dims(vars(state)[f], axis=0) for f in params.iflo_fieldin
@@ -34,7 +32,7 @@ def solve_iceflow(params, state, U, V):
             tape.watch(U)
             tape.watch(V)
 
-            if track_mem:
+            if params.iflo_solve_track_mem:
                 gpu_info = tf.config.experimental.get_memory_info("GPU:0")
                 gp0 = gpu_info['current']
 
@@ -47,11 +45,11 @@ def solve_iceflow(params, state, U, V):
 
             Cost_Glen.append(COST)
 
-            if track_mem:
+            if params.iflo_solve_track_mem:
                 gpu_info = tf.config.experimental.get_memory_info("GPU:0")
                 gp1 = gpu_info['current']
 
-            if track_mem:
+            if params.iflo_solve_track_mem:
                 print(f"GPU memory consum for COST: {(gp1 - gp0) / 1024**2:.2f} MB")
 
             #if (i + 1) % 100 == 0:

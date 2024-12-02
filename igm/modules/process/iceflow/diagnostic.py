@@ -15,12 +15,17 @@ def initialize_iceflow_diagnostic(params,state):
 
     state.diagno = []
 
+    state.velsurf_mag_exa = tf.zeros_like(state.thk)
+    state.velsurf_mag_app = tf.zeros_like(state.thk)
+
     # state.UT = tf.Variable(
     #     tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
     # )
     # state.VT = tf.Variable(
     #     tf.zeros((params.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
     # )
+
+    print("it,l1,l2,COST_Glen,COST_Emulator,nb_it_solve,nb_it_emula,time_solve,time_retra")
 
 def update_iceflow_diagnostic(params, state):
 
@@ -51,7 +56,15 @@ def update_iceflow_diagnostic(params, state):
     Y = state.iceflow_model(X)
     U, V = Y_to_UV(params, Y)
 
-    COST_Emulator = state.COST_EMULATOR[-1].numpy()
+    if len(state.COST_EMULATOR) > 0:
+        COST_Emulator = state.COST_EMULATOR[-1].numpy()
+    else:
+        COST_Emulator = np.NaN
+
+    if len(state.GRAD_NORM) > 0:
+        GRAD_Norm     = state.GRAD_NORM[-1].numpy()
+    else:
+        GRAD_Norm = np.NaN
 
     time_retra -= time.time()
     time_retra *= -1
@@ -63,7 +76,18 @@ def update_iceflow_diagnostic(params, state):
 
     l1, l2 = computemisfit(state, state.thk, state.U - U, state.V - V)
 
-    state.diagno.append([state.it, l1, l2, COST_Glen, COST_Emulator, nb_it_solve, nb_it_emula, time_solve, time_retra])
+    vol = np.sum(state.thk) * (state.dx**2) / 10**9
+
+    state.diagno.append([state.t,state.it, l1, l2, COST_Glen, COST_Emulator, nb_it_solve, nb_it_emula, time_solve, time_retra, GRAD_Norm, vol])
+
+    state.velsurf_mag_app = tf.linalg.norm(tf.stack([U[0,-1], V[0,-1]], axis=0), axis=0)
+    state.velsurf_mag_exa = tf.linalg.norm(tf.stack([state.U[-1], state.V[-1]], axis=0), axis=0)
+
+    if state.it % 100 == 0: 
+        np.savetxt("errors_diagno.txt", np.stack(state.diagno), delimiter=",", fmt="%10.3f",
+                header="time, it,l1,l2,COST_Glen,COST_Emulator,nb_it_solve,nb_it_emula,time_solve,time_retra, GRAD_Norm, vol",
+                comments='')
+
 
 def computemisfit(state, thk, U, V):
     ubar = tf.reduce_sum(state.vert_weight * U, axis=0)
@@ -79,7 +103,5 @@ def computemisfit(state, thk, U, V):
     return nl1diff.numpy(), np.sqrt(nl2diff)
 
 def finalize_iceflow_diagnostic(params, state):
-
-    state.diagno = np.stack(state.diagno)
-    np.savetxt("errors_diagno.txt", state.diagno, delimiter=",", fmt="%10.3f",
-               header="it,l1,l2,COST_Glen,COST_Emulator,nb_it_solve,nb_it_emula,time_solve,time_retra")
+ 
+    pass

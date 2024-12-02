@@ -164,6 +164,12 @@ def params_iceflow(parser):
         help="Frequency at which the emulator is retrained, 0 means never, 1 means at each time step, 2 means every two time steps, etc.",
     )
     parser.add_argument(
+        "--iflo_retrain_emulator_lr_init",
+        type=float,
+        default=0.001,
+        help="Learning rate for the retraining of the emulator",
+    )
+    parser.add_argument(
         "--iflo_retrain_emulator_lr",
         type=float,
         default=0.00002,
@@ -359,19 +365,6 @@ def params_iceflow(parser):
     )
 
     parser.add_argument(
-        "--iflo_emulate_rel_min_delta",
-        type=float,
-        default=1e-2,
-        help="iflo_emulate_rel_min_delta",
-    )
-    parser.add_argument(
-        "--iflo_emulate_patience",
-        type=int,
-        default=100,
-        help="iflo_emulate_patience",
-    )
- 
-    parser.add_argument(
         "--iflo_pretraining_nbit",
         type=int,
         default=1,
@@ -384,3 +377,23 @@ def params_iceflow(parser):
         help="iflow_track_error",
     )
   
+    parser.add_argument(
+        "--iflo_solve_track_mem",
+        type=str2bool,
+        default=False,
+        help="iflow_track_error",
+    )
+    parser.add_argument(
+        "--iflo_retrain_track_mem",
+        type=str2bool,
+        default=False,
+        help="iflow_track_error",
+    )
+ 
+    parser.add_argument(
+        "--iflo_retrain_warm_up_time",
+        type=float,
+        default=0,
+        help="iflo_retrain_warm_up_time",
+    )
+    

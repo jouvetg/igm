@@ -159,10 +159,12 @@ def update_iceflow_emulated(params, state):
 
 def update_iceflow_emulator(params, state):
 
-    early_stopping = EarlyStopping(relative_min_delta=params.iflo_emulate_misfit_rel_min_delta, 
-                                   patience=params.iflo_emulate_misfit_patience)
-    
-    if (state.it < 0) | (state.it % params.iflo_retrain_emulator_freq == 0):
+    warm_up = int(state.t <= params.time_start + params.iflo_retrain_warm_up_time)
+
+    state.COST_EMULATOR = []
+    state.GRAD_NORM = []
+
+    if warm_up | (state.it % params.iflo_retrain_emulator_freq == 0):
         fieldin = [vars(state)[f] for f in params.iflo_fieldin]
 
 ########################
@@ -175,9 +177,7 @@ def update_iceflow_emulator(params, state):
         # state.CF_N = tf.where((state.thk>0)&(thkext[2:,1:-1]==0),1.0,0.0)
 
 ########################
-
-        track_mem = False
-
+ 
         XX = fieldin_to_X(params, fieldin)
 
         X = _split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
@@ -187,12 +187,12 @@ def update_iceflow_emulator(params, state):
         
         PAD = compute_PAD(params,Nx,Ny)
 
-        state.COST_EMULATOR = []
-
-        nbit = int((state.it >= 0) * params.iflo_retrain_emulator_nbit + (
-            state.it < 0
-        ) * params.iflo_retrain_emulator_nbit_init)
-
+        nbit =     warm_up * params.iflo_retrain_emulator_nbit_init \
+             + (1-warm_up) * params.iflo_retrain_emulator_nbit 
+         
+        state.opti_retrain.lr =     warm_up * params.iflo_retrain_emulator_lr_init \
+                              + (1-warm_up) * params.iflo_retrain_emulator_lr
+ 
         iz = params.iflo_exclude_borders 
 
         for epoch in range(nbit):
@@ -201,22 +201,19 @@ def update_iceflow_emulator(params, state):
             for i in range(X.shape[0]):
                 with tf.GradientTape() as tape:
 
-                    if track_mem:
+                    if params.iflo_retrain_track_mem:
                         gpu_info = tf.config.experimental.get_memory_info("GPU:0")
                         gp0 = gpu_info['current']
 
                     Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
  
-                    if track_mem:
-                        gpu_info = tf.config.experimental.get_memory_info("GPU:0")
-                        gp1 = gpu_info['current']
                     
                     if iz>0:
                         C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
                     else:
                         C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X[i : i + 1, :, :, :], Y[:, :, :, :])
 
-                    if track_mem:
+                    if params.iflo_retrain_track_mem:
                         gpu_info = tf.config.experimental.get_memory_info("GPU:0")
                         gp2 = gpu_info['current']
  
@@ -242,13 +239,25 @@ def update_iceflow_emulator(params, state):
                     #     velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
                     #     print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 
-                    if track_mem:
-                        print(f"GPU memory consum for NN and COST: {(gp1 - gp0) / 1024**2:.2f} MB and {(gp2 - gp1) / 1024**2:.2f} MB")
+                    if params.iflo_retrain_track_mem:
+                        print(f"GPU memory consum for RETRAIN: {(gp2 - gp0) / 1024**2:.2f} MB")
 
                 # gpu_info = tf.config.experimental.get_memory_info("GPU:0")
                 # print(f"Emulate Peak GPU memory: {gpu_info['current'] / 1024**2:.2f} MB")
 
                 grads = tape.gradient(COST, state.iceflow_model.trainable_variables)
+
+                gradient_norm = tf.linalg.global_norm(grads)
+
+                state.GRAD_NORM.append(gradient_norm)
+
+                # if warm_up==0:
+                #     emer = max(min(gradient_norm/5,1),0)
+                #     params.iflo_retrain_emulator_freq = 10 - int(9*emer)
+                #     if emer > 0.25:
+                #         state.opti_retrain.lr = params.iflo_retrain_emulator_lr * 0.02
+                #     else:
+                #         state.opti_retrain.lr = params.iflo_retrain_emulator_lr
  
                 #if (epoch + 1) % 100 == 0:
                 #    print("Gradient norm:", tf.linalg.global_norm(grads).numpy())
@@ -256,17 +265,9 @@ def update_iceflow_emulator(params, state):
                 state.opti_retrain.apply_gradients(
                     zip(grads, state.iceflow_model.trainable_variables)
                 )
-
-                state.opti_retrain.lr = params.iflo_retrain_emulator_lr * (
-                    0.95 ** (epoch / 1000)
-                )
-
             state.COST_EMULATOR.append(cost_emulator)
-
-            if early_stopping.should_stop(np.sqrt(COST.numpy())):
-                break
     
-        # print("Emule : ", epoch, ": ", COST.numpy())
+        # print("Emule : ", epoch, ": ", COST.numpy(), " ", params.iflo_retrain_emulator_freq, " ", state.opti_retrain.lr.numpy())
 
     if len(params.iflo_save_cost_emulator)>0:
         np.savetxt(params.iflo_output_directory+params.iflo_save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")

@@ -23,6 +23,14 @@ def update(params, state):
 
 
 def finalize(params, state):
+
+    gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+    gp = gpu_info['peak']
+
+    print("--------------------------------------------")
+    print(f"GPU memory peak: {gp / 1024**2:.2f} MB")
+    print("--------------------------------------------")
+
     ################################################################
 
     size_of_tensor = {}

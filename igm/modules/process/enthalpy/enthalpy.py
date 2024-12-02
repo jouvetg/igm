@@ -148,12 +148,26 @@ def params(parser):
         default=10**10,
         help="lower bound for tauc [Pa]"
     )
+
+    # vertical discretization
+    parser.add_argument(
+        "--enth_Nz",
+        type=int,
+        default=10,
+        help="Number of grid point for the vertical discretization",
+    )
+    parser.add_argument(
+        "--enth_vert_spacing",
+        type=float,
+        default=4.0,
+        help="Parameter controlling the discretization density to get more point near the bed than near the the surface. 1.0 means equal vertical spacing.",
+    )
  
 def initialize(params, state):
     Ny, Nx = state.thk.shape
 
     state.basalMeltRate = tf.Variable(tf.zeros_like(state.thk),trainable=False)
-    state.T = tf.Variable(tf.ones((params.iflo_Nz, Ny, Nx)) * params.enth_melt_temp,trainable=False)
+    state.T = tf.Variable(tf.ones((params.enth_Nz, Ny, Nx)) * params.enth_melt_temp,trainable=False)
     state.omega = tf.Variable(tf.zeros_like(state.T),trainable=False)
     state.E = tf.Variable(
         tf.ones_like(state.T)
@@ -187,7 +201,11 @@ def initialize(params, state):
     state.tcomp_enthalpy = []
 
     # arrhenius must be 3D for the Enthlapy to work
-    assert params.iflo_dim_arrhenius == 3
+
+    case1 = (params.iflo_dim_arrhenius == 3) and (state.params.iflo_Nz > 2)
+    case2 = (params.iflo_dim_arrhenius == 2) and (state.params.iflo_Nz == 2)
+
+    assert case1 | case2
 
 
 def update(params, state):
@@ -203,8 +221,8 @@ def update(params, state):
     )  # [K]
 
     # get the vertical discretization
-    depth, dz = vertically_discretize_tf(
-        state.thk, params.iflo_Nz, params.iflo_vert_spacing
+    depth, dz, vert_weight = vertically_discretize_tf(
+        state.thk, params.enth_Nz, params.enth_vert_spacing
     )
 
     # compute temperature and enthalpy at the pressure melting point
@@ -235,11 +253,11 @@ def update(params, state):
     state.temppasurf = state.Tpa[-1]
 
     # get the arrhenius factor from temperature and and enthalpy
-    state.arrhenius = arrhenius_from_temp_tf(
+    state.arrhenius3d = arrhenius_from_temp_tf(
         state.Tpa,
         state.omega
     ) * params.iflo_enhancement_factor
- 
+
     if hasattr(state, "W"):
         # correct vertical velocity corrected (therefore Wc) from melting rate
         Wc = state.W - tf.expand_dims(state.basalMeltRate, axis=0)
@@ -247,11 +265,15 @@ def update(params, state):
         # if the vertical velocity is not given, we assume it is zero
         Wc = tf.zeros_like(state.U) - tf.expand_dims(state.basalMeltRate, axis=0)
         
+    Ue = vertically_interpolate_f_to_e(state.U, params.iflo_Nz, params.iflo_vert_spacing, params.enth_Nz, params.enth_vert_spacing, params.iflo_exp_glen)
+    Ve = vertically_interpolate_f_to_e(state.V, params.iflo_Nz, params.iflo_vert_spacing, params.enth_Nz, params.enth_vert_spacing, params.iflo_exp_glen)
+    We = vertically_interpolate_f_to_e(Wc,      params.iflo_Nz, params.iflo_vert_spacing, params.enth_Nz, params.enth_vert_spacing, params.iflo_exp_glen)
+ 
     # compute the strainheat is in [W m-3]
     state.strainheat = compute_strainheat_tf(
-        state.U / params.enth_spy,
-        state.V / params.enth_spy,
-        state.arrhenius,
+        Ue / params.enth_spy,
+        Ve / params.enth_spy,
+        state.arrhenius3d,
         state.dx,
         dz,
         params.iflo_exp_glen,
@@ -260,8 +282,8 @@ def update(params, state):
 
     # compute the frictheat is in [W m-2]
     state.frictheat = compute_frictheat_tf(
-        state.U / params.enth_spy,
-        state.V / params.enth_spy,
+        Ue / params.enth_spy,
+        Ve / params.enth_spy,
         state.slidingco,
         state.topg,
         state.dx,
@@ -276,16 +298,16 @@ def update(params, state):
 
     # one explicit step for the horizonal advection
     state.E = state.E - state.dt * compute_upwind_tf(
-        state.U, state.V, state.E, state.dx
+        Ue, Ve, state.E, state.dx
     )
-
+ 
     # update the enthalpy and the basal melt rate (implicit scheme)
     state.E, state.basalMeltRate = compute_enthalpy_basalmeltrate(
         state.E,
         Epmp,
         state.dt * params.enth_spy,
         dz,
-        Wc / params.enth_spy,
+        We / params.enth_spy,
         surfenth,
         state.bheatflx,
         state.strainheat,
@@ -329,10 +351,13 @@ def update(params, state):
         params.enth_tauc_max
     )
     
-    state.hardav = tf.reduce_sum(state.arrhenius**(-1/3) * state.vert_weight, axis=0) \
+    state.hardav = tf.reduce_sum(state.arrhenius**(-1/3) * vert_weight, axis=0) \
                  * 1e+6 * (365.25*24*3600)**(1/3)  # unit is Pa s**(1/3)
-                 
-    state.arrheniusav = tf.reduce_sum(state.arrhenius * state.vert_weight, axis=0)
+
+    if params.iflo_dim_arrhenius == 3:
+        state.arrhenius = state.arrhenius3d
+    else:
+        state.arrhenius = tf.reduce_sum(state.arrhenius3d * vert_weight, axis=0)
     
     state.tcomp_enthalpy[-1] -= time.time()
     state.tcomp_enthalpy[-1] *= -1
@@ -357,6 +382,21 @@ def finalize(params, state):
 # strainheat in [W m-3]
 
 
+def vertically_interpolate_f_to_e(Af, Nz_f, vert_spacing_f, Nz_e, vert_spacing_e, iflo_exp_glen):
+
+    if Nz_f == 2:
+
+        zeta = tf.cast(tf.range(Nz_e) / (Nz_e - 1), "float32")
+        levels = (zeta / vert_spacing_e) * (1.0 + (vert_spacing_e - 1.0) * zeta)
+        levels = tf.expand_dims(tf.expand_dims(levels, axis=-1), axis=-1)
+        return  Af[0] + (Af[1] - Af[0]) * ( 1 - (1 - levels) ** (iflo_exp_glen + 1) ) 
+
+    else:
+ 
+        assert Nz_f == Nz_e
+        assert vert_spacing_f == vert_spacing_e
+        return Af
+
 @tf.function()
 def vertically_discretize_tf(thk, Nz, vert_spacing):
     zeta = tf.cast(tf.range(Nz) / (Nz - 1), "float32")
@@ -369,7 +409,12 @@ def vertically_discretize_tf(thk, Nz, vert_spacing):
 
     depth = tf.math.cumsum(D, axis=0, reverse=True)
 
-    return depth, dz
+    zeta2 = tf.cast(tf.range(Nz+1) / (Nz), "float32")
+    levels2 = (zeta2 / vert_spacing) * (1.0 + (vert_spacing - 1.0) * zeta2)
+    weight2 = levels2[1:] - levels2[:-1]
+    vert_weight = tf.expand_dims(tf.expand_dims(weight2, axis=-1), axis=-1)
+
+    return depth, dz, vert_weight
 
 
 @tf.function()
@@ -463,7 +508,7 @@ def compute_phi(params,state):
         )
 
 @tf.function()
-def compute_strainheat_tf(U, V, arrhenius, dx, dz, exp_glen, thr):
+def compute_strainheat_tf(U, V, arrhenius3d, dx, dz, exp_glen, thr):
     # input U [m s^{-1} ]
     # input arrhenius [MPa^{-3} y^{-1} ]
     # return strainheat in [W m^{-3}]
@@ -507,7 +552,7 @@ def compute_strainheat_tf(U, V, arrhenius, dx, dz, exp_glen, thr):
 
     # here one put back arrhenius in unit  Pa^{-3} s^{-1}
     # [Pa y^1/3 y^(-4/3)] = [Pa s^{-1}] = [W m^{-3}]
-    return (arrhenius / ((10**18) * 31556926)) ** (-1.0 / exp_glen) * (
+    return (arrhenius3d / ((10**18) * 31556926)) ** (-1.0 / exp_glen) * (
         strainrate ** (1.0 + 1.0 / exp_glen)
     )
 

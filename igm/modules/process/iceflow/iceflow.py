@@ -105,7 +105,7 @@ def initialize(params, state):
 
     if params.iflo_run_data_assimilation:
         state.it = -1
-        update_iceflow_emulator(params, state)
+#        update_iceflow_emulator(params, state)
         optimize(params, state)
 
 def update(params, state):

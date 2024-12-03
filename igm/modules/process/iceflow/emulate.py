@@ -180,7 +180,7 @@ def update_iceflow_emulator(params, state):
  
         XX = fieldin_to_X(params, fieldin)
 
-        X = _split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
+        X = split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
         
         Ny = X.shape[1]
         Nx = X.shape[2]
@@ -316,7 +316,7 @@ def update_iceflow_emulator(params, state):
  
 
 
-def _split_into_patches(X, nbmax):
+def split_into_patches(X, nbmax):
     XX = []
     ny = X.shape[1]
     nx = X.shape[2]

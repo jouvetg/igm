@@ -98,6 +98,9 @@ def optimize(params, state):
         state.tcomp_optimize.append(time.time())
 
         with tf.GradientTape() as t:
+
+            #gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+            #print(f"A : GPU memory: {gpu_info['current'] / 1024**2:.2f} MB")
             
             if params.opti_step_size_decay < 1:
                 optimizer.lr = params.opti_step_size * (params.opti_step_size_decay ** (i / 100))
@@ -180,8 +183,8 @@ def optimize(params, state):
   
             cost_total = tf.reduce_sum(tf.convert_to_tensor(list(cost.values())))
  
-            # gpu_info = tf.config.experimental.get_memory_info("GPU:0")
-            # print(f"C : GPU memory: {gpu_info['current'] / 1024**2:.2f} MB")
+            #gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+            #print(f"B : GPU memory: {gpu_info['current'] / 1024**2:.2f} MB")
 
             #################
 
@@ -227,30 +230,45 @@ def optimize(params, state):
 
             _compute_rms_std_optimization(state, i)
 
+
+        # gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+        # print(f"C : GPU memory: {gpu_info['current'] / 1024**2:.2f} MB")
+ 
         # Here one allow retraining of the ice flow emaultor
         if params.opti_retrain_iceflow_model:
-            with tf.GradientTape() as s:
 
-                fieldin = [vars(state)[f] for f in params.iflo_fieldin]
+            cost["glen"] = 0
 
-                X = fieldin_to_X(params, fieldin)
+            fieldin = [vars(state)[f] for f in params.iflo_fieldin]
 
-                # evalutae th ice flow emulator                
-                if params.iflo_multiple_window_size==0:
-                    Y = state.iceflow_model(X)
-                else:
-                    Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
- 
-                C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X, Y)
+            XX = fieldin_to_X(params, fieldin)
 
-                cost["glen"] = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
-                             + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
-                
-                grads = s.gradient(cost["glen"], state.iceflow_model.trainable_variables) 
+            X = split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
 
-                opti_retrain.apply_gradients(
-                    zip(grads, state.iceflow_model.trainable_variables)
-                )
+            # state.opti_retrain.lr = params.iflo_retrain_emulator_lr * 10**tf.random.uniform(shape=[], minval=-2, maxval=1, dtype=tf.float32)
+
+            for itr in range(X.shape[0]):
+                with tf.GradientTape() as s:
+
+                    # evalutae th ice flow emulator                
+                    if params.iflo_multiple_window_size==0:
+                        Y = state.iceflow_model(X[itr:itr+1, :, :, :])
+                    else:
+                        Y = state.iceflow_model(tf.pad(X[itr:itr+1, :, :, :], state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
+    
+                    C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(params, X[itr:itr+1, :, :, :], Y)
+
+                    cost["glen"] += tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
+                                  + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
+                        
+                    #gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+                    #print(f"D : GPU memory: {gpu_info['current'] / 1024**2:.2f} MB")
+                    
+                    grads = s.gradient(cost["glen"], state.iceflow_model.trainable_variables) 
+
+                    opti_retrain.apply_gradients(
+                        zip(grads, state.iceflow_model.trainable_variables)
+                    )
 
         print_costs(params, state, cost, i)
 

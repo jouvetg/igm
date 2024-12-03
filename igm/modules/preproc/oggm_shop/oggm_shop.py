@@ -96,6 +96,12 @@ def params(parser):
         default=False,
         help="Run all the glaciers in the world",
     )
+    parser.add_argument(
+        "--smooth_obs_vel",
+        type=str2bool,
+        default=True,
+        help="Smooth the observed velocities",
+    )
 
 def initialize(params, state):
 
@@ -174,15 +180,12 @@ def initialize(params, state):
             uvelsurfobs = np.flipud(
                 np.squeeze(nc.variables["millan_vx"]).astype("float32")
             )
-            uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
-
             uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
             vars_to_save += ["uvelsurfobs"]
         if "millan_vy" in nc.variables:
             vvelsurfobs = np.flipud(
                 np.squeeze(nc.variables["millan_vy"]).astype("float32")
             )
-            vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
             vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
             vars_to_save += ["vvelsurfobs"]
         else:
@@ -195,19 +198,18 @@ def initialize(params, state):
             uvelsurfobs = np.flipud(
                 np.squeeze(nc.variables["itslive_vx"]).astype("float32")
             )
-            uvelsurfobs = np.where(np.isnan(uvelsurfobs), 0, uvelsurfobs)
             uvelsurfobs = np.where(icemaskobs, uvelsurfobs, 0)
             vars_to_save += ["uvelsurfobs"]
         if "itslive_vy" in nc.variables:
             vvelsurfobs = np.flipud(
                 np.squeeze(nc.variables["itslive_vy"]).astype("float32")
             )
-            vvelsurfobs = np.where(np.isnan(vvelsurfobs), 0, vvelsurfobs)
             vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
             vars_to_save += ["vvelsurfobs"]
 
-    uvelsurfobs = scipy.signal.medfilt2d(uvelsurfobs, kernel_size=3) # remove outliers
-    vvelsurfobs = scipy.signal.medfilt2d(vvelsurfobs, kernel_size=3) # remove outliers
+    if params.smooth_obs_vel:
+       uvelsurfobs = scipy.signal.medfilt2d(uvelsurfobs, kernel_size=3) # remove outliers
+       vvelsurfobs = scipy.signal.medfilt2d(vvelsurfobs, kernel_size=3) # remove outliers 
 
     if params.oggm_thk_source in nc.variables: # either "millan_ice_thickness" or "consensus_ice_thickness"
         thkinit = np.flipud(

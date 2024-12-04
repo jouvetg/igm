@@ -15,6 +15,7 @@ def initialize_iceflow_emulator(params,state):
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
         state.opti_retrain = getattr(tf.keras.optimizers,params.iflo_optimizer_emulator)(
             learning_rate=params.iflo_retrain_emulator_lr, # Default is 0.001
+            clipnorm=1.0
 #            beta_1=0.9,           # Change beta1 from default 0.9
 #            beta_2=0.999,         # Default is 0.999
 #            epsilon=1e-3          # Default is 1e-7
@@ -22,6 +23,7 @@ def initialize_iceflow_emulator(params,state):
     else:
         state.opti_retrain = getattr(tf.keras.optimizers.legacy,params.iflo_optimizer_emulator)( 
             learning_rate=params.iflo_retrain_emulator_lr, # Default is 0.001
+            clipnorm=1.0 
 #            beta_1=0.9,           # Change beta1 from default 0.9
 #            beta_2=0.999,         # Default is 0.999
 #            epsilon=1e-3         # Default is 1e-7

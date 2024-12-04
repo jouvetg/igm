@@ -7,11 +7,11 @@ def initialize_iceflow_solver(params,state):
 
     if int(tf.__version__.split(".")[1]) <= 10:
         state.optimizer = getattr(tf.keras.optimizers,params.iflo_optimizer_solver)(
-            learning_rate=params.iflo_solve_step_size
+            learning_rate=params.iflo_solve_step_size, clipnorm=1.0
         )
     else:
         state.optimizer = getattr(tf.keras.optimizers.legacy,params.iflo_optimizer_solver)(
-            learning_rate=params.iflo_solve_step_size
+            learning_rate=params.iflo_solve_step_size, clipnorm=1.0
         )
 
 def solve_iceflow(params, state, U, V):

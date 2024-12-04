@@ -93,11 +93,11 @@ def compute_solutions(params, state):
 
     if int(tf.__version__.split(".")[1]) <= 10:
         state.optimizer = tf.keras.optimizers.Adam(
-            learning_rate=params.iflo_solve_step_size
+            learning_rate=params.iflo_solve_step_size, clipnorm=1.0
         )
     else:
         state.optimizer = tf.keras.optimizers.legacy.Adam(
-            learning_rate=params.iflo_solve_step_size
+            learning_rate=params.iflo_solve_step_size, clipnorm=1.0
         )
 
     for par in state.PAR:
@@ -202,11 +202,11 @@ def train_iceflow_emulator(params, state, trainingset, augmentation=True):
     # fix change in TF btw version <=10 and version >=11
     if int(tf.__version__.split(".")[1]) <= 10:
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate=params.iflo_retrain_emulator_lr
+            learning_rate=params.iflo_retrain_emulator_lr, clipnorm=1.0
         )
     else:
         optimizer = tf.keras.optimizers.legacy.Adam(
-            learning_rate=params.iflo_retrain_emulator_lr
+            learning_rate=params.iflo_retrain_emulator_lr, clipnorm=1.0
         )
 
     state.MISFIT = []

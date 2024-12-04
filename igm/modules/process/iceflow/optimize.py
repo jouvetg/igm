@@ -70,14 +70,14 @@ def optimize(params, state):
             return
     
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-        optimizer = tf.keras.optimizers.Adam(learning_rate=params.opti_step_size)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=params.opti_step_size, clipnorm=1.0)
         opti_retrain = tf.keras.optimizers.Adam(
-            learning_rate=params.iflo_retrain_emulator_lr
+            learning_rate=params.iflo_retrain_emulator_lr, clipnorm=1.0
         )
     else:
-        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=params.opti_step_size)
+        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=params.opti_step_size, clipnorm=1.0)
         opti_retrain = tf.keras.optimizers.legacy.Adam(
-            learning_rate=params.iflo_retrain_emulator_lr
+            learning_rate=params.iflo_retrain_emulator_lr, clipnorm=1.0
         )
 
     state.tcomp_optimize = []

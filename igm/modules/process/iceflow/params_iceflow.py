@@ -393,7 +393,7 @@ def params_iceflow(parser):
     parser.add_argument(
         "--iflo_retrain_warm_up_time",
         type=float,
-        default=0,
+        default=-1,
         help="iflo_retrain_warm_up_time",
     )
     

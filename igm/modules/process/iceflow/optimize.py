@@ -20,6 +20,8 @@ from .optimize_params_cook import *
  
 def optimize(params, state):
 
+    os.remove("costs.dat") if os.path.exists("costs.dat") else None
+
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
 
     # from scipy.ndimage import gaussian_filter
@@ -246,6 +248,8 @@ def optimize(params, state):
             X = split_into_patches(XX, params.iflo_retrain_emulator_framesizemax)
 
             # state.opti_retrain.lr = params.iflo_retrain_emulator_lr * 10**tf.random.uniform(shape=[], minval=-2, maxval=1, dtype=tf.float32)
+
+            state.opti_retrain.lr = params.iflo_retrain_emulator_lr * (0.85 ** (i / 100))
 
             for itr in range(X.shape[0]):
                 with tf.GradientTape() as s:

@@ -264,4 +264,11 @@ def params_optimize(parser):
         help="Threshold for the surface ice velocities as input data for the optimization, anything below this value will be ignored",
     )
 
+    parser.add_argument(
+        "--init_slidingco_from_obs",
+        type=str2bool,
+        default=False,
+        help="init_slidingco_from_obs",
+    )
+    
     

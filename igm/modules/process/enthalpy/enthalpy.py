@@ -202,8 +202,8 @@ def initialize(params, state):
 
     # arrhenius must be 3D for the Enthlapy to work
 
-    case1 = (params.iflo_dim_arrhenius == 3) and (state.params.iflo_Nz > 2)
-    case2 = (params.iflo_dim_arrhenius == 2) and (state.params.iflo_Nz == 2)
+    case1 = (params.iflo_dim_arrhenius == 3) and (params.iflo_Nz > 2)
+    case2 = (params.iflo_dim_arrhenius == 2) and (params.iflo_Nz == 2)
 
     assert case1 | case2
 

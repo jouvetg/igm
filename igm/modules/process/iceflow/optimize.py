@@ -61,6 +61,14 @@ def optimize(params, state):
         
     # force zero slidingco in the floating areas
     state.slidingco = tf.where( state.icemaskobs == 2, 0.0, state.slidingco)
+ 
+    if params.init_slidingco_from_obs:
+        dsdx, dsdy = compute_gradient_tf(state.usurf, state.dx, state.dx)
+        slope = tf.clip_by_value(tf.sqrt(dsdx**2 + dsdy**2), 0, 0.1)
+        vel = tf.clip_by_value(tf.sqrt(state.uvelsurfobs**2 + state.vvelsurfobs**2),0, 2000)
+        state.slidingco = 10**(-6) * 9.81 * 1000 * state.thk * slope / (vel+0.1)
+        state.slidingco = tf.where((state.thk==0)|(tf.math.is_nan(vel)), 0.001, state.slidingco)
+    
     
     # this will infer values for slidingco and convexity weight based on the ice velocity and an empirical relationship from test glaciers with thickness profiles
     if params.opti_infer_params:
@@ -223,6 +231,9 @@ def optimize(params, state):
             if "thk" in params.opti_control:
                 state.thk = tf.where(state.icemaskobs > 0.5, state.thk, 0)
 #                state.thk = tf.where(state.thk < 0.01, 0, state.thk)
+            if "slidingco" in params.opti_control:
+                state.slidingco = tf.where(state.slidingco < 0, 0, state.slidingco)
+
 
             state.divflux = compute_divflux(
                 state.ubar, state.vbar, state.thk, state.dx, state.dx, method=params.opti_divflux_method

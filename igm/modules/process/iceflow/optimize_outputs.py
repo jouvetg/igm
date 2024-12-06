@@ -230,9 +230,9 @@ def update_plot_inversion(params, state, i):
         state.slidingco,
         origin="lower",
 #        norm=colors.LogNorm(),
-        vmin=0.01,
-        vmax=0.06,
-        cmap=cmap,
+         vmin=0.0,
+         vmax=0.06,
+         cmap=cmap,
     )
     if i == 0:
         plt.colorbar(im1, format="%.2f", ax=ax2)

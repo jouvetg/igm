@@ -62,12 +62,12 @@ def optimize(params, state):
     # force zero slidingco in the floating areas
     state.slidingco = tf.where( state.icemaskobs == 2, 0.0, state.slidingco)
  
-    if params.init_slidingco_from_obs:
-        dsdx, dsdy = compute_gradient_tf(state.usurf, state.dx, state.dx)
-        slope = tf.clip_by_value(tf.sqrt(dsdx**2 + dsdy**2), 0, 0.1)
-        vel = tf.clip_by_value(tf.sqrt(state.uvelsurfobs**2 + state.vvelsurfobs**2),0, 2000)
-        state.slidingco = 10**(-6) * 9.81 * 1000 * state.thk * slope / (vel+0.1)
-        state.slidingco = tf.where((state.thk==0)|(tf.math.is_nan(vel)), 0.001, state.slidingco)
+#    if params.init_slidingco_from_obs:
+#        dsdx, dsdy = compute_gradient_tf(state.usurf, state.dx, state.dx)
+#        slope = tf.clip_by_value(tf.sqrt(dsdx**2 + dsdy**2), 0, 0.1)
+#        vel = tf.clip_by_value(tf.sqrt(state.uvelsurfobs**2 + state.vvelsurfobs**2),0, 2000)
+#        state.slidingco = 10**(-6) * 9.81 * 1000 * state.thk * slope / (vel+0.1)
+#        state.slidingco = tf.where((state.thk==0)|(tf.math.is_nan(vel)), 0.001, state.slidingco)
     
     
     # this will infer values for slidingco and convexity weight based on the ice velocity and an empirical relationship from test glaciers with thickness profiles
@@ -554,8 +554,9 @@ def regu_slidingco(params,state):
                 + np.sqrt(params.opti_smooth_anisotropy_factor_sl)
                 * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx)) )
  
-    REGU_S = REGU_S + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
-    # this last line serve to enforce non-negative slidingco
+    REGU_S = REGU_S + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco >=  0, 0.0, state.slidingco**2) ) \
+                    + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco < params.opti_max_slidingco, 0.0, (state.slidingco-params.opti_max_slidingco)**2) ) 
+    # this last line serve to enforce non-negative slidingco, as well as a maximum value
  
     return REGU_S
 

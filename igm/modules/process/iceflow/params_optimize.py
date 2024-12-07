@@ -270,5 +270,11 @@ def params_optimize(parser):
         default=False,
         help="init_slidingco_from_obs",
     )
-    
-    
+
+    parser.add_argument(
+        "--opti_max_slidingco",
+        type=float,
+        default=1.0,
+        help="Max slidingco value allowed within the optimization",
+    )
+ 

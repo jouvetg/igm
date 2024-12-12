@@ -624,7 +624,7 @@ def _get_tidewater_termini_and_slopes(tidewatermask, slopes, RGIs, params):
     import matplotlib.pyplot as plt
 
     rgi_ids = RGIs
-    base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v3" )
+    base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v4" )
     gdirs = workflow.init_glacier_directories(
         # Start from level 3 if you want some climate data in them
         rgi_ids,

@@ -131,6 +131,9 @@ def update(params, state):
             E.axis = "X"
             E[:] = state.x.numpy()
 
+            if hasattr(state, 'pyproj_srs'):
+                nc.pyproj_srs = state.pyproj_srs
+
             if hasattr(params, "iflo_Nz"):
                 nc.createDimension("z", params.iflo_Nz)
                 E = nc.createVariable("z", np.dtype("float32").char, ("z",))

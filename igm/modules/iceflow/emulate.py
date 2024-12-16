@@ -123,7 +123,8 @@ def update_iceflow_emulated(cfg, state):
     U = U[0]
     V = V[0]
 
-    #    U = tf.where(state.thk > 0, U, 0)
+    U = tf.where(state.thk > 0, U, 0)
+    V = tf.where(state.thk > 0, V, 0)
 
     state.U.assign(U)
     state.V.assign(V)

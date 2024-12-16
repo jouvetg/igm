@@ -121,6 +121,9 @@ def optimize(cfg, state):
 
             U = U[0]
             V = V[0]
+
+            U = tf.where(state.thk > 0, U, 0)
+            V = tf.where(state.thk > 0, V, 0)
            
             # this is strange, but it having state.U instead of U, slidingco is not more optimized ....
             state.uvelbase = U[0, :, :]
@@ -249,6 +252,17 @@ def optimize(cfg, state):
             #     if np.mean(cost[-10:])>np.mean(cost[-20:-10]):
             #         break;
 
+	# for final iteration
+    i = params.opti_nbitmax
+
+    print_costs(params, state, cost, i)
+
+    if i % params.opti_output_freq == 0:
+        if params.opti_plot2d:
+            update_plot_inversion(params, state, i)
+        if params.opti_save_iterat_in_ncdf:
+            update_ncdf_optimize(params, state, i)
+
 #    for f in params.opti_control:
 #        vars(state)[f] = vars()[f] * sc[f]
 
@@ -274,10 +288,12 @@ def misfit_velsurf(params,state):
     velsurf    = tf.stack([state.uvelsurf,    state.vvelsurf],    axis=-1) 
     velsurfobs = tf.stack([state.uvelsurfobs, state.vvelsurfobs], axis=-1)
 
-    ACT = ~tf.math.is_nan(velsurfobs)
+    REL = tf.expand_dims( (tf.norm(velsurfobs,axis=-1) >= params.opti_velsurfobs_thr ) , axis=-1)
+
+    ACT = ~tf.math.is_nan(velsurfobs) 
 
     cost = 0.5 * tf.reduce_mean(
-           ( (velsurfobs[ACT] - velsurf[ACT]) / params.opti_velsurfobs_std  )** 2
+           ( (velsurfobs[ACT & REL] - velsurf[ACT & REL]) / params.opti_velsurfobs_std  )** 2
     )
 
     if params.opti_include_low_speed_term:

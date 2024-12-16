@@ -10,6 +10,8 @@ texture-aif-test
 tests/examples/texture-test/
 checkpoints/
 logdir/
+.DS_Store
+
 # texture/
 smb_accpdd/
 clim_glacialindex/
@@ -36,3 +38,7 @@ thk_MG
 .history/
 outputs/
 multirun/
+.idea/
+energy_iceflow_DG.py
+emulate_DG.py
+optimize_fw.py

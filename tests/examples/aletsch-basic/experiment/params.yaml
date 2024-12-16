@@ -2,7 +2,21 @@
 
 core:
   url_data: https://www.dropbox.com/scl/fo/kd7dix5j1tm75nj941pvi/h?rlkey=q7jtmf9yn3a970cqygdwne25j&dl=0
-  
+  # url_data: https://www.dropboxed.com/scl/fo/kd7dix5j1tm75nj941pvi/h?rlkey=q7jtmf9yn3a970cqygdwne25j&dl=0
+
+defaults:
+  - override /modules: [load_ncdf, time_igm, thk, iceflow, smb_simple, print_info]
+  # - _self_
+  # - override /core: []
+  # - modules:
+    # - override time_igm: 
+#   - /modules/time_igm@_here_/modules
+
+# time_igm:
+#   time_start: 1900.0
+#   time_end: 2000.0
+#   time_save: 10.0
+
 modules:
   load_ncdf:
     lncd_input_file: data/input.nc
@@ -15,9 +29,9 @@ modules:
   time_igm:
     time_start: 1900.0
     time_end: 2000.0
-    time_save: 10.0
-  # iceflow
-  # thk
+    time_save: 11.0
+  # iceflow: # will override it to be null
+  # thk # does not work without ":"
 
 # experiment: params # can we make it work here?
 

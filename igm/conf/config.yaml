@@ -18,16 +18,20 @@ cwd: ${get_cwd:0} #0 is a dummy input since resolvers require callables
 #   # Misc
 #   print_params: True
 
+# ! Problem
+# We need to start with NO modules such that if a user specifies a module and just one change, it will load it and then overwrite it.
+# If we do not load the module beforehand, it will create a new module and not overwrite the existing one...
+
 defaults:
   - _self_
   - core
-  - modules:
-    - load_ncdf # ths should not be a module...
-    - smb_simple
-    - iceflow
-    - time_igm # ths should not be a module...
-    - thk
-    - print_info # this should not be a module...
+  - modules: null
+    # - load_ncdf # ths should not be a module...
+    # - smb_simple
+    # - iceflow
+    # - time_igm # ths should not be a module...
+    # - thk
+  #   - print_info # this should not be a module...
     # - oggm_shop
   # - params@_here_ # is this necessary with experiment? No !
     # - plot2d

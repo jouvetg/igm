@@ -101,6 +101,7 @@ iceflow:
     opti_tidewater_glacier: False # help="Is the glacier you're trying to infer parameters for a tidewater type?"
     opti_vol_std: 1000.0 # help="Confidence/STD of the volume estimates from volume-area scaling"
     fix_opti_normalization_issue: False # help="formerly, the oce was mixing reduce_mean and l2_loss leadinf to dependence to the resolution of the grid"
+    opti_velsurfobs_thr: 0.0 # "help="Threshold for the surface ice velocities as input data for the optimization, anything below this value will be ignored"
   pretraining:
     data_dir: "surflib3d_shape_100" # help="Directory of the data of the glacier catalogu"
     batch_size: 1 # help="Batch size"

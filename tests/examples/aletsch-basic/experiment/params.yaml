@@ -6,16 +6,9 @@ core:
 
 defaults:
   - override /modules: [load_ncdf, time_igm, thk, iceflow, smb_simple, print_info]
-  # - _self_
-  # - override /core: []
-  # - modules:
-    # - override time_igm: 
-#   - /modules/time_igm@_here_/modules
+  # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
+  # experiment: params # can we make it work here?
 
-# time_igm:
-#   time_start: 1900.0
-#   time_end: 2000.0
-#   time_save: 10.0
 
 modules:
   load_ncdf:
@@ -33,7 +26,6 @@ modules:
   # iceflow: # will override it to be null
   # thk # does not work without ":"
 
-# experiment: params # can we make it work here?
 
 # defaults:
 # hydra/launcher: joblib # not working right now! Why???

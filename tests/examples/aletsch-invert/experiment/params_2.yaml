@@ -1,0 +1,26 @@
+# @package _global_
+core:
+  url_data: "https://www.dropbox.com/scl/fo/uhreatoec6yfveayqa098/h?rlkey=1ymk9o4s6qlah5bb8llzo5ggo&dl=0"
+
+defaults:
+  - override /modules: [load_ncdf, iceflow]
+  # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
+  # experiment: params # can we make it work here?
+
+
+modules:
+  load_ncdf:
+    lncd_input_file: data/input.nc
+  iceflow:
+    iceflow:
+      iflo_init_slidingco: 0.045
+      iflo_run_data_assimilation: true
+    optimize:
+      opti_control: [thk]
+      opti_cost: [velsurf, icemask, thk]
+      opti_velsurfobs_std: 0.25
+      opti_thkobs_std: 1
+      opti_regu_param_thk: 1.0
+      opti_smooth_anisotropy_factor: 0.2
+      opti_convexity_weight: 0.0
+      opti_nbitmax: 50 # ! changed from 500 to 50 for params 2 yaml file for you to see the difference!

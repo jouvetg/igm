@@ -7,7 +7,7 @@ from scipy import stats
 from netCDF4 import Dataset
 from igm.modules.utils import * 
 
-def update_ncdf_optimize(params, state, it):
+def update_ncdf_optimize(cfg, state, it):
     """
     Initialize and write the ncdf optimze file
     """
@@ -15,16 +15,16 @@ def update_ncdf_optimize(params, state, it):
     if hasattr(state, "logger"):
         state.logger.info("Initialize  and write NCDF output Files")
         
-    if "velbase_mag" in params.opti_vars_to_save:
+    if "velbase_mag" in cfg.modules.iceflow.optimize.opti_vars_to_save:
         state.velbase_mag = getmag(state.uvelbase, state.vvelbase)
 
-    if "velsurf_mag" in params.opti_vars_to_save:
+    if "velsurf_mag" in cfg.modules.iceflow.optimize.opti_vars_to_save:
         state.velsurf_mag = getmag(state.uvelsurf, state.vvelsurf)
 
-    if "velsurfobs_mag" in params.opti_vars_to_save:
+    if "velsurfobs_mag" in cfg.modules.iceflow.optimize.opti_vars_to_save:
         state.velsurfobs_mag = getmag(state.uvelsurfobs, state.vvelsurfobs)
     
-    if "sliding_ratio" in params.opti_vars_to_save:
+    if "sliding_ratio" in cfg.modules.iceflow.optimize.opti_vars_to_save:
         state.sliding_ratio = tf.where(state.velsurf_mag > 10, state.velbase_mag / state.velsurf_mag, np.nan)
 
     if it == 0:
@@ -55,7 +55,7 @@ def update_ncdf_optimize(params, state, it):
         E.axis = "X"
         E[:] = state.x.numpy()
 
-        for var in params.opti_vars_to_save:
+        for var in cfg.modules.iceflow.optimize.opti_vars_to_save:
             E = nc.createVariable(
                 var, np.dtype("float32").char, ("iterations", "y", "x")
             )
@@ -72,31 +72,31 @@ def update_ncdf_optimize(params, state, it):
 
         nc.variables["iterations"][d] = it
 
-        for var in params.opti_vars_to_save:
+        for var in cfg.modules.iceflow.optimize.opti_vars_to_save:
             nc.variables[var][d, :, :] = vars(state)[var].numpy()
 
         nc.close()
 
 
-def output_ncdf_optimize_final(params, state):
+def output_ncdf_optimize_final(cfg, state):
     """
     Write final geology after optimizing
     """
-    if params.opti_save_iterat_in_ncdf==False:
-        if "velbase_mag" in params.opti_vars_to_save:
+    if cfg.modules.iceflow.optimize.opti_save_iterat_in_ncdf==False:
+        if "velbase_mag" in cfg.modules.iceflow.optimize.opti_vars_to_save:
             state.velbase_mag = getmag(state.uvelbase, state.vvelbase)
 
-        if "velsurf_mag" in params.opti_vars_to_save:
+        if "velsurf_mag" in cfg.modules.iceflow.optimize.opti_vars_to_save:
             state.velsurf_mag = getmag(state.uvelsurf, state.vvelsurf)
 
-        if "velsurfobs_mag" in params.opti_vars_to_save:
+        if "velsurfobs_mag" in cfg.modules.iceflow.optimize.opti_vars_to_save:
             state.velsurfobs_mag = getmag(state.uvelsurfobs, state.vvelsurfobs)
         
-        if "sliding_ratio" in params.opti_vars_to_save:
+        if "sliding_ratio" in cfg.modules.iceflow.optimize.opti_vars_to_save:
             state.sliding_ratio = tf.where(state.velsurf_mag > 10, state.velbase_mag / state.velsurf_mag, np.nan)
 
     nc = Dataset(
-        params.opti_save_result_in_ncdf,
+        cfg.modules.iceflow.optimize.opti_save_result_in_ncdf,
         "w",
         format="NETCDF4",
     )
@@ -115,7 +115,7 @@ def output_ncdf_optimize_final(params, state):
     E.axis = "X"
     E[:] = state.x.numpy()
 
-    for v in params.opti_vars_to_save:
+    for v in cfg.modules.iceflow.optimize.opti_vars_to_save:
         if hasattr(state, v):
             E = nc.createVariable(v, np.dtype("float32").char, ("y", "x"))
             E.standard_name = v
@@ -125,7 +125,7 @@ def output_ncdf_optimize_final(params, state):
 
     os.system(
         "echo rm "
-        + params.opti_save_result_in_ncdf
+        + cfg.modules.iceflow.optimize.opti_save_result_in_ncdf
         + " >> clean.sh"
     )
 
@@ -140,7 +140,12 @@ def plot_cost_functions():
     with open(file_path, 'r') as file:
         lines = file.readlines()
         label = lines[0].strip().split()
+        
+        print(lines)
+        print(lines[1:][0].strip().split())
+        
         costs = [np.array(line.strip().split(), dtype=float) for line in lines[1:]]
+        # costs = [np.array(line.strip().split(), dtype=float) for line in lines[1:]]
 
     costs = np.stack(costs)
 
@@ -166,7 +171,7 @@ def plot_cost_functions():
     )
 
 
-def update_plot_inversion(params, state, i):
+def update_plot_inversion(cfg, state, i):
     """
     Plot thickness, velocity, mand slidingco"""
 
@@ -185,7 +190,7 @@ def update_plot_inversion(params, state, i):
     #########################################################
 
     if i == 0:
-        if params.opti_editor_plot2d == "vs":
+        if cfg.modules.iceflow.optimize.opti_editor_plot2d == "vs":
             plt.ion()  # enable interactive mode
 
         # state.fig = plt.figure()
@@ -325,8 +330,8 @@ def update_plot_inversion(params, state, i):
 
     #########################################################
 
-    if params.opti_plot2d_live:
-        if params.opti_editor_plot2d == "vs":
+    if cfg.modules.iceflow.optimize.opti_plot2d_live:
+        if cfg.modules.iceflow.optimize.opti_editor_plot2d == "vs":
             state.fig.canvas.draw()  # re-drawing the figure
             state.fig.canvas.flush_events()  # to flush the GUI events
         else:
@@ -340,7 +345,7 @@ def update_plot_inversion(params, state, i):
         os.system( "echo rm " + "*.png" + " >> clean.sh" )
 
 
-def update_plot_inversion_simple(params, state, i):
+def update_plot_inversion_simple(cfg, state, i):
     """
     Plot thickness, velocity, mand slidingco"""
 
@@ -359,7 +364,7 @@ def update_plot_inversion_simple(params, state, i):
     #########################################################
 
     if i == 0:
-        if params.opti_editor_plot2d == "vs":
+        if cfg.modules.iceflow.optimize.opti_editor_plot2d == "vs":
             plt.ion()  # enable interactive mode
 
         # state.fig = plt.figure()
@@ -423,8 +428,8 @@ def update_plot_inversion_simple(params, state, i):
 
     #########################################################
 
-    if params.opti_plot2d_live:
-        if params.opti_editor_plot2d == "vs":
+    if cfg.modules.iceflow.optimize.opti_plot2d_live:
+        if cfg.modules.iceflow.optimize.opti_editor_plot2d == "vs":
             state.fig.canvas.draw()  # re-drawing the figure
             state.fig.canvas.flush_events()  # to flush the GUI events
         else:

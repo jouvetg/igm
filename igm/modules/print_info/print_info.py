@@ -19,8 +19,8 @@ def params(parser):
         help="Additional info on memory usage",
     )
 
-def initialize(params, state):
-    if params.print_mem_info:
+def initialize(cfg, state):
+    if cfg.modules.print_info.print_mem_info:
         print(
             "IGM %s :         Iterations   |         Time (y)     |     Time Step (y)   |   Ice Volume (km^3)   |   GPU memory (MB) "
         )
@@ -36,7 +36,7 @@ def update(cfg, state):
     """
     if state.saveresult:
 
-        if params.print_mem_info:
+        if cfg.modules.print_info.print_mem_info:
             gpu_info = tf.config.experimental.get_memory_info("GPU:0")
             print(
                 "IGM %s :      %6.0f    |      %8.0f        |     %7.2f        |     %10.2f         |     %10.2f "

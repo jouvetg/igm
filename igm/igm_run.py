@@ -68,7 +68,9 @@ def main(cfg: DictConfig) -> None:
     if cfg.core.logging:
         add_logger(cfg=cfg, state=state)
         tf.get_logger().setLevel(cfg.logging_level)
-        
+    
+    
+    
     imported_modules = setup_igm_modules(cfg)
     
     # params = setup_igm_params(parser, imported_modules)

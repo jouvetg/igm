@@ -46,10 +46,10 @@ def params(parser):
     )
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     state.extent = [np.min(state.x), np.max(state.x), np.min(state.y), np.max(state.y)]
 
-    if params.plt2d_editor == "vs":
+    if cfg.modules.plot2d.plt2d_editor == "vs":
         plt.ion()  # enable interactive mode
 
     state.tcomp_plot2d = []
@@ -59,14 +59,14 @@ def initialize(params, state):
     state.ax.axis("off")
     state.ax.set_aspect("equal")
 
-    os.system("echo rm " + params.plt2d_var + "*.png" + " >> clean.sh")
+    os.system("echo rm " + cfg.modules.plot2d.plt2d_var + "*.png" + " >> clean.sh")
 
 
-def update(params, state):
+def update(cfg, state):
     if state.saveresult:
         state.tcomp_plot2d.append(time.time())
 
-        if params.plt2d_var == "velbar_mag":
+        if cfg.modules.plot2d.plt2d_var == "velbar_mag":
             state.velbar_mag = getmag(state.ubar, state.vbar)
 
         im0 = state.ax.imshow(
@@ -77,24 +77,24 @@ def update(params, state):
 #            alpha=0.65,
         )
  
-        if params.plt2d_var=="velbar_mag":
+        if cfg.modules.plot2d.plt2d_var=="velbar_mag":
             im = state.ax.imshow(
-                np.where(state.thk > 0, vars(state)[params.plt2d_var], np.nan),
+                np.where(state.thk > 0, vars(state)[cfg.modules.plot2d.plt2d_var], np.nan),
                 origin="lower",
                 cmap="turbo",
                 extent=state.extent, 
-                norm=matplotlib.colors.LogNorm(vmin=1, vmax=params.plt2d_var_max)
+                norm=matplotlib.colors.LogNorm(vmin=1, vmax=cfg.modules.plot2d.plt2d_var_max)
             )
         else:
             im = state.ax.imshow(
-                np.where(state.thk > 0, vars(state)[params.plt2d_var], np.nan),
+                np.where(state.thk > 0, vars(state)[cfg.modules.plot2d.plt2d_var], np.nan),
                 origin="lower",
                 cmap='jet',
                 vmin=0,
-                vmax=params.plt2d_var_max,
+                vmax=cfg.modules.plot2d.plt2d_var_max,
                 extent=state.extent,
             )
-        if params.plt2d_particles:
+        if cfg.modules.plot2d.plt2d_particles:
             if hasattr(state, "particle_x"):
                 if hasattr(state, "ip"):
                     state.ip.set_visible(False)
@@ -111,11 +111,11 @@ def update(params, state):
         state.ax.set_title("YEAR : " + str(state.t.numpy()), size=15)
 
         if not hasattr(state, "already_set_cbar"):
-            state.cbar = plt.colorbar(im, label=params.plt2d_var)
+            state.cbar = plt.colorbar(im, label=cfg.modules.plot2d.plt2d_var)
             state.already_set_cbar = True
 
-        if params.plt2d_live:
-            if params.plt2d_editor == "vs":
+        if cfg.modules.plot2d.plt2d_live:
+            if cfg.modules.plot2d.plt2d_editor == "vs":
                 state.fig.canvas.draw()  # re-drawing the figure
                 state.fig.canvas.flush_events()  # to flush the GUI events
             else:
@@ -125,7 +125,7 @@ def update(params, state):
                 display(state.fig)
         else:
             plt.savefig(
-                params.plt2d_var + "-" + str(state.t.numpy()).zfill(4) + ".png",
+                cfg.modules.plot2d.plt2d_var + "-" + str(state.t.numpy()).zfill(4) + ".png",
                 bbox_inches="tight",
                 pad_inches=0.2,
             )

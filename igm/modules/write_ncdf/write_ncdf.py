@@ -40,10 +40,10 @@ def params(parser):
     )
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     state.tcomp_write_ncdf = []
 
-    os.system("echo rm " + params.wncd_output_file + " >> clean.sh")
+    os.system("echo rm " + cfg.modules.write_ncdf.wncd_output_file + " >> clean.sh")
 
     # give information on variables for output ncdf, TODO: IMPROVE
     state.var_info_ncdf_ex = {}
@@ -83,23 +83,23 @@ def initialize(params, state):
     state.var_info_ncdf_ex["weight_particles"] = ["weight_particles", "no"]
 
 
-def update(params, state):
+def update(cfg, state):
     if state.saveresult:
         state.tcomp_write_ncdf.append(time.time())
 
-        if "velbar_mag" in params.wncd_vars_to_save:
+        if "velbar_mag" in cfg.modules.write_ncdf.wncd_vars_to_save:
             state.velbar_mag = getmag(state.ubar, state.vbar)
 
-        if "velsurf_mag" in params.wncd_vars_to_save:
+        if "velsurf_mag" in cfg.modules.write_ncdf.wncd_vars_to_save:
             state.velsurf_mag = getmag(state.uvelsurf, state.vvelsurf)
 
-        if "velbase_mag" in params.wncd_vars_to_save:
+        if "velbase_mag" in cfg.modules.write_ncdf.wncd_vars_to_save:
             state.velbase_mag = getmag(state.uvelbase, state.vvelbase)
 
-        if "meanprec" in params.wncd_vars_to_save:
+        if "meanprec" in cfg.modules.write_ncdf.wncd_vars_to_save:
             state.meanprec = tf.math.reduce_mean(state.precipitation, axis=0)
 
-        if "meantemp" in params.wncd_vars_to_save:
+        if "meantemp" in cfg.modules.write_ncdf.wncd_vars_to_save:
             state.meantemp = tf.math.reduce_mean(state.air_temp, axis=0)
 
         if not hasattr(state, "already_called_update_write_ncdf"):
@@ -108,7 +108,7 @@ def update(params, state):
             if hasattr(state, "logger"):
                 state.logger.info("Initialize NCDF ex output Files")
 
-            nc = Dataset(params.wncd_output_file, "w", format="NETCDF4")
+            nc = Dataset(cfg.modules.write_ncdf.wncd_output_file, "w", format="NETCDF4")
 
             nc.createDimension("time", None)
             E = nc.createVariable("time", np.dtype("float32").char, ("time",))
@@ -134,17 +134,17 @@ def update(params, state):
             if hasattr(state, 'pyproj_srs'):
                 nc.pyproj_srs = state.pyproj_srs
 
-            if hasattr(params, "iflo_Nz"):
-                nc.createDimension("z", params.iflo_Nz)
+            if "iflo_Nz" in cfg.modules.iceflow.iceflow:
+                nc.createDimension("z", cfg.modules.iceflow.iceflow.iflo_Nz)
                 E = nc.createVariable("z", np.dtype("float32").char, ("z",))
                 E.units = "m"
                 E.long_name = "z"
                 E.axis = "Z"
                 E[:] = np.arange(
-                    params.iflo_Nz
+                    cfg.modules.iceflow.iceflow.iflo_Nz
                 )  # TODO: fix this, that's not what we want
 
-            for var in params.wncd_vars_to_save:
+            for var in cfg.modules.write_ncdf.wncd_vars_to_save:
                 if hasattr(state, var):
                     if vars(state)[var].numpy().ndim == 2:
                         E = nc.createVariable(
@@ -167,12 +167,12 @@ def update(params, state):
                     "Write NCDF ex file at time : " + str(state.t.numpy())
                 )
 
-            nc = Dataset( params.wncd_output_file, "a", format="NETCDF4" )
+            nc = Dataset(cfg.modules.write_ncdf.wncd_output_file, "a", format="NETCDF4" )
 
             d = nc.variables["time"][:].shape[0]
             nc.variables["time"][d] = state.t.numpy()
 
-            for var in params.wncd_vars_to_save:
+            for var in cfg.modules.write_ncdf.wncd_vars_to_save:
                 if hasattr(state, var):
                     if vars(state)[var].numpy().ndim == 2:
                         nc.variables[var][d, :, :] = vars(state)[var].numpy()
@@ -185,5 +185,5 @@ def update(params, state):
         state.tcomp_write_ncdf[-1] *= -1
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

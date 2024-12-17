@@ -13,29 +13,33 @@ from igm.modules.utils import *
 def params(parser):
     pass
  
-def initialize(params, state):
+def initialize(cfg, state):
     Ny, Nx = state.thk.shape
  
     # initialize age of ice to zero
-    state.age_of_ice = tf.Variable(tf.zeros((params.iflo_Nz, Ny, Nx)))
+    
+    if "iceflow" not in cfg.modules:
+        raise ValueError("The 'iceflow' module is required for the 'age_of_ice' module.")
+    
+    state.age_of_ice = tf.Variable(tf.zeros((cfg.modules.iceflow.iceflow.iflo_Nz, Ny, Nx)))
     
     state.tcomp_age_of_ice = []
   
-def update(params, state):
+def update(cfg, state):
     if hasattr(state, "logger"):
         state.logger.info("Update AGE OF ICE at time : " + str(state.t.numpy()))
 
     state.tcomp_age_of_ice.append(time.time())
     
     # get the vertical discretization
-    dz = vertically_disc_tf( state.thk, params.iflo_Nz, params.iflo_vert_spacing)
+    dz = vertically_disc_tf( state.thk, cfg.modules.iceflow.iceflow.iflo_Nz, cfg.modules.iceflow.iceflow.iflo_vert_spacing)
     
     # Assign zero age for the top surface elevation ice located in the accumulation area
     state.age_of_ice[-1].assign( tf.where(state.smb > 0, 0.0, state.age_of_ice[-1]) )
 
     # one explicit step for the advection
     state.age_of_ice.assign( state.age_of_ice - state.dt * compute_upwind_3d_tf(
-        state.U, state.V, state.W, state.age_of_ice, state.dx, dz, params.iflo_thr_ice_thk
+        state.U, state.V, state.W, state.age_of_ice, state.dx, dz, cfg.modules.iceflow.iceflow.iflo_thr_ice_thk
     ) )
     
     # add the time step to the age
@@ -44,7 +48,7 @@ def update(params, state):
     state.tcomp_age_of_ice[-1] -= time.time()
     state.tcomp_age_of_ice[-1] *= -1
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass
 
 #######################################################################################

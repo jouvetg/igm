@@ -25,7 +25,7 @@ def params(parser):
         help="Give the resolution the climate forcing should be (monthly=12, daily=365)",
     ) 
 
-def  initialize(params,state):
+def  initialize(cfg,state):
     """
         load climate data to run the Aletsch Glacier simulation
     """
@@ -58,7 +58,7 @@ def  initialize(params,state):
         state.year[k] = y
 
     # this make monthly temp and prec if this is wished
-    if params.clim_time_resolution==12:
+    if cfg.modules.clim_aletsch.clim_time_resolution==12:
         II = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 364]
         state.prec = np.stack([np.mean(state.prec[II[i]:II[i+1]],axis=0) 
                                 for i in range(0,12) ] )
@@ -74,14 +74,17 @@ def  initialize(params,state):
         tf.zeros((len(state.prec), state.y.shape[0], state.x.shape[0])),
         dtype="float32",
     )
+    
+    if "time_igm" not in cfg.modules:
+        raise ValueError("The 'time_igm' module is required for the 'clim_aletsch' module.")
 
-    state.tlast_clim_aletsch = tf.Variable(params.time_start)
+    state.tlast_clim_aletsch = tf.Variable(cfg.modules.time_igm.time_start)
     state.tcomp_clim_aletsch = []
 
 
-def update(params,state):
+def update(cfg,state):
 
-    if ((state.t - state.tlast_clim_aletsch) >= params.clim_update_freq):
+    if ((state.t - state.tlast_clim_aletsch) >= cfg.modules.clim_aletsch.clim_update_freq):
 
         if hasattr(state, "logger"):
             state.logger.info("update climate at time : " + str(state.t.numpy()))
@@ -127,6 +130,6 @@ def update(params,state):
         state.tcomp_clim_aletsch[-1] *= -1
 
 
-def  finalize(params,state):
+def  finalize(cfg,state):
     pass
  

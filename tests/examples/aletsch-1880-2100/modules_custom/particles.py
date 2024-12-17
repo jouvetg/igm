@@ -4,7 +4,8 @@ import tensorflow as tf
 from netCDF4 import Dataset
 import os
 
-def initialize(params, state):
+def initialize(cfg, state):
+    
     state.tlast_seeding = -1.0e5000
     state.tcomp_particles = []
 
@@ -19,7 +20,7 @@ def initialize(params, state):
 
     # build the gridseed
     state.gridseed = np.zeros_like(state.thk) == 1
-    rr = int(1.0 / params.part_density_seeding)
+    rr = int(1.0 / cfg.modules.particles.part_density_seeding)
     state.gridseed[::rr, ::rr] = True
     
     nc = Dataset( os.path.join("data", 'seeding.nc'), "r" ) 

@@ -22,19 +22,19 @@ def params(parser):
     )
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     pass
 
 
-def update(params, state):
+def update(cfg, state):
     slopsurfx, slopsurfy = compute_gradient_tf(state.usurf, state.dx, state.dx)
 
     slop = getmag(slopsurfx, slopsurfy)
 
-    dirx = -params.rock_flow_speed * tf.where(
+    dirx = -cfg.modules.rockflow.rock_flow_speed * tf.where(
         tf.not_equal(slop, 0), slopsurfx / slop, 1
     )
-    diry = -params.rock_flow_speed * tf.where(
+    diry = -cfg.modules.rockflow.rock_flow_speed * tf.where(
         tf.not_equal(slop, 0), slopsurfy / slop, 1
     )
 
@@ -44,5 +44,5 @@ def update(params, state):
     state.V.assign(tf.where(thkexp > 0, state.V, diry))
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

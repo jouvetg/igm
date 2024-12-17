@@ -20,6 +20,12 @@ from igm import (
 )
 
 from omegaconf import DictConfig, OmegaConf
+from hydra.utils import get_original_cwd #, to_absolute_path
+
+# @hydra.main(version_base=None)
+# def my_app(_cfg: DictConfig) -> None:
+    # print(f"Current working directory : {os.getcwd()}")
+    # print(f"Orig working directory    : {get_original_cwd()}")
 import hydra
 
 OmegaConf.register_new_resolver("get_cwd", lambda x: os.getcwd())
@@ -70,6 +76,8 @@ def main(cfg: DictConfig) -> None:
         tf.get_logger().setLevel(cfg.logging_level)
     
     
+    if cfg.core.print_params:
+        print(OmegaConf.to_yaml(cfg))
     
     imported_modules = setup_igm_modules(cfg)
     
@@ -77,8 +85,6 @@ def main(cfg: DictConfig) -> None:
     # print(OmegaConf.to_yaml(cfg.modules.iceflow.iceflow))
     # print(imported_modules)
     # exit()
-    if cfg.core.print_params:
-        print(OmegaConf.to_yaml(cfg))
         # save_params(cfg) # already handled with logging it seems... (hydra specifically)
         
     if not cfg.core.url_data=="":
@@ -86,11 +92,7 @@ def main(cfg: DictConfig) -> None:
         
     os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.core.gpu_id)        
 
-    # print(imported_modules)
-    
     # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
-    
-    # exit()
     with tf.device(f"/GPU:{cfg.core.gpu_id}"):  # type: ignore for linting checks
         run_intializers(imported_modules, cfg, state)
         run_processes(imported_modules, cfg, state)

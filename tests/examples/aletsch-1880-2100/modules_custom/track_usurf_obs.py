@@ -25,7 +25,7 @@ from netCDF4 import Dataset
 def params(parser):
     pass
 
-def initialize(params,state):
+def initialize(cfg,state):
     
     nc = Dataset(os.path.join("data", 'past_surf.nc'), "r" )
 #    for y in [1880,1926,1957,1980,1999,2009,2017]:
@@ -37,10 +37,13 @@ def initialize(params,state):
 
  
     # load the surface toporgaphy available at given year
-    state.usurf = vars(state)['surf_'+str(int(params.time_start))]
+    if "time_igm" not in cfg.modules:
+        raise ValueError("The 'time_igm' module is required for the 'clim_aletsch' module.")
+    
+    state.usurf = vars(state)['surf_'+str(int(cfg.modules.time_igm.time_start))]
     state.thk   = state.usurf -state.topg
 
-def update(params,state):
+def update(cfg,state):
 
     if state.t in [1880,1926,1957,1980,1999,2009,2017]:
 
@@ -53,5 +56,5 @@ def update(params,state):
                 % (state.t, mean, std, vol) )
 
 
-def finalize(params,state):
+def finalize(cfg,state):
     pass

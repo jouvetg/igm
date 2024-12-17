@@ -1,4 +1,5 @@
 cwd: ${get_cwd:0} #0 is a dummy input since resolvers require callables
+# cwd: ${hydra.runtime.cwd} # do I need a custom resolver or can I just access the cwd from hydra?
 
 # core:
 #   # Input / Output

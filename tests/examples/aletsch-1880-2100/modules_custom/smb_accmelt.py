@@ -98,16 +98,17 @@ def params(parser):
     )
 
 
-def initialize(params,state):
+def initialize(cfg,state):
     """
         load smb data to run the Aletsch Glacier simulation 
     """
+    
 
     nc = Dataset(os.path.join("data", 'massbalance.nc'), "r")
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")
 
-    state.snow_redistribution = np.squeeze(         nc.variables["snow_redistribution"]
+    state.snow_redistribution = np.squeeze(nc.variables["snow_redistribution"]
     ).astype("float32")
     state.direct_radiation = np.squeeze(nc.variables["direct_radiation"]).astype(
         "float32"
@@ -151,11 +152,11 @@ def initialize(params,state):
     )
 
     # This permits to give some weight to some of the accumaulation bassins
-    if not ((params.weight_Aletschfirn==1.0)&(params.weight_Jungfraufirn==1.0)&(params.weight_Ewigschneefeld==1.0)):
+    if not ((cfg.modules.smb_accmelt.weight_Aletschfirn==1.0)&(cfg.modules.smb_accmelt.weight_Jungfraufirn==1.0)&(cfg.modules.smb_accmelt.weight_Ewigschneefeld==1.0)):
         state.snow_redistribution *= (1.0/3.0)* \
-            ( params.weight_Aletschfirn    * state.Aletschfirn     + (1-state.Aletschfirn) \
-            + params.weight_Jungfraufirn   * state.Jungfraufirn    + (1-state.Jungfraufirn) \
-            + params.weight_Ewigschneefeld * state.Ewigschneefeld  + (1-state.Ewigschneefeld) )
+            ( cfg.modules.smb_accmelt.weight_Aletschfirn    * state.Aletschfirn     + (1-state.Aletschfirn) \
+            + cfg.modules.smb_accmelt.weight_Jungfraufirn   * state.Jungfraufirn    + (1-state.Jungfraufirn) \
+            + cfg.modules.smb_accmelt.weight_Ewigschneefeld * state.Ewigschneefeld  + (1-state.Ewigschneefeld) )
 
     # snow_redistribution must have shape like precipitation (365,ny,nx)
     state.snow_redistribution = tf.expand_dims(state.snow_redistribution, axis=0)
@@ -169,16 +170,23 @@ def initialize(params,state):
         )[0]
     state.IMB = tf.Variable(state.IMB)
 
-    state.tlast_smb = tf.Variable(params.time_start)
+    if "time_igm" not in cfg.modules:
+        raise ValueError("The 'time_igm' module is required to use the 'smb_accmelt' module.")
+    
+    
+    # ! We need an initial smb value as particles comes after in the update order...
+    state.smb = tf.ones_like(state.topg) * (cfg.modules.smb_accmelt.smb_accmelt_wat_density / cfg.modules.smb_accmelt.smb_accmelt_ice_density)
+    
+    state.tlast_smb = tf.Variable(cfg.modules.time_igm.time_start)
     state.tcomp_smb = []
 
 # Warning: The decorator permits to take full benefit from efficient TensorFlow operation (especially on GPU)
 # Note that tf.function works best with TensorFlow ops; NumPy and Python calls are converted to constants.
 # Therefore: you must make sure any variables are TensorFlow Tensor (and not Numpy)
 # @tf.function()
-def update(params,state):
+def update(cfg,state):
 
-    if ((state.t - state.tlast_smb) >= params.smb_simple_update_freq):
+    if ((state.t - state.tlast_smb) >= cfg.modules.smb_accmelt.smb_simple_update_freq):
 
         if hasattr(state, "logger"):
             state.logger.info("update smb at time : " + str(state.t.numpy()))
@@ -193,24 +201,24 @@ def update(params,state):
         # keep solid precipitation when temperature < smb_accpdd_thr_temp_snow
         # with linear transition to 0 between smb_accpdd_thr_temp_snow and smb_accpdd_thr_temp_rain
         accumulation = tf.where(
-            state.air_temp <= params.smb_accpdd_thr_temp_snow,
+            state.air_temp <= cfg.modules.smb_accmelt.smb_accpdd_thr_temp_snow,
             state.precipitation,
             tf.where(
-                state.air_temp >= params.smb_accpdd_thr_temp_rain,
+                state.air_temp >= cfg.modules.smb_accmelt.smb_accpdd_thr_temp_rain,
                 0.0,
                 state.precipitation
-                * (params.smb_accpdd_thr_temp_rain - state.air_temp)
-                / (params.smb_accpdd_thr_temp_rain - params.smb_accpdd_thr_temp_snow),
+                * (cfg.modules.smb_accmelt.smb_accpdd_thr_temp_rain - state.air_temp)
+                / (cfg.modules.smb_accmelt.smb_accpdd_thr_temp_rain - cfg.modules.smb_accmelt.smb_accpdd_thr_temp_snow),
             ),
         )
 
         # unit to [  kg * m^(-2) * y^(-1) water eq  ] -> [ m water eq / d]
-        accumulation /= (accumulation.shape[0] * params.smb_accmelt_wat_density) 
+        accumulation /= (accumulation.shape[0] * cfg.modules.smb_accmelt.smb_accmelt_wat_density) 
 
         # correct for snow re-distribution
         accumulation *= state.snow_redistribution  # unit to [ m water eq. / d ]
 
-        accumulation *= params.weight_accumulation  # unit to [ m water eq. / d ]
+        accumulation *= cfg.modules.smb_accmelt.weight_accumulation  # unit to [ m water eq. / d ]
 
         pos_temp = tf.where(state.air_temp > 0.0, state.air_temp, 0.0)  # unit is [°C]
 
@@ -222,7 +230,7 @@ def update(params,state):
         for kk in range(state.air_temp.shape[0]):
                 
             # shift to hydro year, i.e. start Oct. 1
-            k = (kk+int(state.air_temp.shape[0]*params.smb_accpdd_shift_hydro_year))%(state.air_temp.shape[0]) 
+            k = (kk+int(state.air_temp.shape[0]*cfg.modules.smb_accmelt.smb_accpdd_shift_hydro_year))%(state.air_temp.shape[0]) 
 
             # add accumulation to the snow depth
             snow_depth += accumulation[k]
@@ -238,14 +246,14 @@ def update(params,state):
                 )
             )
 
-            ablation[-1] *= params.weight_ablation
+            ablation[-1] *= cfg.modules.smb_accmelt.weight_ablation
 
             # remove snow melt to snow depth, and cap it as snow_depth can not be negative
             snow_depth = tf.clip_by_value(snow_depth - ablation[-1], 0.0, 1.0e10)
 
         # sum accumulation and ablation over the year, and conversion to ice equivalent
         state.smb = tf.math.reduce_sum(accumulation - ablation, axis=0)* (
-            params.smb_accmelt_wat_density / params.smb_accmelt_ice_density
+            cfg.modules.smb_accmelt.smb_accmelt_wat_density / cfg.modules.smb_accmelt.smb_accmelt_ice_density
         )
 
         if hasattr(state,'icemask'):
@@ -257,5 +265,5 @@ def update(params,state):
         state.tcomp_smb[-1] *= -1
 
 
-def finalize(params,state):
+def finalize(cfg,state):
     pass

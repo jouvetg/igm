@@ -1,0 +1,155 @@
+# @package _global_
+core:
+  url_data: "https://www.dropbox.com/scl/fo/8ixpy27i67s04bp7uixoq/h?rlkey=0ye7rd4zkcqfhvzx7suunw3bk&dl=0"
+
+defaults:
+  # - override /modules: [load_ncdf, iceflow, time_igm, thk, rockflow, vert_flow, particles, write_ncdf, plot2d, print_info, print_comp]
+  - override /modules: [load_ncdf, iceflow, time_igm, print_info, particles, thk, rockflow, vert_flow, write_ncdf, plot2d, print_comp]
+  # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
+  # experiment: params # can we make it work here?
+  # - override /hydra/job/chdir: 1
+
+hydra:
+  output_subdir: my_result_${core.gpu_id} # name the result based on the GPU ID
+  # output_subdir: my_result_particles_${modules.particles.part_frequency_seeding} # name the result based on a parameter with multirun
+#   job:
+#     chdir: True
+
+
+modules:
+  load_ncdf:
+    lncd_input_file: data/input.nc
+  iceflow:
+    iflo_init_slidingco: 0.0595
+  time_igm:
+    time_start: 1880.0
+    time_end: 2020.0
+    time_save: 5.0
+  smb_accmelt:
+    smb_simple_update_freq: 1
+    weight_ablation: 1.25
+    weight_accumulation: 1.0
+    smb_accpdd_thr_temp_snow: 0.5
+    smb_accpdd_thr_temp_rain: 2.5
+    smb_accpdd_shift_hydro_year: 0.75
+    smb_accmelt_ice_density: 910.0
+    smb_accmelt_wat_density: 1000.0
+    weight_Aletschfirn: 1.0
+    weight_Jungfraufirn: 1.0
+    weight_Ewigschneefeld: 1.0
+  particles:
+    part_frequency_seeding: 500
+    part_tracking_method: simple
+    part_density_seeding: 0.2
+  clim_aletsch:
+    clim_update_freq: 1
+    clim_time_resolution: 365
+  plot2d:
+    plt2d_live: true
+  track_usurf_obs: null
+  age_of_ice: null
+
+
+
+# {
+#   "modules_preproc": [
+#     "load_ncdf",
+#     "track_usurf_obs"
+#   ],
+#   "modules_process": [
+#     "clim_aletsch",
+#     "smb_accmelt",
+#     "iceflow",
+#     "time",
+#     "thk",
+#     "rockflow",
+#     "vert_flow",
+#     "particles"
+#   ],
+#   "modules_postproc": [
+#     "write_ncdf",
+#     "plot2d",
+#     "print_info",
+#     "print_comp"
+#   ],
+#   "url_data": "https://www.dropbox.com/scl/fo/8ixpy27i67s04bp7uixoq/h?rlkey=0ye7rd4zkcqfhvzx7suunw3bk&dl=0",
+#   "lncd_input_file": "data/input.nc",
+#   "time_start": 1880.0,
+#   "time_end": 2020.0,
+#   "time_save": 5.0,
+#   "plt2d_live": true,
+#   "iflo_init_slidingco": 0.0595,
+#   "weight_accumulation": 1.0,
+#   "weight_ablation": 1.25,
+#   "part_frequency_seeding": 500,
+#   "part_tracking_method": "simple",
+#   "part_density_seeding": 0.2
+# }
+
+# def params(parser):  
+
+#     parser.add_argument(
+#         "--smb_simple_update_freq",
+#         type=float,
+#         default=1,
+#         help="Update the mass balance each X years (1)",
+#     )
+#     parser.add_argument(
+#         "--weight_ablation", 
+#         type=float, 
+#         default=1.0, 
+#         help="Weight for melt",
+#     )
+#     parser.add_argument(
+#         "--weight_accumulation",
+#         type=float,
+#         default=1.0,
+#         help="Weight for accumulation",
+#     )
+#     parser.add_argument(
+#         "--smb_accpdd_thr_temp_snow",
+#         type=float,
+#         default=0.5,
+#         help="Threshold temperature for solid precipitation (0.0)",
+#     )
+#     parser.add_argument(
+#         "--smb_accpdd_thr_temp_rain",
+#         type=float,
+#         default=2.5,
+#         help="Threshold temperature for liquid precipitation (2.0)",
+#     )
+#     parser.add_argument(
+#         "--smb_accpdd_shift_hydro_year",
+#         type=float,
+#         default=0.75,
+#         help="This serves to start Oct 1. the acc/melt computation (0.75)",
+#     )
+
+#     parser.add_argument(
+#         "--weight_Aletschfirn",
+#         type=float,
+#         default=1.0, 
+#     )
+#     parser.add_argument(
+#         "--weight_Jungfraufirn",
+#         type=float,
+#         default=1.0, 
+#     )
+#     parser.add_argument(
+#         "--weight_Ewigschneefeld",
+#         type=float,
+#         default=1.0, 
+#     )
+    
+#     parser.add_argument(
+#         "--smb_accmelt_ice_density",
+#         type=float,
+#         default=910.0,
+#         help="Density of ice for conversion of SMB into ice equivalent",
+#     )
+#     parser.add_argument(
+#         "--smb_accmelt_wat_density",
+#         type=float,
+#         default=1000.0,
+#         help="Density of water",
+#     )

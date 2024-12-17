@@ -34,13 +34,17 @@ def params(parser):
     )
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     state.tcomp_glerosion = []
-    state.tlast_erosion = tf.Variable(params.time_start, dtype=tf.float32)
+    
+    if "time_igm" not in cfg.modules:
+        raise ValueError("The 'time_igm' module is required for the 'glerosion' module.")
+    
+    state.tlast_erosion = tf.Variable(cfg.modules.time_igm.time_start, dtype=tf.float32)
 
 
-def update(params, state):
-    if (state.t - state.tlast_erosion) >= params.glerosion_update_freq:
+def update(cfg, state):
+    if (state.t - state.tlast_erosion) >= cfg.modules.glerosion.glerosion_update_freq:
         if hasattr(state, "logger"):
             state.logger.info(
                 "update topg_glacial_erosion at time : " + str(state.t.numpy())
@@ -51,7 +55,7 @@ def update(params, state):
         velbase_mag = getmag(state.U[0], state.V[0])
 
         # apply erosion law, erosion rate is proportional to a power of basal sliding speed
-        dtopgdt = params.glerosion_cst * (velbase_mag**params.glerosion_exp)
+        dtopgdt = cfg.modules.glerosion.glerosion_cst * (velbase_mag**cfg.modules.glerosion.glerosion_exp)
 
         state.topg = state.topg - (state.t - state.tlast_erosion) * dtopgdt
 
@@ -64,5 +68,5 @@ def update(params, state):
         state.tcomp_glerosion[-1] *= -1
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

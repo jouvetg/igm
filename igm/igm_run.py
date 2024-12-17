@@ -75,9 +75,21 @@ def main(cfg: DictConfig) -> None:
         add_logger(cfg=cfg, state=state)
         tf.get_logger().setLevel(cfg.logging_level)
     
+    # s = """
+    # core:
+    #     print_params: true
+    # """
+    # cfg = OmegaConf.create(s)
+    # cfg = OmegaConf.from_dotlist(["core.print_params=true"])
+    # cfg.test = "test"
+    
+    new_module = OmegaConf.from_dotlist(["new_module.test=1"])
+    # cfg.modules = OmegaConf.merge(cfg.modules, new_module)
     
     if cfg.core.print_params:
         print(OmegaConf.to_yaml(cfg))
+        # print(OmegaConf.to_yaml(new_module))
+    
     
     imported_modules = setup_igm_modules(cfg)
     

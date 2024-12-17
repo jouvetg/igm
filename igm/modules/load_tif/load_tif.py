@@ -54,10 +54,10 @@ def params(parser):
         default="",
     )
     
-def initialize(params, state):
+def initialize(cfg, state):
     import rasterio
 
-    files = glob.glob(os.path.join(params.ltif_folder, "*.tif"))
+    files = glob.glob(os.path.join(cfg.modules.load_tif.ltif_folder, "*.tif"))
     
     print(files)
     
@@ -76,29 +76,29 @@ def initialize(params, state):
             del src
 
     # coarsen if requested
-    if params.ltif_coarsen > 1:
-        xx = x[:: params.ltif_coarsen]
-        yy = y[:: params.ltif_coarsen]
+    if cfg.modules.load_tif.ltif_coarsen > 1:
+        xx = x[:: cfg.modules.load_tif.ltif_coarsen]
+        yy = y[:: cfg.modules.load_tif.ltif_coarsen]
         for file in files:
             var = os.path.split(file)[-1].split(".")[0]
             if (not var in ["x", "y"]) & (vars()[var].ndim == 2):
                 vars()[var] = vars()[var][
-                    :: params.ltif_coarsen, :: params.ltif_coarsen
+                    :: cfg.modules.load_tif.ltif_coarsen, :: cfg.modules.load_tif.ltif_coarsen
                 ]
         #                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
         x = xx
         y = yy
 
     # crop if requested
-    if params.ltif_crop:
-        i0 = max(0, int((params.ltif_xmin - x[0]) / (x[1] - x[0])))
-        i1 = min(int((params.ltif_xmax - x[0]) / (x[1] - x[0])), x.shape[0] - 1)
+    if cfg.modules.load_tif.ltif_crop:
+        i0 = max(0, int((cfg.modules.load_tif.ltif_xmin - x[0]) / (x[1] - x[0])))
+        i1 = min(int((cfg.modules.load_tif.ltif_xmax - x[0]) / (x[1] - x[0])), x.shape[0] - 1)
         i1 = max(i0 + 1, i1)
-        j0 = max(0, int((params.ltif_ymin - y[0]) / (y[1] - y[0])))
-        j1 = min(int((params.ltif_ymax - y[0]) / (y[1] - y[0])), y.shape[0] - 1)
+        j0 = max(0, int((cfg.modules.load_tif.ltif_ymin - y[0]) / (y[1] - y[0])))
+        j1 = min(int((cfg.modules.load_tif.ltif_ymax - y[0]) / (y[1] - y[0])), y.shape[0] - 1)
         j1 = max(j0 + 1, j1)
-        #        i0,i1 = int((params.ltif_xmin-x[0])/(x[1]-x[0])),int((params.ltif_xmax-x[0])/(x[1]-x[0]))
-        #        j0,j1 = int((params.ltif_ymin-y[0])/(y[1]-y[0])),int((params.ltif_ymax-y[0])/(y[1]-y[0]))
+        #        i0,i1 = int((cfg.modules.load_tif.ltif_xmin-x[0])/(x[1]-x[0])),int((cfg.modules.load_tif.ltif_xmax-x[0])/(x[1]-x[0]))
+        #        j0,j1 = int((cfg.modules.load_tif.ltif_ymin-y[0])/(y[1]-y[0])),int((cfg.modules.load_tif.ltif_ymax-y[0])/(y[1]-y[0]))
         for file in files:
             var = os.path.split(file)[-1].split(".")[0]
             if not var in ["x", "y"]:
@@ -117,9 +117,9 @@ def initialize(params, state):
     complete_data(state)
 
 
-def update(params, state):
+def update(cfg, state):
     pass
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

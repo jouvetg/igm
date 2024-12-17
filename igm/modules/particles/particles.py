@@ -81,8 +81,7 @@ def update(cfg, state):
     if (
         state.t.numpy() - state.tlast_seeding
     ) >= cfg.modules.particles.part_frequency_seeding:
-        print(cfg.modules)
-        print(dir(state))
+
         seeding_particles(cfg, state)
 
         # merge the new seeding points with the former ones

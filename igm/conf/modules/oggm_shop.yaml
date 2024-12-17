@@ -13,6 +13,7 @@ oggm_shop:
   oggm_sub_entity_mask: False # help="Ice mask shows individual RGI 7.0G entities within each larger RGI 7.0C complex"
   oggm_RGI_product: "G" # help="Glacier complexes (C) or individual basins (G) (default is G, individual basins)"
   oggm_run_batch: False # help="Run all the glaciers in the world"
+  smooth_obs_vel: True # help="Smooth the observed velocities"
 
 # ===================== NOTE =====================
 # aletsch  RGI60-11.01450

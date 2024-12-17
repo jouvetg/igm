@@ -18,18 +18,18 @@ def initialize_iceflow_diagnostic(cfg,state):
         tf.zeros((cfg.iceflow.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
     )
 
-def update_iceflow_diagnostic(params, state):
+def update_iceflow_diagnostic(cfg, state):
     
-    if params.iflo_retrain_emulator_freq > 0:
-        update_iceflow_emulator(params, state)
+    if cfg.modules.iceflow.iceflow.iflo_retrain_emulator_freq > 0:
+        update_iceflow_emulator(cfg, state)
         COST_Emulator = state.COST_EMULATOR[-1].numpy()
     else:
         COST_Emulator = 0.0
 
-    update_iceflow_emulated(params, state)
+    update_iceflow_emulated(cfg, state)
 
     if state.it % 10 == 0:
-        UT, VT, Cost_Glen = solve_iceflow(params, state, state.UT, state.VT)
+        UT, VT, Cost_Glen = solve_iceflow(cfg, state, state.UT, state.VT)
         state.UT.assign(UT)
         state.VT.assign(VT)
         COST_Glen = Cost_Glen[-1].numpy()

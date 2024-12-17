@@ -68,7 +68,7 @@ def solve_iceflow(cfg, state, U, V):
 
     return U, V, Cost_Glen
 
-def solve_iceflow_lbfgs(params, state, U, V):
+def solve_iceflow_lbfgs(cfg, state, U, V):
 
     import tensorflow_probability as tfp
 
@@ -80,11 +80,11 @@ def solve_iceflow_lbfgs(params, state, U, V):
         V = UV[1]
 
         fieldin = [
-            tf.expand_dims(vars(state)[f], axis=0) for f in params.iflo_fieldin
+            tf.expand_dims(vars(state)[f], axis=0) for f in cfg.iceflow.iceflow.iflo_fieldin
         ]
 
         C_shear, C_slid, C_grav, C_float = iceflow_energy(
-            params, tf.expand_dims(U, axis=0), tf.expand_dims(V, axis=0), fieldin
+            cfg, tf.expand_dims(U, axis=0), tf.expand_dims(V, axis=0), fieldin
         )
 
         COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
@@ -105,7 +105,7 @@ def solve_iceflow_lbfgs(params, state, U, V):
     optimizer = tfp.optimizer.lbfgs_minimize(
             value_and_gradients_function=loss_and_gradients_function,
             initial_position=UV,
-            max_iterations=params.iflo_solve_nbitmax,
+            max_iterations=cfg.iceflow.iceflow.iflo_solve_nbitmax,
             tolerance=1e-8)
     
     UV = optimizer.position
@@ -115,37 +115,37 @@ def solve_iceflow_lbfgs(params, state, U, V):
  
     return U, V, Cost_Glen
 
-def update_iceflow_solved(params, state):
+def update_iceflow_solved(cfg, state):
 
-    if params.iflo_optimizer_lbfgs:
-        U, V, Cost_Glen = solve_iceflow_lbfgs(params, state, state.U, state.V)
+    if cfg.iceflow.iceflow.iflo_optimizer_lbfgs:
+        U, V, Cost_Glen = solve_iceflow_lbfgs(cfg, state, state.U, state.V)
     else:
-        U, V, Cost_Glen = solve_iceflow(params, state, state.U, state.V)
+        U, V, Cost_Glen = solve_iceflow(cfg, state, state.U, state.V)
  
     state.U.assign(U)
     state.V.assign(V)
     
-    if params.iflo_force_max_velbar > 0:
+    if cfg.iceflow.iceflow.iflo_force_max_velbar > 0:
         velbar_mag = getmag3d(state.U, state.V)
         state.U.assign(
             tf.where(
-                velbar_mag >= params.iflo_force_max_velbar,
-                params.iflo_force_max_velbar * (state.U / velbar_mag),
+                velbar_mag >= cfg.iceflow.iceflow.iflo_force_max_velbar,
+                cfg.iceflow.iceflow.iflo_force_max_velbar * (state.U / velbar_mag),
                 state.U,
             )
         )
         state.V.assign(
             tf.where(
-                velbar_mag >= params.iflo_force_max_velbar,
-                params.iflo_force_max_velbar * (state.V / velbar_mag),
+                velbar_mag >= cfg.iceflow.iceflow.iflo_force_max_velbar,
+                cfg.iceflow.iceflow.iflo_force_max_velbar * (state.V / velbar_mag),
                 state.V,
             )
         )
         
-    if len(params.iflo_save_cost_solver)>0:
-        np.savetxt(params.iflo_output_directory+params.iflo_save_cost_solver+'-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")
+    if len(cfg.iceflow.iceflow.iflo_save_cost_solver)>0:
+        np.savetxt(cfg.iceflow.iceflow.iflo_output_directory+cfg.iceflow.iceflow.iflo_save_cost_solver+'-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")
 
     state.COST_Glen = Cost_Glen[-1].numpy()
 
-    update_2d_iceflow_variables(params, state)
+    update_2d_iceflow_variables(cfg, state)
  

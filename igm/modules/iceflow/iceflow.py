@@ -26,7 +26,7 @@ compute the energy associated with the state of the emulator, and compute the
 gradient of the energy with respect to the emulator parameters. Then we update
 the emulator parameters with the gradient descent method (Adam optimizer).
 Because this step may be memory consuming, we split the computation in several
-patches of size params.iflo_retrain_emulator_framesizemax. This permits to
+patches of size cfg.modules.iceflow.iceflow.iflo_retrain_emulator_framesizemax. This permits to
 retrain the emulator on large size arrays.
 
 Alternatively, one can solve the Blatter-Pattyn model using a solver using 
@@ -62,7 +62,7 @@ from .pretraining import *
 #     params_iceflow(parser)
 
 def initialize(cfg, state):
-    cfg_iceflow = cfg.modules.iceflow
+
     # This makes it so that if the user included the optimize module, this intializer will not be called again.
     # This is due to the fact that the optimize module calls the initialize (and params) function of the iceflow module.
     if hasattr(state, "optimize_initializer_called"):
@@ -70,66 +70,66 @@ def initialize(cfg, state):
 
     state.tcomp_iceflow = []
 
-    if cfg_iceflow.iceflow.iflo_run_pretraining:
-        pretraining(cfg_iceflow, state)
+    if cfg.modules.iceflow.iceflow.iflo_run_pretraining:
+        pretraining(cfg, state)
 
     # deinfe the fields of the ice flow such a U, V, but also sliding coefficient, arrhenius, ectt
-    initialize_iceflow_fields(cfg_iceflow, state)
+    initialize_iceflow_fields(cfg, state)
 
-    if cfg_iceflow.iceflow.iflo_type == "emulated":
+    if cfg.modules.iceflow.iceflow.iflo_type == "emulated":
         # define the emulator, and the optimizer
-        initialize_iceflow_emulator(cfg_iceflow, state)
-    elif cfg_iceflow.iceflow.iflo_type == "solved":
+        initialize_iceflow_emulator(cfg, state)
+    elif cfg.modules.iceflow.iceflow.iflo_type == "solved":
         # define the solver, and the optimizer
-        initialize_iceflow_solver(cfg_iceflow, state)    
-    elif cfg_iceflow.iceflow.iflo_type == "diagnostic":
+        initialize_iceflow_solver(cfg, state)    
+    elif cfg.modules.iceflow.iceflow.iflo_type == "diagnostic":
         # define the second velocity field
-        initialize_iceflow_diagnostic(cfg_iceflow,state)
+        initialize_iceflow_diagnostic(cfg,state)
 
     # create the vertica discretization
-    define_vertical_weight(cfg_iceflow, state)
+    define_vertical_weight(cfg, state)
     
     # padding is necessary when using U-net emulator
-    state.PAD = compute_PAD(cfg_iceflow, state.thk.shape[1],state.thk.shape[0])
+    state.PAD = compute_PAD(cfg, state.thk.shape[1],state.thk.shape[0])
     
-    if not cfg_iceflow.iceflow.iflo_type == "solved":
-        update_iceflow_emulated(cfg_iceflow, state)
+    if not cfg.modules.iceflow.iceflow.iflo_type == "solved":
+        update_iceflow_emulated(cfg, state)
         
         
     # Currently it is not supported to have the two working simulatanoutly
-    assert (cfg_iceflow.iceflow.iflo_exclude_borders==0) | (cfg_iceflow.iceflow.iflo_multiple_window_size==0)
+    assert (cfg.modules.iceflow.iceflow.iflo_exclude_borders==0) | (cfg.modules.iceflow.iceflow.iflo_multiple_window_size==0)
 
-    if cfg_iceflow.iceflow.iflo_run_data_assimilation:
+    if cfg.modules.iceflow.iceflow.iflo_run_data_assimilation:
         state.it = -1
-        update_iceflow_emulator(cfg_iceflow, state)
+        update_iceflow_emulator(cfg, state)
         optimize(cfg, state)
         
 
 def update(cfg, state):
-    cfg = cfg.modules.iceflow
+
     if hasattr(state, "logger"):
         state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
     state.tcomp_iceflow.append(time.time())
 
-    if cfg.iceflow.iflo_type == "emulated":
-        if cfg.iceflow.iflo_retrain_emulator_freq > 0:
+    if cfg.modules.iceflow.iceflow.iflo_type == "emulated":
+        if cfg.modules.iceflow.iceflow.iflo_retrain_emulator_freq > 0:
             update_iceflow_emulator(cfg, state)
 
         update_iceflow_emulated(cfg, state)
 
-    elif cfg.iflo_type == "solved":
+    elif cfg.modules.iceflow.iflo_type == "solved":
         update_iceflow_solved(cfg, state)
 
-    elif cfg.iflo_type == "diagnostic":
+    elif cfg.modules.iceflow.iflo_type == "diagnostic":
         update_iceflow_diagnostic(cfg, state)
 
     state.tcomp_iceflow[-1] -= time.time()
     state.tcomp_iceflow[-1] *= -1
 
 def finalize(cfg, state):
-    cfg = cfg.modules.iceflow
-    if cfg.iceflow.iflo_save_model:
+
+    if cfg.modules.iceflow.iceflow.iflo_save_model:
         save_iceflow_model(cfg, state)
    
  

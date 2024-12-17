@@ -14,15 +14,15 @@ def params(parser):
     pass
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     pass
 
 
-def update(params, state):
+def update(cfg, state):
     pass
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     ################################################################
 
     size_of_tensor = {}
@@ -48,7 +48,7 @@ def finalize(params, state):
 
     os.system("echo rm " + "memory-statistics.txt" + " >> clean.sh" )
 
-    _plot_memory_pie(params, state)
+    _plot_memory_pie(cfg, state)
 
     ################################################################
 
@@ -77,10 +77,10 @@ def finalize(params, state):
 
     os.system( "echo rm " + "computational-statistics.txt" + " >> clean.sh" )
 
-    _plot_computational_pie(params, state)
+    _plot_computational_pie(cfg, state)
 
 
-def _plot_computational_pie(params, state):
+def _plot_computational_pie(cfg, state):
     """
     Plot to the computational time of each model components in a pie
     """
@@ -124,7 +124,7 @@ def _plot_computational_pie(params, state):
 
     os.system("echo rm computational-pie.png >> clean.sh")
 
-def _plot_memory_pie(params, state):
+def _plot_memory_pie(cfg, state):
     """
     Plot to the memory size of each model components in a pie
     """

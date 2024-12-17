@@ -20,7 +20,7 @@ def params(parser):
     )
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     state.tcomp_write_particles = []
 
     directory = "trajectories"
@@ -30,7 +30,7 @@ def initialize(params, state):
 
     os.system( "echo rm -r " + "trajectories" + " >> clean.sh" )
 
-    if params.wpar_add_topography:
+    if cfg.modules.write_particles.wpar_add_topography:
         ftt = os.path.join("trajectories", "topg.csv")
         array = tf.transpose(
             tf.stack(
@@ -40,7 +40,7 @@ def initialize(params, state):
         np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
 
 
-def update(params, state):
+def update(cfg, state):
     if state.saveresult:
         state.tcomp_write_particles.append(time.time())
 
@@ -72,7 +72,7 @@ def update(params, state):
         with open(ft, "a") as f:
             print(state.t.numpy(), file=f)
 
-        if params.wpar_add_topography:
+        if cfg.modules.write_particles.wpar_add_topography:
             ftt = os.path.join(
                 "trajectories",
                 "usurf-" + "{:06d}".format(int(state.t.numpy())) + ".csv",
@@ -92,5 +92,5 @@ def update(params, state):
         state.tcomp_write_particles[-1] *= -1
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

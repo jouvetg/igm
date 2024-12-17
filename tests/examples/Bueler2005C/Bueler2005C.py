@@ -8,7 +8,7 @@ import math
 def params(parser):  
     pass
 
-def initialize(params,state):
+def initialize(cfg,state):
 
     state.x = tf.constant(np.linspace(-3950,3950,80).astype("float32"))
     state.y = tf.constant(np.linspace(-3950,3950,80).astype("float32"))
@@ -26,7 +26,7 @@ def initialize(params,state):
 
     state.dX = tf.ones_like(state.X) * state.dx 
  
-def update(params,state):
+def update(cfg,state):
     # compute time dependent mass balance according to Bueler C 2005
     A = 1.0e-16  # [Pa^-3 year^-1]
     n = 3.
@@ -58,5 +58,5 @@ def update(params,state):
 
     state.smb  = smbB
     
-def finalize(params,state):
+def finalize(cfg,state):
     pass

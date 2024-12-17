@@ -42,17 +42,17 @@ def cnn(cfg, nb_inputs, nb_outputs):
     return tf.keras.models.Model(inputs=inputs, outputs=outputs)
 
 
-def unet(params, nb_inputs, nb_outputs):
+def unet(cfg, nb_inputs, nb_outputs):
     """
     Routine serve to define a UNET network from keras_unet_collection
     """
 
     from keras_unet_collection import models
 
-    layers = np.arange(int(params.iflo_nb_blocks))
+    layers = np.arange(int(cfg.iceflow.iceflow.iflo_nb_blocks))
 
     number_of_filters = [
-        params.iflo_nb_out_filter * 2 ** (layers[i]) for i in range(len(layers))
+        cfg.iceflow.iceflow.iflo_nb_out_filter * 2 ** (layers[i]) for i in range(len(layers))
     ]
 
     return models.unet_2d(
@@ -61,7 +61,7 @@ def unet(params, nb_inputs, nb_outputs):
         n_labels=nb_outputs,
         stack_num_down=2,
         stack_num_up=2,
-        activation=params.iflo_activation,
+        activation=cfg.iceflow.iceflow.iflo_activation,
         output_activation=None,
         batch_norm=False,
         pool="max",

@@ -46,9 +46,9 @@ def params(parser):
     )
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     # read_shapefile
-    gdf = read_shapefile(params.mask_shapefile)
+    gdf = read_shapefile(cfg.modules.include_icemask.mask_shapefile)
 
     # Flatten the X and Y coordinates and convert to numpy
     flat_X = state.X.numpy().flatten()
@@ -76,18 +76,18 @@ def initialize(params, state):
     mask_values = mask_values.reshape(state.X.shape)
 
     # Invert the mask values if mask_invert is True
-    if params.mask_invert:
+    if cfg.modules.include_icemask.mask_invert:
         mask_values = np.logical_not(mask_values).astype(np.float32)
 
     # define icemask
     state.icemask = tf.constant(mask_values)
 
 
-def update(params, state):
+def update(cfg, state):
     pass
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass
 
 

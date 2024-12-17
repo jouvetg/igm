@@ -14,7 +14,7 @@ def params(parser):
     pass
 
 
-def initialize(params, state):
+def initialize(cfg, state):
 
     x = np.arange(0, 100) * 100  # make x-axis, lenght 10 km, resolution 100 m
     y = np.arange(0, 200) * 100  # make y-axis, lenght 20 km, resolution 100 m
@@ -33,10 +33,10 @@ def initialize(params, state):
     complete_data(state)
 
 
-def update(params, state):
+def update(cfg, state):
     pass
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass
     

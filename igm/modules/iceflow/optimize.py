@@ -113,7 +113,7 @@ def optimize(cfg, state):
 
             fieldin = [vars(state)[f] for f in cfg.modules.iceflow.iceflow.iflo_fieldin]
 
-            X = fieldin_to_X(cfg.modules.iceflow, fieldin) # temporary doing cfg.modules.iceflow due to the naming issues
+            X = fieldin_to_X(cfg, fieldin) # temporary doing cfg.modules.iceflow due to the naming issues
 
             # evalutae th ice flow emulator                
             if cfg.modules.iceflow.iceflow.iflo_multiple_window_size==0:
@@ -121,7 +121,7 @@ def optimize(cfg, state):
             else:
                 Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
 
-            U, V = Y_to_UV(cfg.modules.iceflow, Y) # temporary doing cfg.modules.iceflow due to the naming issues
+            U, V = Y_to_UV(cfg, Y) # temporary doing cfg.modules.iceflow due to the naming issues
 
             U = U[0]
             V = V[0]
@@ -187,7 +187,7 @@ def optimize(cfg, state):
 
             # Here one allow retraining of the ice flow emaultor
             if cfg.modules.iceflow.optimize.opti_retrain_iceflow_model:
-                C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg.modules.iceflow, X, Y)
+                C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X, Y)
 
                 cost["glen"] = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
                              + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)

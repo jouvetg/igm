@@ -20,15 +20,15 @@ def params(parser):
     )
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     pass
 
 
-def update(params, state):
+def update(cfg, state):
     import rasterio
 
     if state.saveresult:
-        for var in params.wtif_vars_to_save:
+        for var in cfg.modules.write_tif.wtif_vars_to_save:
             file = var + "-" + str(int(state.t)).zfill(6) + ".tif"
 
             os.system("echo rm " + file + " >> clean.sh")
@@ -58,5 +58,5 @@ def update(params, state):
             del src
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

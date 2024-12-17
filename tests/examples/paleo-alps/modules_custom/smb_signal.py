@@ -40,7 +40,7 @@ def params(parser):
         help="Maximum accumulation",
     )
 
-def initialize(params,state):
+def initialize(cfg,state):
     """
         Retrieve the Temperature difference from the EPICA signal
     """
@@ -50,20 +50,20 @@ def initialize(params,state):
     dT   = ss[:,3]          # extract the dT, i.e. global temp. difference
     state.dT =  interp1d(time,dT, fill_value=(dT[0], dT[-1]),bounds_error=False)
 
-def update(params,state):
+def update(cfg,state):
     """
         mass balance 'signal'
     """
 
     # define ELA as function of EPICA's Delta T, ELA's present day (pdela) and Dela/Dt (deladt)
-    ela     = params.pdela + params.deladt*state.dT(state.t) # for rhine
+    ela     = cfg.modules.smb_signal.pdela + cfg.modules.smb_signal.deladt*state.dT(state.t) # for rhine
 
     # that's SMB param with ELA, ablation and accc gradient, and max accumulation
     # i.e. SMB =       gradabl*(z-ela)           if z<ela, 
     #          =  min( gradacc*(z-ela) , maxacc) if z>ela.
     state.smb  = state.usurf - ela
-    state.smb  *= tf.where(tf.less(state.smb , 0), params.gradabl, params.gradacc)
-    state.smb  = tf.clip_by_value(state.smb , -100, params.maxacc)
+    state.smb  *= tf.where(tf.less(state.smb , 0), cfg.modules.smb_signal.gradabl, cfg.modules.smb_signal.gradacc)
+    state.smb  = tf.clip_by_value(state.smb , -100, cfg.modules.smb_signal.maxacc)
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

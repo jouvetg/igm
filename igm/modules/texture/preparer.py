@@ -4,13 +4,13 @@ from typing import Tuple, Any
 from .emulator import Emulator
 
 class Pix2PixHDImagePreparer:
-    def __init__(self, params: Any, state: Any, ndvi_emulator: Emulator = None) -> None:
+    def __init__(self, cfg: Any, state: Any, ndvi_emulator: Emulator = None) -> None:
         if ndvi_emulator is None and (not hasattr(state, "ndvi")):
             raise ValueError(
                 "Emulator is required for NDVI if no NDVI is provided."
             )  # ? getting a type error with None here... could be a bug to look into
         self.state = state
-        self.params = params
+        self.cfg = cfg
         self.ndvi_emulator = ndvi_emulator
 
     def get_features(self) -> None:
@@ -36,7 +36,7 @@ class Pix2PixHDImagePreparer:
         self.image = tf.stack([topg, water, vx, thk, prec, ndvi, vy, temp], axis=0)
 
     def prec_units(self, prec: tf.Tensor) -> tf.Tensor:
-        return (prec / self.params.divide_by_density) * (1 / 12)  # (m / yr. -> mm / month)
+        return (prec / self.cfg.modules.texture.divide_by_density) * (1 / 12)  # (m / yr. -> mm / month)
 
     def compute_ndvi(self, temp: tf.Tensor, prec: tf.Tensor) -> tf.Tensor:
         temp_flat = tf.reshape(temp, [-1])

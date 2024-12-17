@@ -51,23 +51,26 @@ def params(parser):
     )
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     # load the given parameters from the json file
     
-    with open(os.path.join(params.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
+    with open(os.path.join(cfg.modules.oggm_shop.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
         jsonString = json_file.read()
 
     oggm_mb_calib = json.loads(jsonString)
 
-    params.temp_default_gradient = oggm_mb_calib["mb_global_params"][
+    state.temp_default_gradient = oggm_mb_calib["mb_global_params"][
         "temp_default_gradient"
     ]
-    params.temp_bias = oggm_mb_calib["temp_bias"]
-    params.prcp_fac = oggm_mb_calib["prcp_fac"]
+    
+    # ! I am passing these through the 'state' object instead of the cfg object as the cfg should be static ideally... we can change this later...
+    
+    state.temp_bias = oggm_mb_calib["temp_bias"]
+    state.prcp_fac = oggm_mb_calib["prcp_fac"]
 
     # load climate data from netcdf file climate_historical.nc
     nc = Dataset(
-        os.path.join(params.oggm_RGI_ID, "climate_historical.nc")
+        os.path.join(cfg.modules.oggm_shop.oggm_RGI_ID, "climate_historical.nc")
     )
 
     time = np.squeeze(nc.variables["time"]).astype("float32")  # unit : year
@@ -77,8 +80,8 @@ def initialize(params, state):
         "float32"
     )  # unit : degree celcius
 
-    params.ref_hgt = nc.ref_hgt
-    params.yr_0 = nc.yr_0
+    state.ref_hgt = nc.ref_hgt
+    state.yr_0 = nc.yr_0
 
     nc.close()
 
@@ -91,8 +94,8 @@ def initialize(params, state):
     state.temp_std = temp_std.reshape((nb_y, nb_m))
 
     # correct the temperature and precipitation with factor and bias
-    state.temp = state.temp + params.temp_bias
-    state.prec = state.prec * params.prcp_fac
+    state.temp = state.temp + state.temp_bias
+    state.prec = state.prec * state.prcp_fac
 
     # fix the units of precipitation
     state.prec = nb_m * state.prec  # kg * m^(-2) * month^(-1) ->  kg * m^(-2) * y^(-1)
@@ -114,36 +117,36 @@ def initialize(params, state):
     state.tlast_clim_oggm = tf.Variable(-(10**10), dtype="float32", trainable=False)
     state.tcomp_clim_oggm = []
 
-    if params.clim_oggm_clim_trend_array == []:
+    if cfg.modules.clim_oggm.clim_oggm_clim_trend_array == []:
         state.climpar = np.loadtxt(
-            params.clim_oggm_file,
+            cfg.modules.clim_oggm.clim_oggm_file, # ! does this exist? if not, I will set it...
             skiprows=1,
             dtype=np.float32,
         )
     else:
-        state.climpar = np.array(params.clim_oggm_clim_trend_array[1:]).astype(
+        state.climpar = np.array(cfg.modules.clim_oggm.clim_oggm_clim_trend_array[1:]).astype(
             np.float32
         )
 
-    np.random.seed(params.clim_oggm_seed_par)  # fix the seed
+    np.random.seed(cfg.modules.clim_oggm.clim_oggm_seed_par)  # fix the seed
 
 
-def update(params, state):
-    if (state.t - state.tlast_clim_oggm) >= params.clim_oggm_update_freq:
+def update(cfg, state):
+    if (state.t - state.tlast_clim_oggm) >= cfg.modules.clim_oggm.clim_oggm_update_freq:
         if hasattr(state, "logger"):
             state.logger.info("update climate at time : " + str(state.t.numpy()))
 
         state.tcomp_clim_oggm.append(time.time())
 
         # find out the index that corresponds to the current year
-        index_year = int(state.t - params.yr_0)
+        index_year = int(state.t - state.yr_0)
 
         if (index_year >= 0) & (index_year < state.prec.shape[0]):
             II = index_year
             delta_temp = 0.0
             prec_scal = 1.0
         else:
-            i0, i1 = np.round(params.clim_oggm_ref_period - params.yr_0)
+            i0, i1 = np.round(cfg.modules.clim_oggm.clim_oggm_ref_period - state.yr_0)
             II = np.random.randint(i0, i1)
             delta_temp = interp1d_tf(state.climpar[:, 0], state.climpar[:, 1], state.t)
             prec_scal = interp1d_tf(state.climpar[:, 0], state.climpar[:, 2], state.t)
@@ -168,7 +171,7 @@ def update(params, state):
         state.air_temp_std = tf.tile(TEMP_STD, (1, state.y.shape[0], state.x.shape[0]))
 
         # vertical correction (lapse rates)
-        temp_corr_addi = params.temp_default_gradient * (state.usurf - params.ref_hgt)
+        temp_corr_addi = state.temp_default_gradient * (state.usurf - state.ref_hgt)
         temp_corr_addi = tf.expand_dims(temp_corr_addi, axis=0)
         temp_corr_addi = tf.tile(temp_corr_addi, (state.temp.shape[1], 1, 1))
 
@@ -184,5 +187,5 @@ def update(params, state):
         state.tcomp_clim_oggm[-1] *= -1
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

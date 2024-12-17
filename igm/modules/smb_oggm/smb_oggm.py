@@ -37,23 +37,24 @@ def params(parser):
         help="Melt enhancer factor",
     )
 
-def initialize(params, state):
+def initialize(cfg, state):
     state.tcomp_smb_oggm = []
     state.tlast_mb = tf.Variable(-1.0e5000)
 
     # load the given parameters from the json file
-    with open(os.path.join(params.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
+    with open(os.path.join(cfg.modules.oggm_shop.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
         jsonString = json_file.read()
 
     oggm_mb_calib = json.loads(jsonString)
 
-    params.thr_temp_snow = oggm_mb_calib["mb_global_params"]["temp_all_solid"]
-    params.thr_temp_rain = oggm_mb_calib["mb_global_params"]["temp_all_liq"]
-    params.temp_melt = oggm_mb_calib["mb_global_params"]["temp_melt"]
-    params.melt_f = oggm_mb_calib["melt_f"]  # unit: mm water / (celcius day)
+    # ! Changed these variables into state attributes instead of params!
+    state.thr_temp_snow = oggm_mb_calib["mb_global_params"]["temp_all_solid"]
+    state.thr_temp_rain = oggm_mb_calib["mb_global_params"]["temp_all_liq"]
+    state.temp_melt = oggm_mb_calib["mb_global_params"]["temp_melt"]
+    state.melt_f = oggm_mb_calib["melt_f"]  # unit: mm water / (celcius day)
 
 
-def update(params, state):
+def update(cfg, state):
     #    mass balance forced by climate with accumulation and temperature-index melt model
     #    Input:  state.precipitation [Unit: kg * m^(-2) * y^(-1)]
     #            state.air_temp      [Unit: °C           ]
@@ -62,7 +63,7 @@ def update(params, state):
     #   This mass balance routine implements the surface mass balance model of OGGM
 
     # update smb each X years
-    if (state.t - state.tlast_mb) >= params.smb_oggm_update_freq:
+    if (state.t - state.tlast_mb) >= cfg.modules.smb_oggm.smb_oggm_update_freq:
         if hasattr(state, "logger"):
             state.logger.info(
                 "Construct mass balance at time : " + str(state.t.numpy())
@@ -73,14 +74,14 @@ def update(params, state):
         # keep solid precipitation when temperature < thr_temp_snow
         # with linear transition to 0 between thr_temp_snow and thr_temp_rain
         accumulation = tf.where(
-            state.air_temp <= params.thr_temp_snow,
+            state.air_temp <= state.thr_temp_snow,
             state.precipitation,
             tf.where(
-                state.air_temp >= params.thr_temp_rain,
+                state.air_temp >= state.thr_temp_rain,
                 0.0,
                 state.precipitation
-                * (params.thr_temp_rain - state.air_temp)
-                / (params.thr_temp_rain - params.thr_temp_snow),
+                * (state.thr_temp_rain - state.air_temp)
+                / (state.thr_temp_rain - state.thr_temp_snow),
             ),
         )
 
@@ -88,10 +89,10 @@ def update(params, state):
             0
         ]  # unit to [ kg * m^(-2) * y^(-1) ] -> [ kg * m^(-2) water ]
 
-        accumulation /= params.smb_oggm_wat_density  # unit [ m water ]
+        accumulation /= cfg.modules.smb_oggm.smb_oggm_wat_density  # unit [ m water ]
 
-        ablation = params.melt_f * params.melt_enhancer * tf.clip_by_value(
-            state.air_temp - params.temp_melt, 0, 10**10
+        ablation = state.melt_f * cfg.modules.smb_oggm.melt_enhancer * tf.clip_by_value(
+            state.air_temp - state.temp_melt, 0, 10**10
         )  # unit: [ mm * day^(-1) water ]
 
         ablation *= 365.242198781 / 1000.0  # unit to [ m * y^(-1) water ]
@@ -100,7 +101,7 @@ def update(params, state):
 
         # sum accumulation and ablation over the year, and conversion to ice equivalent
         state.smb = tf.math.reduce_sum(accumulation - ablation, axis=0) * (
-            params.smb_oggm_wat_density / params.smb_oggm_ice_density
+            cfg.modules.smb_oggm.smb_oggm_wat_density / cfg.modules.smb_oggm.smb_oggm_ice_density
         )
 
         if hasattr(state, "icemask"):
@@ -114,5 +115,5 @@ def update(params, state):
         state.tcomp_smb_oggm[-1] *= -1
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

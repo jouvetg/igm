@@ -4,6 +4,7 @@ from .exporter import Exporter
 from typing import Any
 import logging
 
+
 class Pix2PixHDPipeline:
     def __init__(
         self,
@@ -13,8 +14,7 @@ class Pix2PixHDPipeline:
         exporter: Exporter,
         model: Any,
         state: Any,
-        params: Any,
-
+        cfg: Any,
     ):
         self.feature_normalizer: Normalizer = feature_normalizer
         self.image_normalizer: Normalizer = image_normalizer
@@ -22,7 +22,7 @@ class Pix2PixHDPipeline:
         self.exporter: Exporter = exporter
         self.model: Any = model
         self.state: Any = state
-        self.params: Any = params
+        self.cfg: Any = cfg
 
     def run(self) -> None:
         year = int(round(self.state.t.numpy()))
@@ -43,6 +43,9 @@ class Pix2PixHDPipeline:
             image=image, image_normalizer=self.image_normalizer
         )
         logging.info(f"Image type after converting to 8bit (if needed): {image.dtype}")
-        logging.debug(f"First column from Image after converting to 8bit (if needed): {image[:,0]}")
+        logging.debug(
+            f"First column from Image after converting to 8bit (if needed): {image[:,0]}"
+        )
         self.exporter.export(
-            image=image, filename=f"texture_{year}.{self.params.texture_format}")
+            image=image, filename=f"texture_{year}.{self.cfg.modules.texture.format}"
+        )

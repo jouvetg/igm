@@ -40,23 +40,23 @@ import tensorflow as tf
 
 
 def initialize(cfg, state):
-    cfg = cfg.modules.time_igm # does this alter the original cfg? Nope - its a local variable !
+
     state.tcomp_time = []
 
     # Initialize the time with starting time
-    state.t = tf.Variable(float(cfg.time_start))
+    state.t = tf.Variable(float(cfg.modules.time_igm.time_start))
 
     # the first loop is not advancing
     state.it = -1
     state.itsave = -1
 
-    state.dt = tf.Variable(float(cfg.time_step_max))
+    state.dt = tf.Variable(float(cfg.modules.time_igm.time_step_max))
 
-    state.dt_target = tf.Variable(float(cfg.time_step_max))
+    state.dt_target = tf.Variable(float(cfg.modules.time_igm.time_step_max))
 
     state.time_save = np.ndarray.tolist(
-        np.arange(cfg.time_start, cfg.time_end, cfg.time_save)
-    ) + [cfg.time_end]
+        np.arange(cfg.modules.time_igm.time_start, cfg.modules.time_igm.time_end, cfg.modules.time_igm.time_save)
+    ) + [cfg.modules.time_igm.time_end]
 
     state.time_save = tf.constant(state.time_save, dtype="float32")
 
@@ -68,7 +68,7 @@ def update(cfg, state):
         state.logger.info(
             "Update DT from the CFL condition at time : " + str(state.t.numpy())
         )
-    cfg = cfg.modules.time_igm
+
     state.tcomp_time.append(time.time())
 
     # compute maximum ice velocitiy magnitude 
@@ -77,12 +77,12 @@ def update(cfg, state):
         tf.reduce_max(tf.abs(state.vbar)),
     )
     # dt_target account for both cfl and dt_max
-    if (velomax > 0) & (cfg.time_cfl>0):
+    if (velomax > 0) & (cfg.modules.time_igm.time_cfl>0):
         state.dt_target =  tf.minimum(
-            cfg.time_cfl * state.dx / velomax, cfg.time_step_max
+            cfg.modules.time_igm.time_cfl * state.dx / velomax, cfg.modules.time_igm.time_step_max
         )
     else:
-        state.dt_target = cfg.time_step_max
+        state.dt_target = cfg.modules.time_igm.time_step_max
 
     state.dt = state.dt_target
 

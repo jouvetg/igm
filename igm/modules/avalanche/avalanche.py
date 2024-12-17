@@ -24,13 +24,17 @@ def params(parser):
     )
 
 
-def initialize(params, state):
+def initialize(cfg, state):
     state.tcomp_avalanche = []
-    state.tlast_avalanche = tf.Variable(params.time_start, dtype=tf.float32)
+    
+    if "time_igm" not in cfg.modules:
+        raise ValueError("The 'time_igm' module is required for the 'avalanche' module.")
+    
+    state.tlast_avalanche = tf.Variable(cfg.modules.time_igm.time_start, dtype=tf.float32)
 
 
-def update(params, state):
-    if (state.t - state.tlast_avalanche) >= params.avalanche_update_freq:
+def update(cfg, state):
+    if (state.t - state.tlast_avalanche) >= cfg.modules.avalanche.avalanche_update_freq:
         if hasattr(state, "logger"):
             state.logger.info("Update AVALANCHE at time : " + str(state.t.numpy()))
 
@@ -40,7 +44,7 @@ def update(params, state):
         Zb = state.topg
         Zi = Zb + H
         dHRepose = state.dx * tf.math.tan(
-            params.avalanche_angleOfRepose * np.pi / 180.0
+            cfg.modules.avalanche.avalanche_angleOfRepose * np.pi / 180.0
         )
         Ho = tf.maximum(H, 0)
 
@@ -120,5 +124,5 @@ def update(params, state):
         state.tcomp_avalanche[-1] *= -1
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

@@ -144,50 +144,54 @@ def params(parser):
     )
 
 
-def initialize(params, state):
+def initialize(cfg, state):
+    
+    if "iceflow" not in cfg.modules:
+        raise ValueError("The 'iceflow' module is required for the 'enthalpy' module.")
+    
     Ny, Nx = state.thk.shape
 
     state.basalMeltRate = tf.Variable(tf.zeros_like(state.thk), trainable=False)
     state.T = tf.Variable(
-        tf.ones((params.iflo_Nz, Ny, Nx)) * params.enth_melt_temp, trainable=False
+        tf.ones((cfg.modules.iceflow.iceflow.iflo_Nz, Ny, Nx)) * cfg.modules.enthalpy.enth_melt_temp, trainable=False
     )
     state.omega = tf.Variable(tf.zeros_like(state.T), trainable=False)
     state.E = tf.Variable(
         tf.ones_like(state.T)
-        * (params.enth_ci * (params.enth_melt_temp - params.enth_ref_temp)),
+        * (cfg.modules.enthalpy.enth_ci * (cfg.modules.enthalpy.enth_melt_temp - cfg.modules.enthalpy.enth_ref_temp)),
         trainable=False,
     )
     state.tillwat = 0.0 * tf.Variable(tf.ones_like(state.thk), trainable=False)
 
     if not hasattr(state, "bheatflx"):
         state.bheatflx = tf.Variable(
-            tf.ones_like(state.thk) * params.enth_default_bheatflx, trainable=False
+            tf.ones_like(state.thk) * cfg.modules.enthalpy.enth_default_bheatflx, trainable=False
         )
 
-    state.phi = compute_phi(params, state)
+    state.phi = compute_phi(cfg, state)
 
     # update the sliding coefficient
     state.tauc, state.slidingco = compute_slidingco_tf(
         state.thk,
         state.tillwat,
-        params.iflo_ice_density,
-        params.iflo_gravity_cst,
-        params.enth_till_wat_max,
+        cfg.modules.iceflow.iceflow.iflo_ice_density,
+        cfg.modules.iceflow.iceflow.iflo_gravity_cst,
+        cfg.modules.enthalpy.enth_till_wat_max,
         state.phi,
-        params.iflo_exp_weertman,
-        params.enth_uthreshold,
-        params.iflo_new_friction_param,
-        params.enth_tauc_min,
-        params.enth_tauc_max,
+        cfg.modules.iceflow.iceflow.iflo_exp_weertman,
+        cfg.modules.enthalpy.enth_uthreshold,
+        cfg.modules.iceflow.iceflow.iflo_new_friction_param,
+        cfg.modules.enthalpy.enth_tauc_min,
+        cfg.modules.enthalpy.enth_tauc_max,
     )
 
     state.tcomp_enthalpy = []
 
     # arrhenius must be 3D for the Enthlapy to work
-    assert params.iflo_dim_arrhenius == 3
+    assert cfg.modules.iceflow.iceflow.iflo_dim_arrhenius == 3
 
 
-def update(params, state):
+def update(cfg, state):
     if hasattr(state, "logger"):
         state.logger.info("Update ENTHALPY at time : " + str(state.t.numpy()))
 
@@ -197,27 +201,27 @@ def update(params, state):
     surftemp = (
         tf.minimum(
             tf.math.reduce_mean(
-                state.air_temp + params.temperature_offset_air_to_ice, axis=0
+                state.air_temp + cfg.modules.enthalpy.temperature_offset_air_to_ice, axis=0
             ),
             0,
         )
-        + params.enth_melt_temp
+        + cfg.modules.enthalpy.enth_melt_temp
     )  # [K]
 
     # get the vertical discretization
     depth, dz = vertically_discretize_tf(
-        state.thk, params.iflo_Nz, params.iflo_vert_spacing
+        state.thk, cfg.modules.iceflow.iceflow.iflo_Nz, cfg.modules.iceflow.iceflow.iflo_vert_spacing
     )
 
     # compute temperature and enthalpy at the pressure melting point
     Tpmp, Epmp = TpmpEpmp_from_depth_tf(
         depth,
-        params.iflo_gravity_cst,
-        params.iflo_ice_density,
-        params.enth_claus_clape,
-        params.enth_melt_temp,
-        params.enth_ci,
-        params.enth_ref_temp,
+        cfg.modules.iceflow.iceflow.iflo_gravity_cst,
+        cfg.modules.iceflow.iceflow.iflo_ice_density,
+        cfg.modules.enthalpy.enth_claus_clape,
+        cfg.modules.enthalpy.enth_melt_temp,
+        cfg.modules.enthalpy.enth_ci,
+        cfg.modules.enthalpy.enth_ref_temp,
     )
 
     # get the temperature from the enthalpy
@@ -225,17 +229,17 @@ def update(params, state):
         state.E,
         Tpmp,
         Epmp,
-        params.enth_ci,
-        params.enth_ref_temp,
-        params.enth_Lh,
+        cfg.modules.enthalpy.enth_ci,
+        cfg.modules.enthalpy.enth_ref_temp,
+        cfg.modules.enthalpy.enth_Lh,
     )
 
     # pressure adjusted temperature
     state.Tpa = (
         state.T
-        + params.enth_claus_clape
-        * params.iflo_ice_density
-        * params.iflo_gravity_cst
+        + cfg.modules.enthalpy.enth_claus_clape
+        * cfg.modules.iceflow.iceflow.iflo_ice_density
+        * cfg.modules.iceflow.iceflow.iflo_gravity_cst
         * depth
     )
 
@@ -244,7 +248,7 @@ def update(params, state):
 
     # get the arrhenius factor from temperature and and enthalpy
     state.arrhenius = (
-        arrhenius_from_temp_tf(state.Tpa, state.omega) * params.iflo_enhancement_factor
+        arrhenius_from_temp_tf(state.Tpa, state.omega) * cfg.modules.iceflow.iceflow.iflo_enhancement_factor
     )
 
     if hasattr(state, "W"):
@@ -256,29 +260,29 @@ def update(params, state):
 
     # compute the strainheat is in [W m-3]
     state.strainheat = compute_strainheat_tf(
-        state.U / params.enth_spy,
-        state.V / params.enth_spy,
+        state.U / cfg.modules.enthalpy.enth_spy,
+        state.V / cfg.modules.enthalpy.enth_spy,
         state.arrhenius,
         state.dx,
         dz,
-        params.iflo_exp_glen,
-        params.iflo_thr_ice_thk,
+        cfg.modules.iceflow.iceflow.iflo_exp_glen,
+        cfg.modules.iceflow.iceflow.iflo_thr_ice_thk,
     )
 
     # compute the frictheat is in [W m-2]
     state.frictheat = compute_frictheat_tf(
-        state.U / params.enth_spy,
-        state.V / params.enth_spy,
+        state.U / cfg.modules.enthalpy.enth_spy,
+        state.V / cfg.modules.enthalpy.enth_spy,
         state.slidingco,
         state.topg,
         state.dx,
-        params.iflo_exp_weertman,
-        params.iflo_new_friction_param,
+        cfg.modules.iceflow.iceflow.iflo_exp_weertman,
+        cfg.modules.iceflow.iceflow.iflo_new_friction_param,
     )
 
     # compute the surface enthalpy
     surfenth = surf_enthalpy_from_temperature_tf(
-        surftemp, params.enth_melt_temp, params.enth_ci, params.enth_ref_temp
+        surftemp, cfg.modules.enthalpy.enth_melt_temp, cfg.modules.enthalpy.enth_ci, cfg.modules.enthalpy.enth_ref_temp
     )
 
     # one explicit step for the horizonal advection
@@ -290,50 +294,50 @@ def update(params, state):
     state.E, state.basalMeltRate = compute_enthalpy_basalmeltrate(
         state.E,
         Epmp,
-        state.dt * params.enth_spy,
+        state.dt * cfg.modules.enthalpy.enth_spy,
         dz,
-        Wc / params.enth_spy,
+        Wc / cfg.modules.enthalpy.enth_spy,
         surfenth,
         state.bheatflx,
         state.strainheat,
         state.frictheat,
         state.tillwat,
-        params.iflo_thr_ice_thk,
-        params.enth_ki,
-        params.iflo_ice_density,
-        params.enth_water_density,
-        params.enth_ci,
-        params.enth_ref_temp,
-        params.enth_Lh,
-        params.enth_spy,
-        params.enth_KtdivKc,
-        params.enth_drain_ice_column,
+        cfg.modules.iceflow.iceflow.iflo_thr_ice_thk,
+        cfg.modules.enthalpy.enth_ki,
+        cfg.modules.iceflow.iceflow.iflo_ice_density,
+        cfg.modules.enthalpy.enth_water_density,
+        cfg.modules.enthalpy.enth_ci,
+        cfg.modules.enthalpy.enth_ref_temp,
+        cfg.modules.enthalpy.enth_Lh,
+        cfg.modules.enthalpy.enth_spy,
+        cfg.modules.enthalpy.enth_KtdivKc,
+        cfg.modules.enthalpy.enth_drain_ice_column,
     )
 
     state.basalMeltRate = tf.clip_by_value(state.basalMeltRate, 0.0, 10.0**10)
 
     # update the till water content
     state.tillwat = state.tillwat + state.dt * (
-        state.basalMeltRate - params.enth_drain_rate
+        state.basalMeltRate - cfg.modules.enthalpy.enth_drain_rate
     )
-    state.tillwat = tf.clip_by_value(state.tillwat, 0.0, params.enth_till_wat_max)
+    state.tillwat = tf.clip_by_value(state.tillwat, 0.0, cfg.modules.enthalpy.enth_till_wat_max)
     state.tillwat = tf.where(state.thk > 0, state.tillwat, 0.0)
 
-    state.phi = compute_phi(params, state)
+    state.phi = compute_phi(cfg, state)
 
     # update the sliding coefficient
     state.tauc, state.slidingco = compute_slidingco_tf(
         state.thk,
         state.tillwat,
-        params.iflo_ice_density,
-        params.iflo_gravity_cst,
-        params.enth_till_wat_max,
+        cfg.modules.iceflow.iceflow.iflo_ice_density,
+        cfg.modules.iceflow.iceflow.iflo_gravity_cst,
+        cfg.modules.enthalpy.enth_till_wat_max,
         state.phi,
-        params.iflo_exp_weertman,
-        params.enth_uthreshold,
-        params.iflo_new_friction_param,
-        params.enth_tauc_min,
-        params.enth_tauc_max,
+        cfg.modules.iceflow.iceflow.iflo_exp_weertman,
+        cfg.modules.enthalpy.enth_uthreshold,
+        cfg.modules.iceflow.iceflow.iflo_new_friction_param,
+        cfg.modules.enthalpy.enth_tauc_min,
+        cfg.modules.enthalpy.enth_tauc_max,
     )
 
     state.hardav = (
@@ -348,7 +352,7 @@ def update(params, state):
     state.tcomp_enthalpy[-1] *= -1
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass
 
 
@@ -455,26 +459,26 @@ def compute_slidingco_tf(
     return tauc, slidingco
 
 
-def compute_phi(params, state):
+def compute_phi(cfg, state):
 
-    if params.enth_till_friction_angle_bed_min == None:
-        return params.enth_till_friction_angle * tf.ones_like(state.thk)
+    if cfg.modules.enthalpy.enth_till_friction_angle_bed_min == None:
+        return cfg.modules.enthalpy.enth_till_friction_angle * tf.ones_like(state.thk)
     else:
         return tf.where(
-            state.topg <= params.enth_till_friction_angle_bed_min,
-            params.enth_till_friction_angle_phi_min,
+            state.topg <= cfg.modules.enthalpy.enth_till_friction_angle_bed_min,
+            cfg.modules.enthalpy.enth_till_friction_angle_phi_min,
             tf.where(
-                state.topg >= params.enth_till_friction_angle_bed_max,
-                params.enth_till_friction_angle_phi_max,
-                params.enth_till_friction_angle_phi_min
+                state.topg >= cfg.modules.enthalpy.enth_till_friction_angle_bed_max,
+                cfg.modules.enthalpy.enth_till_friction_angle_phi_max,
+                cfg.modules.enthalpy.enth_till_friction_angle_phi_min
                 + (
-                    params.enth_till_friction_angle_phi_max
-                    - params.enth_till_friction_angle_phi_min
+                    cfg.modules.enthalpy.enth_till_friction_angle_phi_max
+                    - cfg.modules.enthalpy.enth_till_friction_angle_phi_min
                 )
-                * (state.topg - params.enth_till_friction_angle_bed_min)
+                * (state.topg - cfg.modules.enthalpy.enth_till_friction_angle_bed_min)
                 / (
-                    params.enth_till_friction_angle_bed_max
-                    - params.enth_till_friction_angle_bed_min
+                    cfg.modules.enthalpy.enth_till_friction_angle_bed_max
+                    - cfg.modules.enthalpy.enth_till_friction_angle_bed_min
                 ),
             ),
         )

@@ -88,6 +88,10 @@ def optimize(params, state):
             learning_rate=params.iflo_retrain_emulator_lr, clipnorm=1.0
         )
 
+    velsurfobs_mag = getmag(state.uvelsurfobs, state.vvelsurfobs)
+    params.opti_velsurfobs_std = tf.reduce_mean(tf.boolean_mask(velsurfobs_mag, ~tf.math.is_nan(velsurfobs_mag)))
+    print('Mean velocity obs:', params.opti_velsurfobs_std)
+ 
     state.tcomp_optimize = []
 
     # this thing is outdated with using iflo_new_friction_param default as we use scaling of one.
@@ -100,7 +104,10 @@ def optimize(params, state):
     Ny, Nx = state.thk.shape
 
     for f in params.opti_control:
-        vars()[f] = tf.Variable(vars(state)[f] / sc[f]) 
+        if f == "slidingco": 
+            vars()[f] = tf.Variable(( tf.math.log(vars(state)[f]) / tf.math.log(10.0) ) / sc[f]) 
+        else:
+            vars()[f] = tf.Variable(vars(state)[f] / sc[f]) 
 
     # main loop
     for i in range(params.opti_nbitmax):
@@ -120,7 +127,10 @@ def optimize(params, state):
                 t.watch(vars()[f])
 
             for f in params.opti_control:
-                vars(state)[f] = vars()[f] * sc[f]
+                if f == "slidingco":
+                    vars(state)[f] = (10**(vars()[f] * sc[f]))
+                else:
+                    vars(state)[f] = vars()[f] * sc[f]
 
             fieldin = [vars(state)[f] for f in params.iflo_fieldin]
 
@@ -136,6 +146,9 @@ def optimize(params, state):
 
             U = U[0]
             V = V[0]
+
+            U = tf.where(state.thk > 0, U, 0)
+            V = tf.where(state.thk > 0, V, 0)
            
             # this is strange, but it having state.U instead of U, slidingco is not more optimized ....
             state.uvelbase = U[0, :, :]
@@ -223,7 +236,10 @@ def optimize(params, state):
             )
 
             for f in params.opti_control:
-                vars(state)[f] = vars()[f] * sc[f]
+                if f == "slidingco":
+                    vars(state)[f] = (10**(vars()[f] * sc[f]))
+                else:
+                    vars(state)[f] = vars()[f] * sc[f]
 
             ###################
 

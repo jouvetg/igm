@@ -277,4 +277,10 @@ def params_optimize(parser):
         default=1.0,
         help="Max slidingco value allowed within the optimization",
     )
- 
+
+    parser.add_argument(
+        "--opti_log_slidingco",
+        type=str2bool,
+        default=False,
+        help="opimize the log the slidingco instead of slidingco directly",
+    )

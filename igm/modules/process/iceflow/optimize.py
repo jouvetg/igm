@@ -90,7 +90,7 @@ def optimize(params, state):
 
     velsurfobs_mag = getmag(state.uvelsurfobs, state.vvelsurfobs)
     params.opti_velsurfobs_std = tf.reduce_mean(tf.boolean_mask(velsurfobs_mag, ~tf.math.is_nan(velsurfobs_mag)))
-    print('Mean velocity obs:', params.opti_velsurfobs_std)
+#    print('Mean velocity obs:', params.opti_velsurfobs_std)
  
     state.tcomp_optimize = []
 
@@ -104,7 +104,7 @@ def optimize(params, state):
     Ny, Nx = state.thk.shape
 
     for f in params.opti_control:
-        if f == "slidingco": 
+        if params.opti_log_slidingco & (f == "slidingco"):
             vars()[f] = tf.Variable(( tf.math.log(vars(state)[f]) / tf.math.log(10.0) ) / sc[f]) 
         else:
             vars()[f] = tf.Variable(vars(state)[f] / sc[f]) 
@@ -127,7 +127,7 @@ def optimize(params, state):
                 t.watch(vars()[f])
 
             for f in params.opti_control:
-                if f == "slidingco":
+                if params.opti_log_slidingco & (f == "slidingco"):
                     vars(state)[f] = (10**(vars()[f] * sc[f]))
                 else:
                     vars(state)[f] = vars()[f] * sc[f]
@@ -236,7 +236,7 @@ def optimize(params, state):
             )
 
             for f in params.opti_control:
-                if f == "slidingco":
+                if params.opti_log_slidingco & (f == "slidingco"):
                     vars(state)[f] = (10**(vars()[f] * sc[f]))
                 else:
                     vars(state)[f] = vars()[f] * sc[f]

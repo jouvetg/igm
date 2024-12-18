@@ -9,6 +9,8 @@ sys.path.append(os.getcwd()) # I guess by default sys.path does not have cwd. no
     
 from . import modules, emulators
 
+from .input import local
+
 from .common import (
     State,
     # params_core,

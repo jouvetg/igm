@@ -1,0 +1,14 @@
+local:
+  filename: ???
+  # coarsening_method: skipping
+  coarsening:
+    boundary: trim
+    ratio:
+      x: 2
+      y: 1
+  crop:
+    xmin: null #4.2e5
+    xmax: null
+    ymin: null
+    ymax: null
+  

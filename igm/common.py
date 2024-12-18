@@ -42,123 +42,10 @@ IGM_DESCRIPTION = r"""
 class State:
     pass
 
-
-# # this create core parameters for any IGM run
-# def params_core() -> argparse.ArgumentParser:
-#     parser = ArgumentParser(
-#         description=IGM_DESCRIPTION,
-#         formatter_class=argparse.RawDescriptionHelpFormatter,
-#         conflict_handler="resolve",
-#     )  # automatically overrides repeated/older parameters! Valid solution?
-
-#     parser.add_argument(
-#         "--param_file",
-#         type=str,
-#         default="params.json",
-#         help="Path for the JSON parameter file. (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--modules_preproc",
-#         type=list,
-#         default=["oggm_shop"],
-#         help="List of pre-processing modules (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--modules_process",
-#         type=list,
-#         default=["iceflow", "time", "thk"],
-#         help="List of processing modules (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--modules_postproc",
-#         type=list,
-#         default=["write_ncdf", "plot2d", "print_info"],
-#         help="List of post-processing modules (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--logging",
-#         action="store_true",
-#         default=False,
-#         help="Activates the logging (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--logging_level",
-#         default=30,
-#         type=int,
-#         help="Determine logging level used for logger (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--logging_file",
-#         type=str,
-#         default="",
-#         help="Logging file name, if empty it prints in the screen (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--print_params",
-#         action="store_false",
-#         default=True,
-#         help="Print definitive parameters in a file for record (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--gpu_info",
-#         action="store_true",
-#         default=False,
-#         help="Print CUDA and GPU information to the screen (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--gpu_id",
-#         type=int,
-#         default=0,
-#         help="Id of the GPU to use (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--saved_params_filename",
-#         type=str,
-#         default="params_saved",
-#         help="Name of the file to store the parameters used in the run (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--url_data",
-#         type=str,
-#         default="",
-#         help="The URL of the ZIP file to download and unzip (default: %(default)s)",
-#     )
-#     parser.add_argument(
-#         "--folder_data",
-#         type=str,
-#         default="data",
-#         help="The name of the folder where are stored the data (default: %(default)s)",
-#     )
-
-#     return parser
-
 from omegaconf import DictConfig, OmegaConf
 
 def setup_igm_modules(cfg) -> List[ModuleType]:
-
-    # modules_dict = get_modules_list(cfg.param_file)
-    imported_modules = load_modules(cfg.modules)
-#    imported_modules = load_dependent_modules(imported_modules) this is no more in used
-
-    return imported_modules
-
-
-# def setup_igm_params(
-#     parser: ArgumentParser, imported_modules: List[ModuleType]
-# ) -> Namespace:
-#     for module in imported_modules:
-#         module.params(parser)
-
-#     core_and_module_params = parser.parse_args()
-#     params = load_user_defined_params(
-#         param_file=core_and_module_params.param_file,
-#         params_dict=vars(core_and_module_params),
-#     )
-
-#     parser.set_defaults(**params)
-#     params = parser.parse_args()
-
-#     return params
+    return load_modules(cfg.modules)
 
 
 def run_intializers(modules: List, cfg: Any, state: State) -> None:
@@ -180,138 +67,35 @@ def run_finalizers(modules: List, cfg: Any, state: State) -> None:
 
 
 def add_logger(cfg, state) -> None:
-    if cfg.logging_file == "":
-        pathf = ""
-    else:
-        pathf = cfg.logging_file
+    
+    # ! Ignore logging file for now...
+    # if cfg.logging_file == "":
+    #     pathf = ""
+    # else:
+    #     pathf = cfg.logging_file
 
     logging.basicConfig(
-        filename=pathf,
+        # filename=pathf,
         encoding="utf-8",
         filemode="w",
-        level=cfg.logging_level,
+        level=cfg.core.logging_level,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
-    logging.root.setLevel(cfg.logging_level)
+    logging.root.setLevel(cfg.core.logging_level)
 
-    state.logger = logging.getLogger("igm_logger")
-    if not pathf == "":
-        os.system("echo rm " + pathf + " >> clean.sh")
+    state.logger = logging.getLogger("igm")
 
-
-# def remove_comments(json_str) -> str:
-#     lines = json_str.split("\n")
-#     cleaned_lines = [
-#         line for line in lines if not line.strip().startswith(("//", "#"))
-#     ]  # ! TODO: Add blocks comments...
-#     cleaned_text = "\n".join(cleaned_lines)
-#     return cleaned_text
-
-
-# def load_json_file(
-#     param_file: str, remove_param_comments: bool = True
-# ) -> Dict[str, Any]:
-#     with open(param_file, "r") as json_file:
-#         json_text = json_file.read()
-
-#     if remove_param_comments:
-#         json_text = remove_comments(json_text)
-
-#     dic_params = json.loads(json_text)
-#     return dic_params
-
-# import yaml
-# def load_yaml_file(
-#     param_file: str
-# ) -> Dict[str, Any]:
-#     with open(param_file, "r") as file:
-#         dic_params = yaml.safe_load(file)
-
-#     return dic_params
-
-
-# def get_modules_list(params_path: str) -> dict[str, List[str]]:
-#     try:
-#         with open(params_path, "r") as file:
-#             if params_path.endswith(".json"):
-#                 json_text = file.read()
-#                 json_cleaned = remove_comments(json_text)
-#                 params_dict = json.loads(json_cleaned)
-#             elif params_path.endswith(".yaml") or params_path.endswith(".yml"):
-#                 params_dict = yaml.safe_load(file)
-#             else:
-#                 raise ValueError(
-#                     f"File type not supported. Please use a .json or .yaml file."
-#                 )
-#             module_dict = {
-#                 "modules_preproc": params_dict["modules_preproc"],
-#                 "modules_process": params_dict["modules_process"],
-#                 "modules_postproc": params_dict["modules_postproc"],
-#             }
-
-#             return module_dict
-#     except JSONDecodeError as e:
-#         raise JSONDecodeError(
-#             msg="For the following line, please check the 1) JSON file structure and/or 2) make sure there are no comments (//, #, etc.)",
-#             doc=e.doc,
-#             pos=e.pos,
-#         )
-    # Create a custom error message for the YAML file (using yaml.YAMLError base exception)
-
-
-# def load_user_defined_params(param_file: str, params_dict: dict[str, Any]):
-#     if param_file.endswith(".json"):
-#         loading_function = load_json_file
-#     elif param_file.endswith(".yaml") or param_file.endswith(".yml"):
-#         loading_function = load_yaml_file
-#     else:
-#         raise ValueError(
-#             f"File type not supported. Please use a .json or .yaml file."
-#         )
-#     try:
-#         json_defined_params = loading_function(param_file=param_file)
-
-#     except JSONDecodeError as e:
-#         raise JSONDecodeError(
-#             msg=f"Error decoding JSON: Please make sure your file path is correct or your json is properly formatted.",
-#             doc=e.doc,
-#             pos=e.pos,
-#         )
-
-#     unrecognized_json_arguments = {
-#         k: v for k, v in json_defined_params.items() if k not in params_dict
-#     }
-#     params_dict.update(json_defined_params)
-
-#     for key in unrecognized_json_arguments.keys():
-#         raise ValueError(
-#             f"The following argument specified in the JSON file does not exist among the core arguments nor the modules you have chosen: {key}"
-#         )
-
-#     return params_dict
 
 
 def load_modules(modules_list: list) -> List[ModuleType]:
     """Returns a list of actionable modules to then apply the update, initialize, finalize functions on for IGM."""
 
-    imported_preproc_modules = load_modules_from_directory(modules_list=modules_list)
-    # imported_process_modules = load_modules_from_directory(
-    #     modules_list=modules_dict["modules_process"], module_folder="process"
-    # )
-    # imported_postproc_modules = load_modules_from_directory(
-    #     modules_list=modules_dict["modules_postproc"], module_folder="postproc"
-    # )
-    # ? Should we have custom modules in a seperate folder?
-    # imported_custom_modules = load_modules_from_directory(
-    #     modules_list=modules_dict.modules_custom, module_folder=params.modules_custom_folder
-    # )
+    imported_modules = load_modules_from_directory(modules_list=modules_list)
 
     return (
-        imported_preproc_modules
+        imported_modules
     )
-    #     + imported_process_modules
-    #     + imported_postproc_modules  # + imported_custom_modules ? (see above)
-    # )
+
 
 
 def validate_module(module) -> None:
@@ -356,43 +140,6 @@ def load_modules_from_directory(
     return imported_modules
 
 
-# def has_dependencies(module: Any) -> bool:
-#     if hasattr(module, "dependencies"):
-#         return True
-#     return False
-
-
-# def load_dependent_modules(imported_modules: List) -> List[ModuleType]:
-#     imported_dependencies = set()
-#     for module in imported_modules:
-#         if has_dependencies(module):
-#             module_dependencies = module.dependencies
-#             directories_to_search = [
-#                 "preproc",
-#                 "process",
-#                 "postproc",
-#             ]  # will also check current working directory if any of them fail
-#             load_modules_partial = partial(
-#                 load_modules_from_directory, module_dependencies
-#             )
-#             for directory in directories_to_search:
-#                 try:
-#                     dependent_module = load_modules_partial(module_folder=directory)
-#                     imported_dependencies.add(
-#                         dependent_module[0]
-#                     )  # [0] because it returns a singleton list
-#                     logging.info(
-#                         f"Found dependencies in directory {directory} or current working directory. Checking next module for dependencies."
-#                     )
-#                     break
-#                 except ModuleNotFoundError:
-#                     logging.info(
-#                         f"Could not find dependencies in directory {directory} or current working directory. Checking next IGM directory."
-#                     )
-
-#     return imported_modules + list(imported_dependencies)
-
-
 def print_gpu_info() -> None:
     gpus = tf.config.experimental.list_physical_devices("GPU")
     print(f"{'CUDA Enviroment':-^150}")
@@ -406,18 +153,6 @@ def print_gpu_info() -> None:
 
         print(f"{json.dumps(gpu_info, indent=2, default=str)}")
     print(f"{'':-^150}")
-
-
-# Print parameters in screen and a dedicated file
-# def print_params(params: Namespace) -> None:
-#     param_file = params.saved_params_filename
-#     param_file = param_file + ".json"
-
-#     # load the given parameters
-#     with open(param_file, "w") as json_file:
-#         json.dump(params.__dict__, json_file, indent=2)
-
-#     os.system("echo rm " + param_file + " >> clean.sh")
 
 def save_params(cfg, extension='yaml') -> None:
     param_file = f"{cfg.saved_params_filename}.{extension}"

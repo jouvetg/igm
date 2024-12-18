@@ -16,7 +16,8 @@ from igm import (
     # setup_igm_params,
     print_gpu_info,
     add_logger,
-    download_unzip_and_store
+    download_unzip_and_store,
+    local
 )
 
 from omegaconf import DictConfig, OmegaConf
@@ -42,62 +43,22 @@ for gpu_instance in physical_devices:
 # @hydra.main(version_base=None, config_path=".", config_name="params")
 def main(cfg: DictConfig) -> None:
     state = State()  # class acting as a dictionary
-    # parser = params_core()
-    # params, _ = parser.parse_known_args()
-    # cfg
-    
-    # if cfg.search_path is not None:
-    #     override_path = hydra.utils.to_absolute_path(cfg.search_path)
-    #     # print(override_path)
-    #     override_conf = OmegaConf.load(override_path)
-    #     # print('original cfg', OmegaConf.to_yaml(cfg))
-    #     cfg = OmegaConf.merge(cfg, override_conf)
-    
-    # override_path = hydra.utils.to_absolute_path(f"{cfg.cwd}/params.yaml")
-    # print(override_path)
-    # override_conf = OmegaConf.load(override_path)
-    # print('original cfg', OmegaConf.to_yaml(cfg))
-    # cfg = OmegaConf.merge(cfg, override_conf)
-        # print('merged cfg', OmegaConf.to_yaml(cfg))
-    
-    # print("yee",cfg.search_path)
-
-    # print(OmegaConf.to_yaml(cfg))
-    # print(cfg.testd)
-    # import time
-    # time.sleep(15)
-    # exit()
 
     if cfg.core.gpu_info:
         print_gpu_info()
 
     if cfg.core.logging:
         add_logger(cfg=cfg, state=state)
-        tf.get_logger().setLevel(cfg.logging_level)
-    
-    # s = """
-    # core:
-    #     print_params: true
-    # """
-    # cfg = OmegaConf.create(s)
-    # cfg = OmegaConf.from_dotlist(["core.print_params=true"])
-    # cfg.test = "test"
-    
-    new_module = OmegaConf.from_dotlist(["new_module.test=1"])
-    # cfg.modules = OmegaConf.merge(cfg.modules, new_module)
+        tf.get_logger().setLevel(cfg.core.logging_level)
+
     
     if cfg.core.print_params:
         print(OmegaConf.to_yaml(cfg))
-        # print(OmegaConf.to_yaml(new_module))
     
-    
+    # ! Only works with local for now... dyanmically change this to oggm, synthetic, etc.
+    local.run(cfg, state) 
+
     imported_modules = setup_igm_modules(cfg)
-    
-    # params = setup_igm_params(parser, imported_modules)
-    # print(OmegaConf.to_yaml(cfg.modules.iceflow.iceflow))
-    # print(imported_modules)
-    # exit()
-        # save_params(cfg) # already handled with logging it seems... (hydra specifically)
         
     if not cfg.core.url_data=="":
         download_unzip_and_store(cfg.core.url_data, cfg.core.folder_data)

@@ -4,17 +4,33 @@ core:
   url_data: https://www.dropbox.com/scl/fo/kd7dix5j1tm75nj941pvi/h?rlkey=q7jtmf9yn3a970cqygdwne25j&dl=0
   logging: True
   logging_level: 30
-  # url_data: https://www.dropboxed.com/scl/fo/kd7dix5j1tm75nj941pvi/h?rlkey=q7jtmf9yn3a970cqygdwne25j&dl=0
 
 defaults:
-  - override /modules: [time_igm, thk, iceflow, smb_simple, print_info]
+  - override /modules: [time_igm, thk, iceflow, smb_simple, print_info, plot2d]
   - override /input: [local]
   # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
   # experiment: params # can we make it work here?
 
+  # How to override help:
+  # - hydra/help: my_app_help
+  # - override hydra/help: my_app_help
+
 input:
   local:
     filename: data/input.nc
+    coarsening:
+      ratio:
+        x: 1
+        y: 1
+  # load_ncdf:
+  #   lncd_input_file: data/input.nc
+  #   lncd_method_coarsen: skipping
+  #   lncd_coarsen: 1
+  #   lncd_crop: False
+  #   lncd_xmin: -1e20
+  #   lncd_xmax: 1e20
+  #   lncd_ymin: -1e20
+  #   lncd_ymax: 1e20
 
 modules:
   smb_simple:
@@ -27,3 +43,5 @@ modules:
     time_start: 1900.0
     time_end: 2000.0
     time_save: 11.0
+  plot2d:
+    plt2d_live: True

@@ -46,6 +46,14 @@ def params(parser):
 
 
 def initialize(cfg, state):
+
+    if cfg.modules.particles.part_tracking_method == "3d":
+        if "vert_flow" not in cfg.modules:
+            raise ValueError(
+                "The 'vert_flow' module is required to use the 3d tracking method in the 'particles' module."
+            )
+
+
     state.tlast_seeding = -1.0e5000
     state.tcomp_particles = []
 
@@ -72,7 +80,7 @@ def initialize(cfg, state):
 
 def update(cfg, state):
 
-    if 'iceflow' not in cfg.modules:
+    if "iceflow" not in cfg.modules:
         raise ValueError("The 'iceflow' module is required to use the particles module")
 
     if hasattr(state, "logger"):
@@ -339,7 +347,7 @@ def seeding_particles(cfg, state):
     #                    iv) on the accumulation area
     I = (
         (state.thk > 1) & state.gridseed & (state.smb > 0)
-    ) # here you may redefine how you want to seed particles
+    )  # here you may redefine how you want to seed particles
     state.nparticle_x = state.X[I] - state.x[0]  # x position of the particle
     state.nparticle_y = state.Y[I] - state.y[0]  # y position of the particle
     state.nparticle_z = state.usurf[I]  # z position of the particle

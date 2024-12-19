@@ -4,14 +4,14 @@ core:
   gpu_id: 0
 
 defaults:
-  - override /modules: [load_ncdf, iceflow]
-  # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
-  # experiment: params # can we make it work here?
+  - override /modules: [iceflow]
+  - override /input: [load_ncdf]
 
-
-modules:
+input:
   load_ncdf:
     lncd_input_file: data/input.nc
+
+modules:
   iceflow:
     iceflow:
       iflo_init_slidingco: 0.045

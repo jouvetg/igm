@@ -54,7 +54,7 @@ def params(parser):
 def initialize(cfg, state):
     # load the given parameters from the json file
     
-    with open(os.path.join(cfg.modules.oggm_shop.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
+    with open(os.path.join(cfg.input.oggm_shop.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
         jsonString = json_file.read()
 
     oggm_mb_calib = json.loads(jsonString)
@@ -70,7 +70,7 @@ def initialize(cfg, state):
 
     # load climate data from netcdf file climate_historical.nc
     nc = Dataset(
-        os.path.join(cfg.modules.oggm_shop.oggm_RGI_ID, "climate_historical.nc")
+        os.path.join(cfg.input.oggm_shop.oggm_RGI_ID, "climate_historical.nc")
     )
 
     time = np.squeeze(nc.variables["time"]).astype("float32")  # unit : year

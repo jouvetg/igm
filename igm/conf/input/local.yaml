@@ -4,7 +4,7 @@ local:
   coarsening:
     boundary: trim
     ratio:
-      x: 2
+      x: 1
       y: 1
   crop:
     xmin: null #4.2e5

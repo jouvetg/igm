@@ -1,13 +1,15 @@
 # @package _global_
 
-# core:
-  # url_data: https://www.dropbox.com/scl/fi/7pib29dhsuo2t80yplu2j/paleo-alps-v1.zip?rlkey=jsyz0qseyv9jqk63vz3lk6mf0&dl=0
 
 defaults:
-  - override /modules: [oggm_shop, time_igm, iceflow, thk, clim_oggm, smb_oggm, print_info, print_comp, plot2d, write_ncdf]
-  # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
-  # experiment: params # can we make it work here?
+  - override /modules: [time_igm, iceflow, thk, clim_oggm, smb_oggm, print_info, print_comp, plot2d]
+  - override /input: [oggm_shop]
+  - override /output: [write_ncdf]
 
+input:
+  oggm_shop:
+    oggm_RGI_ID: "RGI60-11.01450"
+    oggm_RGI_version: 6
 
 modules:
   time_igm:
@@ -19,38 +21,9 @@ modules:
   iceflow:
     iceflow:
       iflo_init_slidingco: 0.25
-  oggm_shop:
-    oggm_RGI_ID: "RGI60-11.01450"
-    oggm_RGI_version: 6
   clim_oggm:
     clim_oggm_clim_trend_array: [
                           ["time", "delta_temp", "prec_scal"],
                           [ 1900,           0.0,         1.0],
                           [ 2020,           0.0,         1.0],
                           [ 2100,           4.0,         1.0]]
-
-# {
-#   "modules_preproc": ["oggm_shop"],
-#   "modules_process": ["clim_oggm",
-#                       "smb_oggm",
-#                       "iceflow",
-#                       "time",
-#                       "thk"
-#                       ],
-#   "modules_postproc": ["write_ncdf",
-#                        "plot2d",
-#                        "print_info",
-#                        "print_comp"],
-#   "clim_oggm_clim_trend_array": [
-#                         ["time", "delta_temp", "prec_scal"],
-#                         [ 1900,           0.0,         1.0],
-#                         [ 2020,           0.0,         1.0],
-#                         [ 2100,           4.0,         1.0]
-#                                  ],
-#   "oggm_RGI_ID": "RGI60-11.01450",
-#   "oggm_RGI_version": 6,
-#   "time_start": 1800.0,
-#   "time_end": 2100.0,
-#   "plt2d_live": true,
-#   "iflo_init_slidingco": 0.25
-# }

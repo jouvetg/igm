@@ -4,10 +4,14 @@ core:
   url_data: https://www.dropbox.com/scl/fi/7pib29dhsuo2t80yplu2j/paleo-alps-v1.zip?rlkey=jsyz0qseyv9jqk63vz3lk6mf0&dl=0
 
 defaults:
-  - override /modules: [load_tif, time_igm, iceflow, thk, print_info, print_comp, plot2d, write_ncdf]
-  # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
-  # experiment: params # can we make it work here?
+  - override /modules: [time_igm, iceflow, thk, print_info, print_comp, plot2d]
+  - override /input: [load_tif]
+  - override /output: [write_ncdf]
 
+input:
+  load_tif:
+    ltif_folder: "data"
+    ltif_coarsen: 2
 
 modules:
   time_igm:
@@ -16,37 +20,9 @@ modules:
     time_save: 100.0
   plot2d:
     plt2d_live: true
-  load_tif:
-    ltif_folder: "data"
-    ltif_coarsen: 2
   smb_signal:
     pdela: 3000.0 # default param in the .py file has a big typo (30000 instead of 3000...)
     deladt: 200.0
     gradabl: 0.0067
     gradacc: 0.0005
     maxacc: 1.0
-
-# {
-#   "modules_preproc": ["load_tif"],
-#   "modules_process": ["smb_signal",
-#                       "iceflow",
-#                       "time",
-#                       "thk"
-#                      ],
-#   "modules_postproc": ["write_ncdf",
-#                        "plot2d",
-#                        "print_info",
-#                        "print_comp"],
-#   "ltif_folder": "data",
-#   "ltif_coarsen": 2
-#   "url_data": "https://www.dropbox.com/scl/fi/7pib29dhsuo2t80yplu2j/paleo-alps-v1.zip?rlkey=jsyz0qseyv9jqk63vz3lk6mf0&dl=0",
-#   "time_start": -30000.0,
-#   "time_end": -25000.0,
-#   "time_save": 100.0,
-#   "plt2d_live": true,
-#   "pdela": 3000,
-#   "deladt": 200,
-#   "gradabl": 0.0067,
-#   "gradacc": 0.0005,
-#   "maxacc": 1.0,
-# }

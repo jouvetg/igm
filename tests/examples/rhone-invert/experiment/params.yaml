@@ -1,14 +1,8 @@
 # @package _global_
 
-# core:
-#   url_data: "https://www.dropbox.com/scl/fo/8ixpy27i67s04bp7uixoq/h?rlkey=0ye7rd4zkcqfhvzx7suunw3bk&dl=0"
-
 defaults:
-  # - override /modules: [load_ncdf, iceflow, time_igm, thk, rockflow, vert_flow, particles, write_ncdf, plot2d, print_info, print_comp]
-  - override /modules: [oggm_shop, iceflow]
-  # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
-  # experiment: params # can we make it work here?
-  # - override /hydra/job/chdir: 1
+  - override /modules: [iceflow]
+  - override /input: [oggm_shop]
 
 hydra:
   output_subdir: my_result_${core.gpu_id} # name the result based on the GPU ID
@@ -16,9 +10,13 @@ hydra:
 #   job:
 #     chdir: True
 
+input:
+  oggm_shop:
+    oggm_RGI_ID: "RGI60-11.01238"
+    oggm_RGI_version: 6
+    oggm_incl_glathida: true
 
 modules:
-
   iceflow:
     iceflow:
       iflo_init_slidingco: 0.045
@@ -36,34 +34,3 @@ modules:
       opti_convexity_weight: 599
       opti_nbitmax: 1000
       opti_vars_to_save: [usurf, thk, slidingco, velsurf_mag, velsurfobs_mag, divflux, icemask, arrhenius, thkobs]
-  oggm_shop:
-    oggm_RGI_ID: "RGI60-11.01238"
-    oggm_RGI_version: 6
-    oggm_incl_glathida: true
-
-
-# {
-#   "modules_preproc": ["oggm_shop"],
-#   "modules_process": ["iceflow"],
-#   "modules_postproc": [],
-
-#   "iflo_run_data_assimilation": true,
-#   "iflo_init_slidingco"      		: 0.045,
-
-#   "oggm_RGI_ID": "RGI60-11.01238",
-#   "oggm_RGI_version": 6,
-#   "oggm_incl_glathida"			: true,
-
-#   "opti_control": ["thk", "usurf","slidingco"],
-#   "opti_cost": ["velsurf","icemask", "usurf", "thk", "divfluxfcz"],
-#   "opti_usurfobs_std"			: 0.3,
-#   "opti_velsurfobs_std" 	: 0.25,
-#   "opti_thkobs_std"			  : 1, 
-#   "opti_divfluxobs_std"   : 0.1,
-#   "opti_regu_param_thk"			: 1,
-#   "opti_regu_param_slidingco"     : 1.0e6,
-#   "opti_smooth_anisotropy_factor"	: 0.2,
-#   "opti_convexity_weight"		: 500,
-#   "opti_nbitmax"			: 1000,
-#   "opti_vars_to_save": ["usurf", "thk", "slidingco", "velsurf_mag", "velsurfobs_mag", "divflux", "icemask", "arrhenius", "thkobs"]
-# }

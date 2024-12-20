@@ -86,6 +86,3 @@ def run(cfg, state):
         state.tcomp_write_particles[-1] -= time.time()
         state.tcomp_write_particles[-1] *= -1
 
-
-def finalize(cfg, state):
-    pass

@@ -57,6 +57,3 @@ def run(cfg, state):
                 nc.variables[var][d] = vars()[var].numpy()
             nc.close()
 
-
-def finalize(cfg, state):
-    pass

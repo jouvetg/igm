@@ -157,7 +157,3 @@ def run(cfg, state):
 
         state.tcomp_write_ncdf[-1] -= time.time()
         state.tcomp_write_ncdf[-1] *= -1
-
-
-def finalize(cfg, state):
-    pass

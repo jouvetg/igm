@@ -10,8 +10,8 @@ defaults:
   - _self_
   - core
   - modules: null
-  - input: ???
-  - output: null # output can be empty as opposed to input, which requires something (could change if we have synthetic case...)
+  - input: ??? # created a synthetic case as an option, where the user can use a `blank` module to create the synetic data
+  - output: null # output can be empty as opposed to input (???), which requires something (could change if we have synthetic case...)
 
 hydra:
   searchpath:

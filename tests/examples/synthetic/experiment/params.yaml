@@ -1,16 +1,11 @@
 # @package _global_
 
-# core:
-  # url_data: https://www.dropbox.com/scl/fi/7pib29dhsuo2t80yplu2j/paleo-alps-v1.zip?rlkey=jsyz0qseyv9jqk63vz3lk6mf0&dl=0
-
 defaults:
-  - override /modules: [smb_simple, iceflow, time_igm, thk, vert_flow, particles, write_ncdf, plot2d, print_info, print_comp]
-  # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
-  # experiment: params # can we make it work here?
-
+  - override /modules: [blank, smb_simple, iceflow, time_igm, thk, vert_flow, particles, plot2d, print_info, print_comp]
+  - override /input: [synthetic]
+  - override /output: [write_ncdf]
 
 modules:
-  make_synthetic: null
   time_igm:
     time_start: 2000.0
     time_end: 2500.0
@@ -25,29 +20,3 @@ modules:
                         [ 1900,      0.009,     0.005,  2800,      2.0],
                         [ 2000,      0.009,     0.005,  2900,      2.0],
                         [ 2100,      0.009,     0.005,  3300,      2.0]]
-
-
-# {
-#   "modules_preproc": ["make_synthetic"],
-#   "modules_process": ["smb_simple",
-#                       "iceflow",
-#                       "time",
-#                       "thk",
-#                       "vert_flow",
-#                       "particles"
-#                     ],
-#   "modules_postproc": ["write_ncdf",
-#                        "plot2d",
-#                        "print_info",
-#                        "print_comp"],
-#   "smb_simple_array": [
-#                         ["time", "gradabl", "gradacc", "ela", "accmax"],
-#                         [ 1900,      0.009,     0.005,  2800,      2.0],
-#                         [ 2000,      0.009,     0.005,  2900,      2.0],
-#                         [ 2100,      0.009,     0.005,  3300,      2.0]
-#                       ],
-#   "time_start": 2000.0,
-#   "time_end": 2500.0,
-#   "time_save": 10.0,
-#   "plt2d_live": true
-# }

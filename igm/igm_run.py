@@ -51,26 +51,19 @@ def main(cfg: DictConfig) -> None:
 
     if cfg.core.print_params:
         print(OmegaConf.to_yaml(cfg))
-
-    # Replacing this with `???` in the config file
-    # if "input" not in cfg:
-    #     raise ValueError("No input method specified. Please specify at least one.")
     
+    # For now, it does not seem possible to select from the defaults list (so we need to only specify one method in input)
+    # print(HydraConfig.get().runtime.choices)
     input_methods = list(
         cfg.input.keys()
     )
-    # For now, it does not seem possible to select from the defaults list (so we need to only specify one method in input)
-    # print(HydraConfig.get().runtime.choices)
     
-
-
     if len(input_methods) > 1:
         raise ValueError("Only one input method is allowed")
 
     input_method = str(input_methods[0])
     input_module = getattr(input, input_method)
     input_module.run(cfg, state)
-    
     
     output_modules = []
     if "output" in cfg:
@@ -82,10 +75,10 @@ def main(cfg: DictConfig) -> None:
             output_modules.append(output_module)
             
         for output_module in output_modules:
-            output_module.initialize(cfg, state) # do we need to initialize output modules? THis is not very clean...
+            output_module.initialize(cfg, state) # do we need to initialize output modules? This is not very clean...
         
-    imported_modules = setup_igm_modules(cfg)
-
+    imported_modules = setup_igm_modules(cfg, state)
+    
     if not cfg.core.url_data == "":
         download_unzip_and_store(cfg.core.url_data, cfg.core.folder_data)
 

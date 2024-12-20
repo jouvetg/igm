@@ -6,7 +6,8 @@
 
 defaults:
   - _self_
-  - override /modules: [time_igm, iceflow, thk, smb_simple, print_info, print_comp, plot2d, write_ncdf]
+  - override /modules: [blank, time_igm, iceflow, thk, smb_simple, print_info, print_comp, plot2d, write_ncdf]
+  - override /input: [synthetic]
   # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
   # experiment: params # can we make it work here?
 

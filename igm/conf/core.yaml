@@ -15,3 +15,5 @@ core:
 
   # Misc
   print_params: True
+  
+  custom_modules_folder: modules_custom

@@ -1,5 +1,9 @@
 # @package _global_
 
+hydra:
+  job:
+    chdir: True
+
 core:
   url_data: https://www.dropbox.com/scl/fo/kd7dix5j1tm75nj941pvi/h?rlkey=q7jtmf9yn3a970cqygdwne25j&dl=0
   logging: True

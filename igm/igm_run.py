@@ -21,13 +21,13 @@ from igm import (
     output
 )
 
+from pathlib import Path
 from omegaconf import DictConfig, OmegaConf
 from hydra.utils import get_original_cwd  # , to_absolute_path
 
 # @hydra.main(version_base=None)
 # def my_app(_cfg: DictConfig) -> None:
 # print(f"Current working directory : {os.getcwd()}")
-# print(f"Orig working directory    : {get_original_cwd()}")
 import hydra
 
 OmegaConf.register_new_resolver("get_cwd", lambda x: os.getcwd())
@@ -45,6 +45,20 @@ def main(cfg: DictConfig) -> None:
     if cfg.core.gpu_info:
         print_gpu_info()
 
+    gpus = tf.config.list_physical_devices('GPU')
+    
+    if gpus:
+        # Restrict TensorFlow to only use the first GPU
+        try:
+            tf.config.set_visible_devices(gpus[cfg.core.gpu_id], 'GPU')
+            logical_gpus = tf.config.list_logical_devices('GPU')
+            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPU")
+        except RuntimeError as e:
+            # Visible devices must be set before GPUs have been initialized
+            print(e)
+    
+    
+    
     if cfg.core.logging:
         add_logger(cfg=cfg, state=state)
         tf.get_logger().setLevel(cfg.core.logging_level)
@@ -54,16 +68,25 @@ def main(cfg: DictConfig) -> None:
     
     # For now, it does not seem possible to select from the defaults list (so we need to only specify one method in input)
     # print(HydraConfig.get().runtime.choices)
-    input_methods = list(
-        cfg.input.keys()
-    )
     
-    if len(input_methods) > 1:
-        raise ValueError("Only one input method is allowed")
-
-    input_method = str(input_methods[0])
-    input_module = getattr(input, input_method)
-    input_module.run(cfg, state)
+    # ! Needs to be before the input the way it is setup - otherwise, it will throw an error... (at least with local not loadncdf)
+    if not cfg.core.url_data == "":
+        folder_path = Path(get_original_cwd()).joinpath(cfg.core.folder_data)
+        download_unzip_and_store(cfg.core.url_data, folder_path)
+    
+    if "input" in cfg:
+        input_methods = list(
+            cfg.input.keys()
+        )
+        
+        if len(input_methods) > 1:
+            raise ValueError("Only one input method is allowed.")
+        
+        input_method = str(input_methods[0])
+        input_module = getattr(input, input_method)
+        input_module.run(cfg, state)
+    # else:
+        # raise ValueError("Need to supply at least one input module.") # should I just let Hydra's error message take care of this? which is more clear?
     
     output_modules = []
     if "output" in cfg:
@@ -79,10 +102,8 @@ def main(cfg: DictConfig) -> None:
         
     imported_modules = setup_igm_modules(cfg, state)
     
-    if not cfg.core.url_data == "":
-        download_unzip_and_store(cfg.core.url_data, cfg.core.folder_data)
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.core.gpu_id)
+    # os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.core.gpu_id) # ! Depreciation - replaced above with tf.set visible devices
 
     # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
     with tf.device(f"/GPU:{cfg.core.gpu_id}"):  # type: ignore for linting checks

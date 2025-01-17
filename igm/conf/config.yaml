@@ -10,7 +10,8 @@ defaults:
   - _self_
   - core
   - modules: null
-  - input: ??? # created a synthetic case as an option, where the user can use a `blank` module to create the synetic data
+  # - input: ??? # created a synthetic case as an option, where the user can use a `blank` module to create the synetic data
+  - input: null # made it not mandatory so that one can use 'igm_run -h' without +experiement
   - output: null # output can be empty as opposed to input (???), which requires something (could change if we have synthetic case...)
 
 hydra:

@@ -240,13 +240,14 @@ def save_params(cfg, extension="yaml") -> None:
         yaml.dump(yaml_params, file)
 
 
-def download_unzip_and_store(url, folder_name="data") -> None:
+def download_unzip_and_store(url, folder_path) -> None:
     """
     Use wget to download a ZIP file and unzip its contents to a specified folder.
 
     Args:
     - url (str): The URL of the ZIP file to download.
-    - folder_name (str): The name of the folder where the ZIP file's contents will be extracted.
+    - folder_path (str): The path of the folder where the ZIP file's contents will be extracted.
+    # - folder_name (str): The name of the folder where the ZIP file's contents will be extracted.
     """
 
     import subprocess
@@ -254,8 +255,8 @@ def download_unzip_and_store(url, folder_name="data") -> None:
     import zipfile
 
     # Ensure the destination folder exists
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
+    if not os.path.exists(folder_path): # directory exists?
+        os.makedirs(folder_path)
 
         # Download the file with wget
         print("Downloading the ZIP file with wget...")
@@ -264,11 +265,11 @@ def download_unzip_and_store(url, folder_name="data") -> None:
         # Unzipping the file
         print("Unzipping the file...")
         with zipfile.ZipFile("downloaded_file.zip", "r") as zip_ref:
-            zip_ref.extractall(folder_name)
+            zip_ref.extractall(folder_path)
 
         # Clean up (delete) the zip file after extraction
         os.remove("downloaded_file.zip")
-        print(f"File successfully downloaded and extracted to '{folder_name}'")
+        print(f"File successfully downloaded and extracted to '{folder_path}'")
 
     else:
-        print(f"The data already existing at '{folder_name}'")
+        print(f"The data already exists at '{folder_path}'")

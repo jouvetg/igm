@@ -2,10 +2,14 @@ import xarray as xr
 import numpy as np
 import tensorflow as tf
 
+from hydra.utils import get_original_cwd
+from pathlib import Path
 
 def run(cfg, state):
+
+    filepath = Path(get_original_cwd()).joinpath(cfg.input.local.filename)
     with xr.open_dataset(
-        cfg.input.local.filename
+        filepath
     ) as f:
         ds = f.load()
 

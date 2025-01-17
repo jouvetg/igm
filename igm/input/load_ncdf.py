@@ -7,6 +7,8 @@ from scipy.interpolate import RectBivariateSpline
 
 from igm.modules.utils import *
 
+from .include_icemask import include_icemask
+
 def run(cfg, state):
     if hasattr(state, "logger"):
         state.logger.info("LOAD NCDF file")
@@ -87,3 +89,6 @@ def run(cfg, state):
     nc.close()
 
     complete_data(state)
+
+    if cfg.input.load_ncdf.icemask_include:
+        include_icemask(state, mask_shapefile=cfg.input.load_ncdf.icemask_shapefile, mask_invert=cfg.input.load_ncdf.icemask_invert)

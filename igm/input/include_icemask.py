@@ -29,26 +29,10 @@ import tensorflow as tf
 import geopandas as gpd
 from shapely.geometry import Point
 
+def include_icemask(state, mask_shapefile, mask_invert):
 
-def params(parser):
-    parser.add_argument(
-        "--mask_shapefile",
-        type=str,
-        default="icemask.shp",
-        help="Icemask input file (default: icemask.shp)",
-    )
-
-    parser.add_argument(
-        "--mask_invert",
-        type=bool,
-        default=False,
-        help="Invert ice mask if the mask is where the ice should be (default: False)",
-    )
-
-
-def initialize(cfg, state):
     # read_shapefile
-    gdf = read_shapefile(cfg.modules.include_icemask.mask_shapefile)
+    gdf = read_shapefile(mask_shapefile)
 
     # Flatten the X and Y coordinates and convert to numpy
     flat_X = state.X.numpy().flatten()
@@ -76,22 +60,12 @@ def initialize(cfg, state):
     mask_values = mask_values.reshape(state.X.shape)
 
     # Invert the mask values if mask_invert is True
-    if cfg.modules.include_icemask.mask_invert:
+    if mask_invert:
         mask_values = np.logical_not(mask_values).astype(np.float32)
 
     # define icemask
     state.icemask = tf.constant(mask_values)
 
-
-def update(cfg, state):
-    pass
-
-
-def finalize(cfg, state):
-    pass
-
-
-# == Helping functions ==================
 
 
 def read_shapefile(filepath):

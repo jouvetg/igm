@@ -7,3 +7,6 @@ load_tif:
   ltif_ymin: -1e20 # help="crop_ymin"
   ltif_ymax: 1e20 # help="crop_ymax"
   ltif_folder: "" # help="ltif_folder"
+  icemask_include: False # help="Include ice mask in the NetCDF file"
+  icemask_shapefile: icemask.shp # help="Shapefile for ice mask"
+  icemask_invert: False # help="Invert the ice mask"

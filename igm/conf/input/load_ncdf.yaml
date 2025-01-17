@@ -7,3 +7,6 @@ load_ncdf:
   lncd_xmax: 10**20 # help="X right coordinate for cropping the NetCDF data"
   lncd_ymin: -(10**20) # help="Y bottom coordinate fro cropping the NetCDF data"
   lncd_ymax: 10**20 # help="Y top coordinate for cropping the NetCDF data"
+  icemask_include: False # help="Include ice mask in the NetCDF file"
+  icemask_shapefile: icemask.shp # help="Shapefile for ice mask"
+  icemask_invert: False # help="Invert the ice mask"

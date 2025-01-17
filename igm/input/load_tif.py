@@ -4,6 +4,8 @@ import os, glob
 import tensorflow as tf
 
 from igm.modules.utils import *
+
+from .include_icemask import include_icemask
     
 def run(cfg, state):
     import rasterio
@@ -66,3 +68,6 @@ def run(cfg, state):
     state.y = tf.constant(y.astype("float32"))
 
     complete_data(state)
+
+    if cfg.input.load_tif.icemask_include:
+        include_icemask(state, mask_shapefile=cfg.input.load_tif.icemask_shapefile, mask_invert=cfg.input.load_tif.icemask_invert)

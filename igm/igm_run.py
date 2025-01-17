@@ -46,10 +46,12 @@ def main(cfg: DictConfig) -> None:
         print_gpu_info()
 
     gpus = tf.config.list_physical_devices('GPU')
+    
+    print([gpus[i] for i in cfg.core.hardware.visible_gpus])
     if gpus:
         try:
-            visible_gpus = [gpus[i] for i in cfg.core.hardware.visible_gpus]
-            tf.config.set_visible_devices(visible_gpus, 'GPU')
+            selected_visible_gpus = [gpus[i] for i in cfg.core.hardware.visible_gpus]
+            tf.config.set_visible_devices(selected_visible_gpus, 'GPU')
             logical_gpus = tf.config.list_logical_devices('GPU')
             print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPU")
         except RuntimeError as e:
@@ -61,8 +63,9 @@ def main(cfg: DictConfig) -> None:
         # strategy = tf.distribute.MirroredStrategy()
     else:
         # if there is only one visible GPU, the id will be 0! Even when choosing a GPU that has index 4, it will only be 0 after configuring visible devices!
-        strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0") 
-        # strategy = tf.distribute.get_strategy()
+        # However, apply_gradients is having issues... so we have to update that first!
+        # strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0") 
+        strategy = tf.distribute.get_strategy()
     
     if cfg.core.logging:
         add_logger(cfg=cfg, state=state)

@@ -4,22 +4,21 @@ core:
   url_data: "https://www.dropbox.com/scl/fo/8ixpy27i67s04bp7uixoq/h?rlkey=0ye7rd4zkcqfhvzx7suunw3bk&dl=0"
 
 defaults:
-  # - override /modules: [load_ncdf, iceflow, time_igm, thk, rockflow, vert_flow, particles, write_ncdf, plot2d, print_info, print_comp]
-  - override /modules: [load_ncdf, iceflow, time_igm, print_info, particles, thk, rockflow, vert_flow, write_ncdf, plot2d, print_comp]
-  # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
-  # experiment: params # can we make it work here?
-  # - override /hydra/job/chdir: 1
+  - override /input: [load_ncdf]
+  - override /modules: [iceflow, time_igm, thk, rockflow, vert_flow, plot2d, print_info, print_comp] # particles
+  - override /output: [write_ncdf] # plot2d, print_info, print_comp
 
 hydra:
   output_subdir: my_result_${core.gpu_id} # name the result based on the GPU ID
   # output_subdir: my_result_particles_${modules.particles.part_frequency_seeding} # name the result based on a parameter with multirun
-#   job:
-#     chdir: True
+  job:
+    chdir: True
 
-
-modules:
+input:
   load_ncdf:
     lncd_input_file: data/input.nc
+
+modules:
   iceflow:
     iceflow:
       iflo_init_slidingco: 0.0595
@@ -50,38 +49,3 @@ modules:
     plt2d_live: true
   track_usurf_obs: null
   age_of_ice: null
-
-  
-
-
-# ├── avalanche       -> module
-# ├── clim_oggm      -> module
-# ├── enthalpy          -> module
-
-# ├── gflex                -> module
-# ├── glerosion         -> module
-# ├── iceflow             -> module (contain former pretrain & optimize)
-
-# ├── include_icemask -> pre-processing (should be integrated to load_X)
-# ├── infersmb          -> leave aside the official repo (should be a custom)
-# ├── load_ncdf        -> pre-processing
-# ├── load_tif            -> pre-processing
-# ├── oggm_shop     -> pre-processing
-
-# ├── particles          -> module
-
-# ├── plot2d              -> post-processing
-# ├── print_comp      -> integrated to core
-# ├── print_info         -> integrated to core
-# ├── read_output    -> leave aside the official repo (should be a custom)
-# ├── rockflow          -> module
-# ├── smb_oggm      -> module
-# ├── smb_simple     -> module
-# ├── texture             -> module
-# ├── thk                    -> module
-# ├── time_igm          -> module (to be renamed time)
-# ├── vert_flow          -> module
-# ├── write_ncdf        -> post-processing
-# ├── write_particles -> post-processing
-# ├── write_tif            -> post-processing
-# └── write_ts            -> post-processing

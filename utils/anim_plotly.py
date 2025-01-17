@@ -3,20 +3,7 @@ import copy
 import numpy as np
 import json
 import xarray as xr
-
-
-def params(parser):
-    pass
-
-
-def initialize(params, state):
-    pass
-
-
-def update(params, state):
-    pass
-
-
+ 
 def finalize(params, state):
     import plotly.graph_objects as go
     import math
@@ -305,6 +292,11 @@ if __name__ == "__main__":
                         type=str,
                         default='params_saved.json',
                         help='Path to the JSON parameter file')
+    
+    parser.add_argument('--wncd_output_file',
+                        type=str,
+                        default='output.nc',
+                        help='output')
 
     # Parse the command-line arguments
     args = parser.parse_args()

@@ -1,0 +1,43 @@
+# @package _global_
+
+core:
+  url_data: "https://www.dropbox.com/scl/fo/8ixpy27i67s04bp7uixoq/h?rlkey=0ye7rd4zkcqfhvzx7suunw3bk&dl=0"
+
+defaults:
+  - override /input: [load_ncdf]
+  - override /modules: [iceflow] 
+
+hydra:
+  # output_subdir: my_result_${core.gpu_id} # name the result based on the GPU ID
+  # output_subdir: my_result_particles_${modules.particles.part_frequency_seeding} # name the result based on a parameter with multirun
+  job:
+    chdir: True
+
+input:
+  load_ncdf:
+    lncd_input_file: data/input.nc
+
+modules:
+  iceflow:
+    iceflow:
+      iflo_run_data_assimilation: True
+      iflo_init_slidingco: 0.045
+      iflo_init_arrhenius: 78
+    optimize:      
+      opti_control: [thk, usurf,slidingco]
+      opti_cost: [velsurf,icemask, usurf, thk, divfluxfcz]
+      opti_force_zero_sum_divflux: true
+      opti_divflux_method: centered
+      opti_usurfobs_std: 0.3
+      opti_velsurfobs_std: 0.25
+      opti_thkobs_std: 1
+      opti_divfluxobs_std: 0.1
+      opti_regu_param_thk: 1
+      opti_regu_param_slidingco: 1.0e6
+      opti_smooth_anisotropy_factor: 0.2
+      opti_convexity_weight: 500
+      opti_nbitmax: 500
+      opti_vars_to_save: [usurf, thk, slidingco, velsurf_mag, velsurfobs_mag, velbase_mag, sliding_ratio, divflux, icemask, arrhenius, thkobs]
+
+
+ 

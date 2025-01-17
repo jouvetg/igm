@@ -5,11 +5,11 @@ core:
 
 defaults:
   - override /input: [load_ncdf]
-  - override /modules: [iceflow, time, thk, rockflow, vert_flow, print_info, print_comp] # particles
-  - override /output: [write_ncdf, plot2d] # plot2d, print_info, print_comp
+  - override /modules: [iceflow, time, thk, rockflow, vert_flow, print_info] # particles
+  - override /output: [write_ncdf, plot2d]
 
 hydra:
-  output_subdir: my_result_${core.gpu_id} # name the result based on the GPU ID
+  # output_subdir: my_result_${core.gpu_id} # name the result based on the GPU ID
   # output_subdir: my_result_particles_${modules.particles.part_frequency_seeding} # name the result based on a parameter with multirun
   job:
     chdir: True

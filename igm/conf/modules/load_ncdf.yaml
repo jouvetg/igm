@@ -1,9 +1,0 @@
-load_ncdf:
-  lncd_input_file: input.nc # help="NetCDF input data file"
-  lncd_method_coarsen: skipping # help="Method for coarsening the data from NetCDF file: skipping or cubic_spline"
-  lncd_coarsen: 1 # help="Coarsen the data from NetCDF file by a certain (integer) number: 2 would be twice coarser ignore data each 2 grid points"
-  lncd_crop: False # help="Crop the data from NetCDF file with given top/down/left/right bounds"
-  lncd_xmin: -(10**20) # help="X left coordinate for cropping the NetCDF data"
-  lncd_xmax: 10**20 # help="X right coordinate for cropping the NetCDF data"
-  lncd_ymin: -(10**20) # help="Y bottom coordinate fro cropping the NetCDF data"
-  lncd_ymax: 10**20 # help="Y top coordinate for cropping the NetCDF data"

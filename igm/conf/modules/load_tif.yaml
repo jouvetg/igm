@@ -1,9 +1,0 @@
-load_tif:
-  ltif_coarsen: 1 # help="coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points"
-  ltif_crop: "False" # help="Crop the data with xmin, xmax, ymin, ymax (default: False)"
-  ltif_xmin: -1e20 # help="crop_xmin"
-  # ltif_xmin: -10**20 # help="crop_xmin" # careful -> this notation does not work with yaml, use the 1e notation...
-  ltif_xmax: 1e20 # help="crop_xmax"
-  ltif_ymin: -1e20 # help="crop_ymin"
-  ltif_ymax: 1e20 # help="crop_ymax"
-  ltif_folder: "" # help="ltif_folder"

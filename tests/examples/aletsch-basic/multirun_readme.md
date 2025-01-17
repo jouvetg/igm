@@ -15,4 +15,4 @@ Instead of running a single experiment from 1 param file like done previously, w
 # Terminal output
 # Data locations
 
-<!-- igm_run +experiment=params hydra.job.chdir=True core.hardware.visible_gpus=[0,1] -->
+<!-- igm_run +experiment=params hydra.job.chdir=True core.hardware.visible_gpus=[0],[1] -->

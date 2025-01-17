@@ -5,7 +5,7 @@
 
 import sys
 import os
-sys.path.append(os.getcwd()) # I guess by default sys.path does not have cwd. not sure if this is the convention though...
+# sys.path.append(os.getcwd()) # I guess by default sys.path does not have cwd. not sure if this is the convention though...
     
 from . import modules, emulators
 from . import input, output

@@ -63,7 +63,7 @@ def run_intializers(modules: List, cfg: Any, state: State) -> None:
 
 def run_processes(modules: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
-        while state.t < cfg.modules.time_igm.time_end:
+        while state.t < cfg.modules.time.time_end:
             for module in modules:
                 module.update(cfg, state)
 
@@ -137,17 +137,23 @@ def load_modules_from_directory(  # CAREFUL -> OVERRIDING FUNCTIONS ARE NOT ACTU
     for module_name in modules_list:
         module_path = f"igm.modules.{module_name}"
 
+        # print(module_path)
         # ! CLEAN UP THIS CODE
         # Look into best practices for logging and error handling (as this is a tricky sequence...)
         try:
+            # print(module_path)
             module = importlib.import_module(module_path)
+            # print(module)
 
             # state.logger.info(
             #     f"Module {module_name} exist in source code. Checking to see if an override is attempted."
             # )
-            custom_module = import_custom_module(
-                module_name, custom_modules_folder=cfg.core.custom_modules_folder
-            )
+            if module_name not in ['time']: # temporary solution here to get around the builtin module issue...
+                custom_module = import_custom_module(
+                    module_name, custom_modules_folder=cfg.core.custom_modules_folder
+                )
+            else:
+                custom_module = module
             if custom_module is None:
                 # state.logger.info(
                 #     f"Using source code version for module {module_name}."
@@ -157,7 +163,9 @@ def load_modules_from_directory(  # CAREFUL -> OVERRIDING FUNCTIONS ARE NOT ACTU
                 # state.logger.info(
                 #     f"Custom module {module_name} has overridden the original module."
                 # )
+                # print('c', custom_module)
                 module = custom_module
+                # print(module)
 
         except ModuleNotFoundError:
             # state.logger.info(f"Module {module_name} does not exist in source code.")

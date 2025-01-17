@@ -10,7 +10,7 @@ core:
   logging_level: 30
 
 defaults:
-  - override /modules: [time_igm, thk, iceflow, smb_simple, print_info]
+  - override /modules: [time, thk, iceflow, smb_simple, print_info]
   - override /input: [local]
   - override /output: [plot2d]
   # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
@@ -44,7 +44,7 @@ modules:
       - [1900, 0.009, 0.005, 2800, 2.0]
       - [2000, 0.009, 0.005, 2900, 2.0]
       - [2100, 0.009, 0.005, 3300, 2.0]
-  time_igm:
+  time:
     time_start: 1900.0
     time_end: 2000.0
     time_save: 11.0

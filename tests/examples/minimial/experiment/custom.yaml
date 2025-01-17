@@ -15,7 +15,7 @@ core:
   folder_data: data
 
 modules:
-  time_igm:
+  time:
     time_start: 2000.0
     time_end: 2500.0
     time_save: 11.0

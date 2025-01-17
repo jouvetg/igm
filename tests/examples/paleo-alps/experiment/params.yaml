@@ -4,7 +4,7 @@ core:
   url_data: https://www.dropbox.com/scl/fi/7pib29dhsuo2t80yplu2j/paleo-alps-v1.zip?rlkey=jsyz0qseyv9jqk63vz3lk6mf0&dl=0
 
 defaults:
-  - override /modules: [time_igm, iceflow, thk, print_info, print_comp]
+  - override /modules: [time, iceflow, thk, print_info, print_comp]
   - override /input: [load_tif]
   - override /output: [write_ncdf,plot2d]
 
@@ -14,7 +14,7 @@ input:
     ltif_coarsen: 2
 
 modules:
-  time_igm:
+  time:
     time_start: -30000.0
     time_end: -25000.0
     time_save: 100.0

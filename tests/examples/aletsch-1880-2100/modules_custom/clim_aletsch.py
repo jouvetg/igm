@@ -75,10 +75,10 @@ def  initialize(cfg,state):
         dtype="float32",
     )
     
-    if "time_igm" not in cfg.modules:
-        raise ValueError("The 'time_igm' module is required for the 'clim_aletsch' module.")
+    if "time" not in cfg.modules:
+        raise ValueError("The 'time' module is required for the 'clim_aletsch' module.")
 
-    state.tlast_clim_aletsch = tf.Variable(cfg.modules.time_igm.time_start)
+    state.tlast_clim_aletsch = tf.Variable(cfg.modules.time.time_start)
     state.tcomp_clim_aletsch = []
 
 

@@ -13,4 +13,4 @@ core:
   folder_data: data_folder
 
 defaults:
-  - override /modules: [time_igm, thk] # These values have to already exist in the config defaults list!!! (note that we do not have to specify replacing the arguments)
+  - override /modules: [time, thk] # These values have to already exist in the config defaults list!!! (note that we do not have to specify replacing the arguments)

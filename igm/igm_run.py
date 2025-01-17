@@ -108,7 +108,15 @@ def main(cfg: DictConfig) -> None:
         for output_module in output_modules:
             output_module.initialize(cfg, state) # do we need to initialize output modules? This is not very clean...
         
+    # for var in locals():
+    #     print(var)
+    # for var in globals():
+    #     print(var)
     imported_modules = setup_igm_modules(cfg, state)
+    
+
+    # print(imported_modules)
+    # exit()
     
     with strategy.scope():
         run_intializers(imported_modules, cfg, state)

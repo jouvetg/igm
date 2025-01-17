@@ -37,10 +37,10 @@ def params(parser):
 def initialize(cfg, state):
     state.tcomp_glerosion = []
     
-    if "time_igm" not in cfg.modules:
-        raise ValueError("The 'time_igm' module is required for the 'glerosion' module.")
+    if "time" not in cfg.modules:
+        raise ValueError("The 'time' module is required for the 'glerosion' module.")
     
-    state.tlast_erosion = tf.Variable(cfg.modules.time_igm.time_start, dtype=tf.float32)
+    state.tlast_erosion = tf.Variable(cfg.modules.time.time_start, dtype=tf.float32)
 
 
 def update(cfg, state):

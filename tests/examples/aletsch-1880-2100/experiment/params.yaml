@@ -5,7 +5,7 @@ core:
 
 defaults:
   - override /input: [load_ncdf]
-  - override /modules: [iceflow, time_igm, thk, rockflow, vert_flow, print_info, print_comp] # particles
+  - override /modules: [iceflow, time, thk, rockflow, vert_flow, print_info, print_comp] # particles
   - override /output: [write_ncdf, plot2d] # plot2d, print_info, print_comp
 
 hydra:
@@ -22,7 +22,7 @@ modules:
   iceflow:
     iceflow:
       iflo_init_slidingco: 0.0595
-  time_igm:
+  time:
     time_start: 1880.0
     time_end: 2020.0
     time_save: 5.0

@@ -1,12 +1,12 @@
 # @package _global_
 
 defaults:
-  - override /modules: [blank, smb_simple, iceflow, time_igm, thk, vert_flow, particles, print_info, print_comp]
+  - override /modules: [blank, smb_simple, iceflow, time, thk, vert_flow, particles, print_info, print_comp]
   - override /input: [synthetic]
   - override /output: [write_ncdf, plot2d]
 
 modules:
-  time_igm:
+  time:
     time_start: 2000.0
     time_end: 2500.0
     time_save: 10.0

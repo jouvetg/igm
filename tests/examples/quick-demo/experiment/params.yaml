@@ -2,7 +2,7 @@
 
 
 defaults:
-  - override /modules: [time_igm, iceflow, thk, clim_oggm, smb_oggm, print_info, print_comp]
+  - override /modules: [time, iceflow, thk, clim_oggm, smb_oggm, print_info, print_comp]
   - override /input: [oggm_shop]
   - override /output: [write_ncdf,plot2d]
 
@@ -12,7 +12,7 @@ input:
     oggm_RGI_version: 6
 
 modules:
-  time_igm:
+  time:
     time_start: 1800.0
     time_end: 2100.0
     time_save: 100.0

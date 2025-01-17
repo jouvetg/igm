@@ -15,9 +15,9 @@ def run(cfg, state):
 
     if "time" in ds.dims:
         state.logger.info(
-            f"Time dimension found. Selecting the first time step at {cfg.modules.time_igm.time_start}"
+            f"Time dimension found. Selecting the first time step at {cfg.modules.time.time_start}"
         )
-        ds = ds.sel(time=ds.time[cfg.modules.time_igm.time_start])
+        ds = ds.sel(time=ds.time[cfg.modules.time.time_start])
 
     ds = xr.where(ds > 1e35, np.nan, ds)
 

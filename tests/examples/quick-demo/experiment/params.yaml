@@ -2,9 +2,9 @@
 
 
 defaults:
-  - override /modules: [time_igm, iceflow, thk, clim_oggm, smb_oggm, print_info, print_comp, plot2d]
+  - override /modules: [time_igm, iceflow, thk, clim_oggm, smb_oggm, print_info, print_comp]
   - override /input: [oggm_shop]
-  - override /output: [write_ncdf]
+  - override /output: [write_ncdf,plot2d]
 
 input:
   oggm_shop:
@@ -16,8 +16,6 @@ modules:
     time_start: 1800.0
     time_end: 2100.0
     time_save: 100.0
-  plot2d:
-    plt2d_live: true
   iceflow:
     iceflow:
       iflo_init_slidingco: 0.25
@@ -27,3 +25,7 @@ modules:
                           [ 1900,           0.0,         1.0],
                           [ 2020,           0.0,         1.0],
                           [ 2100,           4.0,         1.0]]
+
+output:
+  plot2d:
+    plt2d_live: true

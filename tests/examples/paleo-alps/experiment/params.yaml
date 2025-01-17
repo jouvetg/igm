@@ -4,9 +4,9 @@ core:
   url_data: https://www.dropbox.com/scl/fi/7pib29dhsuo2t80yplu2j/paleo-alps-v1.zip?rlkey=jsyz0qseyv9jqk63vz3lk6mf0&dl=0
 
 defaults:
-  - override /modules: [time_igm, iceflow, thk, print_info, print_comp, plot2d]
+  - override /modules: [time_igm, iceflow, thk, print_info, print_comp]
   - override /input: [load_tif]
-  - override /output: [write_ncdf]
+  - override /output: [write_ncdf,plot2d]
 
 input:
   load_tif:
@@ -18,11 +18,13 @@ modules:
     time_start: -30000.0
     time_end: -25000.0
     time_save: 100.0
-  plot2d:
-    plt2d_live: true
   smb_signal:
     pdela: 3000.0 # default param in the .py file has a big typo (30000 instead of 3000...)
     deladt: 200.0
     gradabl: 0.0067
     gradacc: 0.0005
     maxacc: 1.0
+
+output:
+  plot2d:
+    plt2d_live: true

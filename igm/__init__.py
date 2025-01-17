@@ -21,5 +21,6 @@ from .common import (
     setup_igm_modules,
     add_logger,
     print_gpu_info,
-    download_unzip_and_store    
+    download_unzip_and_store,
+    print_comp
 )

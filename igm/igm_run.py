@@ -17,6 +17,7 @@ from igm import (
     print_gpu_info,
     add_logger,
     download_unzip_and_store,
+    print_comp,
     input,
     output
 )
@@ -127,6 +128,8 @@ def main(cfg: DictConfig) -> None:
         for output_module in output_modules:
             output_module.run(cfg, state) # do we need to initialize output modules? THis is not very clean...
 
+    if cfg.core.print_comp:
+        print_comp(state)
 
 if __name__ == "__main__":
     main()

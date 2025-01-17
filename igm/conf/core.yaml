@@ -17,5 +17,6 @@ core:
 
   # Misc
   print_params: True
+  print_comp: False
   
   custom_modules_folder: modules_custom

@@ -170,14 +170,14 @@ def initialize(cfg,state):
         )[0]
     state.IMB = tf.Variable(state.IMB)
 
-    if "time_igm" not in cfg.modules:
-        raise ValueError("The 'time_igm' module is required to use the 'smb_accmelt' module.")
+    if "time" not in cfg.modules:
+        raise ValueError("The 'time' module is required to use the 'smb_accmelt' module.")
     
     
     # ! We need an initial smb value as particles comes after in the update order...
     state.smb = tf.ones_like(state.topg) * (cfg.modules.smb_accmelt.smb_accmelt_wat_density / cfg.modules.smb_accmelt.smb_accmelt_ice_density)
     
-    state.tlast_smb = tf.Variable(cfg.modules.time_igm.time_start)
+    state.tlast_smb = tf.Variable(cfg.modules.time.time_start)
     state.tcomp_smb = []
 
 # Warning: The decorator permits to take full benefit from efficient TensorFlow operation (especially on GPU)

@@ -1,4 +1,4 @@
-from .time_igm import (
+from .time import (
     initialize,
     finalize,
     update

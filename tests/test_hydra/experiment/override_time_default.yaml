@@ -1,7 +1,7 @@
 # this is for the `override_core_syntax` test to determine if we can override a core default module within our own yaml file
 # You should expect that these values overrite the time values in the core module
 
-time_igm:
+time:
   time_start: 9999.0
   time_end: 2100.0
   time_save: 10.0

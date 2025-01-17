@@ -151,7 +151,7 @@ modules:
       min_coarsen: 0
       max_coarsen: 2
       soft_begining: 500
-  time_igm:
+  time:
     time_start: 2000.0
     time_end: 2100.0
     time_save: 10.0
@@ -319,7 +319,7 @@ modules:
       min_coarsen: 0
       max_coarsen: 2
       soft_begining: 500
-  time_igm:
+  time:
     time_start: -2000.0
     time_end: 10000.0
     time_save: 100.0
@@ -480,7 +480,7 @@ modules:
       min_coarsen: 0
       max_coarsen: 2
       soft_begining: 500
-  time_igm:
+  time:
     time_start: 2000.0
     time_end: 2100.0
     time_save: 10.0
@@ -507,7 +507,7 @@ core:
   gpu_info: true
   print_params: true
 modules:
-  time_igm:
+  time:
     time_start: 2000.0
     time_end: 2100.0
     time_save: 10.0

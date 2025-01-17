@@ -45,12 +45,12 @@ def params(parser):
 def initialize(cfg, state):
     from gflex.f2d import F2D
 
-    if "time_igm" not in cfg.modules:
-        raise ValueError("The 'time_igm' module is required for the 'gflex' module.")
+    if "time" not in cfg.modules:
+        raise ValueError("The 'time' module is required for the 'gflex' module.")
 
     if not hasattr(state,"tcomp_gflex"):
         state.tcomp_gflex = []
-        state.tlast_gflex = tf.Variable(cfg.modules.time_igm.time_start, dtype=tf.float32)
+        state.tlast_gflex = tf.Variable(cfg.modules.time.time_start, dtype=tf.float32)
         state.topg0 = state.usurf - state.thk
 
     state.flex = F2D()

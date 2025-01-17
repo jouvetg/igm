@@ -25,7 +25,7 @@ def run(cfg, state):
 
     if "time" in nc.variables:
         TIME = np.squeeze(nc.variables["time"]).astype("float32")
-        I = np.where(TIME == cfg.modules.time_igm.time_start)[0][0]
+        I = np.where(TIME == cfg.modules.time.time_start)[0][0]
         istheretime = True
     else:
         istheretime = False

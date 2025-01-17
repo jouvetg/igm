@@ -1,7 +1,8 @@
 # @package _global_
 core:
   url_data: "https://www.dropbox.com/scl/fo/uhreatoec6yfveayqa098/h?rlkey=1ymk9o4s6qlah5bb8llzo5ggo&dl=0"
-  gpu_id: 0
+  hardware:
+    visible_gpus: [0]
 
 defaults:
   - override /modules: [iceflow]

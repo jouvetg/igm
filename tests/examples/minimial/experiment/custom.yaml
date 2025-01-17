@@ -7,8 +7,9 @@ core:
   logging_level: 30
   logging_file: ""
   print_params: True
-  gpu_info: True
-  gpu_id: 0
+  hardware:
+    gpu_info: True
+    visible_gpus: [0]
   saved_params_filename: params_savedd
   url_data: ""
   folder_data: data

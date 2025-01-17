@@ -3,6 +3,9 @@ import numpy as np
 import os, glob
 import tensorflow as tf
 
+from hydra.utils import get_original_cwd
+from pathlib import Path
+
 from igm.modules.utils import *
 
 from .include_icemask import include_icemask
@@ -10,7 +13,9 @@ from .include_icemask import include_icemask
 def run(cfg, state):
     import rasterio
 
-    files = glob.glob(os.path.join(cfg.input.load_tif.ltif_folder, "*.tif"))
+    filepath = Path(get_original_cwd()).joinpath(cfg.input.load_tif.ltif_folder)
+
+    files = glob.glob(os.path.join(filepath, "*.tif"))
     
     print(files)
     

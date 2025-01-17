@@ -10,8 +10,10 @@ core:
   logging_level: 30
 
   # Hardware
-  gpu_id: 0
-  gpu_info: True
+  hardware:
+    gpu_info: True
+    visible_gpus: [0]
+    strategy: none
 
   # Misc
   print_params: True

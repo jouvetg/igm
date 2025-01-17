@@ -42,22 +42,27 @@ for gpu_instance in physical_devices:
 def main(cfg: DictConfig) -> None:
     state = State()  # class acting as a dictionary
 
-    if cfg.core.gpu_info:
+    if cfg.core.hardware.gpu_info:
         print_gpu_info()
 
     gpus = tf.config.list_physical_devices('GPU')
-    
     if gpus:
-        # Restrict TensorFlow to only use the first GPU
         try:
-            tf.config.set_visible_devices(gpus[cfg.core.gpu_id], 'GPU')
+            visible_gpus = [gpus[i] for i in cfg.core.hardware.visible_gpus]
+            tf.config.set_visible_devices(visible_gpus, 'GPU')
             logical_gpus = tf.config.list_logical_devices('GPU')
             print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPU")
         except RuntimeError as e:
             # Visible devices must be set before GPUs have been initialized
             print(e)
     
-    
+    if len(tf.config.list_logical_devices('GPU')) > 1:
+        raise NotImplementedError("Strategies for multiple GPUs are not yet implemented. Please make only one GPU visible.")
+        # strategy = tf.distribute.MirroredStrategy()
+    else:
+        # if there is only one visible GPU, the id will be 0! Even when choosing a GPU that has index 4, it will only be 0 after configuring visible devices!
+        strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0") 
+        # strategy = tf.distribute.get_strategy()
     
     if cfg.core.logging:
         add_logger(cfg=cfg, state=state)
@@ -102,11 +107,7 @@ def main(cfg: DictConfig) -> None:
         
     imported_modules = setup_igm_modules(cfg, state)
     
-
-    # os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.core.gpu_id) # ! Depreciation - replaced above with tf.set visible devices
-
-    # Place the computation on your device GPU ('/GPU:0') or CPU ('/CPU:0')
-    with tf.device(f"/GPU:{cfg.core.gpu_id}"):  # type: ignore for linting checks
+    with strategy.scope():
         run_intializers(imported_modules, cfg, state)
         run_processes(imported_modules, cfg, state)
         run_finalizers(imported_modules, cfg, state)

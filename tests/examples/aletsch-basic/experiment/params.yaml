@@ -10,9 +10,9 @@ core:
   logging_level: 30
 
 defaults:
-  - override /modules: [time, thk, iceflow, smb_simple, print_info]
   - override /input: [local]
-  - override /output: [plot2d]
+  - override /modules: [time, thk, iceflow, smb_simple, print_info] # vert_flow, particles, 
+  - override /output: [write_ncdf, plot2d]
   # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
   # experiment: params # can we make it work here?
 
@@ -47,8 +47,10 @@ modules:
   time:
     time_start: 1900.0
     time_end: 2000.0
-    time_save: 11.0
+    time_save: 10.0
     
 output:
   plot2d:
-    plt2d_live: True
+    plt2d_live: False
+    
+    

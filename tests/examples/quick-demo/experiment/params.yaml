@@ -1,8 +1,11 @@
 # @package _global_
 
+hydra:
+  job:
+    chdir: True
 
 defaults:
-  - override /modules: [time, iceflow, thk, clim_oggm, smb_oggm, print_info, print_comp]
+  - override /modules: [time, iceflow, thk, clim_oggm, smb_oggm, print_info]
   - override /input: [oggm_shop]
   - override /output: [write_ncdf,plot2d]
 
@@ -15,7 +18,7 @@ modules:
   time:
     time_start: 1800.0
     time_end: 2100.0
-    time_save: 100.0
+    time_save: 10.0
   iceflow:
     iceflow:
       iflo_init_slidingco: 0.25

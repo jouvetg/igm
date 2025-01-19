@@ -1,7 +1,11 @@
 # @package _global_
 
+hydra:
+  job:
+    chdir: True
+
 defaults:
-  - override /modules: [iceflow, time, thk, vert_flow, particles, print_info, print_comp]
+  - override /modules: [iceflow, time, thk, vert_flow, particles, print_info]
   - override /input: [oggm_shop]
   - override /output: [write_ncdf,plot2d]
 
@@ -14,7 +18,7 @@ modules:
   time:
     time_start: 2000.0
     time_end: 2100.0
-    time_save: 100.0
+    time_save: 10.0
   mysmb:
     meanela: 3000.0
 

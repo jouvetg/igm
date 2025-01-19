@@ -3,8 +3,12 @@
 core:
   url_data: https://www.dropbox.com/scl/fi/7pib29dhsuo2t80yplu2j/paleo-alps-v1.zip?rlkey=jsyz0qseyv9jqk63vz3lk6mf0&dl=0
 
+hydra:
+  job:
+    chdir: True
+
 defaults:
-  - override /modules: [time, iceflow, thk, print_info, print_comp]
+  - override /modules: [time, iceflow, thk, print_info]
   - override /input: [load_tif]
   - override /output: [write_ncdf,plot2d]
 

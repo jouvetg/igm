@@ -13,13 +13,13 @@ import time
 from igm.modules.utils import *
 
 
-def params(parser):
-    parser.add_argument(
-        "--rock_flow_speed",
-        type=float,
-        default=1,
-        help="Speed of rock flow along the slope in m/y",
-    )
+# def params(parser):
+#     parser.add_argument(
+#         "--flow_speed",
+#         type=float,
+#         default=1,
+#         help="Speed of rock flow along the slope in m/y",
+#     )
 
 
 def initialize(cfg, state):
@@ -31,10 +31,10 @@ def update(cfg, state):
 
     slop = getmag(slopsurfx, slopsurfy)
 
-    dirx = -cfg.modules.rockflow.rock_flow_speed * tf.where(
+    dirx = -cfg.modules.rockflow.flow_speed * tf.where(
         tf.not_equal(slop, 0), slopsurfx / slop, 1
     )
-    diry = -cfg.modules.rockflow.rock_flow_speed * tf.where(
+    diry = -cfg.modules.rockflow.flow_speed * tf.where(
         tf.not_equal(slop, 0), slopsurfy / slop, 1
     )
 

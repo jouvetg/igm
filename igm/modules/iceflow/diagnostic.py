@@ -12,15 +12,15 @@ def initialize_iceflow_diagnostic(cfg,state):
     initialize_iceflow_solver(cfg,state)
 
     state.UT = tf.Variable(
-        tf.zeros((cfg.iceflow.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+        tf.zeros((cfg.modules.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
     )
     state.VT = tf.Variable(
-        tf.zeros((cfg.iceflow.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+        tf.zeros((cfg.modules.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
     )
 
 def update_iceflow_diagnostic(cfg, state):
     
-    if cfg.modules.iceflow.iceflow.iflo_retrain_emulator_freq > 0:
+    if cfg.modules.iceflow.iceflow.retrain_emulator_freq > 0:
         update_iceflow_emulator(cfg, state)
         COST_Emulator = state.COST_EMULATOR[-1].numpy()
     else:

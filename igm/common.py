@@ -64,7 +64,7 @@ def run_intializers(modules: List, cfg: Any, state: State) -> None:
 
 def run_processes(modules: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
-        while state.t < cfg.modules.time.time_end:
+        while state.t < cfg.modules.time.end:
             for module in modules:
                 module.update(cfg, state)
 

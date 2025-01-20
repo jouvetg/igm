@@ -16,7 +16,7 @@ def run(cfg, state):
     import rasterio
 
     if state.saveresult:
-        for var in cfg.output.write_tif.wtif_vars_to_save:
+        for var in cfg.output.write_tif.vars_to_save:
             file = var + "-" + str(int(state.t)).zfill(6) + ".tif"
 
             os.system("echo rm " + file + " >> clean.sh")

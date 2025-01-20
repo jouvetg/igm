@@ -29,73 +29,73 @@ from scipy.interpolate import interp1d
 import time
 
  ## add custumized smb function
-def params(parser):  
+# def params(parser):  
 
-    parser.add_argument(
-        "--smb_simple_update_freq",
-        type=float,
-        default=1,
-        help="Update the mass balance each X years (1)",
-    )
-    parser.add_argument(
-        "--weight_ablation", 
-        type=float, 
-        default=1.0, 
-        help="Weight for melt",
-    )
-    parser.add_argument(
-        "--weight_accumulation",
-        type=float,
-        default=1.0,
-        help="Weight for accumulation",
-    )
-    parser.add_argument(
-        "--smb_accpdd_thr_temp_snow",
-        type=float,
-        default=0.5,
-        help="Threshold temperature for solid precipitation (0.0)",
-    )
-    parser.add_argument(
-        "--smb_accpdd_thr_temp_rain",
-        type=float,
-        default=2.5,
-        help="Threshold temperature for liquid precipitation (2.0)",
-    )
-    parser.add_argument(
-        "--smb_accpdd_shift_hydro_year",
-        type=float,
-        default=0.75,
-        help="This serves to start Oct 1. the acc/melt computation (0.75)",
-    )
+#     parser.add_argument(
+#         "--update_freq",
+#         type=float,
+#         default=1,
+#         help="Update the mass balance each X years (1)",
+#     )
+#     parser.add_argument(
+#         "--weight_ablation", 
+#         type=float, 
+#         default=1.0, 
+#         help="Weight for melt",
+#     )
+#     parser.add_argument(
+#         "--weight_accumulation",
+#         type=float,
+#         default=1.0,
+#         help="Weight for accumulation",
+#     )
+#     parser.add_argument(
+#         "--thr_temp_snow",
+#         type=float,
+#         default=0.5,
+#         help="Threshold temperature for solid precipitation (0.0)",
+#     )
+#     parser.add_argument(
+#         "--thr_temp_rain",
+#         type=float,
+#         default=2.5,
+#         help="Threshold temperature for liquid precipitation (2.0)",
+#     )
+#     parser.add_argument(
+#         "--shift_hydro_year",
+#         type=float,
+#         default=0.75,
+#         help="This serves to start Oct 1. the acc/melt computation (0.75)",
+#     )
 
-    parser.add_argument(
-        "--weight_Aletschfirn",
-        type=float,
-        default=1.0, 
-    )
-    parser.add_argument(
-        "--weight_Jungfraufirn",
-        type=float,
-        default=1.0, 
-    )
-    parser.add_argument(
-        "--weight_Ewigschneefeld",
-        type=float,
-        default=1.0, 
-    )
+#     parser.add_argument(
+#         "--weight_Aletschfirn",
+#         type=float,
+#         default=1.0, 
+#     )
+#     parser.add_argument(
+#         "--weight_Jungfraufirn",
+#         type=float,
+#         default=1.0, 
+#     )
+#     parser.add_argument(
+#         "--weight_Ewigschneefeld",
+#         type=float,
+#         default=1.0, 
+#     )
     
-    parser.add_argument(
-        "--smb_accmelt_ice_density",
-        type=float,
-        default=910.0,
-        help="Density of ice for conversion of SMB into ice equivalent",
-    )
-    parser.add_argument(
-        "--smb_accmelt_wat_density",
-        type=float,
-        default=1000.0,
-        help="Density of water",
-    )
+#     parser.add_argument(
+#         "--ice_density",
+#         type=float,
+#         default=910.0,
+#         help="Density of ice for conversion of SMB into ice equivalent",
+#     )
+#     parser.add_argument(
+#         "--wat_density",
+#         type=float,
+#         default=1000.0,
+#         help="Density of water",
+#     )
 
 
 def initialize(cfg,state):
@@ -175,7 +175,7 @@ def initialize(cfg,state):
     
     
     # ! We need an initial smb value as particles comes after in the update order...
-    state.smb = tf.ones_like(state.topg) * (cfg.modules.smb_accmelt.smb_accmelt_wat_density / cfg.modules.smb_accmelt.smb_accmelt_ice_density)
+    state.smb = tf.ones_like(state.topg) * (cfg.modules.smb_accmelt.wat_density / cfg.modules.smb_accmelt.ice_density)
     
     state.tlast_smb = tf.Variable(cfg.modules.time.time_start)
     state.tcomp_smb = []
@@ -186,7 +186,7 @@ def initialize(cfg,state):
 # @tf.function()
 def update(cfg,state):
 
-    if ((state.t - state.tlast_smb) >= cfg.modules.smb_accmelt.smb_simple_update_freq):
+    if ((state.t - state.tlast_smb) >= cfg.modules.smb_accmelt.update_freq):
 
         if hasattr(state, "logger"):
             state.logger.info("update smb at time : " + str(state.t.numpy()))
@@ -198,22 +198,22 @@ def update(cfg,state):
         ri = state.mb_parameters[state.IMB[int(state.t) - 1880], 3] * 10 ** (-5)
         rs = state.mb_parameters[state.IMB[int(state.t) - 1880], 4] * 10 ** (-5)
 
-        # keep solid precipitation when temperature < smb_accpdd_thr_temp_snow
-        # with linear transition to 0 between smb_accpdd_thr_temp_snow and smb_accpdd_thr_temp_rain
+        # keep solid precipitation when temperature < thr_temp_snow
+        # with linear transition to 0 between thr_temp_snow and thr_temp_rain
         accumulation = tf.where(
-            state.air_temp <= cfg.modules.smb_accmelt.smb_accpdd_thr_temp_snow,
+            state.air_temp <= cfg.modules.smb_accmelt.thr_temp_snow,
             state.precipitation,
             tf.where(
-                state.air_temp >= cfg.modules.smb_accmelt.smb_accpdd_thr_temp_rain,
+                state.air_temp >= cfg.modules.smb_accmelt.thr_temp_rain,
                 0.0,
                 state.precipitation
-                * (cfg.modules.smb_accmelt.smb_accpdd_thr_temp_rain - state.air_temp)
-                / (cfg.modules.smb_accmelt.smb_accpdd_thr_temp_rain - cfg.modules.smb_accmelt.smb_accpdd_thr_temp_snow),
+                * (cfg.modules.smb_accmelt.thr_temp_rain - state.air_temp)
+                / (cfg.modules.smb_accmelt.thr_temp_rain - cfg.modules.smb_accmelt.thr_temp_snow),
             ),
         )
 
         # unit to [  kg * m^(-2) * y^(-1) water eq  ] -> [ m water eq / d]
-        accumulation /= (accumulation.shape[0] * cfg.modules.smb_accmelt.smb_accmelt_wat_density) 
+        accumulation /= (accumulation.shape[0] * cfg.modules.smb_accmelt.wat_density) 
 
         # correct for snow re-distribution
         accumulation *= state.snow_redistribution  # unit to [ m water eq. / d ]
@@ -230,7 +230,7 @@ def update(cfg,state):
         for kk in range(state.air_temp.shape[0]):
                 
             # shift to hydro year, i.e. start Oct. 1
-            k = (kk+int(state.air_temp.shape[0]*cfg.modules.smb_accmelt.smb_accpdd_shift_hydro_year))%(state.air_temp.shape[0]) 
+            k = (kk+int(state.air_temp.shape[0]*cfg.modules.smb_accmelt.shift_hydro_year))%(state.air_temp.shape[0]) 
 
             # add accumulation to the snow depth
             snow_depth += accumulation[k]
@@ -253,7 +253,7 @@ def update(cfg,state):
 
         # sum accumulation and ablation over the year, and conversion to ice equivalent
         state.smb = tf.math.reduce_sum(accumulation - ablation, axis=0)* (
-            cfg.modules.smb_accmelt.smb_accmelt_wat_density / cfg.modules.smb_accmelt.smb_accmelt_ice_density
+            cfg.modules.smb_accmelt.wat_density / cfg.modules.smb_accmelt.ice_density
         )
 
         if hasattr(state,'icemask'):

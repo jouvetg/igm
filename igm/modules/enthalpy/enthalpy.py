@@ -11,137 +11,137 @@ import time
 from igm.modules.utils import *
 
 
-def params(parser):
-    parser.add_argument(
-        "--enth_water_density",
-        type=float,
-        default=1000,
-        help="Constant of the Water density [kg m-3]",
-    )
-    parser.add_argument(
-        "--enth_spy",
-        type=float,
-        default=31556926,
-        help="Number of seconds per years [s y-1]",
-    )
-    parser.add_argument(
-        "--enth_ki",
-        type=float,
-        default=2.1,
-        help="Conductivity of cold ice [W m-1 K-1] (Aschwanden and al, JOG, 2012)",
-    )
-    parser.add_argument(
-        "--enth_ci",
-        type=float,
-        default=2009,
-        help="Specific heat capacity of ice [W s kg-1 K-1] (Aschwanden and al, JOG, 2012)",
-    )
-    parser.add_argument(
-        "--enth_Lh",
-        type=float,
-        default=3.34 * 10 ** (5),
-        help="latent heat of fusion [W s kg-1] = [E] (Aschwanden and al, JOG, 2012)",
-    )
-    parser.add_argument(
-        "--enth_KtdivKc",
-        type=float,
-        default=10 ** (-1),
-        help="Ratio of temp vs cold ice diffusivity Kt / Kc [no unit] (Aschwanden and al, JOG, 2012)",
-    )
-    parser.add_argument(
-        "--enth_claus_clape",
-        type=float,
-        default=7.9 * 10 ** (-8),
-        help="Clausius-Clapeyron constant [K Pa-1] (Aschwanden and al, JOG, 2012)",
-    )
-    parser.add_argument(
-        "--enth_melt_temp",
-        type=float,
-        default=273.15,
-        help="Melting point at standart pressure [K] (Aschwanden and al, JOG, 2012)",
-    )
-    parser.add_argument(
-        "--enth_ref_temp",
-        type=float,
-        default=223.15,
-        help="Reference temperature [K] (Aschwanden and al, JOG, 2012)",
-    )
-    parser.add_argument(
-        "--enth_till_friction_angle",
-        type=float,
-        default=30,
-        help="Till friction angle in the Mohr-Coulomb friction law [deg]",
-    )
+# def params(parser):
+#     parser.add_argument(
+#         "--enth_water_density",
+#         type=float,
+#         default=1000,
+#         help="Constant of the Water density [kg m-3]",
+#     )
+#     parser.add_argument(
+#         "--enth_spy",
+#         type=float,
+#         default=31556926,
+#         help="Number of seconds per years [s y-1]",
+#     )
+#     parser.add_argument(
+#         "--enth_ki",
+#         type=float,
+#         default=2.1,
+#         help="Conductivity of cold ice [W m-1 K-1] (Aschwanden and al, JOG, 2012)",
+#     )
+#     parser.add_argument(
+#         "--enth_ci",
+#         type=float,
+#         default=2009,
+#         help="Specific heat capacity of ice [W s kg-1 K-1] (Aschwanden and al, JOG, 2012)",
+#     )
+#     parser.add_argument(
+#         "--enth_Lh",
+#         type=float,
+#         default=3.34 * 10 ** (5),
+#         help="latent heat of fusion [W s kg-1] = [E] (Aschwanden and al, JOG, 2012)",
+#     )
+#     parser.add_argument(
+#         "--enth_KtdivKc",
+#         type=float,
+#         default=10 ** (-1),
+#         help="Ratio of temp vs cold ice diffusivity Kt / Kc [no unit] (Aschwanden and al, JOG, 2012)",
+#     )
+#     parser.add_argument(
+#         "--enth_claus_clape",
+#         type=float,
+#         default=7.9 * 10 ** (-8),
+#         help="Clausius-Clapeyron constant [K Pa-1] (Aschwanden and al, JOG, 2012)",
+#     )
+#     parser.add_argument(
+#         "--enth_melt_temp",
+#         type=float,
+#         default=273.15,
+#         help="Melting point at standart pressure [K] (Aschwanden and al, JOG, 2012)",
+#     )
+#     parser.add_argument(
+#         "--enth_ref_temp",
+#         type=float,
+#         default=223.15,
+#         help="Reference temperature [K] (Aschwanden and al, JOG, 2012)",
+#     )
+#     parser.add_argument(
+#         "--enth_till_friction_angle",
+#         type=float,
+#         default=30,
+#         help="Till friction angle in the Mohr-Coulomb friction law [deg]",
+#     )
 
-    parser.add_argument(
-        "--enth_till_friction_angle_bed_min",
-        type=float,
-        default=None,
-        help="enth_till_friction_angle_bed_min",
-    )
-    parser.add_argument(
-        "--enth_till_friction_angle_bed_max",
-        type=float,
-        default=None,
-        help="enth_till_friction_angle_bed_max",
-    )
-    parser.add_argument(
-        "--enth_till_friction_angle_phi_min",
-        type=float,
-        default=15,
-        help="enth_till_friction_angle_phi_min",
-    )
-    parser.add_argument(
-        "--enth_till_friction_angle_phi_max",
-        type=float,
-        default=45,
-        help="enth_till_friction_angle_phi_max",
-    )
+#     parser.add_argument(
+#         "--enth_till_friction_angle_bed_min",
+#         type=float,
+#         default=None,
+#         help="enth_till_friction_angle_bed_min",
+#     )
+#     parser.add_argument(
+#         "--enth_till_friction_angle_bed_max",
+#         type=float,
+#         default=None,
+#         help="enth_till_friction_angle_bed_max",
+#     )
+#     parser.add_argument(
+#         "--enth_till_friction_angle_phi_min",
+#         type=float,
+#         default=15,
+#         help="enth_till_friction_angle_phi_min",
+#     )
+#     parser.add_argument(
+#         "--enth_till_friction_angle_phi_max",
+#         type=float,
+#         default=45,
+#         help="enth_till_friction_angle_phi_max",
+#     )
 
-    parser.add_argument(
-        "--enth_uthreshold", type=float, default=100, help="uthreshold [m/y]"
-    )
-    parser.add_argument(
-        "--enth_drain_rate",
-        type=float,
-        default=0.001,
-        help="Drain rate at 1 mm/y  [m y-1] (Bueler and Pelt, GMD, 2015)",
-    )
-    parser.add_argument(
-        "--enth_till_wat_max",
-        type=float,
-        default=2,
-        help="Maximum water till tickness [m] (Bueler and Pelt, GMD, 2015)",
-    )
-    parser.add_argument(
-        "--enth_drain_ice_column",
-        type=str2bool,
-        default=True,
-        help="Transform the water content beyond a thr=0.01 into water, drain it, and add it to basal melt rate",
-    )
+#     parser.add_argument(
+#         "--enth_uthreshold", type=float, default=100, help="uthreshold [m/y]"
+#     )
+#     parser.add_argument(
+#         "--enth_drain_rate",
+#         type=float,
+#         default=0.001,
+#         help="Drain rate at 1 mm/y  [m y-1] (Bueler and Pelt, GMD, 2015)",
+#     )
+#     parser.add_argument(
+#         "--enth_till_wat_max",
+#         type=float,
+#         default=2,
+#         help="Maximum water till tickness [m] (Bueler and Pelt, GMD, 2015)",
+#     )
+#     parser.add_argument(
+#         "--enth_drain_ice_column",
+#         type=str2bool,
+#         default=True,
+#         help="Transform the water content beyond a thr=0.01 into water, drain it, and add it to basal melt rate",
+#     )
 
-    parser.add_argument(
-        "--enth_default_bheatflx",
-        type=float,
-        default=0.065,
-        help="Geothermal heat flux [W m-2]",
-    )
+#     parser.add_argument(
+#         "--enth_default_bheatflx",
+#         type=float,
+#         default=0.065,
+#         help="Geothermal heat flux [W m-2]",
+#     )
 
-    parser.add_argument(
-        "--enth_temperature_offset_air_to_ice",
-        type=float,
-        default=0.0,
-        help="This is the offset between the air temperature and the ice temperature as records show \
-              [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder \
-              than the temperature of ice to be given as boundary upper condition to the Enthlapy model",
-    )
+#     parser.add_argument(
+#         "--enth_temperature_offset_air_to_ice",
+#         type=float,
+#         default=0.0,
+#         help="This is the offset between the air temperature and the ice temperature as records show \
+#               [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder \
+#               than the temperature of ice to be given as boundary upper condition to the Enthlapy model",
+#     )
 
-    parser.add_argument(
-        "--enth_tauc_min", type=float, default=10**5, help="lower bound for tauc [Pa]"
-    )
-    parser.add_argument(
-        "--enth_tauc_max", type=float, default=10**10, help="lower bound for tauc [Pa]"
-    )
+#     parser.add_argument(
+#         "--enth_tauc_min", type=float, default=10**5, help="lower bound for tauc [Pa]"
+#     )
+#     parser.add_argument(
+#         "--enth_tauc_max", type=float, default=10**10, help="lower bound for tauc [Pa]"
+#     )
 
 
 def initialize(cfg, state):
@@ -153,19 +153,19 @@ def initialize(cfg, state):
 
     state.basalMeltRate = tf.Variable(tf.zeros_like(state.thk), trainable=False)
     state.T = tf.Variable(
-        tf.ones((cfg.modules.iceflow.iceflow.iflo_Nz, Ny, Nx)) * cfg.modules.enthalpy.enth_melt_temp, trainable=False
+        tf.ones((cfg.modules.iceflow.iceflow.Nz, Ny, Nx)) * cfg.modules.enthalpy.melt_temp, trainable=False
     )
     state.omega = tf.Variable(tf.zeros_like(state.T), trainable=False)
     state.E = tf.Variable(
         tf.ones_like(state.T)
-        * (cfg.modules.enthalpy.enth_ci * (cfg.modules.enthalpy.enth_melt_temp - cfg.modules.enthalpy.enth_ref_temp)),
+        * (cfg.modules.enthalpy.ci * (cfg.modules.enthalpy.melt_temp - cfg.modules.enthalpy.ref_temp)),
         trainable=False,
     )
     state.tillwat = 0.0 * tf.Variable(tf.ones_like(state.thk), trainable=False)
 
     if not hasattr(state, "bheatflx"):
         state.bheatflx = tf.Variable(
-            tf.ones_like(state.thk) * cfg.modules.enthalpy.enth_default_bheatflx, trainable=False
+            tf.ones_like(state.thk) * cfg.modules.enthalpy.default_bheatflx, trainable=False
         )
 
     state.phi = compute_phi(cfg, state)
@@ -174,21 +174,21 @@ def initialize(cfg, state):
     state.tauc, state.slidingco = compute_slidingco_tf(
         state.thk,
         state.tillwat,
-        cfg.modules.iceflow.iceflow.iflo_ice_density,
-        cfg.modules.iceflow.iceflow.iflo_gravity_cst,
-        cfg.modules.enthalpy.enth_till_wat_max,
+        cfg.modules.iceflow.iceflow.ice_density,
+        cfg.modules.iceflow.iceflow.gravity_cst,
+        cfg.modules.enthalpy.till_wat_max,
         state.phi,
-        cfg.modules.iceflow.iceflow.iflo_exp_weertman,
-        cfg.modules.enthalpy.enth_uthreshold,
-        cfg.modules.iceflow.iceflow.iflo_new_friction_param,
-        cfg.modules.enthalpy.enth_tauc_min,
-        cfg.modules.enthalpy.enth_tauc_max,
+        cfg.modules.iceflow.iceflow.exp_weertman,
+        cfg.modules.enthalpy.uthreshold,
+        cfg.modules.iceflow.iceflow.new_friction_param,
+        cfg.modules.enthalpy.tauc_min,
+        cfg.modules.enthalpy.tauc_max,
     )
 
     state.tcomp_enthalpy = []
 
     # arrhenius must be 3D for the Enthlapy to work
-    assert cfg.modules.iceflow.iceflow.iflo_dim_arrhenius == 3
+    assert cfg.modules.iceflow.iceflow.dim_arrhenius == 3
 
 
 def update(cfg, state):
@@ -201,27 +201,27 @@ def update(cfg, state):
     surftemp = (
         tf.minimum(
             tf.math.reduce_mean(
-                state.air_temp + cfg.modules.enthalpy.enth_temperature_offset_air_to_ice, axis=0
+                state.air_temp + cfg.modules.enthalpy.temperature_offset_air_to_ice, axis=0
             ),
             0,
         )
-        + cfg.modules.enthalpy.enth_melt_temp
+        + cfg.modules.enthalpy.melt_temp
     )  # [K]
 
     # get the vertical discretization
     depth, dz = vertically_discretize_tf(
-        state.thk, cfg.modules.iceflow.iceflow.iflo_Nz, cfg.modules.iceflow.iceflow.iflo_vert_spacing
+        state.thk, cfg.modules.iceflow.iceflow.Nz, cfg.modules.iceflow.iceflow.vert_spacing
     )
 
     # compute temperature and enthalpy at the pressure melting point
     Tpmp, Epmp = TpmpEpmp_from_depth_tf(
         depth,
-        cfg.modules.iceflow.iceflow.iflo_gravity_cst,
-        cfg.modules.iceflow.iceflow.iflo_ice_density,
-        cfg.modules.enthalpy.enth_claus_clape,
-        cfg.modules.enthalpy.enth_melt_temp,
-        cfg.modules.enthalpy.enth_ci,
-        cfg.modules.enthalpy.enth_ref_temp,
+        cfg.modules.iceflow.iceflow.gravity_cst,
+        cfg.modules.iceflow.iceflow.ice_density,
+        cfg.modules.enthalpy.claus_clape,
+        cfg.modules.enthalpy.melt_temp,
+        cfg.modules.enthalpy.ci,
+        cfg.modules.enthalpy.ref_temp,
     )
 
     # get the temperature from the enthalpy
@@ -229,17 +229,17 @@ def update(cfg, state):
         state.E,
         Tpmp,
         Epmp,
-        cfg.modules.enthalpy.enth_ci,
-        cfg.modules.enthalpy.enth_ref_temp,
-        cfg.modules.enthalpy.enth_Lh,
+        cfg.modules.enthalpy.ci,
+        cfg.modules.enthalpy.ref_temp,
+        cfg.modules.enthalpy.Lh,
     )
 
     # pressure adjusted temperature
     state.Tpa = (
         state.T
-        + cfg.modules.enthalpy.enth_claus_clape
-        * cfg.modules.iceflow.iceflow.iflo_ice_density
-        * cfg.modules.iceflow.iceflow.iflo_gravity_cst
+        + cfg.modules.enthalpy.claus_clape
+        * cfg.modules.iceflow.iceflow.ice_density
+        * cfg.modules.iceflow.iceflow.gravity_cst
         * depth
     )
 
@@ -248,7 +248,7 @@ def update(cfg, state):
 
     # get the arrhenius factor from temperature and and enthalpy
     state.arrhenius = (
-        arrhenius_from_temp_tf(state.Tpa, state.omega) * cfg.modules.iceflow.iceflow.iflo_enhancement_factor
+        arrhenius_from_temp_tf(state.Tpa, state.omega) * cfg.modules.iceflow.iceflow.enhancement_factor
     )
 
     if hasattr(state, "W"):
@@ -260,29 +260,29 @@ def update(cfg, state):
 
     # compute the strainheat is in [W m-3]
     state.strainheat = compute_strainheat_tf(
-        state.U / cfg.modules.enthalpy.enth_spy,
-        state.V / cfg.modules.enthalpy.enth_spy,
+        state.U / cfg.modules.enthalpy.spy,
+        state.V / cfg.modules.enthalpy.spy,
         state.arrhenius,
         state.dx,
         dz,
-        cfg.modules.iceflow.iceflow.iflo_exp_glen,
-        cfg.modules.iceflow.iceflow.iflo_thr_ice_thk,
+        cfg.modules.iceflow.iceflow.exp_glen,
+        cfg.modules.iceflow.iceflow.thr_ice_thk,
     )
 
     # compute the frictheat is in [W m-2]
     state.frictheat = compute_frictheat_tf(
-        state.U / cfg.modules.enthalpy.enth_spy,
-        state.V / cfg.modules.enthalpy.enth_spy,
+        state.U / cfg.modules.enthalpy.spy,
+        state.V / cfg.modules.enthalpy.spy,
         state.slidingco,
         state.topg,
         state.dx,
-        cfg.modules.iceflow.iceflow.iflo_exp_weertman,
-        cfg.modules.iceflow.iceflow.iflo_new_friction_param,
+        cfg.modules.iceflow.iceflow.exp_weertman,
+        cfg.modules.iceflow.iceflow.new_friction_param,
     )
 
     # compute the surface enthalpy
     surfenth = surf_enthalpy_from_temperature_tf(
-        surftemp, cfg.modules.enthalpy.enth_melt_temp, cfg.modules.enthalpy.enth_ci, cfg.modules.enthalpy.enth_ref_temp
+        surftemp, cfg.modules.enthalpy.melt_temp, cfg.modules.enthalpy.ci, cfg.modules.enthalpy.ref_temp
     )
 
     # one explicit step for the horizonal advection
@@ -294,33 +294,33 @@ def update(cfg, state):
     state.E, state.basalMeltRate = compute_enthalpy_basalmeltrate(
         state.E,
         Epmp,
-        state.dt * cfg.modules.enthalpy.enth_spy,
+        state.dt * cfg.modules.enthalpy.spy,
         dz,
-        Wc / cfg.modules.enthalpy.enth_spy,
+        Wc / cfg.modules.enthalpy.spy,
         surfenth,
         state.bheatflx,
         state.strainheat,
         state.frictheat,
         state.tillwat,
-        cfg.modules.iceflow.iceflow.iflo_thr_ice_thk,
-        cfg.modules.enthalpy.enth_ki,
-        cfg.modules.iceflow.iceflow.iflo_ice_density,
-        cfg.modules.enthalpy.enth_water_density,
-        cfg.modules.enthalpy.enth_ci,
-        cfg.modules.enthalpy.enth_ref_temp,
-        cfg.modules.enthalpy.enth_Lh,
-        cfg.modules.enthalpy.enth_spy,
-        cfg.modules.enthalpy.enth_KtdivKc,
-        cfg.modules.enthalpy.enth_drain_ice_column,
+        cfg.modules.iceflow.iceflow.thr_ice_thk,
+        cfg.modules.enthalpy.ki,
+        cfg.modules.iceflow.iceflow.ice_density,
+        cfg.modules.enthalpy.water_density,
+        cfg.modules.enthalpy.ci,
+        cfg.modules.enthalpy.ref_temp,
+        cfg.modules.enthalpy.Lh,
+        cfg.modules.enthalpy.spy,
+        cfg.modules.enthalpy.KtdivKc,
+        cfg.modules.enthalpy.drain_ice_column,
     )
 
     state.basalMeltRate = tf.clip_by_value(state.basalMeltRate, 0.0, 10.0**10)
 
     # update the till water content
     state.tillwat = state.tillwat + state.dt * (
-        state.basalMeltRate - cfg.modules.enthalpy.enth_drain_rate
+        state.basalMeltRate - cfg.modules.enthalpy.drain_rate
     )
-    state.tillwat = tf.clip_by_value(state.tillwat, 0.0, cfg.modules.enthalpy.enth_till_wat_max)
+    state.tillwat = tf.clip_by_value(state.tillwat, 0.0, cfg.modules.enthalpy.till_wat_max)
     state.tillwat = tf.where(state.thk > 0, state.tillwat, 0.0)
 
     state.phi = compute_phi(cfg, state)
@@ -329,15 +329,15 @@ def update(cfg, state):
     state.tauc, state.slidingco = compute_slidingco_tf(
         state.thk,
         state.tillwat,
-        cfg.modules.iceflow.iceflow.iflo_ice_density,
-        cfg.modules.iceflow.iceflow.iflo_gravity_cst,
-        cfg.modules.enthalpy.enth_till_wat_max,
+        cfg.modules.iceflow.iceflow.ice_density,
+        cfg.modules.iceflow.iceflow.gravity_cst,
+        cfg.modules.enthalpy.till_wat_max,
         state.phi,
-        cfg.modules.iceflow.iceflow.iflo_exp_weertman,
-        cfg.modules.enthalpy.enth_uthreshold,
-        cfg.modules.iceflow.iceflow.iflo_new_friction_param,
-        cfg.modules.enthalpy.enth_tauc_min,
-        cfg.modules.enthalpy.enth_tauc_max,
+        cfg.modules.iceflow.iceflow.exp_weertman,
+        cfg.modules.enthalpy.uthreshold,
+        cfg.modules.iceflow.iceflow.new_friction_param,
+        cfg.modules.enthalpy.tauc_min,
+        cfg.modules.enthalpy.tauc_max,
     )
 
     state.hardav = (
@@ -461,24 +461,24 @@ def compute_slidingco_tf(
 
 def compute_phi(cfg, state):
 
-    if cfg.modules.enthalpy.enth_till_friction_angle_bed_min == None:
-        return cfg.modules.enthalpy.enth_till_friction_angle * tf.ones_like(state.thk)
+    if cfg.modules.enthalpy.till_friction_angle_bed_min == None:
+        return cfg.modules.enthalpy.till_friction_angle * tf.ones_like(state.thk)
     else:
         return tf.where(
-            state.topg <= cfg.modules.enthalpy.enth_till_friction_angle_bed_min,
-            cfg.modules.enthalpy.enth_till_friction_angle_phi_min,
+            state.topg <= cfg.modules.enthalpy.till_friction_angle_bed_min,
+            cfg.modules.enthalpy.till_friction_angle_phi_min,
             tf.where(
-                state.topg >= cfg.modules.enthalpy.enth_till_friction_angle_bed_max,
-                cfg.modules.enthalpy.enth_till_friction_angle_phi_max,
-                cfg.modules.enthalpy.enth_till_friction_angle_phi_min
+                state.topg >= cfg.modules.enthalpy.till_friction_angle_bed_max,
+                cfg.modules.enthalpy.till_friction_angle_phi_max,
+                cfg.modules.enthalpy.till_friction_angle_phi_min
                 + (
-                    cfg.modules.enthalpy.enth_till_friction_angle_phi_max
-                    - cfg.modules.enthalpy.enth_till_friction_angle_phi_min
+                    cfg.modules.enthalpy.till_friction_angle_phi_max
+                    - cfg.modules.enthalpy.till_friction_angle_phi_min
                 )
-                * (state.topg - cfg.modules.enthalpy.enth_till_friction_angle_bed_min)
+                * (state.topg - cfg.modules.enthalpy.till_friction_angle_bed_min)
                 / (
-                    cfg.modules.enthalpy.enth_till_friction_angle_bed_max
-                    - cfg.modules.enthalpy.enth_till_friction_angle_bed_min
+                    cfg.modules.enthalpy.till_friction_angle_bed_max
+                    - cfg.modules.enthalpy.till_friction_angle_bed_min
                 ),
             ),
         )

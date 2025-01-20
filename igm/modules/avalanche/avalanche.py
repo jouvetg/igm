@@ -8,20 +8,20 @@ import tensorflow as tf
 import time
 
 
-def params(parser):
-    parser.add_argument(
-        "--avalanche_update_freq",
-        type=float,
-        default=1,
-        help="Update avalanche each X years (1)",
-    )
+# def params(parser):
+#     parser.add_argument(
+#         "--avalanche_update_freq",
+#         type=float,
+#         default=1,
+#         help="Update avalanche each X years (1)",
+#     )
 
-    parser.add_argument(
-        "--avalanche_angleOfRepose",
-        type=float,
-        default=30,
-        help="Angle of repose (30°)",
-    )
+#     parser.add_argument(
+#         "--avalanche_angleOfRepose",
+#         type=float,
+#         default=30,
+#         help="Angle of repose (30°)",
+#     )
 
 
 def initialize(cfg, state):
@@ -30,11 +30,11 @@ def initialize(cfg, state):
     if "time" not in cfg.modules:
         raise ValueError("The 'time' module is required for the 'avalanche' module.")
     
-    state.tlast_avalanche = tf.Variable(cfg.modules.time.time_start, dtype=tf.float32)
+    state.tlast_avalanche = tf.Variable(cfg.modules.time.start, dtype=tf.float32)
 
 
 def update(cfg, state):
-    if (state.t - state.tlast_avalanche) >= cfg.modules.avalanche.avalanche_update_freq:
+    if (state.t - state.tlast_avalanche) >= cfg.modules.avalanche.update_freq:
         if hasattr(state, "logger"):
             state.logger.info("Update AVALANCHE at time : " + str(state.t.numpy()))
 
@@ -44,7 +44,7 @@ def update(cfg, state):
         Zb = state.topg
         Zi = Zb + H
         dHRepose = state.dx * tf.math.tan(
-            cfg.modules.avalanche.avalanche_angleOfRepose * np.pi / 180.0
+            cfg.modules.avalanche.angleOfRepose * np.pi / 180.0
         )
         Ho = tf.maximum(H, 0)
 

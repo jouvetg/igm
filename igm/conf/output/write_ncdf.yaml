@@ -1,6 +1,6 @@
 write_ncdf:
-  wncd_output_file: output.nc # help="Output ncdf data file"
-  wncd_vars_to_save: # help="List of variables to be recorded in the ncdf file"
+  output_file: output.nc # help="Output ncdf data file"
+  vars_to_save: # help="List of variables to be recorded in the ncdf file"
     - topg
     - usurf
     - thk

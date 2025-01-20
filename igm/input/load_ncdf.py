@@ -16,7 +16,7 @@ def run(cfg, state):
     if hasattr(state, "logger"):
         state.logger.info("LOAD NCDF file")
 
-    filepath = Path(get_original_cwd()).joinpath(cfg.input.load_ncdf.lncd_input_file)
+    filepath = Path(get_original_cwd()).joinpath(cfg.input.load_ncdf.input_file)
 
     nc = Dataset(filepath, "r")
 
@@ -30,7 +30,7 @@ def run(cfg, state):
 
     if "time" in nc.variables:
         TIME = np.squeeze(nc.variables["time"]).astype("float32")
-        I = np.where(TIME == cfg.modules.time.time_start)[0][0]
+        I = np.where(TIME == cfg.modules.time.start)[0][0]
         istheretime = True
     else:
         istheretime = False
@@ -46,17 +46,17 @@ def run(cfg, state):
 
 
     # coarsen if requested
-    if cfg.input.load_ncdf.lncd_coarsen > 1:
-        xx = x[:: cfg.input.load_ncdf.lncd_coarsen]
-        yy = y[:: cfg.input.load_ncdf.lncd_coarsen]
+    if cfg.input.load_ncdf.coarsen > 1:
+        xx = x[:: cfg.input.load_ncdf.coarsen]
+        yy = y[:: cfg.input.load_ncdf.coarsen]
          
-        if cfg.input.load_ncdf.lncd_method_coarsen == "skipping":            
+        if cfg.input.load_ncdf.method_coarsen == "skipping":            
             for var in nc.variables:
                 if (not var in ["x", "y"]) & (vars()[var].ndim == 2):
                     vars()[var] = vars()[var][
-                        :: cfg.input.load_ncdf.lncd_coarsen, :: cfg.input.load_ncdf.lncd_coarsen
+                        :: cfg.input.load_ncdf.coarsen, :: cfg.input.load_ncdf.coarsen
                     ]
-        elif cfg.input.load_ncdf.lncd_method_coarsen == "cubic_spline":
+        elif cfg.input.load_ncdf.method_coarsen == "cubic_spline":
             for var in nc.variables:
                 if (not var in ["x", "y"]) & (vars()[var].ndim == 2):
                                     
@@ -68,15 +68,15 @@ def run(cfg, state):
 
 
     # crop if requested
-    if cfg.input.load_ncdf.lncd_crop:
-        i0 = max(0, int((cfg.input.load_ncdf.lncd_xmin - x[0]) / (x[1] - x[0])))
-        i1 = min(int((cfg.input.load_ncdf.lncd_xmax - x[0]) / (x[1] - x[0])), x.shape[0] - 1)
+    if cfg.input.load_ncdf.crop:
+        i0 = max(0, int((cfg.input.load_ncdf.xmin - x[0]) / (x[1] - x[0])))
+        i1 = min(int((cfg.input.load_ncdf.xmax - x[0]) / (x[1] - x[0])), x.shape[0] - 1)
         i1 = max(i0 + 1, i1)
-        j0 = max(0, int((cfg.input.load_ncdf.lncd_ymin - y[0]) / (y[1] - y[0])))
-        j1 = min(int((cfg.input.load_ncdf.lncd_ymax - y[0]) / (y[1] - y[0])), y.shape[0] - 1)
+        j0 = max(0, int((cfg.input.load_ncdf.ymin - y[0]) / (y[1] - y[0])))
+        j1 = min(int((cfg.input.load_ncdf.ymax - y[0]) / (y[1] - y[0])), y.shape[0] - 1)
         j1 = max(j0 + 1, j1)
-        #        i0,i1 = int((cfg.input.load_ncdf.lncd_xmin-x[0])/(x[1]-x[0])),int((cfg.input.load_ncdf.lncd_xmax-x[0])/(x[1]-x[0]))
-        #        j0,j1 = int((cfg.input.load_ncdf.lncd_ymin-y[0])/(y[1]-y[0])),int((cfg.input.load_ncdf.lncd_ymax-y[0])/(y[1]-y[0]))
+        #        i0,i1 = int((cfg.input.load_ncdf.xmin-x[0])/(x[1]-x[0])),int((cfg.input.load_ncdf.xmax-x[0])/(x[1]-x[0]))
+        #        j0,j1 = int((cfg.input.load_ncdf.ymin-y[0])/(y[1]-y[0])),int((cfg.input.load_ncdf.ymax-y[0])/(y[1]-y[0]))
         for var in nc.variables:
             if (not var in ["x", "y"]) & (vars()[var].ndim == 2):
                 vars()[var] = vars()[var][j0:j1, i0:i1]
@@ -95,5 +95,5 @@ def run(cfg, state):
 
     complete_data(state)
 
-    if cfg.input.load_ncdf.lncd_icemask_include:
-        include_icemask(state, mask_shapefile=cfg.input.load_ncdf.lncd_icemask_shapefile, mask_invert=cfg.input.load_ncdf.lncd_icemask_invert)
+    if cfg.input.load_ncdf.icemask_include:
+        include_icemask(state, mask_shapefile=cfg.input.load_ncdf.icemask_shapefile, mask_invert=cfg.input.load_ncdf.icemask_invert)

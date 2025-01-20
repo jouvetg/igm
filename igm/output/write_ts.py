@@ -9,7 +9,7 @@ from netCDF4 import Dataset
 
 
 def initialize(cfg, state):
-    os.system( "echo rm " + cfg.output.write_ts.wts_output_file + " >> clean.sh" )
+    os.system( "echo rm " + cfg.output.write_ts.output_file + " >> clean.sh" )
 
     state.var_info_ncdf_ts = {}
     state.var_info_ncdf_ts["vol"] = ["Ice volume", "km^3"]
@@ -27,7 +27,7 @@ def run(cfg, state):
             if hasattr(state, "logger"):
                 state.logger.info("Initialize NCDF ts output Files")
 
-            nc = Dataset( cfg.output.write_ts.wts_output_file,"w", format="NETCDF4" )
+            nc = Dataset( cfg.output.write_ts.output_file,"w", format="NETCDF4" )
 
             nc.createDimension("time", None)
             E = nc.createVariable("time", np.dtype("float32").char, ("time",))
@@ -49,7 +49,7 @@ def run(cfg, state):
                     "Write NCDF ts file at time : " + str(state.t.numpy())
                 )
 
-            nc = Dataset( cfg.output.write_ts.wts_output_file, "a", format="NETCDF4" )
+            nc = Dataset( cfg.output.write_ts.output_file, "a", format="NETCDF4" )
             d = nc.variables["time"][:].shape[0]
 
             nc.variables["time"][d] = state.t.numpy()

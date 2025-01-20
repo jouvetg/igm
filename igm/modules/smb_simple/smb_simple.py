@@ -10,38 +10,38 @@ import tensorflow as tf
 from igm.modules.utils import interp1d_tf
 
 
-def params(parser):
-    pass
-    parser.add_argument(
-        "--smb_simple_update_freq",
-        type=float,
-        default=1,
-        help="Update the mass balance each X years (1)",
-    )
-    parser.add_argument(
-        "--smb_simple_file",
-        type=str,
-        default="smb_simple_param.txt",
-        help="Name of the imput file for the simple mass balance model (time, gradabl, gradacc, ela, accmax)",
-    )
-    parser.add_argument(
-        "--smb_simple_array",
-        type=list,
-        default=[],
-        help="Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)",
-    )
+# def params(parser):
+#     pass
+#     parser.add_argument(
+#         "--smb_simple_update_freq",
+#         type=float,
+#         default=1,
+#         help="Update the mass balance each X years (1)",
+#     )
+#     parser.add_argument(
+#         "--smb_simple_file",
+#         type=str,
+#         default="smb_simple_param.txt",
+#         help="Name of the imput file for the simple mass balance model (time, gradabl, gradacc, ela, accmax)",
+#     )
+#     parser.add_argument(
+#         "--smb_simple_array",
+#         type=list,
+#         default=[],
+#         help="Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)",
+#     )
 
 
 def initialize(cfg, state):
 
-    if cfg.modules.smb_simple.smb_simple_array == []:
+    if cfg.modules.smb_simple.array == []:
         state.smbpar = np.loadtxt(
-            cfg.modules.smb_simple.smb_simple_file,
+            cfg.modules.smb_simple.file,
             skiprows=1,
             dtype=np.float32,
         )
     else:
-        state.smbpar = np.array(cfg.modules.smb_simple.smb_simple_array[1:]).astype(np.float32)
+        state.smbpar = np.array(cfg.modules.smb_simple.array[1:]).astype(np.float32)
 
     state.tcomp_smb_simple = []
     state.tlast_mb = tf.Variable(-1.0e5000)
@@ -50,7 +50,7 @@ def initialize(cfg, state):
 def update(cfg, state):
 
     # update smb each X years
-    if (state.t - state.tlast_mb) >= cfg.modules.smb_simple.smb_simple_update_freq:
+    if (state.t - state.tlast_mb) >= cfg.modules.smb_simple.update_freq:
         if hasattr(state, "logger"):
             state.logger.info(
                 "Construct mass balance at time : " + str(state.t.numpy())

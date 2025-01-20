@@ -1,8 +1,8 @@
 # @package _global_
-
+ 
 defaults:
-  - override /modules: [iceflow]
   - override /input: [oggm_shop]
+  - override /modules: [iceflow]
 
 hydra:
   # output_subdir: my_result_${core.gpu_id} # name the result based on the GPU ID
@@ -12,25 +12,25 @@ hydra:
 
 input:
   oggm_shop:
-    oggm_RGI_ID: "RGI60-11.01238"
-    oggm_RGI_version: 6
-    oggm_incl_glathida: true
+    RGI_ID: "RGI60-11.01238"
+    RGI_version: 6
+    incl_glathida: true
 
 modules:
   iceflow:
     iceflow:
-      iflo_init_slidingco: 0.045
-      iflo_run_data_assimilation: true
+      init_slidingco: 0.045
+      run_data_assimilation: true
     optimize:
-      opti_control: [thk, usurf, slidingco]
-      opti_cost: [velsurf, icemask, usurf, thk, divfluxfcz]
-      opti_usurfobs_std: 0.3
-      opti_velsurfobs_std: 0.25
-      opti_thkobs_std: 1
-      opti_divfluxobs_std: 0.1
-      opti_regu_param_thk: 1.0
-      opti_regu_param_slidingco: 1.0e6
-      opti_smooth_anisotropy_factor: 0.2
-      opti_convexity_weight: 500
-      opti_nbitmax: 1000
-      opti_vars_to_save: [usurf, thk, slidingco, velsurf_mag, velsurfobs_mag, divflux, icemask, arrhenius, thkobs]
+      control: [thk, usurf, slidingco]
+      cost: [velsurf, icemask, usurf, thk, divfluxfcz]
+      usurfobs_std: 0.3
+      velsurfobs_std: 0.25
+      thkobs_std: 1
+      divfluxobs_std: 0.1
+      regu_param_thk: 1.0
+      regu_param_slidingco: 1.0e6
+      smooth_anisotropy_factor: 0.2
+      convexity_weight: 500
+      nbitmax: 1000
+      vars_to_save: [usurf, thk, slidingco, velsurf_mag, velsurfobs_mag, divflux, icemask, arrhenius, thkobs]

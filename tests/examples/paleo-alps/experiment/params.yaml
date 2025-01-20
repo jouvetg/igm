@@ -14,14 +14,14 @@ defaults:
 
 input:
   load_tif:
-    ltif_folder: "data"
-    ltif_coarsen: 2
+    folder: "data"
+    coarsen: 2
 
 modules:
   time:
-    time_start: -30000.0
-    time_end: -25000.0
-    time_save: 100.0
+    start: -30000.0
+    end: -25000.0
+    save: 100.0
   smb_signal:
     pdela: 3000.0 # default param in the .py file has a big typo (30000 instead of 3000...)
     deladt: 200.0
@@ -31,4 +31,4 @@ modules:
 
 output:
   plot2d:
-    plt2d_live: true
+    live: true

@@ -10,37 +10,37 @@ from igm.modules.utils import *
 
 
 
-def params(parser):
-    parser.add_argument(
-        "--gflex_update_freq",
-        type=float,
-        default=100.0,
-        help="Update gflex each X years (1)",
-    )
-    parser.add_argument(
-        "--gflex_default_Te",
-        type=float,
-        default=50000,
-        help="Default value for Te (Elastic thickness [m]) if not given as ncdf file",
-    )
-    parser.add_argument(
-        "--gflex_dx",
-        type=float,
-        default=1000,
-        help="Default resolution for computing isostasy (m).",
-    )
-    parser.add_argument(
-        "--gflex_pad",
-        type=str2bool,
-        default=False,
-        help="Default padding option",
-    )
-    parser.add_argument(
-        "--gflex_quiet",
-        type=str2bool,
-        default=True,
-        help="Default padding option",
-    )
+# def params(parser):
+#     parser.add_argument(
+#         "--gflex_update_freq",
+#         type=float,
+#         default=100.0,
+#         help="Update gflex each X years (1)",
+#     )
+#     parser.add_argument(
+#         "--gflex_default_Te",
+#         type=float,
+#         default=50000,
+#         help="Default value for Te (Elastic thickness [m]) if not given as ncdf file",
+#     )
+#     parser.add_argument(
+#         "--gflex_dx",
+#         type=float,
+#         default=1000,
+#         help="Default resolution for computing isostasy (m).",
+#     )
+#     parser.add_argument(
+#         "--gflex_pad",
+#         type=str2bool,
+#         default=False,
+#         help="Default padding option",
+#     )
+#     parser.add_argument(
+#         "--gflex_quiet",
+#         type=str2bool,
+#         default=True,
+#         help="Default padding option",
+#     )
 
 def initialize(cfg, state):
     from gflex.f2d import F2D
@@ -50,16 +50,16 @@ def initialize(cfg, state):
 
     if not hasattr(state,"tcomp_gflex"):
         state.tcomp_gflex = []
-        state.tlast_gflex = tf.Variable(cfg.modules.time.time_start, dtype=tf.float32)
+        state.tlast_gflex = tf.Variable(cfg.modules.time.start, dtype=tf.float32)
         state.topg0 = state.usurf - state.thk
 
     state.flex = F2D()
 
-    state.flex.giafreq = cfg.modules.gflex.gflex_update_freq
-    state.flex.giatime = cfg.modules.gflex.gflex_update_freq
-    state.flex.dx = cfg.modules.gflex.gflex_dx
+    state.flex.giafreq = cfg.modules.gflex.update_freq
+    state.flex.giatime = cfg.modules.gflex.update_freq
+    state.flex.dx = cfg.modules.gflex.dx
     state.flex.Quiet = False
-    state.flex.pad = cfg.modules.gflex.gflex_pad
+    state.flex.pad = cfg.modules.gflex.pad
     state.flex.Method = "FD"
     state.flex.PlateSolutionType = "vWC1994"
     state.flex.Solver = "direct"
@@ -75,7 +75,7 @@ def initialize(cfg, state):
     state.flex.BC_N = "0Displacement0Slope"
 
     if not hasattr(state, "Te"):
-        state.flex.Te0 = np.ones_like(state.thk.numpy()) * cfg.modules.gflex.gflex_default_Te
+        state.flex.Te0 = np.ones_like(state.thk.numpy()) * cfg.modules.gflex.default_Te
     else:
         state.flex.Te0 = state.Te    
     if not hasattr(state,"tcomp_gflex"):
@@ -123,7 +123,7 @@ def update(cfg, state):
         
         return pad_width
 
-    if (state.t - state.tlast_gflex) >= cfg.modules.gflex.gflex_update_freq:
+    if (state.t - state.tlast_gflex) >= cfg.modules.gflex.update_freq:
         if hasattr(state, "logger"):
             state.logger.info("Update gflex at time : " + str(state.t.numpy()))
 

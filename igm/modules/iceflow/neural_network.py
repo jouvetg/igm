@@ -10,22 +10,22 @@ def cnn(cfg, nb_inputs, nb_outputs):
 
     conv = inputs
 
-    if cfg.iceflow.iceflow.iflo_activation == "LeakyReLU":
+    if cfg.modules.iceflow.iceflow.activation == "LeakyReLU":
         activation = tf.keras.layers.LeakyReLU(alpha=0.01)
     else:
-        activation = getattr(tf.keras.layers,cfg.iceflow.iceflow.iflo_activation)()      
+        activation = getattr(tf.keras.layers,cfg.modules.iceflow.iceflow.activation)()      
 
-    for i in range(int(cfg.iceflow.iceflow.iflo_nb_layers)):
+    for i in range(int(cfg.modules.iceflow.iceflow.nb_layers)):
         conv = tf.keras.layers.Conv2D(
-            filters=cfg.iceflow.iceflow.iflo_nb_out_filter,
-            kernel_size=(cfg.iceflow.iceflow.iflo_conv_ker_size, cfg.iceflow.iceflow.iflo_conv_ker_size),
-            kernel_initializer=cfg.iceflow.iceflow.iflo_weight_initialization,
+            filters=cfg.modules.iceflow.iceflow.nb_out_filter,
+            kernel_size=(cfg.modules.iceflow.iceflow.conv_ker_size, cfg.modules.iceflow.iceflow.conv_ker_size),
+            kernel_initializer=cfg.modules.iceflow.iceflow.weight_initialization,
             padding="same",
         )(conv)
 
         conv = activation(conv)
 
-        conv = tf.keras.layers.Dropout(cfg.iceflow.iceflow.iflo_dropout_rate)(conv)
+        conv = tf.keras.layers.Dropout(cfg.modules.iceflow.iceflow.dropout_rate)(conv)
 
     outputs = conv
 
@@ -35,7 +35,7 @@ def cnn(cfg, nb_inputs, nb_outputs):
             1,
             1,
         ),
-        kernel_initializer=cfg.iceflow.iceflow.iflo_weight_initialization,
+        kernel_initializer=cfg.modules.iceflow.iceflow.weight_initialization,
         activation=None,
     )(outputs)
 
@@ -49,10 +49,10 @@ def unet(cfg, nb_inputs, nb_outputs):
 
     from keras_unet_collection import models
 
-    layers = np.arange(int(cfg.iceflow.iceflow.iflo_nb_blocks))
+    layers = np.arange(int(cfg.modules.iceflow.iceflow.nb_blocks))
 
     number_of_filters = [
-        cfg.iceflow.iceflow.iflo_nb_out_filter * 2 ** (layers[i]) for i in range(len(layers))
+        cfg.modules.iceflow.iceflow.nb_out_filter * 2 ** (layers[i]) for i in range(len(layers))
     ]
 
     return models.unet_2d(
@@ -61,7 +61,7 @@ def unet(cfg, nb_inputs, nb_outputs):
         n_labels=nb_outputs,
         stack_num_down=2,
         stack_num_up=2,
-        activation=cfg.iceflow.iceflow.iflo_activation,
+        activation=cfg.modules.iceflow.iceflow.activation,
         output_activation=None,
         batch_norm=False,
         pool="max",

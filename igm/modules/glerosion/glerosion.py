@@ -11,27 +11,27 @@ import tensorflow as tf
 from igm.modules.utils import *
 
 
-def params(parser):
-    parser.add_argument(
-        "--glerosion_cst",
-        type=float,
-        default=2.7 * 10 ** (-7),
-        help="Erosion multiplicative factor, here taken from Herman, F. et al. \
-              Erosion by an Alpine glacier. Science 350, 193–195 (2015)",
-    )
-    parser.add_argument(
-        "--glerosion_exp",
-        type=float,
-        default=2,
-        help="Erosion exponent factor, here taken from Herman, F. et al. \
-               Erosion by an Alpine glacier. Science 350, 193–195 (2015)",
-    )
-    parser.add_argument(
-        "--glerosion_update_freq",
-        type=float,
-        default=1,
-        help="Update the erosion only each X years (Default: 1)",
-    )
+# def params(parser):
+#     parser.add_argument(
+#         "--glerosion_cst",
+#         type=float,
+#         default=2.7 * 10 ** (-7),
+#         help="Erosion multiplicative factor, here taken from Herman, F. et al. \
+#               Erosion by an Alpine glacier. Science 350, 193–195 (2015)",
+#     )
+#     parser.add_argument(
+#         "--glerosion_exp",
+#         type=float,
+#         default=2,
+#         help="Erosion exponent factor, here taken from Herman, F. et al. \
+#                Erosion by an Alpine glacier. Science 350, 193–195 (2015)",
+#     )
+#     parser.add_argument(
+#         "--glerosion_update_freq",
+#         type=float,
+#         default=1,
+#         help="Update the erosion only each X years (Default: 1)",
+#     )
 
 
 def initialize(cfg, state):
@@ -40,11 +40,11 @@ def initialize(cfg, state):
     if "time" not in cfg.modules:
         raise ValueError("The 'time' module is required for the 'glerosion' module.")
     
-    state.tlast_erosion = tf.Variable(cfg.modules.time.time_start, dtype=tf.float32)
+    state.tlast_erosion = tf.Variable(cfg.modules.time.start, dtype=tf.float32)
 
 
 def update(cfg, state):
-    if (state.t - state.tlast_erosion) >= cfg.modules.glerosion.glerosion_update_freq:
+    if (state.t - state.tlast_erosion) >= cfg.modules.glerosion.update_freq:
         if hasattr(state, "logger"):
             state.logger.info(
                 "update topg_glacial_erosion at time : " + str(state.t.numpy())
@@ -55,7 +55,7 @@ def update(cfg, state):
         velbase_mag = getmag(state.U[0], state.V[0])
 
         # apply erosion law, erosion rate is proportional to a power of basal sliding speed
-        dtopgdt = cfg.modules.glerosion.glerosion_cst * (velbase_mag**cfg.modules.glerosion.glerosion_exp)
+        dtopgdt = cfg.modules.glerosion.cst * (velbase_mag**cfg.modules.glerosion.exp)
 
         state.topg = state.topg - (state.t - state.tlast_erosion) * dtopgdt
 

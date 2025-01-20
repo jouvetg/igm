@@ -18,43 +18,43 @@ from igm.modules.particles_v1.particles_v1 import seeding_particles
 # from igm.modules.process.particles_v1.particles_v1 import seeding_particles
 
 
-def params(parser):
-    parser.add_argument(
-        "--part_tracking_method",
-        type=str,
-        default="3d",
-        help="Method for tracking particles (3d or simple)",
-    )
-    parser.add_argument(
-        "--part_frequency_seeding",
-        type=int,
-        default=50,
-        help="Frequency of seeding (unit : year)",
-    )
-    parser.add_argument(
-        "--part_density_seeding",
-        type=float,
-        default=0.2,
-        help="Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)",
-    )
-    parser.add_argument(
-        "--part_tlast_seeding_init",
-        type=int,
-        default=-1.0e5000,
-        help="Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value alouds to differ it",
-    )
+# def params(parser):
+#     parser.add_argument(
+#         "--part_tracking_method",
+#         type=str,
+#         default="3d",
+#         help="Method for tracking particles (3d or simple)",
+#     )
+#     parser.add_argument(
+#         "--part_frequency_seeding",
+#         type=int,
+#         default=50,
+#         help="Frequency of seeding (unit : year)",
+#     )
+#     parser.add_argument(
+#         "--part_density_seeding",
+#         type=float,
+#         default=0.2,
+#         help="Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)",
+#     )
+#     parser.add_argument(
+#         "--part_tlast_seeding_init",
+#         type=int,
+#         default=-1.0e5000,
+#         help="Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value alouds to differ it",
+#     )
 
 
 def initialize(cfg, state):
 
-    if cfg.modules.particles.part_tracking_method == "3d":
+    if cfg.modules.particles.tracking_method == "3d":
         if "vert_flow" not in cfg.modules:
             raise ValueError(
                 "The 'vert_flow' module is required to use the 3d tracking method in the 'particles' module."
             )
 
 
-    state.part_tlast_seeding = cfg.modules.particles.part_tlast_seeding_init
+    state.part_tlast_seeding = cfg.modules.particles.tlast_seeding_init
     state.tcomp_particles = []
 
     # initialize trajectories
@@ -74,7 +74,7 @@ def initialize(cfg, state):
     # build the gridseed, we don't want to seed all pixels!
     state.gridseed = np.zeros_like(state.thk) == 1
     # uniform seeding on the grid
-    rr = int(1.0 / cfg.modules.particles.part_density_seeding)
+    rr = int(1.0 / cfg.modules.particles.density_seeding)
     state.gridseed[::rr, ::rr] = True
 
 
@@ -88,7 +88,7 @@ def update(cfg, state):
 
     if (
         state.t.numpy() - state.tlast_seeding
-    ) >= cfg.modules.particles.part_frequency_seeding:
+    ) >= cfg.modules.particles.frequency_seeding:
 
         seeding_particles(cfg, state)
 
@@ -175,15 +175,15 @@ def update(cfg, state):
 
         zeta = _rhs_to_zeta(cfg, state.particle_r)  # get the position in the column
         I0 = tf.cast(
-            tf.math.floor(zeta * (cfg.modules.iceflow.iceflow.iflo_Nz - 1)),
+            tf.math.floor(zeta * (cfg.modules.iceflow.iceflow.Nz - 1)),
             dtype="int32",
         )
         I0 = tf.minimum(
-            I0, cfg.modules.iceflow.iceflow.iflo_Nz - 2
+            I0, cfg.modules.iceflow.iceflow.Nz - 2
         )  # make sure to not reach the upper-most pt
         I1 = I0 + 1
-        zeta0 = tf.cast(I0 / (cfg.modules.iceflow.iceflow.iflo_Nz - 1), dtype="float32")
-        zeta1 = tf.cast(I1 / (cfg.modules.iceflow.iceflow.iflo_Nz - 1), dtype="float32")
+        zeta0 = tf.cast(I0 / (cfg.modules.iceflow.iceflow.Nz - 1), dtype="float32")
+        zeta1 = tf.cast(I1 / (cfg.modules.iceflow.iceflow.Nz - 1), dtype="float32")
 
         lamb = (zeta - zeta0) / (zeta1 - zeta0)
 
@@ -194,7 +194,7 @@ def update(cfg, state):
         wei = tf.tensor_scatter_nd_add(wei, indices=ind0, updates=1 - lamb)
         wei = tf.tensor_scatter_nd_add(wei, indices=ind1, updates=lamb)
 
-        if cfg.modules.particles.part_tracking_method == "simple":
+        if cfg.modules.particles.tracking_method == "simple":
             # adjust the relative height within the ice column with smb
             state.particle_r = tf.where(
                 thk > 0.1,
@@ -210,7 +210,7 @@ def update(cfg, state):
             )
             state.particle_z = topg + thk * state.particle_r
 
-        elif cfg.modules.particles.part_tracking_method == "3d":
+        elif cfg.modules.particles.tracking_method == "3d":
             # uses the vertical velocity w computed in the vert_flow module
 
             w = interpolate_bilinear_tf(
@@ -282,26 +282,26 @@ def finalize(cfg, state):
 
 
 def _zeta_to_rhs(cfg, zeta):
-    return (zeta / cfg.modules.iceflow.iceflow.iflo_vert_spacing) * (
-        1.0 + (cfg.modules.iceflow.iceflow.iflo_vert_spacing - 1.0) * zeta
+    return (zeta / cfg.modules.iceflow.iceflow.vert_spacing) * (
+        1.0 + (cfg.modules.iceflow.iceflow.vert_spacing - 1.0) * zeta
     )
 
 
 def _rhs_to_zeta(cfg, rhs):
-    if cfg.modules.iceflow.iceflow.iflo_vert_spacing == 1:
+    if cfg.modules.iceflow.iceflow.vert_spacing == 1:
         rhs = zeta
     else:
         DET = tf.sqrt(
             1
             + 4
-            * (cfg.modules.iceflow.iceflow.iflo_vert_spacing - 1)
-            * cfg.modules.iceflow.iceflow.iflo_vert_spacing
+            * (cfg.modules.iceflow.iceflow.vert_spacing - 1)
+            * cfg.modules.iceflow.iceflow.vert_spacing
             * rhs
         )
-        zeta = (DET - 1) / (2 * (cfg.modules.iceflow.iceflow.iflo_vert_spacing - 1))
+        zeta = (DET - 1) / (2 * (cfg.modules.iceflow.iceflow.vert_spacing - 1))
 
-    #           temp = cfg.modules.iceflow.iceflow.iflo_Nz*(DET-1)/(2*(cfg.modules.iceflow.iceflow.iflo_vert_spacing-1))
-    #           I=tf.cast(tf.minimum(temp-1,cfg.modules.iceflow.iceflow.iflo_Nz-1),dtype='int32')
+    #           temp = cfg.modules.iceflow.iceflow.Nz*(DET-1)/(2*(cfg.modules.iceflow.iceflow.vert_spacing-1))
+    #           I=tf.cast(tf.minimum(temp-1,cfg.modules.iceflow.iceflow.Nz-1),dtype='int32')
 
     return zeta
 

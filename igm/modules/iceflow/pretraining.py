@@ -22,21 +22,21 @@ def pretraining(cfg, state):
     state.direct_name = (
         "pinnbp"
         + "_"
-        + str(cfg.iceflow.iceflow.iflo_Nz)
+        + str(cfg.modules.iceflow.iceflow.Nz)
         + "_"
-        + str(int(cfg.iceflow.iflo_vert_spacing))
-        + "_"
-    )
-    state.direct_name += (
-        cfg.iceflow.iflo_network
-        + "_"
-        + str(cfg.iceflow.iflo_nb_layers)
-        + "_"
-        + str(cfg.iceflow.iflo_nb_out_filter)
+        + str(int(cfg.modules.iceflow.iceflow.vert_spacing))
         + "_"
     )
     state.direct_name += (
-        str(cfg.iceflow.iflo_dim_arrhenius) + "_" + str(int(cfg.iceflow.iflo_new_friction_param))
+        cfg.modules.iceflow.iceflow.network
+        + "_"
+        + str(cfg.modules.iceflow.iceflow.nb_layers)
+        + "_"
+        + str(cfg.modules.iceflow.iceflow.nb_out_filter)
+        + "_"
+    )
+    state.direct_name += (
+        str(cfg.modules.iceflow.iceflow.dim_arrhenius) + "_" + str(int(cfg.modules.iceflow.iceflow.new_friction_param))
     )
 
     os.makedirs( state.direct_name, exist_ok=True)
@@ -48,31 +48,31 @@ def pretraining(cfg, state):
     )
 
     subdatasetname_train, subdatasetpath_train = _findsubdata(
-        os.path.join(cfg.iceflow.pretraining.pret_data_dir, "train")
+        os.path.join(cfg.modules.iceflow.pretraining.data_dir, "train")
     )
 
     subdatasetname_test, subdatasetpath_test = _findsubdata(
-        os.path.join(cfg.iceflow.pretraining.pret_data_dir, "test")
+        os.path.join(cfg.modules.iceflow.pretraining.data_dir, "test")
     )
 
     for p in subdatasetpath_test:
         state.PAR = []
         it = 3
-        midva2 = 0.50 * cfg.iceflow.pretraining.pret_min_arrhenius + 0.50 * cfg.iceflow.pretraining.pret_max_arrhenius
-        midvs2 = 0.50 * cfg.iceflow.pretraining.pret_min_slidingco + 0.50 * cfg.iceflow.pretraining.pret_max_slidingco
-        state.PAR.append([p, it, midva2, midvs2, cfg.iceflow.pretraining.pret_min_coarsen])
-        if cfg.iceflow.pretraining.pret_min_arrhenius < cfg.iceflow.pretraining.pret_max_arrhenius:
-            midva1 = 0.25 * cfg.iceflow.pretraining.pret_min_arrhenius + 0.75 * cfg.iceflow.pretraining.pret_max_arrhenius
-            midva3 = 0.75 * cfg.iceflow.pretraining.pret_min_arrhenius + 0.25 * cfg.iceflow.pretraining.pret_max_arrhenius
-            state.PAR.append([p, it, midva1, midvs2, cfg.iceflow.pretraining.pret_min_coarsen])
-            state.PAR.append([p, it, midva3, midvs2, cfg.iceflow.pretraining.pret_min_coarsen])
-        if cfg.iceflow.pretraining.pret_min_slidingco < cfg.iceflow.pretraining.pret_max_slidingco:
-            midvs1 = 0.25 * cfg.iceflow.pretraining.pret_min_slidingco + 0.75 * cfg.iceflow.pretraining.pret_max_slidingco
-            midvs3 = 0.75 * cfg.iceflow.pretraining.pret_min_slidingco + 0.25 * cfg.iceflow.pretraining.pret_max_slidingco
-            state.PAR.append([p, it, midva2, midvs1, cfg.iceflow.pretraining.pret_min_coarsen])
-            state.PAR.append([p, it, midva2, midvs3, cfg.iceflow.pretraining.pret_min_coarsen])
-        if cfg.iceflow.pretraining.pret_min_coarsen < cfg.iceflow.pretraining.pret_max_coarsen:
-            state.PAR.append([p, it, midva2, midvs2, cfg.iceflow.pretraining.pret_min_coarsen + 1])
+        midva2 = 0.50 * cfg.modules.iceflow.pretraining.min_arrhenius + 0.50 * cfg.modules.iceflow.pretraining.max_arrhenius
+        midvs2 = 0.50 * cfg.modules.iceflow.pretraining.min_slidingco + 0.50 * cfg.modules.iceflow.pretraining.max_slidingco
+        state.PAR.append([p, it, midva2, midvs2, cfg.modules.iceflow.pretraining.min_coarsen])
+        if cfg.modules.iceflow.pretraining.min_arrhenius < cfg.modules.iceflow.pretraining.max_arrhenius:
+            midva1 = 0.25 * cfg.modules.iceflow.pretraining.min_arrhenius + 0.75 * cfg.modules.iceflow.pretraining.max_arrhenius
+            midva3 = 0.75 * cfg.modules.iceflow.pretraining.min_arrhenius + 0.25 * cfg.modules.iceflow.pretraining.max_arrhenius
+            state.PAR.append([p, it, midva1, midvs2, cfg.modules.iceflow.pretraining.min_coarsen])
+            state.PAR.append([p, it, midva3, midvs2, cfg.modules.iceflow.pretraining.min_coarsen])
+        if cfg.modules.iceflow.pretraining.min_slidingco < cfg.modules.iceflow.pretraining.max_slidingco:
+            midvs1 = 0.25 * cfg.modules.iceflow.pretraining.min_slidingco + 0.75 * cfg.modules.iceflow.pretraining.max_slidingco
+            midvs3 = 0.75 * cfg.modules.iceflow.pretraining.min_slidingco + 0.25 * cfg.modules.iceflow.pretraining.max_slidingco
+            state.PAR.append([p, it, midva2, midvs1, cfg.modules.iceflow.pretraining.min_coarsen])
+            state.PAR.append([p, it, midva2, midvs3, cfg.modules.iceflow.pretraining.min_coarsen])
+        if cfg.modules.iceflow.pretraining.min_coarsen < cfg.modules.iceflow.pretraining.max_coarsen:
+            state.PAR.append([p, it, midva2, midvs2, cfg.modules.iceflow.pretraining.min_coarsen + 1])
 
     compute_solutions(cfg, state)
 
@@ -93,11 +93,11 @@ def compute_solutions(cfg, state):
 
     if int(tf.__version__.split(".")[1]) <= 10:
         state.optimizer = tf.keras.optimizers.Adam(
-            learning_rate=cfg.iceflow.iflo_solve_step_size
+            learning_rate=cfg.modules.iceflow.iceflow.solve_step_size
         )
     else:
         state.optimizer = tf.keras.optimizers.legacy.Adam(
-            learning_rate=cfg.iceflow.iflo_solve_step_size
+            learning_rate=cfg.modules.iceflow.iceflow.solve_step_size
         )
 
     for par in state.PAR:
@@ -113,25 +113,25 @@ def compute_solutions(cfg, state):
         resol = float((x[1] - x[0]) * co)
         dX = tf.ones_like(thk) * resol
 
-        if cfg.iceflow.iflo_dim_arrhenius == 3:
-            arrhenius = tf.ones((cfg.iceflow.iflo_Nz, thk.shape[0], thk.shape[1])) * val_A
+        if cfg.modules.iceflow.iceflow.dim_arrhenius == 3:
+            arrhenius = tf.ones((cfg.modules.iceflow.iceflow.Nz, thk.shape[0], thk.shape[1])) * val_A
         else:
             arrhenius = tf.ones_like(thk) * val_A
 
         slidingco = tf.ones_like(thk) * val_C
 
-        for f in cfg.iceflow.iflo_fieldin:
+        for f in cfg.modules.iceflow.iceflow.fieldin:
             vars(state)[f] = vars()[f]
 
         fieldin = [thk, usurf, arrhenius, slidingco, dX]
 
-        X = fieldin_to_X(cfg.iceflow, fieldin)
+        X = fieldin_to_X(cfg, fieldin)
 
         U = tf.Variable(
-            tf.zeros((cfg.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+            tf.zeros((cfg.modules.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
         )
         V = tf.Variable(
-            tf.zeros((cfg.iceflow.iflo_Nz, state.thk.shape[0], state.thk.shape[1]))
+            tf.zeros((cfg.modules.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
         )
 
         U, V, MISFIT = solve_iceflow(cfg, state, U, V)
@@ -184,17 +184,17 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
 
     import random
 
-    nb_inputs = len(cfg.iceflow.iceflow.iflo_fieldin) + (cfg.iceflow.iceflow.iflo_dim_arrhenius == 3) * (
-        cfg.iceflow.iceflow.iflo_Nz - 1
+    nb_inputs = len(cfg.modules.iceflow.iceflow.fieldin) + (cfg.modules.iceflow.iceflow.dim_arrhenius == 3) * (
+        cfg.modules.iceflow.iceflow.Nz - 1
     )
-    nb_outputs = 2 * cfg.iceflow.iceflow.iflo_Nz
+    nb_outputs = 2 * cfg.modules.iceflow.iceflow.Nz
 
     if os.path.exists("model0.h5"):
         state.iceflow_model = tf.keras.models.load_model("model0.h5", compile=False)
     else:
-        if cfg.iceflow.iceflow.iflo_network=='cnn':
+        if cfg.modules.iceflow.iceflow.network=='cnn':
             state.iceflow_model = cnn(cfg, nb_inputs, nb_outputs)
-        elif cfg.iceflow.iceflow.iflo_network=='unet':
+        elif cfg.modules.iceflow.iceflow.network=='unet':
             state.iceflow_model = unet(cfg, nb_inputs, nb_outputs)
 
     state.iceflow_model.summary(line_length=130)
@@ -202,11 +202,11 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
     # fix change in TF btw version <=10 and version >=11
     if int(tf.__version__.split(".")[1]) <= 10:
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate=cfg.iceflow.iceflow.iflo_retrain_emulator_lr
+            learning_rate=cfg.modules.iceflow.iceflow.retrain_emulator_lr
         )
     else:
         optimizer = tf.keras.optimizers.legacy.Adam(
-            learning_rate=cfg.iceflow.iceflow.iflo_retrain_emulator_lr
+            learning_rate=cfg.modules.iceflow.iceflow.retrain_emulator_lr
         )
 
     state.MISFIT = []
@@ -214,7 +214,7 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
 
     define_vertical_weight(cfg, state)
 
-    for epoch in range(cfg.iceflow.pretraining.pret_epochs):
+    for epoch in range(cfg.modules.iceflow.pretraining.epochs):
         nsub = list(trainingset)
         random.shuffle(nsub)
 
@@ -223,7 +223,7 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
 
             rec = ds.dims["time"]
 
-            bs = cfg.iceflow.pretraining.pret_batch_size
+            bs = cfg.modules.iceflow.pretraining.batch_size
 
             st = rec // bs
 
@@ -241,26 +241,26 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
             else:
                 ri = tf.constant([0, 0, 0, 0])
 
-            if (cfg.iceflow.pretraining.pret_soft_begining > 0) & (cfg.iceflow.pretraining.pret_soft_begining < epoch):
+            if (cfg.modules.iceflow.pretraining.soft_begining > 0) & (cfg.modules.iceflow.pretraining.soft_begining < epoch):
                 co = int(
                     2
                     ** tf.random.uniform(
                         shape=[1],
-                        minval=cfg.iceflow.pretraining.pret_min_coarsen,
-                        maxval=cfg.iceflow.pretraining.pret_max_coarsen,
+                        minval=cfg.modules.iceflow.pretraining.min_coarsen,
+                        maxval=cfg.modules.iceflow.pretraining.max_coarsen,
                         dtype=tf.int32,
                     )
                 )
                 val_A = tf.random.uniform(
-                    shape=[1], minval=cfg.iceflow.pretraining.pret_min_arrhenius, maxval=cfg.iceflow.pretraining.pret_max_arrhenius
+                    shape=[1], minval=cfg.modules.iceflow.pretraining.min_arrhenius, maxval=cfg.modules.iceflow.pretraining.max_arrhenius
                 )
                 val_C = tf.random.uniform(
-                    shape=[1], minval=cfg.iceflow.pretraining.pret_min_slidingco, maxval=cfg.iceflow.pretraining.pret_max_slidingco
+                    shape=[1], minval=cfg.modules.iceflow.pretraining.min_slidingco, maxval=cfg.modules.iceflow.pretraining.max_slidingco
                 )
             else:
-                co = int(2**cfg.iceflow.pretraining.pret_min_coarsen)
-                val_A = (cfg.iceflow.pretraining.pret_min_arrhenius + cfg.iceflow.pretraining.pret_max_arrhenius) / 2
-                val_C = (cfg.iceflow.pretraining.pret_min_slidingco + cfg.iceflow.pretraining.pret_max_slidingco) / 2
+                co = int(2**cfg.modules.iceflow.pretraining.min_coarsen)
+                val_A = (cfg.modules.iceflow.pretraining.min_arrhenius + cfg.modules.iceflow.pretraining.max_arrhenius) / 2
+                val_C = (cfg.modules.iceflow.pretraining.min_slidingco + cfg.modules.iceflow.pretraining.max_slidingco) / 2
 
             thk = _aug(
                 tf.expand_dims(
@@ -282,8 +282,8 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
             
             PAD = compute_PAD(cfg,nx,ny)
 
-            if cfg.iceflow.iceflow.iflo_dim_arrhenius == 3:
-                arrhenius = tf.ones((1, cfg.iceflow.iceflow.iflo_Nz, ny, nx)) * val_A
+            if cfg.modules.iceflow.iceflow.dim_arrhenius == 3:
+                arrhenius = tf.ones((1, cfg.modules.iceflow.iceflow.Nz, ny, nx)) * val_A
             else:
                 arrhenius = tf.ones_like(thk) * val_A
 
@@ -316,18 +316,18 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
 
             ds.close()
 
-        if cfg.iceflow.pretraining.pret_train_iceflow_emulator_restart_lr > 0:
-            optimizer.lr = cfg.iceflow.iceflow.iflo_retrain_emulator_lr * (
-                0.9 ** ((epoch % cfg.iceflow.pretraining.pret_train_iceflow_emulator_restart_lr) / 100)
+        if cfg.modules.iceflow.pretraining.train_iceflow_emulator_restart_lr > 0:
+            optimizer.lr = cfg.modules.iceflow.iceflow.retrain_emulator_lr * (
+                0.9 ** ((epoch % cfg.modules.iceflow.pretraining.train_iceflow_emulator_restart_lr) / 100)
             )
         else:
-            optimizer.lr = cfg.iceflow.iceflow.iflo_retrain_emulator_lr * (0.9 ** (epoch / 100))
+            optimizer.lr = cfg.modules.iceflow.iceflow.retrain_emulator_lr * (0.9 ** (epoch / 100))
 
-        if epoch % (cfg.iceflow.pretraining.pret_epochs // 5) == 0:
+        if epoch % (cfg.modules.iceflow.pretraining.epochs // 5) == 0:
             pp = os.path.join( state.direct_name, "model-" + str(epoch) + ".h5" )
             state.iceflow_model.save(pp)
 
-        if epoch % cfg.iceflow.pretraining.pret_freq_test == 0:
+        if epoch % cfg.modules.iceflow.pretraining.freq_test == 0:
             # Run a validation loop at the end of each epoch.
 
             MIS = []
@@ -373,7 +373,7 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
                 
                 nl1, nl2, nbarl1, nbarl1a = _computemisfitall(cfg, state, X, Y, YP)
 
-                if epoch % (cfg.iceflow.pretraining.pret_epochs // 20) == 0:
+                if epoch % (cfg.modules.iceflow.pretraining.epochs // 20) == 0:
                     _plot_iceflow_Glen(
                         cfg, state, X, Y, YP, str(epoch).zfill(5), path
                     )
@@ -424,7 +424,7 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
             + str(int(par[4]))
         )
         plt.plot(
-            cfg.iceflow.pretraining.pret_freq_test * np.arange(state.MISFIT.shape[0]),
+            cfg.modules.iceflow.pretraining.freq_test * np.arange(state.MISFIT.shape[0]),
             state.MISFIT[:, l],
             label="MISFIT " + code,
         )
@@ -451,7 +451,7 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
             + str(int(par[4]))
         )
         plt.plot(
-            cfg.iceflow.pretraining.pret_freq_test * np.arange(state.MISFIT_CO.shape[0]),
+            cfg.modules.iceflow.pretraining.freq_test * np.arange(state.MISFIT_CO.shape[0]),
             state.MISFIT_CO[:, l],
             label="MISFIT " + code,
         )
@@ -476,13 +476,13 @@ def _computenormp(dz, u, v, p):
 
 
 def _computemisfitall(cfg, state, X, Y, YP):
-    N = cfg.iceflow.iceflow.iflo_Nz
+    N = cfg.modules.iceflow.iceflow.Nz
     thk = X[0, :, :, 0]
 
     # Vertical discretization
-    zeta = np.arange(cfg.iceflow.iceflow.iflo_Nz) / (cfg.iceflow.iceflow.iflo_Nz - 1)
-    temp = (zeta / cfg.iceflow.iceflow.iflo_vert_spacing) * (
-        1.0 + (cfg.iceflow.iceflow.iflo_vert_spacing - 1.0) * zeta
+    zeta = np.arange(cfg.modules.iceflow.iceflow.Nz) / (cfg.modules.iceflow.iceflow.Nz - 1)
+    temp = (zeta / cfg.modules.iceflow.iceflow.vert_spacing) * (
+        1.0 + (cfg.modules.iceflow.iceflow.vert_spacing - 1.0) * zeta
     )
     temp = temp[1:] - temp[:-1]
     dz = tf.stack([thk * z for z in temp])
@@ -538,7 +538,7 @@ def _plot_one_Glen(cfg, X, Y, path):
 
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-    #    N    = cfg.iceflow.iceflow.iflo_Nz
+    #    N    = cfg.modules.iceflow.iceflow.Nz
     #    ut   = Y[0,:,:,N-1] ; #tf.reduce_mean( Y[0,:,:,:N] , axis=-1)
     #    vt   = Y[0,:,:,2*N-1]  ; #tf.reduce_mean( Y[0,:,:,N:] , axis=-1)
 
@@ -580,7 +580,7 @@ def _plot_iceflow_Glen(cfg, state, X, Y, YP, tit, path):
 
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-    #    N    = cfg.iceflow.iceflow.iflo_Nz
+    #    N    = cfg.modules.iceflow.iceflow.Nz
 
     #    ut   = Y[0,:,:,N-1] ; #tf.reduce_mean( Y[0,:,:,:N] , axis=-1)
     #    vt   = Y[0,:,:,2*N-1]  ; #tf.reduce_mean( Y[0,:,:,N:] , axis=-1)

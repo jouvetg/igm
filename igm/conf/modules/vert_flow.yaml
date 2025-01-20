@@ -1,2 +1,2 @@
 vert_flow:
-  vflo_method: kinematic # help="Method to retrive the vertical velocity (kinematic, incompressibility)"
+  method: kinematic # help="Method to retrive the vertical velocity (kinematic, incompressibility)"

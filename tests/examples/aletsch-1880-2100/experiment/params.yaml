@@ -16,38 +16,38 @@ hydra:
 
 input:
   load_ncdf:
-    lncd_input_file: data/input.nc
+    input_file: data/input.nc
 
 modules:
   iceflow:
     iceflow:
-      iflo_init_slidingco: 0.0595
+      init_slidingco: 0.0595
   time:
-    time_start: 1880.0
-    time_end: 2020.0
-    time_save: 5.0
+    start: 1880.0
+    end: 2020.0
+    save: 5.0
   smb_accmelt:
-    smb_simple_update_freq: 1
+    update_freq: 1
     weight_ablation: 1.25
     weight_accumulation: 1.0
-    smb_accpdd_thr_temp_snow: 0.5
-    smb_accpdd_thr_temp_rain: 2.5
-    smb_accpdd_shift_hydro_year: 0.75
-    smb_accmelt_ice_density: 910.0
-    smb_accmelt_wat_density: 1000.0
+    thr_temp_snow: 0.5
+    thr_temp_rain: 2.5
+    shift_hydro_year: 0.75
+    ice_density: 910.0
+    wat_density: 1000.0
     weight_Aletschfirn: 1.0
     weight_Jungfraufirn: 1.0
     weight_Ewigschneefeld: 1.0
   particles:
-    part_frequency_seeding: 500
-    part_tracking_method: simple
-    part_density_seeding: 0.2
+    frequency_seeding: 500
+    tracking_method: simple
+    density_seeding: 0.2
   clim_aletsch:
-    clim_update_freq: 1
-    clim_time_resolution: 365
+    update_freq: 1
+    time_resolution: 365
   track_usurf_obs: null
   age_of_ice: null
 
 output:
   plot2d:
-    plt2d_live: true
+    live: true

@@ -1,3 +1,3 @@
 avalanche:
-  avalanche_update_freq: 1/0 # help="Update avalanche each X years (1)"
-  avalanche_angleOfRepose: 30.0 # help="Angle of repose (30°)"
+  update_freq: 1/0 # help="Update avalanche each X years (1)"
+  angleOfRepose: 30.0 # help="Angle of repose (30°)"

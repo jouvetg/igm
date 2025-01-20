@@ -13,48 +13,48 @@ import json
 from igm.modules.utils import interp1d_tf
 
 
-def params(parser):
-    # CLIMATE PARAMETERS
-    parser.add_argument(
-        "--clim_oggm_update_freq",
-        type=float,
-        default=1,
-        help="Update the climate each X years",
-    )
-    parser.add_argument(
-        "--clim_oggm_file",
-        type=str,
-        default="clim_oggm_file.txt",
-        help="Name of the imput file for the climate outide the given datatime frame (time, delta_temp, prec_scali)",
-    )
-    parser.add_argument(
-        "--clim_oggm_clim_trend_array",
-        type=list,
-        default=[
-            ["time", "delta_temp", "prec_scal"],
-            [1900, 0.0, 1.0],
-            [2020, 0.0, 1.0],
-        ],
-        help="Define climate trend outside available time window",
-    )
-    parser.add_argument(
-        "--clim_oggm_ref_period",
-        type=list,
-        default=[1960, 1990],
-        help="Define the reference period to pick year outside available time window",
-    )
-    parser.add_argument(
-        "--clim_oggm_seed_par",
-        type=list,
-        default=123,
-        help="Seeding parameter to fix for pickying randomly yer in the ref period",
-    )
+# def params(parser):
+#     # CLIMATE PARAMETERS
+#     parser.add_argument(
+#         "--clim_oggm_update_freq",
+#         type=float,
+#         default=1,
+#         help="Update the climate each X years",
+#     )
+#     parser.add_argument(
+#         "--clim_oggm_file",
+#         type=str,
+#         default="clim_oggm_file.txt",
+#         help="Name of the imput file for the climate outide the given datatime frame (time, delta_temp, prec_scali)",
+#     )
+#     parser.add_argument(
+#         "--clim_oggm_clim_trend_array",
+#         type=list,
+#         default=[
+#             ["time", "delta_temp", "prec_scal"],
+#             [1900, 0.0, 1.0],
+#             [2020, 0.0, 1.0],
+#         ],
+#         help="Define climate trend outside available time window",
+#     )
+#     parser.add_argument(
+#         "--clim_oggm_ref_period",
+#         type=list,
+#         default=[1960, 1990],
+#         help="Define the reference period to pick year outside available time window",
+#     )
+#     parser.add_argument(
+#         "--clim_oggm_seed_par",
+#         type=list,
+#         default=123,
+#         help="Seeding parameter to fix for pickying randomly yer in the ref period",
+#     )
 
 
 def initialize(cfg, state):
     # load the given parameters from the json file
     
-    with open(os.path.join(cfg.input.oggm_shop.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
+    with open(os.path.join(cfg.input.oggm_shop.RGI_ID, "mb_calib.json"), "r") as json_file:
         jsonString = json_file.read()
 
     oggm_mb_calib = json.loads(jsonString)
@@ -70,7 +70,7 @@ def initialize(cfg, state):
 
     # load climate data from netcdf file climate_historical.nc
     nc = Dataset(
-        os.path.join(cfg.input.oggm_shop.oggm_RGI_ID, "climate_historical.nc")
+        os.path.join(cfg.input.oggm_shop.RGI_ID, "climate_historical.nc")
     )
 
     time = np.squeeze(nc.variables["time"]).astype("float32")  # unit : year
@@ -117,22 +117,22 @@ def initialize(cfg, state):
     state.tlast_clim_oggm = tf.Variable(-(10**10), dtype="float32", trainable=False)
     state.tcomp_clim_oggm = []
 
-    if cfg.modules.clim_oggm.clim_oggm_clim_trend_array == []:
+    if cfg.modules.clim_oggm.clim_trend_array == []:
         state.climpar = np.loadtxt(
-            cfg.modules.clim_oggm.clim_oggm_file, # ! does this exist? if not, I will set it...
+            cfg.modules.clim_oggm.file, # ! does this exist? if not, I will set it...
             skiprows=1,
             dtype=np.float32,
         )
     else:
-        state.climpar = np.array(cfg.modules.clim_oggm.clim_oggm_clim_trend_array[1:]).astype(
+        state.climpar = np.array(cfg.modules.clim_oggm.clim_trend_array[1:]).astype(
             np.float32
         )
 
-    np.random.seed(cfg.modules.clim_oggm.clim_oggm_seed_par)  # fix the seed
+    np.random.seed(cfg.modules.clim_oggm.seed_par)  # fix the seed
 
 
 def update(cfg, state):
-    if (state.t - state.tlast_clim_oggm) >= cfg.modules.clim_oggm.clim_oggm_update_freq:
+    if (state.t - state.tlast_clim_oggm) >= cfg.modules.clim_oggm.update_freq:
         if hasattr(state, "logger"):
             state.logger.info("update climate at time : " + str(state.t.numpy()))
 
@@ -146,7 +146,7 @@ def update(cfg, state):
             delta_temp = 0.0
             prec_scal = 1.0
         else:
-            i0, i1 = np.round(cfg.modules.clim_oggm.clim_oggm_ref_period - state.yr_0)
+            i0, i1 = np.round(cfg.modules.clim_oggm.ref_period - state.yr_0)
             II = np.random.randint(i0, i1)
             delta_temp = interp1d_tf(state.climpar[:, 0], state.climpar[:, 1], state.t)
             prec_scal = interp1d_tf(state.climpar[:, 0], state.climpar[:, 2], state.t)

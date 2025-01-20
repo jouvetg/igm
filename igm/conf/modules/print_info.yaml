@@ -1,2 +1,2 @@
 print_info:
-  print_mem_info: False
+  mem_info: False

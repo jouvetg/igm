@@ -1,12 +1,12 @@
 load_tif:
-  ltif_coarsen: 1 # help="coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points"
-  ltif_crop: "False" # help="Crop the data with xmin, xmax, ymin, ymax (default: False)"
-  ltif_xmin: -1e20 # help="crop_xmin"
-  # ltif_xmin: -10**20 # help="crop_xmin" # careful -> this notation does not work with yaml, use the 1e notation...
-  ltif_xmax: 1e20 # help="crop_xmax"
-  ltif_ymin: -1e20 # help="crop_ymin"
-  ltif_ymax: 1e20 # help="crop_ymax"
-  ltif_folder: "" # help="ltif_folder"
-  ltif_icemask_include: False # help="Include ice mask in the NetCDF file"
-  ltif_icemask_shapefile: icemask.shp # help="Shapefile for ice mask"
-  ltif_icemask_invert: False # help="Invert the ice mask"
+  coarsen: 1 # help="coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points"
+  crop: "False" # help="Crop the data with xmin, xmax, ymin, ymax (default: False)"
+  xmin: -1e20 # help="crop_xmin"
+  # xmin: -10**20 # help="crop_xmin" # careful -> this notation does not work with yaml, use the 1e notation...
+  xmax: 1e20 # help="crop_xmax"
+  ymin: -1e20 # help="crop_ymin"
+  ymax: 1e20 # help="crop_ymax"
+  folder: "" # help="folder"
+  icemask_include: False # help="Include ice mask in the NetCDF file"
+  icemask_shapefile: icemask.shp # help="Shapefile for ice mask"
+  icemask_invert: False # help="Invert the ice mask"

@@ -21,7 +21,7 @@ def initialize(cfg, state):
 
     os.system("echo rm -r " + "trajectories" + " >> clean.sh")
 
-    if cfg.output.write_particles.wpar_add_topography:
+    if cfg.output.write_particles.add_topography:
         ftt = os.path.join("trajectories", "topg.csv")
         array = tf.transpose(
             tf.stack(
@@ -67,7 +67,7 @@ def run(cfg, state):
         with open(ft, "a") as f:
             print(state.t.numpy(), file=f)
 
-        if cfg.output.write_particles.wpar_add_topography:
+        if cfg.output.write_particles.add_topography:
             ftt = os.path.join(
                 "trajectories",
                 "usurf-" + "{:06d}".format(int(state.t.numpy())) + ".csv",

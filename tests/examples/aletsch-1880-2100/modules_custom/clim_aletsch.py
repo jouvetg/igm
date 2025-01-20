@@ -13,13 +13,13 @@ def params(parser):
 
     # CLIMATE PARAMETERS
     parser.add_argument(
-        "--clim_update_freq",
+        "--update_freq",
         type=float,
         default=1,
         help="Update the climate each X years (default: 1)",
     )
     parser.add_argument(
-        "--clim_time_resolution",
+        "--time_resolution",
         type=float,
         default=365,
         help="Give the resolution the climate forcing should be (monthly=12, daily=365)",
@@ -58,7 +58,7 @@ def  initialize(cfg,state):
         state.year[k] = y
 
     # this make monthly temp and prec if this is wished
-    if cfg.modules.clim_aletsch.clim_time_resolution==12:
+    if cfg.modules.clim_aletsch.time_resolution==12:
         II = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 364]
         state.prec = np.stack([np.mean(state.prec[II[i]:II[i+1]],axis=0) 
                                 for i in range(0,12) ] )
@@ -84,7 +84,7 @@ def  initialize(cfg,state):
 
 def update(cfg,state):
 
-    if ((state.t - state.tlast_clim_aletsch) >= cfg.modules.clim_aletsch.clim_update_freq):
+    if ((state.t - state.tlast_clim_aletsch) >= cfg.modules.clim_aletsch.update_freq):
 
         if hasattr(state, "logger"):
             state.logger.info("update climate at time : " + str(state.t.numpy()))

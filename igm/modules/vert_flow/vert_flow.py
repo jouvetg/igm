@@ -28,7 +28,7 @@ def update(cfg, state):
 
     state.tcomp_vert_flow.append(time.time())
 
-    if cfg.modules.vert_flow.vflo_method == "kinematic":
+    if cfg.modules.vert_flow.method == "kinematic":
         state.W = _compute_vertical_velocity_kinematic(cfg, state)
     else:
         state.W = _compute_vertical_velocity_incompressibility(cfg, state)
@@ -46,7 +46,7 @@ def finalize(cfg, state):
 
 def _compute_vertical_velocity_kinematic(cfg, state):
 
-    dz = vertical_disc_tf(state.thk, cfg.modules.iceflow.iceflow.iflo_Nz, cfg.modules.iceflow.iceflow.iflo_vert_spacing)
+    dz = vertical_disc_tf(state.thk, cfg.modules.iceflow.iceflow.Nz, cfg.modules.iceflow.iceflow.vert_spacing)
 
     W = compute_w_kinematic_tf(state.U,state.V,state.topg,state.thk,dz,state.dx,state.vert_weight)
 
@@ -65,7 +65,7 @@ def compute_w_kinematic_tf(U,V,topg,thk,dz,dx,vert_weight):
 
 def _compute_vertical_velocity_incompressibility(cfg, state):
 
-    dz = vertical_disc_tf(state.thk, cfg.modules.iceflow.iceflow.iflo_Nz, cfg.modules.iceflow.iceflow.iflo_vert_spacing)
+    dz = vertical_disc_tf(state.thk, cfg.modules.iceflow.iceflow.Nz, cfg.modules.iceflow.iceflow.vert_spacing)
     dz = tf.concat([tf.expand_dims(tf.zeros_like(state.thk),0),dz],axis=0)
     Z = tf.cumsum(dz) + state.topg
     sloptopgx, sloptopgy = compute_gradient_tf(state.topg,state.dX,state.dX)

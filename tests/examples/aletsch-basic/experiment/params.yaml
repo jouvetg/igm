@@ -28,29 +28,29 @@ input:
         x: 1
         y: 1
   # load_ncdf:
-  #   lncd_input_file: data/input.nc
-  #   lncd_method_coarsen: skipping
-  #   lncd_coarsen: 1
-  #   lncd_crop: False
-  #   lncd_xmin: -1e20
-  #   lncd_xmax: 1e20
-  #   lncd_ymin: -1e20
-  #   lncd_ymax: 1e20
+  #   input_file: data/input.nc
+  #   method_coarsen: skipping
+  #   coarsen: 1
+  #   crop: False
+  #   xmin: -1e20
+  #   xmax: 1e20
+  #   ymin: -1e20
+  #   ymax: 1e20
 
 modules:
   smb_simple:
-    smb_simple_array:
+    array:
       - ["time", "gradabl", "gradacc", "ela", "accmax"]
       - [1900, 0.009, 0.005, 2800, 2.0]
       - [2000, 0.009, 0.005, 2900, 2.0]
       - [2100, 0.009, 0.005, 3300, 2.0]
   time:
-    time_start: 1900.0
-    time_end: 2000.0
-    time_save: 10.0
+    start: 1900.0
+    end: 2000.0
+    save: 10.0
     
 output:
   plot2d:
-    plt2d_live: False
+    live: False
     
     

@@ -19,12 +19,12 @@ def run(cfg, state):
     import json
 
     # Fetch the data from OGGM
-    if not os.path.exists(cfg.input.oggm_shop.oggm_RGI_ID):
-        _oggm_util([cfg.input.oggm_shop.oggm_RGI_ID], cfg)
+    if not os.path.exists(cfg.input.oggm_shop.RGI_ID):
+        _oggm_util([cfg.input.oggm_shop.RGI_ID], cfg)
 
-    ncpath = os.path.join(cfg.input.oggm_shop.oggm_RGI_ID, "gridded_data.nc")
+    ncpath = os.path.join(cfg.input.oggm_shop.RGI_ID, "gridded_data.nc")
     if not os.path.exists(ncpath):
-        msg = f'OGGM data issue with glacier {cfg.input.oggm_shop.oggm_RGI_ID}'
+        msg = f'OGGM data issue with glacier {cfg.input.oggm_shop.RGI_ID}'
         if hasattr(state, "logger"):
             state.logger.info(msg)
         else:
@@ -49,16 +49,16 @@ def run(cfg, state):
     #maximum threshold will cause IGM to skip execution and move on to the next one
     #(only relevant if using igm_run_batch, hence why I've not made it a parameter yet)
     # if len(x)*len(y) >= 160000:
-    #     print('Skipping this one: '+cfg.input.oggm_shop.oggm_RGI_ID)
+    #     print('Skipping this one: '+cfg.input.oggm_shop.RGI_ID)
     #     return
 
     try:
-        thk = np.flipud(np.squeeze(nc.variables[cfg.input.oggm_shop.oggm_thk_source]).astype("float32"))
+        thk = np.flipud(np.squeeze(nc.variables[cfg.input.oggm_shop.thk_source]).astype("float32"))
         thk = np.where(np.isnan(thk), 0, thk)
     except:
         thk = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
         thk = np.where(True,0,0)
-        print('Thickness 0 everywhere?: '+cfg.input.oggm_shop.oggm_RGI_ID)
+        print('Thickness 0 everywhere?: '+cfg.input.oggm_shop.RGI_ID)
 
     usurf = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
     usurfobs = np.flipud(np.squeeze(nc.variables["topo"]).astype("float32"))
@@ -66,8 +66,8 @@ def run(cfg, state):
     #This will set up some additional masks that are necessary for infer_params in optimize.
     #One of individually numbered RGI7.0G entities within each RGI7.0C and one for which entities
     #(for any RGI version used) are tidewater glaciers as identified in the RGI
-    if cfg.input.oggm_shop.oggm_sub_entity_mask == True:
-        if cfg.input.oggm_shop.oggm_RGI_product == "C":
+    if cfg.input.oggm_shop.sub_entity_mask == True:
+        if cfg.input.oggm_shop.RGI_product == "C":
             icemask = np.flipud(np.squeeze(nc.variables["sub_entities"]).astype("float32"))
             icemaskobs = np.flipud(np.squeeze(nc.variables["sub_entities"]).astype("float32"))
             icemask = np.where(icemask > -1, icemask+1, icemask)
@@ -79,14 +79,14 @@ def run(cfg, state):
             icemaskobs = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
             tidewatermask = icemask.copy()
             slopes = icemask.copy()
-        _get_tidewater_termini_and_slopes(tidewatermask, slopes, [cfg.input.oggm_shop.oggm_RGI_ID], cfg)
+        _get_tidewater_termini_and_slopes(tidewatermask, slopes, [cfg.input.oggm_shop.RGI_ID], cfg)
         vars_to_save = ["usurf", "thk", "icemask", "usurfobs", "thkobs", "icemaskobs", "tidewatermask", "slopes"]
     else:
         icemask = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
         icemaskobs = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
         vars_to_save = ["usurf", "thk", "icemask", "usurfobs", "thkobs", "icemaskobs"]
 
-    if cfg.input.oggm_shop.oggm_vel_source == "millan_ice_velocity":
+    if cfg.input.oggm_shop.vel_source == "millan_ice_velocity":
         if "millan_vx" in nc.variables:
             uvelsurfobs = np.flipud(
                 np.squeeze(nc.variables["millan_vx"]).astype("float32")
@@ -118,13 +118,13 @@ def run(cfg, state):
             vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
             vars_to_save += ["vvelsurfobs"]
 
-    if cfg.input.oggm_shop.oggm_smooth_obs_vel:
+    if cfg.input.oggm_shop.smooth_obs_vel:
        uvelsurfobs = scipy.signal.medfilt2d(uvelsurfobs, kernel_size=3) # remove outliers
        vvelsurfobs = scipy.signal.medfilt2d(vvelsurfobs, kernel_size=3) # remove outliers
 
-    if cfg.input.oggm_shop.oggm_thk_source in nc.variables: # either "millan_ice_thickness" or "consensus_ice_thickness"
+    if cfg.input.oggm_shop.thk_source in nc.variables: # either "millan_ice_thickness" or "consensus_ice_thickness"
         thkinit = np.flipud(
-            np.squeeze(nc.variables[cfg.input.oggm_shop.oggm_thk_source]).astype("float32")
+            np.squeeze(nc.variables[cfg.input.oggm_shop.thk_source]).astype("float32")
         )
         thkinit = np.where(np.isnan(thkinit), 0, thkinit)
         thkinit = np.where(icemaskobs, thkinit, 0)
@@ -140,21 +140,21 @@ def run(cfg, state):
 
     thkobs = np.zeros_like(thk) * np.nan
 
-    if cfg.input.oggm_shop.oggm_incl_glathida:
-        if cfg.input.oggm_shop.oggm_RGI_version==6:
-            with open(os.path.join(cfg.input.oggm_shop.oggm_RGI_ID, "glacier_grid.json"), "r") as f:
+    if cfg.input.oggm_shop.incl_glathida:
+        if cfg.input.oggm_shop.RGI_version==6:
+            with open(os.path.join(cfg.input.oggm_shop.RGI_ID, "glacier_grid.json"), "r") as f:
                 data = json.load(f)
             proj = data["proj"]
 
             try:
                 thkobs = _read_glathida(
-                    x, y, usurfobs, proj, cfg.input.oggm_shop.oggm_path_glathida, state
+                    x, y, usurfobs, proj, cfg.input.oggm_shop.path_glathida, state
                 )
                 thkobs = np.where(icemaskobs, thkobs, np.nan)
             except:
                 thkobs = np.zeros_like(thk) * np.nan
-        elif cfg.input.oggm_shop.oggm_RGI_version==7:
-            path_glathida = os.path.join(cfg.input.oggm_shop.oggm_RGI_ID, "glathida_data.csv")
+        elif cfg.input.oggm_shop.RGI_version==7:
+            path_glathida = os.path.join(cfg.input.oggm_shop.RGI_ID, "glathida_data.csv")
 
             try:
                 thkobs = _read_glathida_v7(
@@ -183,7 +183,7 @@ def run(cfg, state):
 
     ########################################################
 
-    if cfg.input.oggm_shop.oggm_save_in_ncdf:
+    if cfg.input.oggm_shop.save_in_ncdf:
         var_info = {}
         var_info["thk"] = ["Ice Thickness", "m"]
         var_info["usurf"] = ["Surface Topography", "m"]
@@ -195,7 +195,7 @@ def run(cfg, state):
         var_info["vvelsurfobs"] = ["y surface velocity of ice", "m/y"]
         var_info["icemask"] = ["Ice mask", "no unit"]
         var_info["dhdt"] = ["Ice thickness change", "m/y"]
-        if cfg.input.oggm_shop.oggm_sub_entity_mask == True:
+        if cfg.input.oggm_shop.sub_entity_mask == True:
             var_info["tidewatermask"] = ["Tidewater glacier mask", "no unit"]
             var_info["slopes"] = ["Average glacier surface slope", "deg"]
 
@@ -245,7 +245,7 @@ def _oggm_util(RGIs, cfg):
     from oggm import utils, workflow, tasks, graphics
     import xarray as xr
 
-    if cfg.input.oggm_shop.oggm_preprocess:
+    if cfg.input.oggm_shop.preprocess:
         # This uses OGGM preprocessed directories
         # I think that a minimal environment should be enough for this to run
         # Required packages:
@@ -270,7 +270,7 @@ def _oggm_util(RGIs, cfg):
         cfg_oggm.PATHS["working_dir"] = utils.gettempdir(dirname=WD, reset=True)
 
         # We need the outlines here
-        if cfg.input.oggm_shop.oggm_RGI_version==6:
+        if cfg.input.oggm_shop.RGI_version==6:
             rgi_ids = RGIs  # rgi_ids = utils.get_rgi_glacier_entities(RGIs)
             base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v2" )
             gdirs = workflow.init_glacier_directories(
@@ -282,7 +282,7 @@ def _oggm_util(RGIs, cfg):
             )
         else:
             rgi_ids = RGIs
-            if cfg.input.oggm_shop.oggm_highres:
+            if cfg.input.oggm_shop.highres:
                 base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v4_hr" )
             else:
                 base_url = ( "https://cluster.klima.uni-bremen.de/~oggm/gdirs/oggm_v1.6/exps/igm_v4" )
@@ -292,10 +292,10 @@ def _oggm_util(RGIs, cfg):
                 rgi_ids,
                 prepro_border=40,
                 from_prepro_level=3,
-                prepro_rgi_version='70'+cfg.input.oggm_shop.oggm_RGI_product,
+                prepro_rgi_version='70'+cfg.input.oggm_shop.RGI_product,
                 prepro_base_url=base_url,
             )
-            if (cfg.input.oggm_shop.oggm_sub_entity_mask == True) & (cfg.input.oggm_shop.oggm_RGI_product == "C"):
+            if (cfg.input.oggm_shop.sub_entity_mask == True) & (cfg.input.oggm_shop.RGI_product == "C"):
                 tasks.rgi7g_to_complex(gdirs[0])
 
     else:
@@ -314,11 +314,11 @@ def _oggm_util(RGIs, cfg):
 
         # Map resolution parameters
         cfg_oggm.PARAMS["grid_dx_method"] = "fixed"
-        cfg_oggm.PARAMS["fixed_dx"] = cfg.input.oggm_shop.oggm_dx  # m spacing
+        cfg_oggm.PARAMS["fixed_dx"] = cfg.input.oggm_shop.dx  # m spacing
         cfg_oggm.PARAMS[
             "border"
         ] = (
-            cfg.input.oggm_shop.oggm_border
+            cfg.input.oggm_shop.border
         )  # can now be set to any value since we start from scratch
         cfg_oggm.PARAMS["map_proj"] = "utm"
 
@@ -382,13 +382,13 @@ def _oggm_util(RGIs, cfg):
                                                 gdirs, informed_threestep=True)
 
     source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
-    destination_folder = cfg.input.oggm_shop.oggm_RGI_ID
+    destination_folder = cfg.input.oggm_shop.RGI_ID
 
     if os.path.exists(destination_folder):
         shutil.rmtree(destination_folder)
     shutil.copytree(source_folder, destination_folder)
 
-    os.system( "echo rm -r " + cfg.input.oggm_shop.oggm_RGI_ID + " >> clean.sh" )
+    os.system( "echo rm -r " + cfg.input.oggm_shop.RGI_ID + " >> clean.sh" )
 
 
 def _read_glathida(x, y, usurf, proj, path_glathida, state):
@@ -518,10 +518,10 @@ def _get_tidewater_termini_and_slopes(tidewatermask, slopes, RGIs, cfg):
         rgi_ids,
         prepro_border=40,
         from_prepro_level=3,
-        prepro_rgi_version='70'+cfg.input.oggm_shop.oggm_RGI_product,
+        prepro_rgi_version='70'+cfg.input.oggm_shop.RGI_product,
         prepro_base_url=base_url,
     )
-    if cfg.input.oggm_shop.oggm_RGI_product == "C":
+    if cfg.input.oggm_shop.RGI_product == "C":
         tasks.rgi7g_to_complex(gdirs[0])
         gdf = gdirs[0].read_shapefile('complex_sub_entities')
         with xr.open_dataset(gdirs[0].get_filepath('gridded_data')) as ds:

@@ -1,6 +1,6 @@
 plot2d:
-  plt2d_editor: vs # help="Optimized for VS code (vs) or spyder (sp) for live plot"
-  plt2d_live: False # help="Display plots live the results during computation instead of making png"
-  plt2d_particles: True # help="Display particles is True, does not display if False"
-  plt2d_var: "velbar_mag" # help="Name of the variable to plot"
-  plt2d_var_max: 1000 # help="Maximum value of the varplot variable used to adjust the scaling of the colorbar"
+  editor: vs # help="Optimized for VS code (vs) or spyder (sp) for live plot"
+  live: False # help="Display plots live the results during computation instead of making png"
+  particles: True # help="Display particles is True, does not display if False"
+  var: "velbar_mag" # help="Name of the variable to plot"
+  var_max: 1000 # help="Maximum value of the varplot variable used to adjust the scaling of the colorbar"

@@ -11,38 +11,38 @@ import tensorflow as tf
 import json
 
 
-def params(parser):
-    parser.add_argument(
-        "--smb_oggm_update_freq",
-        type=float,
-        default=1,
-        help="Update the mass balance each X years ",
-    )
-    parser.add_argument(
-        "--smb_oggm_ice_density",
-        type=float,
-        default=910.0,
-        help="Density of ice for conversion of SMB into ice equivalent",
-    )
-    parser.add_argument(
-        "--smb_oggm_wat_density",
-        type=float,
-        default=1000.0,
-        help="Density of water",
-    )
-    parser.add_argument(
-        "--smb_oggm_melt_enhancer",
-        type=float,
-        default=1.0,
-        help="Melt enhancer factor",
-    )
+# def params(parser):
+#     parser.add_argument(
+#         "--smb_oggm_update_freq",
+#         type=float,
+#         default=1,
+#         help="Update the mass balance each X years ",
+#     )
+#     parser.add_argument(
+#         "--smb_oggm_ice_density",
+#         type=float,
+#         default=910.0,
+#         help="Density of ice for conversion of SMB into ice equivalent",
+#     )
+#     parser.add_argument(
+#         "--smb_oggm_wat_density",
+#         type=float,
+#         default=1000.0,
+#         help="Density of water",
+#     )
+#     parser.add_argument(
+#         "--smb_oggm_melt_enhancer",
+#         type=float,
+#         default=1.0,
+#         help="Melt enhancer factor",
+#     )
 
 def initialize(cfg, state):
     state.tcomp_smb_oggm = []
     state.tlast_mb = tf.Variable(-1.0e5000)
 
     # load the given parameters from the json file
-    with open(os.path.join(cfg.input.oggm_shop.oggm_RGI_ID, "mb_calib.json"), "r") as json_file:
+    with open(os.path.join(cfg.input.oggm_shop.RGI_ID, "mb_calib.json"), "r") as json_file:
         jsonString = json_file.read()
 
     oggm_mb_calib = json.loads(jsonString)
@@ -63,7 +63,7 @@ def update(cfg, state):
     #   This mass balance routine implements the surface mass balance model of OGGM
 
     # update smb each X years
-    if (state.t - state.tlast_mb) >= cfg.modules.smb_oggm.smb_oggm_update_freq:
+    if (state.t - state.tlast_mb) >= cfg.modules.smb_oggm.update_freq:
         if hasattr(state, "logger"):
             state.logger.info(
                 "Construct mass balance at time : " + str(state.t.numpy())
@@ -89,9 +89,9 @@ def update(cfg, state):
             0
         ]  # unit to [ kg * m^(-2) * y^(-1) ] -> [ kg * m^(-2) water ]
 
-        accumulation /= cfg.modules.smb_oggm.smb_oggm_wat_density  # unit [ m water ]
+        accumulation /= cfg.modules.smb_oggm.wat_density  # unit [ m water ]
 
-        ablation = state.melt_f * cfg.modules.smb_oggm.smb_oggm_melt_enhancer * tf.clip_by_value(
+        ablation = state.melt_f * cfg.modules.smb_oggm.melt_enhancer * tf.clip_by_value(
             state.air_temp - state.temp_melt, 0, 10**10
         )  # unit: [ mm * day^(-1) water ]
 
@@ -101,7 +101,7 @@ def update(cfg, state):
 
         # sum accumulation and ablation over the year, and conversion to ice equivalent
         state.smb = tf.math.reduce_sum(accumulation - ablation, axis=0) * (
-            cfg.modules.smb_oggm.smb_oggm_wat_density / cfg.modules.smb_oggm.smb_oggm_ice_density
+            cfg.modules.smb_oggm.wat_density / cfg.modules.smb_oggm.ice_density
         )
 
         if hasattr(state, "icemask"):

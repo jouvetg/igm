@@ -11,19 +11,19 @@ defaults:
 
 input:
   oggm_shop:
-    oggm_RGI_ID: "RGI60-11.01450"
-    oggm_RGI_version: 6
+    RGI_ID: "RGI60-11.01450"
+    RGI_version: 6
 
 modules:
   time:
-    time_start: 1800.0
-    time_end: 2100.0
-    time_save: 10.0
+    start: 1800.0
+    end: 2100.0
+    save: 10.0
   iceflow:
     iceflow:
-      iflo_init_slidingco: 0.25
+      init_slidingco: 0.25
   clim_oggm:
-    clim_oggm_clim_trend_array: [
+    clim_trend_array: [
                           ["time", "delta_temp", "prec_scal"],
                           [ 1900,           0.0,         1.0],
                           [ 2020,           0.0,         1.0],
@@ -31,4 +31,4 @@ modules:
 
 output:
   plot2d:
-    plt2d_live: true
+    live: true

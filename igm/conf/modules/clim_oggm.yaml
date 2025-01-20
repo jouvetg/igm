@@ -1,9 +1,9 @@
 clim_oggm:
-  clim_oggm_update_freq: 1 # help="Update the climate each X years"
-  clim_oggm_file: clim_oggm_file.txt # help="Name of the imput file for the climate outide the given datatime frame (time, delta_temp, prec_scali)"
-  clim_oggm_clim_trend_array: # help="Define climate trend outside available time window"
+  update_freq: 1 # help="Update the climate each X years"
+  file: file.txt # help="Name of the imput file for the climate outide the given datatime frame (time, delta_temp, prec_scali)"
+  clim_trend_array: # help="Define climate trend outside available time window"
     - ["time", "delta_temp", "prec_scal"]
     - [1900, 0.0, 1.0]
     - [2020, 0.0, 1.0]
-  clim_oggm_ref_period: [1960, 1990] # help="Define the reference period to pick year outside available time window"
-  clim_oggm_seed_par: 123 # help="Seeding parameter to fix for pickying randomly yer in the ref period"
+  ref_period: [1960, 1990] # help="Define the reference period to pick year outside available time window"
+  seed_par: 123 # help="Seeding parameter to fix for pickying randomly yer in the ref period"

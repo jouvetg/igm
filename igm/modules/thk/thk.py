@@ -37,9 +37,9 @@ def initialize(cfg, state):
     # define the lower ice surface
     if hasattr(state, "sealevel"):
         # ! This is not clear which modules provides state.topg and allows us to use state.thk!!!
-        state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.thk_ratio_density*state.thk + state.sealevel)
+        state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.ratio_density*state.thk + state.sealevel)
     else:
-        state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.thk_ratio_density*state.thk + cfg.modules.thk.thk_default_sealevel)
+        state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.ratio_density*state.thk + cfg.modules.thk.default_sealevel)
 
     # define the upper ice surface
     state.usurf = state.lsurf + state.thk
@@ -58,7 +58,7 @@ def update(cfg, state):
 
         # compute the divergence of the flux
         state.divflux = compute_divflux_slope_limiter(
-            state.ubar, state.vbar, state.thk, state.dx, state.dx, state.dt, slope_type=cfg.modules.thk.thk_slope_type
+            state.ubar, state.vbar, state.thk, state.dx, state.dx, state.dt, slope_type=cfg.modules.thk.slope_type
         )
 
         # if not smb model is given, set smb to zero
@@ -70,9 +70,9 @@ def update(cfg, state):
 
         # define the lower ice surface
         if hasattr(state, "sealevel"):
-            state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.thk_ratio_density*state.thk + state.sealevel)
+            state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.ratio_density*state.thk + state.sealevel)
         else:
-            state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.thk_ratio_density*state.thk + cfg.modules.thk.thk_default_sealevel)
+            state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.ratio_density*state.thk + cfg.modules.thk.default_sealevel)
 
         # define the upper ice surface
         state.usurf = state.lsurf + state.thk

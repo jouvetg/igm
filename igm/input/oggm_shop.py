@@ -118,7 +118,7 @@ def run(cfg, state):
             vvelsurfobs = np.where(icemaskobs, vvelsurfobs, 0)
             vars_to_save += ["vvelsurfobs"]
 
-    if cfg.input.oggm_shop.smooth_obs_vel:
+    if cfg.input.oggm_shop.oggm_smooth_obs_vel:
        uvelsurfobs = scipy.signal.medfilt2d(uvelsurfobs, kernel_size=3) # remove outliers
        vvelsurfobs = scipy.signal.medfilt2d(vvelsurfobs, kernel_size=3) # remove outliers
 

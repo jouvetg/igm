@@ -95,5 +95,5 @@ def run(cfg, state):
 
     complete_data(state)
 
-    if cfg.input.load_ncdf.icemask_include:
-        include_icemask(state, mask_shapefile=cfg.input.load_ncdf.icemask_shapefile, mask_invert=cfg.input.load_ncdf.icemask_invert)
+    if cfg.input.load_ncdf.lncd_icemask_include:
+        include_icemask(state, mask_shapefile=cfg.input.load_ncdf.lncd_icemask_shapefile, mask_invert=cfg.input.load_ncdf.lncd_icemask_invert)

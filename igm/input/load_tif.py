@@ -74,5 +74,5 @@ def run(cfg, state):
 
     complete_data(state)
 
-    if cfg.input.load_tif.icemask_include:
-        include_icemask(state, mask_shapefile=cfg.input.load_tif.icemask_shapefile, mask_invert=cfg.input.load_tif.icemask_invert)
+    if cfg.input.load_tif.ltif_icemask_include:
+        include_icemask(state, mask_shapefile=cfg.input.load_tif.ltif_icemask_shapefile, mask_invert=cfg.input.load_tif.ltif_icemask_invert)

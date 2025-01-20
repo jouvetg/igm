@@ -7,7 +7,7 @@ from .utils import *
 from .energy_iceflow import *
 from .neural_network import *
 
-from igm import emulators
+from igm.modules.iceflow import emulators
 import importlib_resources
   
 def initialize_iceflow_emulator(cfg, state):

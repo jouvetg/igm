@@ -210,7 +210,7 @@ def params_optimize(parser):
         help="uniformize the density of thkobs",
     )
     parser.add_argument(
-        "--sole_mask",
+        "--opti_sole_mask",
         type=str2bool,
         default=False,
         help="sole_mask",
@@ -252,7 +252,7 @@ def params_optimize(parser):
         help="Confidence/STD of the volume estimates from volume-area scaling",
     )
     parser.add_argument(
-        "--fix_opti_normalization_issue",
+        "--opti_fix_opti_normalization_issue",
         type=str2bool,
         default=False,
         help="formerly, the oce was mixing reduce_mean and l2_loss leadinf to dependence to the resolution of the grid",

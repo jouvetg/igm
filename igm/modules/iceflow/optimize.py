@@ -424,7 +424,7 @@ def regu_thk(cfg,state):
             dbdx = tf.where( (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5) , dbdx, 0.0)
             dbdy = tf.where( (state.icemaskobs[1:, :] > 0.5) & (state.icemaskobs[:-1, :] > 0.5) , dbdy, 0.0)
 
-        if cfg.modules.iceflow.optimize.fix_opti_normalization_issue:
+        if cfg.modules.iceflow.optimize.opti_fix_opti_normalization_issue:
             REGU_H = (cfg.modules.iceflow.optimize.opti_regu_param_thk) * 0.5 * (
                 tf.math.reduce_mean(dbdx**2) + tf.math.reduce_mean(dbdy**2)
                 - gamma * tf.math.reduce_mean(state.thk)
@@ -445,7 +445,7 @@ def regu_thk(cfg,state):
             dbdx = tf.where( MASK, dbdx, 0.0)
             dbdy = tf.where( MASK, dbdy, 0.0)
  
-        if cfg.modules.iceflow.optimize.fix_opti_normalization_issue:
+        if cfg.modules.iceflow.optimize.opti_fix_opti_normalization_issue:
             REGU_H = (cfg.modules.iceflow.optimize.opti_regu_param_thk) * 0.5 * (
                 (1.0/np.sqrt(cfg.modules.iceflow.optimize.opti_smooth_anisotropy_factor))
                 * tf.math.reduce_mean((dbdx * state.flowdirx + dbdy * state.flowdiry)**2)
@@ -475,7 +475,7 @@ def regu_slidingco(cfg,state):
         dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
 
     if cfg.modules.iceflow.optimize.opti_smooth_anisotropy_factor_sl == 1:
-        if cfg.modules.iceflow.optimize.fix_opti_normalization_issue:
+        if cfg.modules.iceflow.optimize.opti_fix_opti_normalization_issue:
             REGU_S = (cfg.modules.iceflow.optimize.opti_regu_param_slidingco) * 0.5 * (
                 tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
             )
@@ -494,7 +494,7 @@ def regu_slidingco(cfg,state):
             dadx = tf.where( MASK, dadx, 0.0)
             dady = tf.where( MASK, dady, 0.0)
  
-        if cfg.modules.iceflow.optimize.fix_opti_normalization_issue:
+        if cfg.modules.iceflow.optimize.opti_fix_opti_normalization_issue:
             REGU_S = (cfg.modules.iceflow.optimize.opti_regu_param_slidingco) * 0.5 * (
                 (1.0/np.sqrt(cfg.modules.iceflow.optimize.opti_smooth_anisotropy_factor_sl))
                 * tf.math.reduce_mean((dadx * state.flowdirx + dady * state.flowdiry)**2)
@@ -523,7 +523,7 @@ def regu_arrhenius(cfg,state):
         dadx = tf.where( (state.icemaskobs[:, 1:] == 1) & (state.icemaskobs[:, :-1] == 1) , dadx, 0.0)
         dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
     
-    if cfg.modules.iceflow.optimize.fix_opti_normalization_issue:
+    if cfg.modules.iceflow.optimize.opti_fix_opti_normalization_issue:
         REGU_S = (cfg.modules.iceflow.optimize.opti_regu_param_arrhenius) * 0.5 * (
             tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
         )

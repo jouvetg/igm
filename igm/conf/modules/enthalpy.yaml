@@ -18,6 +18,6 @@ enthalpy:
   enth_till_wat_max: 2 # help="Maximum water till tickness [m] (Bueler and Pelt, GMD, 2015)",
   enth_drain_ice_column: True # help="Transform the water content beyond a thr=0.01 into water, drain it, and add it to basal melt rate",
   enth_default_bheatflx: 0.065 # help="Geothermal heat flux [W m-2]",
-  temperature_offset_air_to_ice: 0.0 # help="This is the offset between the air temperature and the ice temperature as records show [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder than the temperature of ice to be given as boundary upper condition to the Enthlapy model",
+  enth_temperature_offset_air_to_ice: 0.0 # help="This is the offset between the air temperature and the ice temperature as records show [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder than the temperature of ice to be given as boundary upper condition to the Enthlapy model",
   enth_tauc_min: 10**5 # help="lower bound for tauc [Pa]"
   enth_tauc_max: 10**10 # help="lower bound for tauc [Pa]"

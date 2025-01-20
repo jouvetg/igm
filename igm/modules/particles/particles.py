@@ -38,7 +38,7 @@ def params(parser):
         help="Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)",
     )
     parser.add_argument(
-        "--tlast_seeding_init",
+        "--part_tlast_seeding_init",
         type=int,
         default=-1.0e5000,
         help="Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value alouds to differ it",
@@ -54,7 +54,7 @@ def initialize(cfg, state):
             )
 
 
-    state.tlast_seeding = -1.0e5000
+    state.part_tlast_seeding = cfg.modules.particles.part_tlast_seeding_init
     state.tcomp_particles = []
 
     # initialize trajectories

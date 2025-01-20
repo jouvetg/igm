@@ -44,7 +44,7 @@ def params(parser: Any) -> None:
     )
 
     parser.add_argument(
-        "--divide_by_density",
+        "--texture_divide_by_density",
         type=float,
         default=1,
         help="This parameter solves an imcompatibility (this option will be removed in the future)",

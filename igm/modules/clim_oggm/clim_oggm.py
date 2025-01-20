@@ -22,9 +22,9 @@ def params(parser):
         help="Update the climate each X years",
     )
     parser.add_argument(
-        "--smb_oggm_file",
+        "--clim_oggm_file",
         type=str,
-        default="smb_oggm_param.txt",
+        default="clim_oggm_file.txt",
         help="Name of the imput file for the climate outide the given datatime frame (time, delta_temp, prec_scali)",
     )
     parser.add_argument(

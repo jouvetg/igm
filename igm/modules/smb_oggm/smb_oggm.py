@@ -31,7 +31,7 @@ def params(parser):
         help="Density of water",
     )
     parser.add_argument(
-        "--melt_enhancer",
+        "--smb_oggm_melt_enhancer",
         type=float,
         default=1.0,
         help="Melt enhancer factor",
@@ -91,7 +91,7 @@ def update(cfg, state):
 
         accumulation /= cfg.modules.smb_oggm.smb_oggm_wat_density  # unit [ m water ]
 
-        ablation = state.melt_f * cfg.modules.smb_oggm.melt_enhancer * tf.clip_by_value(
+        ablation = state.melt_f * cfg.modules.smb_oggm.smb_oggm_melt_enhancer * tf.clip_by_value(
             state.air_temp - state.temp_melt, 0, 10**10
         )  # unit: [ mm * day^(-1) water ]
 

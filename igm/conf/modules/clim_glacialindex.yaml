@@ -1,0 +1,8 @@
+clim_glacialindex:
+  update_freq: 100 # help="Update the climate each X years"
+  climate_0_file: data/climate.nc # help="climate file"
+  climate_1_file: data/climate1.nc # help="climate file"
+  signal_file: data/GI.dat # help="climate signal file for GI"
+  vertical_lapse_rate_0: 6.0 # help="vertical_lapse_rate_0"
+  vertical_lapse_rate_1: 5.74 # help="vertical_lapse_rate_1"
+  temporal_resampling: 12 # help="temporal_resampling"

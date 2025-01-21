@@ -1,23 +1,23 @@
 enthalpy:
-  water_density: 1000 # help="Constant of the Water density [kg m-3]",
-  spy: 31556926 # help="Number of seconds per years [s y-1]",
+  water_density: 1000.0 # help="Constant of the Water density [kg m-3]",
+  spy: 31556926.0 # help="Number of seconds per years [s y-1]",
   ki: 2.1 # help="Conductivity of cold ice [W m-1 K-1] (Aschwanden and al, JOG, 2012)",
-  ci: 2009 # help="Specific heat capacity of ice [W s kg-1 K-1] (Aschwanden and al, JOG, 2012)",
-  Lh: 3.34 * 10 ** (5) # help="latent heat of fusion [W s kg-1] = [E] (Aschwanden and al, JOG, 2012)",
-  KtdivKc: 10 ** (-1) # help="Ratio of temp vs cold ice diffusivity Kt / Kc [no unit] (Aschwanden and al, JOG, 2012)",
-  claus_clape: 7.9 * 10 ** (-8) # help="Clausius-Clapeyron constant [K Pa-1] (Aschwanden and al, JOG, 2012)",
+  ci: 2009.0 # help="Specific heat capacity of ice [W s kg-1 K-1] (Aschwanden and al, JOG, 2012)",
+  Lh: 3.34e5 # help="latent heat of fusion [W s kg-1] = [E] (Aschwanden and al, JOG, 2012)",
+  KtdivKc: 1e-1 # help="Ratio of temp vs cold ice diffusivity Kt / Kc [no unit] (Aschwanden and al, JOG, 2012)",
+  claus_clape: 7.9e-8 # help="Clausius-Clapeyron constant [K Pa-1] (Aschwanden and al, JOG, 2012)",
   melt_temp: 273.15 # help="Melting point at standart pressure [K] (Aschwanden and al, JOG, 2012)",
   ref_temp: 223.15 # help="Reference temperature [K] (Aschwanden and al, JOG, 2012)",
-  till_friction_angle: 30 # help="Till friction angle in the Mohr-Coulomb friction law [deg]",
-  till_friction_angle_bed_min: None # help="till_friction_angle_bed_min",
-  till_friction_angle_bed_max: None # help="till_friction_angle_bed_max",
-  till_friction_angle_phi_min: 15 # help="till_friction_angle_phi_min",
-  till_friction_angle_phi_max: 45 # help="till_friction_angle_phi_max",
-  uthreshold: 100 # help="uthreshold [m/y] # "--uthreshold", type=float, default=100, help="uthreshold [m/y]"
+  till_friction_angle: 30.0 # help="Till friction angle in the Mohr-Coulomb friction law [deg]",
+  till_friction_angle_bed_min: null # help="till_friction_angle_bed_min",
+  till_friction_angle_bed_max: null # help="till_friction_angle_bed_max",
+  till_friction_angle_phi_min: 15.0 # help="till_friction_angle_phi_min",
+  till_friction_angle_phi_max: 45.0 # help="till_friction_angle_phi_max",
+  uthreshold: 100.0 # help="uthreshold [m/y] # "--uthreshold", type=float, default=100, help="uthreshold [m/y]"
   drain_rate: 0.001 # help="Drain rate at 1 mm/y  [m y-1] (Bueler and Pelt, GMD, 2015)",
-  till_wat_max: 2 # help="Maximum water till tickness [m] (Bueler and Pelt, GMD, 2015)",
+  till_wat_max: 2.0 # help="Maximum water till tickness [m] (Bueler and Pelt, GMD, 2015)",
   drain_ice_column: True # help="Transform the water content beyond a thr=0.01 into water, drain it, and add it to basal melt rate",
   default_bheatflx: 0.065 # help="Geothermal heat flux [W m-2]",
   temperature_offset_air_to_ice: 0.0 # help="This is the offset between the air temperature and the ice temperature as records show [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder than the temperature of ice to be given as boundary upper condition to the Enthlapy model",
-  tauc_min: 10**5 # help="lower bound for tauc [Pa]"
-  tauc_max: 10**10 # help="lower bound for tauc [Pa]"
+  tauc_min: 1e5 # help="lower bound for tauc [Pa]"
+  tauc_max: 1e10 # help="lower bound for tauc [Pa]"

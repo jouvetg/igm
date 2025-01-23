@@ -13,7 +13,7 @@ from netCDF4 import Dataset
 
 from igm.modules.utils import *
 
-from igm.modules.particles_v1.particles_v1 import seeding_particles
+# from igm.modules.particles_v1.particles_v1 import seeding_particles
 
 # from igm.modules.process.particles_v1.particles_v1 import seeding_particles
 
@@ -54,7 +54,7 @@ def initialize(cfg, state):
             )
 
 
-    state.part_tlast_seeding = cfg.modules.particles.tlast_seeding_init
+    state.tlast_seeding = cfg.modules.particles.tlast_seeding_init
     state.tcomp_particles = []
 
     # initialize trajectories

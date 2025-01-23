@@ -8,10 +8,10 @@ import tensorflow as tf
 from igm import (
     State,
     # params_core,
-    save_params,
-    run_intializers,
-    run_processes,
-    run_finalizers,
+    # save_params,
+    initialize_modules,
+    run_model,
+    # run_finalizers,
     setup_igm_modules,
     # setup_igm_params,
     print_gpu_info,
@@ -32,6 +32,7 @@ from hydra.utils import get_original_cwd  # , to_absolute_path
 import hydra
 
 OmegaConf.register_new_resolver("get_cwd", lambda x: os.getcwd())
+# OmegaConf.register_new_resolver("merge", ...)
 from hydra.core.hydra_config import HydraConfig
 
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -83,19 +84,34 @@ def main(cfg: DictConfig) -> None:
         folder_path = Path(get_original_cwd()).joinpath(cfg.core.folder_data)
         download_unzip_and_store(cfg.core.url_data, folder_path)
     
-    if "input" in cfg:
-        input_methods = list(
-            cfg.input.keys()
-        )
+    imported_input_modules, imported_modules, imported_output_modules = setup_igm_modules(cfg, state)
+    
+    # print(imported_modules)
+    # exit()
+    
+    # if "input" in cfg:
+    #     input_methods = list(
+    #         cfg.input.keys()
+    #     )
         
-        if len(input_methods) > 1:
-            raise ValueError("Only one input method is allowed.")
+    #     if len(input_methods) > 1:
+    #         raise ValueError("Only one input method is allowed.")
         
-        input_method = str(input_methods[0])
-        input_module = getattr(input, input_method)
-        input_module.run(cfg, state)
-    # else:
-        # raise ValueError("Need to supply at least one input module.") # should I just let Hydra's error message take care of this? which is more clear?
+    #     input_method = str(input_methods[0])
+    #     input_module = getattr(input, input_method)
+    #     print(input_method, input_module)
+    #     # print(input_module)
+    #     print(dir(state))
+    #     input_module.run(cfg, state)
+    #     print(dir(state))
+    
+    input_methods = list(
+        cfg.input.keys()
+            )
+    if len(input_methods) > 1:
+        raise ValueError("Only one input method is allowed.")
+    imported_input_modules[0].run(cfg, state)
+    
     
     output_modules = []
     if "output" in cfg:
@@ -107,26 +123,28 @@ def main(cfg: DictConfig) -> None:
             output_modules.append(output_module)
             
         for output_module in output_modules:
+            # print(output_module)
             output_module.initialize(cfg, state) # do we need to initialize output modules? This is not very clean...
         
     # for var in locals():
     #     print(var)
     # for var in globals():
     #     print(var)
-    imported_modules = setup_igm_modules(cfg, state)
-    
-
     # print(imported_modules)
+    # exit()
+
+    # print(dir(state))
     # exit()
     
     with strategy.scope():
-        run_intializers(imported_modules, cfg, state)
-        run_processes(imported_modules, cfg, state)
-        run_finalizers(imported_modules, cfg, state)
+        initialize_modules(imported_modules, cfg, state)
+        run_model(imported_modules, imported_output_modules, cfg, state)
+        # run_finalizers(imported_modules, cfg, state)
         
         # Writing output files
-        for output_module in output_modules:
-            output_module.run(cfg, state) # do we need to initialize output modules? THis is not very clean...
+        # run_outputs(output_modules, cfg, state)
+        # for output_module in output_modules:
+            # output_module.run(cfg, state) # do we need to initialize output modules? THis is not very clean...
 
     if cfg.core.print_comp:
         print_comp(state)

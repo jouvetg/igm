@@ -1,0 +1,9 @@
+# @package modules.smb_signal
+
+# modules:
+  # smb_signal:
+pdela: 3000.0 # default param in the .py file has a big typo (30000 instead of 3000...)
+deladt: 200.0
+gradabl: 0.0067
+gradacc: 0.0005
+maxacc: 1.0

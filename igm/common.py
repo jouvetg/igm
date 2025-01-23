@@ -51,7 +51,7 @@ def setup_igm_modules(cfg, state) -> List[ModuleType]:
     return load_modules(cfg, state)
 
 
-def run_intializers(modules: List, cfg: Any, state: State) -> None:
+def initialize_modules(modules: List, cfg: Any, state: State) -> None:
     for module in modules:
         print(f"Initializing module: {module.__name__.split('.')[-1]}")
         # print(dir(module))
@@ -62,16 +62,21 @@ def run_intializers(modules: List, cfg: Any, state: State) -> None:
         # exit()
 
 
-def run_processes(modules: List, cfg: Any, state: State) -> None:
+def run_model(modules: List, output_modules: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
         while state.t < cfg.modules.time.end:
             for module in modules:
                 module.update(cfg, state)
+            run_outputs(output_modules, cfg, state)
 
 
-def run_finalizers(modules: List, cfg: Any, state: State) -> None:
-    for module in modules:
-        module.finalize(cfg, state)
+# def run_finalizers(modules: List, cfg: Any, state: State) -> None:
+#     for module in modules:
+#         module.finalize(cfg, state)
+
+def run_outputs(output_modules: List, cfg: Any, state: State) -> None:
+    for module in output_modules:
+        module.run(cfg, state)
 
 
 def add_logger(cfg, state) -> None:
@@ -96,11 +101,175 @@ def add_logger(cfg, state) -> None:
 
 def load_modules(cfg, state) -> List[ModuleType]:
     """Returns a list of actionable modules to then apply the update, initialize, finalize functions on for IGM."""
-    imported_modules = load_modules_from_directory(cfg, state, modules_list=cfg.modules)
+    imported_input_modules = []
+    imported_modules = []
+    imported_output_modules = []
+    
+    # print(cfg.output)
+    # exit()
+    
+    # imported_modules = load_modules_from_directory(cfg, state, modules_list=cfg.modules)
+    load_modules_custom_input(cfg, state, modules_list=cfg.input, imported_modules_list=imported_input_modules)
+    load_input_modules_igm(cfg, state, modules_list=cfg.input, imported_modules_list=imported_input_modules)
+    
+    load_modules_custom(cfg, state, modules_list=cfg.modules, imported_modules_list=imported_modules)
+    load_modules_igm(cfg, state, modules_list=cfg.modules, imported_modules_list=imported_modules)
+    
+    load_modules_custom_output(cfg, state, modules_list=cfg.output, imported_modules_list=imported_output_modules)
+    load_output_modules_igm(cfg, state, modules_list=cfg.output, imported_modules_list=imported_output_modules)
+    
+    print(f"{'':-^100}")
+    print(f"{'INPUT Modules':-^100}")
+    for i, input_module in enumerate(imported_input_modules):
+        print(f' {i}: {input_module}')
+    print(f"{'PHYSICAL Modules':-^100}")
+    for i, module in enumerate(imported_modules):
+        print(f' {i}: {module}')
+    print(f"{'OUTPUT Modules':-^100}")
+    for i, output_module in enumerate(imported_output_modules):
+        print(f' {i}: {output_module}')
+    print(f"{'':-^100}")
+    
+    return imported_input_modules, imported_modules, imported_output_modules
 
-    return imported_modules
+from hydra.core.hydra_config import HydraConfig
+def load_modules_custom_input(cfg, state, modules_list, imported_modules_list) -> List[ModuleType]:
+    
+    from importlib.machinery import SourceFileLoader
 
+    # print("Testing for custom modules first - then will load default IGM modules...")
+    for module_name in modules_list:
+        # Local Directory
+        try:
+            module = SourceFileLoader(f"{module_name}",f".{module_name}.py").load_module()
+        except FileNotFoundError:
+            # print(f'{module_name} [not found] in local working directory: {HydraConfig.get().runtime.cwd}. Trying custom modules directory...')
+            
+            # Custom Modules Folder
+            try:
+                module = SourceFileLoader(f"{module_name}",f"{HydraConfig.get().runtime.cwd}/{cfg.core.custom_input_modules_folder}/{module_name}.py").load_module()
+            except FileNotFoundError:
+                pass
+                # print(f'{module_name} [not found] in local directory or custom modules directory')
+            else:
+                # print(f'{module_name} [found] in custom modules directory: {HydraConfig.get().runtime.cwd}/{cfg.core.custom_modules_folder}')
+                # validate_module(module)
+                imported_modules_list.append(module)            
+        else:
+            # print(f'{module_name} [found] in local working directory: {HydraConfig.get().runtime.cwd}')
+            # validate_module(module)
+            imported_modules_list.append(module)
+            
+    return imported_modules_list
 
+def load_modules_custom(cfg, state, modules_list, imported_modules_list) -> List[ModuleType]:
+    
+    from importlib.machinery import SourceFileLoader
+
+    # print("Testing for custom modules first - then will load default IGM modules...")
+    for module_name in modules_list:
+        # Local Directory
+        try:
+            module = SourceFileLoader(f"{module_name}",f".{module_name}.py").load_module()
+        except FileNotFoundError:
+            # print(f'{module_name} [not found] in local working directory: {HydraConfig.get().runtime.cwd}. Trying custom modules directory...')
+            
+            # Custom Modules Folder
+            try:
+                module = SourceFileLoader(f"{module_name}",f"{HydraConfig.get().runtime.cwd}/{cfg.core.custom_modules_folder}/{module_name}.py").load_module()
+            except FileNotFoundError:
+                pass
+                # print(f'{module_name} [not found] in local directory or custom modules directory')
+            else:
+                # print(f'{module_name} [found] in custom modules directory: {HydraConfig.get().runtime.cwd}/{cfg.core.custom_modules_folder}')
+                # validate_module(module)
+                imported_modules_list.append(module)            
+        else:
+            # print(f'{module_name} [found] in local working directory: {HydraConfig.get().runtime.cwd}')
+            # validate_module(module)
+            imported_modules_list.append(module)
+            
+    return imported_modules_list
+
+def load_modules_custom_output(cfg, state, modules_list, imported_modules_list) -> List[ModuleType]:
+    
+    from importlib.machinery import SourceFileLoader
+
+    # print("Testing for custom modules first - then will load default IGM modules...")
+    for module_name in modules_list:
+        # Local Directory
+        try:
+            module = SourceFileLoader(f"{module_name}",f".{module_name}.py").load_module()
+        except FileNotFoundError:
+            # print(f'{module_name} [not found] in local working directory: {HydraConfig.get().runtime.cwd}. Trying custom modules directory...')
+            
+            # Custom Modules Folder
+            try:
+                module = SourceFileLoader(f"{module_name}",f"{HydraConfig.get().runtime.cwd}/{cfg.core.custom_output_modules_folder}/{module_name}.py").load_module()
+            except FileNotFoundError:
+                pass
+                # print(f'{module_name} [not found] in local directory or custom modules directory')
+            else:
+                # print(f'{module_name} [found] in custom modules directory: {HydraConfig.get().runtime.cwd}/{cfg.core.custom_modules_folder}')
+                # validate_module(module)
+                imported_modules_list.append(module)            
+        else:
+            # print(f'{module_name} [found] in local working directory: {HydraConfig.get().runtime.cwd}')
+            # validate_module(module)
+            imported_modules_list.append(module)
+            
+    return imported_modules_list
+            
+def load_modules_igm(cfg, state, modules_list, imported_modules_list) -> List[ModuleType]:
+    
+    from importlib.machinery import SourceFileLoader
+
+    # print("Testing for custom modules first - then will load default IGM modules...")
+    imported_modules_names = [module.__name__ for module in imported_modules_list]
+    for module_name in modules_list:
+        if module_name in imported_modules_names:
+            continue
+        
+        module_path = f"igm.modules.{module_name}"
+        module = importlib.import_module(module_path)
+        validate_module(module)
+        imported_modules_list.append(module)
+
+def load_input_modules_igm(cfg, state, modules_list, imported_modules_list) -> List[ModuleType]:
+    
+    from importlib.machinery import SourceFileLoader
+
+    # print("Testing for custom modules first - then will load default IGM modules...")
+    imported_modules_names = [module.__name__ for module in imported_modules_list]
+    for module_name in modules_list:
+        if module_name in imported_modules_names:
+            continue
+        
+        module_path = f"igm.input.{module_name}"
+        module = importlib.import_module(module_path)
+        # validate_module(module)
+        imported_modules_list.append(module)
+
+def load_output_modules_igm(cfg, state, modules_list, imported_modules_list) -> List[ModuleType]:
+    
+    from importlib.machinery import SourceFileLoader
+
+    # print("Testing for custom modules first - then will load default IGM modules...")
+    imported_modules_names = [module.__name__ for module in imported_modules_list]
+    for module_name in modules_list:
+        if module_name in imported_modules_names:
+            continue
+        
+        module_path = f"igm.output.{module_name}"
+        module = importlib.import_module(module_path)
+        # validate_module(module)
+        imported_modules_list.append(module)
+        
+            
+# def load_modules_custom_directory(module_name: str, custom_modules_folder: str):
+#     print(f"{custom_modules_folder}.{module_name}")
+#     module = importlib.import_module(f"{custom_modules_folder}.{module_name}")
+    
 def validate_module(module) -> None:
     """Validates that a module has the required functions to be used in IGM."""
     required_functions = ["initialize", "finalize", "update"]
@@ -111,117 +280,85 @@ def validate_module(module) -> None:
                 f"Please see https://github.com/jouvetg/igm/wiki/5.-Custom-modules-(coding) for more information on how to construct custom modules.",
             )
 
-import warnings
-def import_custom_module(module_name: str, custom_modules_folder: str):
-    module = None
-    try:
-        module = importlib.import_module(module_name)
-    except ModuleNotFoundError:
-        try:
-            module = importlib.import_module(f"{custom_modules_folder}.{module_name}")
-        except ModuleNotFoundError:
-            # raise ValueError(
-            # warnings.warn(
-                # f"{module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/ directory or 2) in your current working directory."
-            # )
-            #     f"Can not find module {module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/ directory or 2) in your current working directory."
-            # )
-            pass
+# import warnings
+# def import_custom_module(module_name: str, custom_modules_folder: str):
+#     module = None
+#     try:
+#         module = importlib.import_module(module_name)
+#     except ModuleNotFoundError:
+#         print('here it is')
+#         try:
+#             module = importlib.import_module(f"{custom_modules_folder}.{module_name}")
+#         except ModuleNotFoundError:
+#             # raise ValueError(
+#             # warnings.warn(
+#                 # f"{module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/ directory or 2) in your current working directory."
+#             # )
+#             #     f"Can not find module {module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/ directory or 2) in your current working directory."
+#             # )
+#             pass
 
-    return module
-
-
-def load_modules_from_directory(  # CAREFUL -> OVERRIDING FUNCTIONS ARE NOT ACTUALLY HAPPENING! FIX!!!
-    cfg, state, modules_list: List[str]
-) -> List[ModuleType]:
-    imported_modules = []
-    for module_name in modules_list:
-        module_path = f"igm.modules.{module_name}"
-
-        # print(module_path)
-        # ! CLEAN UP THIS CODE
-        # Look into best practices for logging and error handling (as this is a tricky sequence...)
-        try:
-            # print(module_path)
-            module = importlib.import_module(module_path)
-            # print(module)
-
-            # state.logger.info(
-            #     f"Module {module_name} exist in source code. Checking to see if an override is attempted."
-            # )
-            if module_name not in ['time']: # temporary solution here to get around the builtin module issue...
-                custom_module = import_custom_module(
-                    module_name, custom_modules_folder=cfg.core.custom_modules_folder
-                )
-            else:
-                custom_module = module
-            if custom_module is None:
-                # state.logger.info(
-                #     f"Using source code version for module {module_name}."
-                # )
-                pass
-            else:
-                # state.logger.info(
-                #     f"Custom module {module_name} has overridden the original module."
-                # )
-                # print('c', custom_module)
-                module = custom_module
-                # print(module)
-
-        except ModuleNotFoundError:
-            # state.logger.info(f"Module {module_name} does not exist in source code.")
-            custom_module_attempted = True
-
-            if custom_module_attempted:
-                # state.logger.info(
-                    # f"Custom module {module_name} attempted. Attempting to import it."
-                # )
-                module = import_custom_module(
-                    module_name, custom_modules_folder=cfg.core.custom_modules_folder
-                )
-                # if module is not None:
-                    # state.logger.info(f"Custom module {module_name} successfully imported.")
-
-        if module is not None:
-            # state.logger.info(f"Validating {module_name} module.")
-            validate_module(module)
-            imported_modules.append(module)
-
-    return imported_modules
+#     return module
 
 
-# def load_modules_from_directory( # CAREFUL -> OVERRIDING FUNCTIONS ARE NOT ACTUALLY HAPPENING! FIX!!!
-#     modules_list: List[str]
+# def load_modules_from_directory(  # CAREFUL -> OVERRIDING FUNCTIONS ARE NOT ACTUALLY HAPPENING! FIX!!!
+#     cfg, state, modules_list: List[str]
 # ) -> List[ModuleType]:
 #     imported_modules = []
 #     for module_name in modules_list:
 #         module_path = f"igm.modules.{module_name}"
 
+#         # print(module_path)
+#         # ! CLEAN UP THIS CODE
+#         # Look into best practices for logging and error handling (as this is a tricky sequence...)
 #         try:
+#             # print(module_path)
 #             module = importlib.import_module(module_path)
-#             print(f"Module {module_name} exist in source code.")
-#             try:
-#                 # test if one is trying to overrite existing module...
+#             # print(module)
+
+#             # state.logger.info(
+#             #     f"Module {module_name} exist in source code. Checking to see if an override is attempted."
+#             # )
+#             if module_name not in ['time']: # temporary solution here to get around the builtin module issue...
+#                 custom_module = import_custom_module(
+#                     module_name, custom_modules_folder=cfg.core.custom_modules_folder
+#                 )
+#                 print(module)
+#                 print(custom_module)
+#             else:
+#                 custom_module = module
+#             if custom_module is None:
+#                 # state.logger.info(
+#                 #     f"Using source code version for module {module_name}."
+#                 # )
+#                 pass
+#             else:
+#                 # state.logger.info(
+#                 #     f"Custom module {module_name} has overridden the original module."
+#                 # )
+#                 # print('c', custom_module)
+#                 module = custom_module
+#                 # print(module)
 
 #         except ModuleNotFoundError:
-#             logging.info(
-#                 f"Error importing module: {module_path}, checking for custom package in current working directory."
-#             )
-#             try:
-#                 logging.info(
-#                     f"Trying to import custom module from current working directory (folder or .py): {module_name}"
-#                 )
-#                 try:
-#                     module = importlib.import_module(module_name)
-#                 except ModuleNotFoundError:
-#                     module = importlib.import_module("modules_custom." + module_name)
-#             except ModuleNotFoundError:
-#                 raise ModuleNotFoundError(
-#                     f"Can not find module {module_name}. Make sure it is either in the 1) {Path(igm.__file__).parent}/modules/ directory or 2) in your current working directory."
-#                 )
+#             # state.logger.info(f"Module {module_name} does not exist in source code.")
+#             custom_module_attempted = True
 
-#         validate_module(module)
-#         imported_modules.append(module)
+#             if custom_module_attempted:
+#                 # state.logger.info(
+#                     # f"Custom module {module_name} attempted. Attempting to import it."
+#                 # )
+#                 module = import_custom_module(
+#                     module_name, custom_modules_folder=cfg.core.custom_modules_folder
+#                 )
+#                 # if module is not None:
+#                     # state.logger.info(f"Custom module {module_name} successfully imported.")
+
+#         if module is not None:
+#             # state.logger.info(f"Validating {module_name} module.")
+#             validate_module(module)
+#             imported_modules.append(module)
+#             print(module)
 
 #     return imported_modules
 
@@ -241,12 +378,12 @@ def print_gpu_info() -> None:
     print(f"{'':-^150}")
 
 
-def save_params(cfg, extension="yaml") -> None:
-    param_file = f"{cfg.saved_params_filename}.{extension}"
-    yaml_params = OmegaConf.to_yaml(cfg)
-    # load the given parameters
-    with open(param_file, "w") as file:
-        yaml.dump(yaml_params, file)
+# def save_params(cfg, extension="yaml") -> None:
+#     param_file = f"{cfg.saved_params_filename}.{extension}"
+#     yaml_params = OmegaConf.to_yaml(cfg)
+#     # load the given parameters
+#     with open(param_file, "w") as file:
+#         yaml.dump(yaml_params, file)
 
 
 def download_unzip_and_store(url, folder_path) -> None:

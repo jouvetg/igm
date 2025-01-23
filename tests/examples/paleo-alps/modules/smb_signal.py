@@ -7,44 +7,45 @@ import tensorflow as tf
 import numpy as np
 from scipy.interpolate import interp1d
 
-def params(parser):
+# def params(parser):
 
-    parser.add_argument(
-        "--pdela",
-        type=float,
-        default=30000,
-        help="present-day ELA",
-    )
-    parser.add_argument(
-        "--deladt",
-        type=float,
-        default=200,
-        help="Delta dt",
-    )
-    parser.add_argument(
-        "--gradabl",
-        type=float,
-        default=0.0067,
-        help="Abalation gradient",
-    )
-    parser.add_argument(
-        "--gradacc",
-        type=float,
-        default=0.0005,
-        help="Accumulation gradient",
-    )
-    parser.add_argument(
-        "--maxacc",
-        type=float,
-        default=1.0,
-        help="Maximum accumulation",
-    )
+#     parser.add_argument(
+#         "--pdela",
+#         type=float,
+#         default=30000,
+#         help="present-day ELA",
+#     )
+#     parser.add_argument(
+#         "--deladt",
+#         type=float,
+#         default=200,
+#         help="Delta dt",
+#     )
+#     parser.add_argument(
+#         "--gradabl",
+#         type=float,
+#         default=0.0067,
+#         help="Abalation gradient",
+#     )
+#     parser.add_argument(
+#         "--gradacc",
+#         type=float,
+#         default=0.0005,
+#         help="Accumulation gradient",
+#     )
+#     parser.add_argument(
+#         "--maxacc",
+#         type=float,
+#         default=1.0,
+#         help="Maximum accumulation",
+#     )
 
 def initialize(cfg,state):
     """
         Retrieve the Temperature difference from the EPICA signal
     """
     # load the EPICA signal from theparams,state official data
+    
     ss = np.loadtxt('data/EDC_dD_temp_estim.tab',dtype=np.float32,skiprows=31)
     time = ss[:,1] * -1000  # extract time BP, chnage unit to yeat
     dT   = ss[:,3]          # extract the dT, i.e. global temp. difference

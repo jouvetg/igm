@@ -6,8 +6,8 @@ hydra:
 
 defaults:
   - override /input: [synthetic]
-  - override /modules: [blank, smb_simple, iceflow, time, thk, vert_flow, particles, print_info]
-  - override /output: [write_ncdf, plot2d]
+  - override /modules: [smb_simple, iceflow, time, thk, vert_flow, particles, print_info]
+  - override /output: [write_ncdf]
 
 modules:
   time:
@@ -23,6 +23,6 @@ modules:
              [ 2000,      0.009,     0.005,  2900,      2.0],
              [ 2100,      0.009,     0.005,  3300,      2.0]]
 
-output:
-  plot2d:
-    live: true
+# output: null
+  # plot2d:
+    # live: true

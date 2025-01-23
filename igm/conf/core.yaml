@@ -19,4 +19,7 @@ core:
   print_params: True
   print_comp: False
   
-  custom_modules_folder: modules_custom
+  # Custom Modules
+  custom_input_modules_folder: input
+  custom_modules_folder: modules
+  custom_output_modules_folder: output

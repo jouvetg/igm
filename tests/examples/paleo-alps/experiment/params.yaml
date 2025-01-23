@@ -8,9 +8,12 @@ hydra:
     chdir: True
 
 defaults:
-  - override /modules: [time, iceflow, thk, print_info]
+  - /modules/smb_signal: smb_signal # Loads the base configuration. Needs to be before an `override` I believe, otherwise, we get an assertion error
+  
   - override /input: [load_tif]
-  - override /output: [write_ncdf,plot2d]
+  - override /modules: [time, iceflow, smb_signal, thk, print_info]
+  - override /output: [write_ncdf, plot2d]
+
 
 input:
   load_tif:
@@ -23,11 +26,7 @@ modules:
     end: -25000.0
     save: 100.0
   smb_signal:
-    pdela: 3000.0 # default param in the .py file has a big typo (30000 instead of 3000...)
-    deladt: 200.0
-    gradabl: 0.0067
-    gradacc: 0.0005
-    maxacc: 1.0
+    pdela: 900.0 # default param in the .py file has a big typo (30000 instead of 3000...)
 
 output:
   plot2d:

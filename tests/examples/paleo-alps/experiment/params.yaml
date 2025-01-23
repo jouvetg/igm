@@ -8,7 +8,8 @@ hydra:
     chdir: True
 
 defaults:
-  - /modules/smb_signal: smb_signal # Loads the base configuration. Needs to be before an `override` I believe, otherwise, we get an assertion error
+  # - /modules/smb_signal@modules.smb_signal: smb_signal # Loads the base configuration. Needs to be before an `override` I believe, otherwise, we get an assertion error
+  - /user/conf/modules@modules.smb_signal: smb_signal # Loads the base configuration. Needs to be before an `override` I believe, otherwise, we get an assertion error
   
   - override /input: [load_tif]
   - override /modules: [time, iceflow, smb_signal, thk, print_info]

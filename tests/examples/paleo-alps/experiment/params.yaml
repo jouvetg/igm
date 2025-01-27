@@ -2,6 +2,8 @@
 
 core:
   url_data: https://www.dropbox.com/scl/fi/7pib29dhsuo2t80yplu2j/paleo-alps-v1.zip?rlkey=jsyz0qseyv9jqk63vz3lk6mf0&dl=0
+  logging: True
+  print_params: True
 
 hydra:
   job:
@@ -9,26 +11,30 @@ hydra:
 
 defaults:
   # - /modules/smb_signal@modules.smb_signal: smb_signal # Loads the base configuration. Needs to be before an `override` I believe, otherwise, we get an assertion error
+  - _self_
   - /user/conf/modules@modules.smb_signal: smb_signal # Loads the base configuration. Needs to be before an `override` I believe, otherwise, we get an assertion error
   
   - override /input: [load_tif]
-  - override /modules: [time, iceflow, smb_signal, thk, print_info]
+  - override /modules: [time, iceflow, thk, smb_signal, print_info]
   - override /output: [write_ncdf, plot2d]
-
+  - override /hydra/launcher: joblib
 
 input:
+  order: [load_tif]
   load_tif:
     folder: "data"
     coarsen: 2
 
 modules:
+  order: [time, iceflow, thk, smb_signal, print_info]
+  smb_signal:
+    pdela: 900.0 # default param in the .py file has a big typo (30000 instead of 3000...)
   time:
     start: -30000.0
     end: -25000.0
     save: 100.0
-  smb_signal:
-    pdela: 900.0 # default param in the .py file has a big typo (30000 instead of 3000...)
 
 output:
+  order: [plot2d, write_ncdf]
   plot2d:
     live: true

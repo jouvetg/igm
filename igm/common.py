@@ -45,6 +45,7 @@ class State:
 
 
 from omegaconf import DictConfig, OmegaConf
+from hydra.core.hydra_config import HydraConfig
 
 
 def setup_igm_modules(cfg, state) -> List[ModuleType]:
@@ -53,13 +54,8 @@ def setup_igm_modules(cfg, state) -> List[ModuleType]:
 
 def initialize_modules(modules: List, cfg: Any, state: State) -> None:
     for module in modules:
-        print(f"Initializing module: {module.__name__.split('.')[-1]}")
-        # print(dir(module))
-        # print(module)
-        # print(dir(state))
+        state.logger.info(f"Initializing module: {module.__name__.split('.')[-1]}")
         module.initialize(cfg, state)
-        # print(dir(state))
-        # exit()
 
 
 def run_model(modules: List, output_modules: List, cfg: Any, state: State) -> None:
@@ -73,6 +69,7 @@ def run_model(modules: List, output_modules: List, cfg: Any, state: State) -> No
 # def run_finalizers(modules: List, cfg: Any, state: State) -> None:
 #     for module in modules:
 #         module.finalize(cfg, state)
+
 
 def run_outputs(output_modules: List, cfg: Any, state: State) -> None:
     for module in output_modules:
@@ -98,80 +95,148 @@ def add_logger(cfg, state) -> None:
 
     state.logger = logging.getLogger("igm")
 
+def get_module_name(module):
+        return module.__name__.split('.')[-1]
 
-def load_modules(cfg, state) -> List[ModuleType]:
+def load_modules(
+    cfg, state
+) -> Tuple[List[ModuleType], List[ModuleType], List[ModuleType]]:
     """Returns a list of actionable modules to then apply the update, initialize, finalize functions on for IGM."""
     imported_input_modules = []
     imported_modules = []
     imported_output_modules = []
-    
-    # print(cfg.output)
+
+    # print('LISTS')
+    # print('input', cfg.input)
+    # print('modules', cfg.modules.keys())
+    # print('modules order', cfg.modules.order)
+    # print('output', cfg.output)
     # exit()
+    input_modules_list = dict(cfg.input).pop("order")
+    modules_list = dict(cfg.modules).pop("order")
+    output_modules_list = dict(cfg.output).pop("order")
+    # modules_list = list(cfg.modules.keys()).pop(['order'])
+    print(modules_list)
     # imported_modules = load_modules_from_directory(cfg, state, modules_list=cfg.modules)
-    root_foldername = f"{HydraConfig.get().runtime.cwd}/{cfg.core.structure.root_foldername}"
-    
+    root_foldername = (
+        f"{HydraConfig.get().runtime.cwd}/{cfg.core.structure.root_foldername}"
+    )
+
     user_input_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.input_modules_foldername}"
-    
-    load_user_modules(cfg, state, modules_list=cfg.input, imported_modules_list=imported_input_modules, module_folder=user_input_modules_folder)
-    load_modules_igm(cfg, state, modules_list=cfg.input, imported_modules_list=imported_input_modules, module_type='input')
-    
-    
+
+    load_user_modules(
+        cfg=cfg,
+        state=state,
+        modules_list=input_modules_list,
+        imported_modules_list=imported_input_modules,
+        module_folder=user_input_modules_folder,
+    )
+    load_modules_igm(
+        cfg=cfg,
+        state=state,
+        modules_list=input_modules_list,
+        imported_modules_list=imported_input_modules,
+        module_type="input",
+    )
+
     user_process_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.process_modules_foldername}"
-    load_user_modules(cfg, state, modules_list=cfg.modules, imported_modules_list=imported_modules, module_folder=user_process_modules_folder)
-    load_modules_igm(cfg, state, modules_list=cfg.modules, imported_modules_list=imported_modules, module_type='modules')
-    
+    load_user_modules(
+        cfg=cfg,
+        state=state,
+        modules_list=modules_list,
+        imported_modules_list=imported_modules,
+        module_folder=user_process_modules_folder,
+    )
+    load_modules_igm(
+        cfg=cfg,
+        state=state,
+        modules_list=modules_list,
+        imported_modules_list=imported_modules,
+        module_type="modules",
+    )
+
     # print(user_input_modules_folder)
     # exit()
     user_output_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.output_modules_foldername}"
-    load_user_modules(cfg, state, modules_list=cfg.output, imported_modules_list=imported_output_modules, module_folder=user_output_modules_folder)
-    load_modules_igm(cfg, state, modules_list=cfg.output, imported_modules_list=imported_output_modules, module_type='output')
+    load_user_modules(
+        cfg=cfg,
+        state=state,
+        modules_list=output_modules_list,
+        imported_modules_list=imported_output_modules,
+        module_folder=user_output_modules_folder,
+    )
+    load_modules_igm(
+        cfg=cfg,
+        state=state,
+        modules_list=output_modules_list,
+        imported_modules_list=imported_output_modules,
+        module_type="output",
+    )
     
+    # Reorder modules
+    input_order_dict = {name: index for index, name in enumerate(cfg.input.order)}
+    imported_input_modules = sorted(imported_input_modules, key=lambda module: input_order_dict[get_module_name(module)])
+    
+    modules_order_dict = {name: index for index, name in enumerate(cfg.modules.order)}
+    imported_modules = sorted(imported_modules, key=lambda module: modules_order_dict[get_module_name(module)])
+    
+    output_order_dict = {name: index for index, name in enumerate(cfg.output.order)}
+    imported_output_modules = sorted(imported_output_modules, key=lambda module: output_order_dict[get_module_name(module)])
+
     print(f"{'':-^100}")
     print(f"{'INPUT Modules':-^100}")
     for i, input_module in enumerate(imported_input_modules):
-        print(f' {i}: {input_module}')
+        print(f" {i}: {input_module}")
     print(f"{'PHYSICAL Modules':-^100}")
     for i, module in enumerate(imported_modules):
-        print(f' {i}: {module}')
+        print(f" {i}: {module}")
     print(f"{'OUTPUT Modules':-^100}")
     for i, output_module in enumerate(imported_output_modules):
-        print(f' {i}: {output_module}')
+        print(f" {i}: {output_module}")
     print(f"{'':-^100}")
-    
+
     return imported_input_modules, imported_modules, imported_output_modules
 
-from hydra.core.hydra_config import HydraConfig
-def load_user_modules(cfg, state, modules_list, imported_modules_list, module_folder) -> List[ModuleType]:
-    
+
+def load_user_modules(
+    cfg, state, modules_list, imported_modules_list, module_folder
+) -> List[ModuleType]:
+
     from importlib.machinery import SourceFileLoader
 
     # print("Testing for custom modules first - then will load default IGM modules...")
     for module_name in modules_list:
+        print("module name", module_name)
         # Local Directory
         try:
-            module = SourceFileLoader(f"{module_name}",f".{module_name}.py").load_module()
+            module = SourceFileLoader(
+                f"{module_name}", f".{module_name}.py"
+            ).load_module()
         except FileNotFoundError:
             # print(f'{module_name} [not found] in local working directory: {HydraConfig.get().runtime.cwd}. Trying custom modules directory...')
-            
+
             # Custom Modules Folder
             try:
-                module = SourceFileLoader(f"{module_name}",f"{module_folder}/{module_name}.py").load_module()
+                module = SourceFileLoader(
+                    f"{module_name}", f"{module_folder}/{module_name}.py"
+                ).load_module()
             except FileNotFoundError:
                 pass
                 # print(f'{module_name} [not found] in local directory or custom modules directory')
             else:
                 # print(f'{module_name} [found] in custom modules directory: {HydraConfig.get().runtime.cwd}/{cfg.core.custom_modules_folder}')
                 # validate_module(module)
-                imported_modules_list.append(module)            
+                imported_modules_list.append(module)
         else:
             # print(f'{module_name} [found] in local working directory: {HydraConfig.get().runtime.cwd}')
             # validate_module(module)
             imported_modules_list.append(module)
-            
+
     return imported_modules_list
 
+
 # def load_modules_custom(cfg, state, modules_list, imported_modules_list) -> List[ModuleType]:
-    
+
 #     from importlib.machinery import SourceFileLoader
 
 #     # print("Testing for custom modules first - then will load default IGM modules...")
@@ -181,7 +246,7 @@ def load_user_modules(cfg, state, modules_list, imported_modules_list, module_fo
 #             module = SourceFileLoader(f"{module_name}",f".{module_name}.py").load_module()
 #         except FileNotFoundError:
 #             # print(f'{module_name} [not found] in local working directory: {HydraConfig.get().runtime.cwd}. Trying custom modules directory...')
-            
+
 #             # Custom Modules Folder
 #             try:
 #                 module = SourceFileLoader(f"{module_name}",f"{HydraConfig.get().runtime.cwd}/{cfg.core.custom_modules_folder}/{module_name}.py").load_module()
@@ -191,16 +256,16 @@ def load_user_modules(cfg, state, modules_list, imported_modules_list, module_fo
 #             else:
 #                 # print(f'{module_name} [found] in custom modules directory: {HydraConfig.get().runtime.cwd}/{cfg.core.custom_modules_folder}')
 #                 # validate_module(module)
-#                 imported_modules_list.append(module)            
+#                 imported_modules_list.append(module)
 #         else:
 #             # print(f'{module_name} [found] in local working directory: {HydraConfig.get().runtime.cwd}')
 #             # validate_module(module)
 #             imported_modules_list.append(module)
-            
+
 #     return imported_modules_list
 
 # def load_modules_custom_output(cfg, state, modules_list, imported_modules_list) -> List[ModuleType]:
-    
+
 #     from importlib.machinery import SourceFileLoader
 
 #     # print("Testing for custom modules first - then will load default IGM modules...")
@@ -210,7 +275,7 @@ def load_user_modules(cfg, state, modules_list, imported_modules_list, module_fo
 #             module = SourceFileLoader(f"{module_name}",f".{module_name}.py").load_module()
 #         except FileNotFoundError:
 #             # print(f'{module_name} [not found] in local working directory: {HydraConfig.get().runtime.cwd}. Trying custom modules directory...')
-            
+
 #             # Custom Modules Folder
 #             try:
 #                 module = SourceFileLoader(f"{module_name}",f"{HydraConfig.get().runtime.cwd}/{cfg.core.custom_output_modules_folder}/{module_name}.py").load_module()
@@ -220,34 +285,38 @@ def load_user_modules(cfg, state, modules_list, imported_modules_list, module_fo
 #             else:
 #                 # print(f'{module_name} [found] in custom modules directory: {HydraConfig.get().runtime.cwd}/{cfg.core.custom_modules_folder}')
 #                 # validate_module(module)
-#                 imported_modules_list.append(module)            
+#                 imported_modules_list.append(module)
 #         else:
 #             # print(f'{module_name} [found] in local working directory: {HydraConfig.get().runtime.cwd}')
 #             # validate_module(module)
 #             imported_modules_list.append(module)
-            
+
 #     return imported_modules_list
-            
-def load_modules_igm(cfg, state, modules_list, imported_modules_list, module_type) -> List[ModuleType]:
-    
+
+
+def load_modules_igm(
+    cfg, state, modules_list, imported_modules_list, module_type
+) -> List[ModuleType]:
+
     from importlib.machinery import SourceFileLoader
 
     # print("Testing for custom modules first - then will load default IGM modules...")
     imported_modules_names = [module.__name__ for module in imported_modules_list]
-    print(imported_modules_names)
+    # print(imported_modules_names)
     # exit()
     for module_name in modules_list:
         if module_name in imported_modules_names:
             continue
-        
+
         module_path = f"igm.{module_type}.{module_name}"
         module = importlib.import_module(module_path)
-        if module_type == 'modules':
+        if module_type == "modules":
             validate_module(module)
         imported_modules_list.append(module)
 
+
 # def load_input_modules_igm(cfg, state, modules_list, imported_modules_list) -> List[ModuleType]:
-    
+
 #     from importlib.machinery import SourceFileLoader
 
 #     # print("Testing for custom modules first - then will load default IGM modules...")
@@ -255,14 +324,14 @@ def load_modules_igm(cfg, state, modules_list, imported_modules_list, module_typ
 #     for module_name in modules_list:
 #         if module_name in imported_modules_names:
 #             continue
-        
+
 #         module_path = f"igm.input.{module_name}"
 #         module = importlib.import_module(module_path)
 #         # validate_module(module)
 #         imported_modules_list.append(module)
 
 # def load_output_modules_igm(cfg, state, modules_list, imported_modules_list) -> List[ModuleType]:
-    
+
 #     from importlib.machinery import SourceFileLoader
 
 #     # print("Testing for custom modules first - then will load default IGM modules...")
@@ -270,17 +339,18 @@ def load_modules_igm(cfg, state, modules_list, imported_modules_list, module_typ
 #     for module_name in modules_list:
 #         if module_name in imported_modules_names:
 #             continue
-        
+
 #         module_path = f"igm.output.{module_name}"
 #         module = importlib.import_module(module_path)
 #         # validate_module(module)
 #         imported_modules_list.append(module)
-        
-            
+
+
 # def load_modules_custom_directory(module_name: str, custom_modules_folder: str):
 #     print(f"{custom_modules_folder}.{module_name}")
 #     module = importlib.import_module(f"{custom_modules_folder}.{module_name}")
-    
+
+
 def validate_module(module) -> None:
     """Validates that a module has the required functions to be used in IGM."""
     required_functions = ["initialize", "finalize", "update"]
@@ -290,6 +360,7 @@ def validate_module(module) -> None:
                 f"Module {module} is missing the required function ({function}). If it is a custom python package, make sure to include the 3 required functions: ['initialize', 'finalize', 'update'].",
                 f"Please see https://github.com/jouvetg/igm/wiki/5.-Custom-modules-(coding) for more information on how to construct custom modules.",
             )
+
 
 # import warnings
 # def import_custom_module(module_name: str, custom_modules_folder: str):
@@ -412,24 +483,25 @@ def download_unzip_and_store(url, folder_path) -> None:
     import zipfile
 
     # Ensure the destination folder exists
-    if not os.path.exists(folder_path): # directory exists?
+    if not os.path.exists(folder_path):  # directory exists?
         os.makedirs(folder_path)
 
         # Download the file with wget
-        print("Downloading the ZIP file with wget...")
+        logging.info("Downloading the ZIP file with wget...")
         subprocess.run(["wget", "-O", "downloaded_file.zip", url])
 
         # Unzipping the file
-        print("Unzipping the file...")
+        logging.info("Unzipping the file...")
         with zipfile.ZipFile("downloaded_file.zip", "r") as zip_ref:
             zip_ref.extractall(folder_path)
 
         # Clean up (delete) the zip file after extraction
         os.remove("downloaded_file.zip")
-        print(f"File successfully downloaded and extracted to '{folder_path}'")
+        logging.info(f"File successfully downloaded and extracted to '{folder_path}'")
 
     else:
-        print(f"The data already exists at '{folder_path}'")
+        logging.info(f"The data already exists at '{folder_path}'")
+
 
 def print_comp(state):
     ################################################################
@@ -527,6 +599,7 @@ def _plot_computational_pie(state):
     plt.savefig("computational-pie.png", pad_inches=0)
     plt.close("all")
 
+
 def _plot_memory_pie(state):
     """
     Plot to the memory size of each model components in a pie
@@ -575,4 +648,3 @@ def _plot_memory_pie(state):
     plt.tight_layout()
     plt.savefig("memory-pie.png", pad_inches=0)
     plt.close("all")
-

@@ -18,3 +18,5 @@ hydra:
   searchpath:
     - file:///${cwd} # adds cwd to the search path
 
+modules:
+  order: null # this is a list of modules that will be executed in order

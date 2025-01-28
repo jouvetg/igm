@@ -1,0 +1,33 @@
+- Name: saved_params_filename
+  Description: Filename of the saved parameters (will be depreciated with hydra)
+  Units: -
+- Name: url_data
+  Description: Url supplied to download .nc data files
+  Units: -
+- Name: folder_data
+  Description: data
+  Units: -
+- Name: logging_file
+  Description: ""
+  Units: -
+
+
+- Name: logging
+  Description: False
+  Units: -
+- Name: logging_level
+  Description: 30
+  Units: -
+
+  # Hardware
+- Name: gpu_id
+  Description: 0
+  Units: -
+- Name: gpu_info
+  Description: True
+  Units: -
+
+  # Misc
+- Name: print_params
+  Description: True
+  Units: -

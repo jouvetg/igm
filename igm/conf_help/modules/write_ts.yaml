@@ -1,0 +1,2 @@
+write_ts:
+  wts_output_file: output_ts.nc # help="Output ncdf data file (time series)"

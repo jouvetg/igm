@@ -1,0 +1,68 @@
+- Name: enth_water_density
+  Description: "Constant of the Water density"
+  Units: $kg \\times m^{-3}$
+- Name: enth_spy
+  Description: "Number of seconds per years "
+  Units: $s y^{-1}$
+- Name: enth_ki
+  Description: "Conductivity of cold ice  (Aschwanden and al, JOG, 2012)"
+  Units: [W m-1 K-1]
+- Name: enth_ci
+  Description: "Specific heat capacity of ice  (Aschwanden and al, JOG, 2012)"
+  Units: [W s kg-1 K-1]
+- Name: enth_Lh
+  Description: "latent heat of fusion  (Aschwanden and al, JOG, 2012)"
+  Units: "[W s kg-1] = [E]"
+- Name: enth_KtdivKc
+  Description: "Ratio of temp vs cold ice diffusivity  (Aschwanden and al, JOG, 2012)"
+  Units: Kt / Kc [no unit]
+- Name: enth_claus_clape
+  Description: "Clausius-Clapeyron constant  (Aschwanden and al, JOG, 2012)"
+  Units: [K Pa-1]
+- Name: enth_melt_temp
+  Description: "Melting point at standart pressure  (Aschwanden and al, JOG, 2012)"
+  Units: [K]
+- Name: enth_ref_temp
+  Description: "Reference temperature  (Aschwanden and al, JOG, 2012)"
+  Units: [K]
+- Name: enth_till_friction_angle
+  Description: "Till friction angle in the Mohr-Coulomb friction law "
+  Units: [deg]
+- Name: enth_till_friction_angle_bed_min
+  Description: "enth_till_friction_angle_bed_min"
+  Units:
+- Name: enth_till_friction_angle_bed_max
+  Description: "enth_till_friction_angle_bed_max"
+  Units:
+- Name: enth_till_friction_angle_phi_min
+  Description: "enth_till_friction_angle_phi_min"
+  Units:
+- Name: enth_till_friction_angle_phi_max
+  Description: "enth_till_friction_angle_phi_max"
+  Units:
+- Name: enth_uthreshold
+  Description: "uthreshold"
+  Units: [m/y]
+- Name: enth_drain_rate
+  Description: "Drain rate at 1 mm/y (Bueler and Pelt, GMD, 2015)"
+  Units: [m y-1]
+- Name: enth_till_wat_max
+  Description: "Maximum water till tickness  (Bueler and Pelt, GMD, 2015)"
+  Units: [m]
+- Name: enth_drain_ice_column
+  Description: "Transform the water content beyond a thr=0.01 into water, drain it, and add it to basal melt rate"
+  Units:
+- Name: enth_default_bheatflx
+  Description: "Geothermal heat flux "
+  Units: [W m-2]
+- Name: temperature_offset_air_to_ice
+  Description: "This is the offset between the air temperature and the ice temperature as records show [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder than the temperature of ice to be given as boundary upper condition to the Enthlapy model"
+  Units:
+- Name: enth_tauc_min
+  Description: "lower bound for tauc "
+  Units: [Pa]
+- Name: enth_tauc_max
+  Description: "lower bound for tauc "
+  Units: [Pa]
+
+

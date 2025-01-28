@@ -1,0 +1,4 @@
+particles_v1:
+  part_tracking_method: 3d # help="Method for tracking particles (3d or simple)"
+  part_frequency_seeding: 10 # help="Frequency of seeding (default: 10)"
+  part_density_seeding: 0.2 # help="Density of seeding (default: 0.2)"

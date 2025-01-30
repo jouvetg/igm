@@ -11,22 +11,21 @@ hydra:
 
 defaults:
   # - /modules/smb_signal@modules.smb_signal: smb_signal # Loads the base configuration. Needs to be before an `override` I believe, otherwise, we get an assertion error
-  - _self_
   - /user/conf/modules@modules.smb_signal: smb_signal # Loads the base configuration. Needs to be before an `override` I believe, otherwise, we get an assertion error
   
   - override /input: [load_tif]
   - override /modules: [time, iceflow, thk, smb_signal, print_info]
-  - override /output: [write_ncdf, plot2d]
+  - override /output: [plot2d, write_ncdf]
   - override /hydra/launcher: joblib
 
 input:
-  order: [load_tif]
+  # order: [load_tif]
   load_tif:
     folder: "data"
     coarsen: 2
 
 modules:
-  order: [time, iceflow, thk, smb_signal, print_info]
+  # order: [time, iceflow, thk, smb_signal, print_info]
   smb_signal:
     pdela: 900.0 # default param in the .py file has a big typo (30000 instead of 3000...)
   time:
@@ -35,6 +34,6 @@ modules:
     save: 100.0
 
 output:
-  order: [plot2d, write_ncdf]
+  # order: [plot2d, write_ncdf]
   plot2d:
     live: true

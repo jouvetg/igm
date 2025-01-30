@@ -98,6 +98,44 @@ def add_logger(cfg, state) -> None:
 def get_module_name(module):
         return module.__name__.split('.')[-1]
 
+def get_orders():
+    import yaml
+    # Get hydra experiment file from hydra object!
+    # print(HydraConfig.get().runtime.choices.experiment) # Why does there not exist a better way to get this :( ?
+    # -> Does this only work on command line choices?
+    # exit()
+    config_path = [path["path"] for path in HydraConfig.get().runtime.config_sources if path["schema"] == "file"][0]
+    
+    # config_sources = HydraConfig.get().runtime.config_sources
+    # config_sources_provider_paths = {i['provider']:i['path'] for i in config_sources}
+    # print(HydraConfig.get().runtime.config_sources)
+    # print(config_path)
+    # print(config_sources)
+    # exit()
+    
+    with open(f'{config_path}/experiment/{HydraConfig.get().runtime.choices.experiment}.yaml', 'r') as file:
+        # print('yes')
+        original_experiment_config = yaml.safe_load(file)
+    
+    defaults = original_experiment_config['defaults']
+    # print(defaults)
+    input_order = modules_order = output_order = []
+    for default in defaults:
+        # print(key)
+        key = list(default.keys())[0] # ? Cleaner / more robust way to do this?
+        # print(default)
+        # print('key', key)
+        # exit()
+        if key == 'override /input':
+            input_order = default[key]
+        elif key == 'override /modules':
+            modules_order = default[key]
+        elif key == 'override /output':
+            output_order = default[key]
+    # exit()
+    return input_order, modules_order, output_order
+        
+
 def load_modules(
     cfg, state
 ) -> Tuple[List[ModuleType], List[ModuleType], List[ModuleType]]:
@@ -112,11 +150,11 @@ def load_modules(
     # print('modules order', cfg.modules.order)
     # print('output', cfg.output)
     # exit()
-    input_modules_list = dict(cfg.input).pop("order")
-    modules_list = dict(cfg.modules).pop("order")
-    output_modules_list = dict(cfg.output).pop("order")
+    # input_modules_list = dict(cfg.input).pop("order")
+    # modules_list = dict(cfg.modules).pop("order")
+    # output_modules_list = dict(cfg.output).pop("order")
     # modules_list = list(cfg.modules.keys()).pop(['order'])
-    print(modules_list)
+    # print(modules_list)
     # imported_modules = load_modules_from_directory(cfg, state, modules_list=cfg.modules)
     root_foldername = (
         f"{HydraConfig.get().runtime.cwd}/{cfg.core.structure.root_foldername}"
@@ -127,14 +165,14 @@ def load_modules(
     load_user_modules(
         cfg=cfg,
         state=state,
-        modules_list=input_modules_list,
+        modules_list=cfg.input,
         imported_modules_list=imported_input_modules,
         module_folder=user_input_modules_folder,
     )
     load_modules_igm(
         cfg=cfg,
         state=state,
-        modules_list=input_modules_list,
+        modules_list=cfg.input,
         imported_modules_list=imported_input_modules,
         module_type="input",
     )
@@ -143,14 +181,14 @@ def load_modules(
     load_user_modules(
         cfg=cfg,
         state=state,
-        modules_list=modules_list,
+        modules_list=cfg.modules,
         imported_modules_list=imported_modules,
         module_folder=user_process_modules_folder,
     )
     load_modules_igm(
         cfg=cfg,
         state=state,
-        modules_list=modules_list,
+        modules_list=cfg.modules,
         imported_modules_list=imported_modules,
         module_type="modules",
     )
@@ -161,26 +199,30 @@ def load_modules(
     load_user_modules(
         cfg=cfg,
         state=state,
-        modules_list=output_modules_list,
+        modules_list=cfg.output,
         imported_modules_list=imported_output_modules,
         module_folder=user_output_modules_folder,
     )
     load_modules_igm(
         cfg=cfg,
         state=state,
-        modules_list=output_modules_list,
+        modules_list=cfg.output,
         imported_modules_list=imported_output_modules,
         module_type="output",
     )
     
+    input_order, module_order, output_order = get_orders()
+    
+    # print(input_order, module_order, output_order)
+    
     # Reorder modules
-    input_order_dict = {name: index for index, name in enumerate(cfg.input.order)}
+    input_order_dict = {name: index for index, name in enumerate(input_order)}
     imported_input_modules = sorted(imported_input_modules, key=lambda module: input_order_dict[get_module_name(module)])
     
-    modules_order_dict = {name: index for index, name in enumerate(cfg.modules.order)}
+    modules_order_dict = {name: index for index, name in enumerate(module_order)}
     imported_modules = sorted(imported_modules, key=lambda module: modules_order_dict[get_module_name(module)])
     
-    output_order_dict = {name: index for index, name in enumerate(cfg.output.order)}
+    output_order_dict = {name: index for index, name in enumerate(output_order)}
     imported_output_modules = sorted(imported_output_modules, key=lambda module: output_order_dict[get_module_name(module)])
 
     print(f"{'':-^100}")
@@ -194,6 +236,7 @@ def load_modules(
     for i, output_module in enumerate(imported_output_modules):
         print(f" {i}: {output_module}")
     print(f"{'':-^100}")
+    # exit()
 
     return imported_input_modules, imported_modules, imported_output_modules
 

@@ -111,7 +111,7 @@ def main(cfg: DictConfig) -> None:
     #     print(dir(state))
 
     input_methods = list(cfg.input.keys())
-    input_methods.remove('order')
+    # input_methods.remove('order')
     if len(input_methods) > 1:
         raise ValueError("Only one input method is allowed.")
     imported_input_modules[0].run(cfg, state)
@@ -119,7 +119,7 @@ def main(cfg: DictConfig) -> None:
     output_modules = []
     if "output" in cfg:
         output_methods = list(cfg.output.keys())
-        output_methods.remove('order')
+        # output_methods.remove('order')
         for output_method in output_methods:
             output_module = getattr(output, output_method)
             output_modules.append(output_module)

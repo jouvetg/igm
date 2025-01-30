@@ -25,15 +25,9 @@ from igm import (
 from pathlib import Path
 from omegaconf import DictConfig, OmegaConf
 from hydra.utils import get_original_cwd  # , to_absolute_path
-
-# @hydra.main(version_base=None)
-# def my_app(_cfg: DictConfig) -> None:
-# print(f"Current working directory : {os.getcwd()}")
 import hydra
 
 OmegaConf.register_new_resolver("get_cwd", lambda x: os.getcwd())
-
-# OmegaConf.register_new_resolver("merge", ...)
 from hydra.core.hydra_config import HydraConfig
 
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -79,9 +73,6 @@ def main(cfg: DictConfig) -> None:
     if cfg.core.print_params:
         print(OmegaConf.to_yaml(cfg))
 
-    # For now, it does not seem possible to select from the defaults list (so we need to only specify one method in input)
-    # print(HydraConfig.get().runtime.choices)
-
     # ! Needs to be before the input the way it is setup - otherwise, it will throw an error... (at least with local not loadncdf)
     if not cfg.core.url_data == "":
         folder_path = Path(get_original_cwd()).joinpath(cfg.core.folder_data)
@@ -91,27 +82,7 @@ def main(cfg: DictConfig) -> None:
         setup_igm_modules(cfg, state)
     )
 
-    # print(imported_modules)
-    # exit()
-
-    # if "input" in cfg:
-    #     input_methods = list(
-    #         cfg.input.keys()
-    #     )
-
-    #     if len(input_methods) > 1:
-    #         raise ValueError("Only one input method is allowed.")
-
-    #     input_method = str(input_methods[0])
-    #     input_module = getattr(input, input_method)
-    #     print(input_method, input_module)
-    #     # print(input_module)
-    #     print(dir(state))
-    #     input_module.run(cfg, state)
-    #     print(dir(state))
-
     input_methods = list(cfg.input.keys())
-    # input_methods.remove('order')
     if len(input_methods) > 1:
         raise ValueError("Only one input method is allowed.")
     imported_input_modules[0].run(cfg, state)
@@ -119,36 +90,20 @@ def main(cfg: DictConfig) -> None:
     output_modules = []
     if "output" in cfg:
         output_methods = list(cfg.output.keys())
-        # output_methods.remove('order')
         for output_method in output_methods:
             output_module = getattr(output, output_method)
             output_modules.append(output_module)
 
         for output_module in output_modules:
-            # print(output_module)
             output_module.initialize(
                 cfg, state
             )  # do we need to initialize output modules? This is not very clean...
 
-    # for var in locals():
-    #     print(var)
-    # for var in globals():
-    #     print(var)
-    # print(imported_modules)
-    # exit()
-
-    # print(dir(state))
-    # exit()
 
     with strategy.scope():
         initialize_modules(imported_modules, cfg, state)
         run_model(imported_modules, imported_output_modules, cfg, state)
-        # run_finalizers(imported_modules, cfg, state)
-
-        # Writing output files
-        # run_outputs(output_modules, cfg, state)
-        # for output_module in output_modules:
-        # output_module.run(cfg, state) # do we need to initialize output modules? THis is not very clean...
+        # run_finalizers(imported_modules, cfg, state) # Remove finalizers?
 
     if cfg.core.print_comp:
         print_comp(state)

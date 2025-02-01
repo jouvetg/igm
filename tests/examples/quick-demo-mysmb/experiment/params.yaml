@@ -5,8 +5,10 @@ hydra:
     chdir: True
 
 defaults:
+  - /user/conf/modules@modules.mysmb: mysmb
+  
   - override /input: [oggm_shop]
-  - override /modules: [iceflow, time, thk, vert_flow, particles, print_info]
+  - override /modules: [mysmb, iceflow, time, thk, vert_flow, particles, print_info]
   - override /output: [write_ncdf,plot2d]
 
 input:
@@ -19,8 +21,6 @@ modules:
     start: 2000.0
     end: 2100.0
     save: 10.0
-  mysmb:
-    meanela: 3000.0
 
 output:
   plot2d:

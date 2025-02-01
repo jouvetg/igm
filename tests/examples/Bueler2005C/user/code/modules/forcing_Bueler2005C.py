@@ -3,14 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import math
-
- ## add BuelerC smb function
-def params(parser):  
-    pass
-
+ 
 def initialize(cfg,state):
-
-    pass # ! done in blank module!
+    pass
  
 def update(cfg,state):
     # compute time dependent mass balance according to Bueler C 2005

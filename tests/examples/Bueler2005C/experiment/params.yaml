@@ -1,71 +1,34 @@
 # @package _global_
 
-# core:
-#   url_data: https://www.dropbox.com/scl/fo/kd7dix5j1tm75nj941pvi/h?rlkey=q7jtmf9yn3a970cqygdwne25j&dl=0
-  # url_data: https://www.dropboxed.com/scl/fo/kd7dix5j1tm75nj941pvi/h?rlkey=q7jtmf9yn3a970cqygdwne25j&dl=0
+hydra:
+  job:
+    chdir: True
 
 defaults:
-  - _self_
-  - override /modules: [blank, time, iceflow, thk, smb_simple, print_info, print_comp, plot2d, write_ncdf]
-  - override /input: [synthetic]
-  # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
-  # experiment: params # can we make it work here?
-
+  - override /input: [Bueler2005C]
+  - override /modules: [forcing_Bueler2005C, iceflow, time, thk, print_info]
+  - override /output: [write_ncdf,plot2d]
 
 modules:
-  Bueler2005C: null
-  # load_ncdf:
-  #   lncd_input_file: data/input.nc
   time:
-    time_start: 0.0
-    time_end: 1000.0
-    time_save: 100.0
-    time_cfl: 0.125
-  plot2d:
-    plt2d_live: false
+    start: 0.0
+    end: 1000.0
+    save: 100.0
+    cfl: 0.125
   iceflow:
     iceflow:
-      iflo_init_arrhenius: 100.0
-      iflo_init_slidingco: 0.0595
-      iflo_retrain_emulator_nbit: 1
-      iflo_retrain_emulator_freq: 1
-      # iflo_type: "solved"
-      # iflo_solve_nbitmax: 10
-      # iflo_solve_step_size: 1
-      # iflo_solve_stop_if_no_decrease: true
-      # iflo_retrain_emulator_lr: 0.0001
+      init_arrhenius: 100.0
+      init_slidingco: 0.01
+      retrain_emulator_nbit: 1
+      retrain_emulator_freq: 1
+      # type: "solved"
+      # solve_nbitmax: 10
+      # solve_step_size: 1
+      # solve_stop_if_no_decrease: true
+      # retrain_emulator_lr: 0.0001
+      
+output:
+  plot2d:
+    live: false
   write_ncdf:
-    wncd_vars_to_save: ["topg", "usurf", "thk", "smb", "velbar_mag", "velsurf_mag", "velbase_mag"]
-
-
-
-# {
-#   "modules_preproc": [ ],
-#   "modules_process": ["Bueler2005C",
-#                       "iceflow",
-#                       "time",
-#                       "thk"
-#                       ],
-#   "modules_postproc": ["write_ncdf",
-#                        "plot2d",
-#                        "print_info",
-#                        "print_comp"],
-#   "time_start": 0.0,
-#   "time_end": 1000.0,
-#   "time_save": 100.0,
-#   "iflo_init_arrhenius": 100.0,
-#   "iflo_init_slidingco": 0.01,
-# #  "iflo_retrain_emulator_lr": 0.0001,
-#   "iflo_retrain_emulator_nbit": 1,
-#   "iflo_retrain_emulator_freq": 1,
-
-# #  "iflo_type": "solved",
-# #  "iflo_solve_nbitmax": 10,
-# #  "iflo_solve_step_size": 1,
-# #  "iflo_solve_stop_if_no_decrease": true,
-
-# "wncd_vars_to_save" : ["topg", "usurf", "thk", "smb", "velbar_mag", "velsurf_mag", "velbase_mag"],
-
-#   "time_cfl": 0.125,
-#   "plt2d_live": false
-# }
+    vars_to_save: ["topg", "usurf", "thk", "smb", "velbar_mag", "velsurf_mag", "velbase_mag"]

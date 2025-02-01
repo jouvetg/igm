@@ -41,12 +41,6 @@ def pretraining(cfg, state):
 
     os.makedirs( state.direct_name, exist_ok=True)
 
-    os.system(
-        "echo rm -r "
-        + state.direct_name
-        + " >> clean.sh"
-    )
-
     subdatasetname_train, subdatasetpath_train = _findsubdata(
         os.path.join(cfg.modules.iceflow.pretraining.data_dir, "train")
     )

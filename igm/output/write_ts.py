@@ -9,7 +9,6 @@ from netCDF4 import Dataset
 
 
 def initialize(cfg, state):
-    os.system( "echo rm " + cfg.output.write_ts.output_file + " >> clean.sh" )
 
     state.var_info_ncdf_ts = {}
     state.var_info_ncdf_ts["vol"] = ["Ice volume", "km^3"]

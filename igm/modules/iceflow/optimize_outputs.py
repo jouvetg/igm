@@ -63,8 +63,6 @@ def update_ncdf_optimize(cfg, state, it):
 
         nc.close()
 
-        os.system( "echo rm " + "optimize.nc" + " >> clean.sh" )
-
     else:
         nc = Dataset("optimize.nc", "a", format="NETCDF4", )
 
@@ -123,13 +121,6 @@ def output_ncdf_optimize_final(cfg, state):
 
     nc.close()
 
-    os.system(
-        "echo rm "
-        + cfg.modules.iceflow.optimize.save_result_in_ncdf
-        + " >> clean.sh"
-    )
-
-
 def plot_cost_functions():
 
 #    costs = np.stack(costs)
@@ -163,13 +154,6 @@ def plot_cost_functions():
 
     plt.savefig("convergence.png", pad_inches=0)
     plt.close("all")
-
-    os.system(
-        "echo rm "
-        + "convergence.png"
-        + " >> clean.sh"
-    )
-
 
 def update_plot_inversion(cfg, state, i):
     """
@@ -342,9 +326,6 @@ def update_plot_inversion(cfg, state, i):
     else:
         plt.savefig("resu-opti-" + str(i).zfill(4) + ".png", bbox_inches="tight", pad_inches=0.2)
 
-        os.system( "echo rm " + "*.png" + " >> clean.sh" )
-
-
 def update_plot_inversion_simple(cfg, state, i):
     """
     Plot thickness, velocity, mand slidingco"""
@@ -443,11 +424,6 @@ def update_plot_inversion_simple(cfg, state, i):
             pad_inches=0,
         )
         plt.close("all")
-
-        os.system(
-            "echo rm " + "*.png" + " >> clean.sh"
-        )
-
 
 
 

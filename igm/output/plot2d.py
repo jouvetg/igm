@@ -59,9 +59,6 @@ def initialize(cfg, state):
     state.ax.axis("off")
     state.ax.set_aspect("equal")
 
-    os.system("echo rm " + cfg.output.plot2d.var + "*.png" + " >> clean.sh")
-
-
 def run(cfg, state):
     if state.saveresult:
         state.tcomp_plot2d.append(time.time())

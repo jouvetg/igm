@@ -554,7 +554,6 @@ def print_costs(cfg, state, cost, i):
         L = [f"{key:>8}" for key in ["it","vol"]] + [f"{key:>12}" for key in keys]
         print("Costs:     " + "   ".join(L))
         print("   ".join([f"{key:>12}" for key in keys]),file=f)
-        os.system("echo rm costs.dat >> clean.sh")
 
     if i % cfg.modules.iceflow.optimize.output_freq == 0:
         L = [datetime.datetime.now().strftime("%H:%M:%S"),f"{i:0>{8}}",f"{vol:>8.4f}"] \
@@ -582,10 +581,6 @@ def save_rms_std(cfg, state):
         ),
         fmt="%.10f",
         header="        rmsthk      stdthk       rmsvel       stdvel       rmsdiv       stddiv       rmsusurf       stdusurf",
-    )
-
-    os.system(
-        "echo rm " + "rms_std.dat" + " >> clean.sh"
     )
 
 def create_density_matrix(data, kernel_size):

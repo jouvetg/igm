@@ -388,9 +388,6 @@ def _oggm_util(RGIs, cfg):
         shutil.rmtree(destination_folder)
     shutil.copytree(source_folder, destination_folder)
 
-    os.system( "echo rm -r " + cfg.input.oggm_shop.RGI_ID + " >> clean.sh" )
-
-
 def _read_glathida(x, y, usurf, proj, path_glathida, state):
     """
     Function written by Ethan Welthy, Guillaume Jouvet and Samuel Cook

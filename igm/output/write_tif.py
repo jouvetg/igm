@@ -19,8 +19,6 @@ def run(cfg, state):
         for var in cfg.output.write_tif.vars_to_save:
             file = var + "-" + str(int(state.t)).zfill(6) + ".tif"
 
-            os.system("echo rm " + file + " >> clean.sh")
-
             if hasattr(state, "profile_tif_file"):
                 with rasterio.open(file, mode="w", **state.profile_tif_file) as src:
                     src.write(np.flipud(vars(state)[var]), 1)

@@ -19,8 +19,6 @@ def initialize(cfg, state):
         shutil.rmtree(directory)
     os.mkdir(directory)
 
-    os.system("echo rm -r " + "trajectories" + " >> clean.sh")
-
     if cfg.output.write_particles.add_topography:
         ftt = os.path.join("trajectories", "topg.csv")
         array = tf.transpose(

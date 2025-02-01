@@ -17,8 +17,6 @@ from igm.modules.utils import getmag
 def initialize(cfg, state):
     state.tcomp_write_ncdf = []
 
-    os.system("echo rm " + cfg.output.write_ncdf.output_file + " >> clean.sh")
-
     # give information on variables for output ncdf, TODO: IMPROVE
     state.var_info_ncdf_ex = {}
     state.var_info_ncdf_ex["topg"] = ["Basal Topography", "m"]

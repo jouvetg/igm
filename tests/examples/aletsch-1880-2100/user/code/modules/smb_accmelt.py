@@ -27,6 +27,9 @@ import tensorflow as tf
 from netCDF4 import Dataset
 from scipy.interpolate import interp1d
 import time
+from hydra.utils import get_original_cwd
+from pathlib import Path
+
 
  ## add custumized smb function
 # def params(parser):  
@@ -102,9 +105,9 @@ def initialize(cfg,state):
     """
         load smb data to run the Aletsch Glacier simulation 
     """
-    
 
-    nc = Dataset(os.path.join("data", 'massbalance.nc'), "r")
+    filepath = Path(get_original_cwd()).joinpath(os.path.join("data", 'massbalance.nc'))
+    nc = Dataset(filepath, "r")
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")
 
@@ -116,7 +119,7 @@ def initialize(cfg,state):
     nc.close()
     
     
-    nc = Dataset(os.path.join("data", 'bassin.nc'), "r" )
+    nc = Dataset(Path(get_original_cwd()).joinpath(os.path.join("data", 'bassin.nc')), "r" )
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")
 
@@ -145,7 +148,7 @@ def initialize(cfg,state):
     # read mass balance parameters
     state.mb_parameters = tf.Variable(
         np.loadtxt(
-            os.path.join("data", "mbparameter.dat"),
+            Path(get_original_cwd()).joinpath(os.path.join("data", 'mbparameter.dat')),
             skiprows=2,
             dtype=np.float32,
         )
@@ -177,7 +180,7 @@ def initialize(cfg,state):
     # ! We need an initial smb value as particles comes after in the update order...
     state.smb = tf.ones_like(state.topg) * (cfg.modules.smb_accmelt.wat_density / cfg.modules.smb_accmelt.ice_density)
     
-    state.tlast_smb = tf.Variable(cfg.modules.time.time_start)
+    state.tlast_smb = tf.Variable(cfg.modules.time.start)
     state.tcomp_smb = []
 
 # Warning: The decorator permits to take full benefit from efficient TensorFlow operation (especially on GPU)

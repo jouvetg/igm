@@ -1,0 +1,11 @@
+update_freq: 1
+weight_ablation: 1.25
+weight_accumulation: 1.0
+thr_temp_snow: 0.5
+thr_temp_rain: 2.5
+shift_hydro_year: 0.75
+ice_density: 910.0
+wat_density: 1000.0
+weight_Aletschfirn: 1.0
+weight_Jungfraufirn: 1.0
+weight_Ewigschneefeld: 1.0

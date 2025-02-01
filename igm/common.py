@@ -54,7 +54,8 @@ def setup_igm_modules(cfg, state) -> List[ModuleType]:
 
 def initialize_modules(modules: List, cfg: Any, state: State) -> None:
     for module in modules:
-        state.logger.info(f"Initializing module: {module.__name__.split('.')[-1]}")
+        if cfg.core.logging:
+            state.logger.info(f"Initializing module: {module.__name__.split('.')[-1]}")
         module.initialize(cfg, state)
 
 

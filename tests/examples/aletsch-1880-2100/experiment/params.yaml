@@ -4,8 +4,12 @@ core:
   url_data: "https://www.dropbox.com/scl/fo/8ixpy27i67s04bp7uixoq/h?rlkey=0ye7rd4zkcqfhvzx7suunw3bk&dl=0"
 
 defaults:
+
+  - /user/conf/modules@modules.smb_accmelt: smb_accmelt 
+  - /user/conf/modules@modules.clim_aletsch: clim_aletsch
+
   - override /input: [load_ncdf]
-  - override /modules: [iceflow, time, thk, rockflow, vert_flow, print_info] # particles
+  - override /modules: [clim_aletsch, smb_accmelt, iceflow, time, thk, rockflow, vert_flow, print_info, particles]
   - override /output: [write_ncdf, plot2d]
 
 hydra:
@@ -26,27 +30,10 @@ modules:
     start: 1880.0
     end: 2020.0
     save: 5.0
-  smb_accmelt:
-    update_freq: 1
-    weight_ablation: 1.25
-    weight_accumulation: 1.0
-    thr_temp_snow: 0.5
-    thr_temp_rain: 2.5
-    shift_hydro_year: 0.75
-    ice_density: 910.0
-    wat_density: 1000.0
-    weight_Aletschfirn: 1.0
-    weight_Jungfraufirn: 1.0
-    weight_Ewigschneefeld: 1.0
   particles:
     frequency_seeding: 500
     tracking_method: simple
     density_seeding: 0.2
-  clim_aletsch:
-    update_freq: 1
-    time_resolution: 365
-  track_usurf_obs: null
-  age_of_ice: null
 
 output:
   plot2d:

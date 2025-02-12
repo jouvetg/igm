@@ -203,86 +203,22 @@ def update_iceflow_emulator(cfg, state):
 
                     Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
                     
-                    # print(cfg.modules.iceflow.iceflow.Nz)
-                    # print(iz)
-                    # print("Iceflow Model Output")
-                    # print(Y.shape)
-                    
+                    # Manually doing sliding loss (for ground truth)
                     c = tf.Variable(cfg.modules.iceflow.iceflow.init_slidingco)
                     s = cfg.modules.iceflow.iceflow.exp_weertman
-                    # s = tf.Variable(1.0 + 1.0 / cfg.modules.iceflow.iceflow.exp_weertman)
-                    m = s - 1
-                    
-                    # U, V = Y_to_UV(cfg, Y)
                     
                     U = Y[:, :, :, 0:cfg.modules.iceflow.iceflow.Nz]
                     V = Y[:, :, :, cfg.modules.iceflow.iceflow.Nz:]
-                    # print(U.shape)
+
                     U_basal = U[0,...,0]
-                    V_basal = V[0,...,0]
-                    # velbase = U[0][0], V[0][0] # first 0 is for squeezing batch dimension, second 0 is for choosing basal velcity
-                    # Y[0, :, :, 0] # u basal
-                    # Y[0, :, :, cfg.modules.iceflow.iceflow.Nz] # v basal
-                    # batch = Y[0, :, :, :] # batch
-                    # velbase = tf.gather(batch, indices=[0, cfg.modules.iceflow.iceflow.Nz], axis=-1) # (Ny, Nx, 2)
-                    # print(velbase.shape)
-
+                    V_basal = V[0,...,0]                
                     
+                    velbase = tf.stack([U_basal, V_basal], axis=-1)
                     
-                    velbase = tf.stack([U_basal, V_basal], axis=-1) # (Ny, Nx, 2)
-                    # print(velbase.shape)
-                    # print(V_basal.shape)
-                    
-                    # C_slid is unit Mpa y^m m^(-m) * m^(1+m) * y^(-1-m)  = Mpa  m/y
+                    # Sliding loss (ground truth - matches what was done before in IGM without using the gradient directly)
                     N = U_basal**2 + V_basal**2 # velbase magntude
-                    # N = Y[:, :, :, 0]** 2 + Y[:, :, :, cfg.modules.iceflow.iceflow.Nz]** 2 # velbase magntude
-                    # print(N.shape)
                     C_slid = (c/s) * N ** (s / 2)
-                    # C_slid = (c/s) * U_basal ** (s / 2)
-                    # C_slid = (c/s) * N ** (s / 2) #244x179
                     sliding_loss = tf.reduce_sum(C_slid)
-                    # print('velbase mag', N)
-                    
-                    # C_slid = U_basal ** 2 + V_basal ** 2
-                    # sliding_loss = tf.reduce_sum(C_slid)
-                    
-                    
-                    # print(C_slid.shape)
-                    # print(velbase.shape)
-                    # jacobian_velocities_model = t.jacobian(velbase, state.iceflow_model.trainable_variables) # 244x179x244x179x2
-                    # sliding_loss_velocities = t.jacobian(C_slid, velbase) # 244x179x244x179x2
-                    # print(C_slid, velbase)
-                    # print(sliding_loss_velocities)
-                    # print(jacobian_velocities_model)
-                    # print(grad_weertman.shape)
-                    # U, V = Y_to_UV(cfg, Y)
-                    # exit()
-                    # grad_output_wrt_vars = t.gradient(Y, state.iceflow_model.trainable_variables)
-                    # grad_output_wrt_vars_U = t.gradient(U, state.iceflow_model.trainable_variables)
-                    # grad_output_wrt_vars_V = t.gradient(V, state.iceflow_model.trainable_variables)
-                    
-                    # combined_grads = [grad_weertman * grad_output for grad_output in grad_output_wrt_vars]
-                    # velbase = U[0], V[0]
-                    # velbase_mag = tf.linalg.norm(velbase) # L2 norm
-                    
-                    
-                    # print(grad_weertman.shape)
-                    
-                    # print('trainable_variables')
-                    # for var in state.iceflow_model.trainable_variables:
-                        # print(f' {var.name} | {var.shape}')
-                    
-                    # state.opti_retrain.apply_gradients(combined_grads_U, state.iceflow_model.trainable_variables)
-                    # state.opti_retrain.apply_gradients(combined_grads_V, state.iceflow_model.trainable_variables)
-
-                    # grads_Y = t.gradient(Y, state.iceflow_model.trainable_variables)
-                    # grads_Y
-                    # print("Velbase")
-                    # print(velbase)
-                    # print("Velbase Magnitude")
-                    # print(velbase_mag)
-                    
-                    # velbase_mag = tf.sqrt(U[0] ** 2 + V[0] ** 2)
                     
                     if iz>0:
                         C_shear, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
@@ -310,17 +246,11 @@ def update_iceflow_emulator(cfg, state):
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
                         print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 
-                # print(C_slid)
-                # print(N.shape)
-                # print('...')
-                # sliding_loss_u_velocities = tf.cast(t.jacobian(C_slid, U_basal), tf.float16)
-                # sliding_loss_v_velocities = tf.cast(t.jacobian(C_slid, V_basal), tf.float16)
-                
+
+                # Original method (ground truth)                
                 sliding_loss_velocities = t.gradient(sliding_loss, [U_basal, V_basal]) 
-                # sliding_loss_velocities = t.gradient(sliding_loss, [U_basal, V_basal]) 
-                # sliding_loss_velocities = t.jacobian(C_slid, Y, parallel_iterations=512) 
-                # grad_weertman_u =  (2*c) * U_basal ** (2*s - 1)
-                
+
+                # Manually computing gradients (non-vectorized)               
                 dN_dU = 2 * U_basal
                 dN_dV = 2 * V_basal
                 dC_slid_dN = (c / 2) * N ** ((s/2) - 1)
@@ -328,61 +258,21 @@ def update_iceflow_emulator(cfg, state):
                 grad_weertman_u = dC_slid_dN * dN_dU
                 grad_weertman_v = dC_slid_dN * dN_dV
                 
-                # grad_weertman_u =  (c/2) * U_basal ** (s/2 - 1)
-                # grad_weertman_v = 2 * V_basal #+ 2 * V_basal
+                # Manually computing gradients (vectorized)
                 my_grad_weertman = weertman_sliding_law(velbase, c, s) # Ny, Nx, 2
-                # my_grad_weertman_u, my_grad_weertman_v = weertman_sliding_law(U_basal, V_basal, c, s) # Ny, Nx, 2
                 
-                # print('s',sliding_loss_velocities)
-                # sliding_loss_velocities_u_basal = sliding_loss_velocities[:, :, :, 0]
-                # sliding_loss_velocities_v_basal = sliding_loss_velocities[:, :, :, cfg.modules.iceflow.iceflow.Nz]
-                # print(sliding_loss_velocities_u_basal)
-                # print(grad_weertman_u)
-                # print(grad_weertman_v)
-                # print("my weertman")
-                # print(my_grad_weertman[...,0])
-                # print(my_grad_weertman[...,1])
-                # print(my_grad_weertman_u)
-                # print(my_grad_weertman_v)
-                
-                
-                
-                # sliding_loss_velocities = t.jacobian(C_slid, velbase)
-                # print(sliding_loss_u_velocities.shape)
-                # sliding_loss_velocities = tf.stack([sliding_loss_u_velocities, sliding_loss_v_velocities], axis=-1)
-                
-                # print(sliding_loss_velocities.shape)
-                # loss_velocity_gradient = tf.reduce_sum(sliding_loss_velocities, axis=(0, 1))
-                # sliding_loss_velocities = t.jacobian(C_slid, U_basal) # 244x179x244x179x2
-                
+                # All gradients other than sliding loss    
                 grads = t.gradient(COST, state.iceflow_model.trainable_variables)
-                # print(grads)
 
-                # U_basal_grads = t.gradient(U_basal, state.iceflow_model.trainable_variables)
-                
+                # Sliding loss gradients
                 sliding_gradients = t.gradient([U_basal, V_basal], state.iceflow_model.trainable_variables, output_gradients=sliding_loss_velocities)
-                # model_gradients_U = t.gradient(U_basal, state.iceflow_model.trainable_variables, output_gradients=sliding_loss_velocities[0])
-                # model_gradients_V = t.gradient(V_basal, state.iceflow_model.trainable_variables, output_gradients=sliding_loss_velocities[1])
                 
-                # V_basal_grads = t.gradient(V_basal, state.iceflow_model.trainable_variables)
-                # print(sliding_gradients)
-                
+                # Combining sliding loss gradients with other loss term gradients
                 combined_gradients = [grad + sliding_grad for grad, sliding_grad in zip(grads, sliding_gradients)]
-                # U_basal_grads_jacobian = t.jacobian(U_basal, state.iceflow_model.trainable_variables)
-                # print(U_basal_grads_jacobian.shape)
-                # print(U_basal_grads, )
-                
-                # print(COST)
-                # print('trainable_variables')
-                # for var, grad in zip(state.iceflow_model.trainable_variables, grads):
-                #     print(f' {var.name} | {var.shape} | {grad.shape}')
-                # print('gradients')
-                # for grad in grads:
-                # print(state.iceflow_model.trainable_variables)
+
                 state.opti_retrain.apply_gradients(
                     zip(combined_gradients, state.iceflow_model.trainable_variables)
                 )
-                # exit()
 
                 state.opti_retrain.lr = cfg.modules.iceflow.iceflow.retrain_emulator_lr * (
                     0.95 ** (epoch / 1000)

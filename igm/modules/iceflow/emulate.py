@@ -1,6 +1,5 @@
-
-import numpy as np 
-import tensorflow as tf 
+import numpy as np
+import tensorflow as tf
 import os
 
 from .utils import *
@@ -9,17 +8,20 @@ from .neural_network import *
 
 from igm.modules.iceflow import emulators
 import importlib_resources
-  
+
+
 def initialize_iceflow_emulator(cfg, state):
 
-    if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-        state.opti_retrain = getattr(tf.keras.optimizers,cfg.modules.iceflow.iceflow.optimizer_emulator)(
-            learning_rate=cfg.modules.iceflow.iceflow.retrain_emulator_lr
-        )
+    if (int(tf.__version__.split(".")[1]) <= 10) | (
+        int(tf.__version__.split(".")[1]) >= 16
+    ):
+        state.opti_retrain = getattr(
+            tf.keras.optimizers, cfg.modules.iceflow.iceflow.optimizer_emulator
+        )(learning_rate=cfg.modules.iceflow.iceflow.retrain_emulator_lr)
     else:
-        state.opti_retrain = getattr(tf.keras.optimizers.legacy,cfg.modules.iceflow.iceflow.optimizer_emulator)( 
-            learning_rate=cfg.modules.iceflow.iceflow.retrain_emulator_lr
-        )
+        state.opti_retrain = getattr(
+            tf.keras.optimizers.legacy, cfg.modules.iceflow.iceflow.optimizer_emulator
+        )(learning_rate=cfg.modules.iceflow.iceflow.retrain_emulator_lr)
 
     direct_name = (
         "pinnbp"
@@ -49,17 +51,20 @@ def initialize_iceflow_emulator(cfg, state):
                 importlib_resources.files(emulators).joinpath(direct_name)
             ):
                 dirpath = importlib_resources.files(emulators).joinpath(direct_name)
-                print(
-                    "Found pretrained emulator in the igm package: " + direct_name
-                )
+                print("Found pretrained emulator in the igm package: " + direct_name)
             else:
                 print("No pretrained emulator found in the igm package")
         else:
             if os.path.exists(cfg.modules.iceflow.iceflow.emulator):
                 dirpath = cfg.modules.iceflow.iceflow.emulator
-                print("----------------------------------> Found pretrained emulator: " + cfg.modules.iceflow.iceflow.emulator)
+                print(
+                    "----------------------------------> Found pretrained emulator: "
+                    + cfg.modules.iceflow.iceflow.emulator
+                )
             else:
-                print("----------------------------------> No pretrained emulator found ")
+                print(
+                    "----------------------------------> No pretrained emulator found "
+                )
 
         fieldin = []
         fid = open(os.path.join(dirpath, "fieldin.dat"), "r")
@@ -71,22 +76,24 @@ def initialize_iceflow_emulator(cfg, state):
         state.iceflow_model = tf.keras.models.load_model(
             os.path.join(dirpath, "model.h5"), compile=False
         )
-        state.iceflow_model.compile() 
+        state.iceflow_model.compile()
     else:
-        print("----------------------------------> No pretrained emulator, start from scratch.") 
-        nb_inputs = len(cfg.modules.iceflow.iceflow.fieldin) + (cfg.modules.iceflow.iceflow.dim_arrhenius == 3) * (
-            cfg.modules.iceflow.iceflow.Nz - 1
+        print(
+            "----------------------------------> No pretrained emulator, start from scratch."
         )
+        nb_inputs = len(cfg.modules.iceflow.iceflow.fieldin) + (
+            cfg.modules.iceflow.iceflow.dim_arrhenius == 3
+        ) * (cfg.modules.iceflow.iceflow.Nz - 1)
         nb_outputs = 2 * cfg.modules.iceflow.iceflow.Nz
         # state.iceflow_model = getattr(igm, cfg.modules.iceflow.iceflow.network)(
         #     cfg, nb_inputs, nb_outputs
         # )
-        if cfg.modules.iceflow.iceflow.network=='cnn':
+        if cfg.modules.iceflow.iceflow.network == "cnn":
             state.iceflow_model = cnn(cfg, nb_inputs, nb_outputs)
-        elif cfg.modules.iceflow.iceflow.network=='unet':
+        elif cfg.modules.iceflow.iceflow.network == "unet":
             state.iceflow_model = unet(cfg, nb_inputs, nb_outputs)
 
-    # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
+    # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'
     # dirpath = importlib_resources.files(emulators).joinpath(direct_name)
     # iceflow_model_pretrained = tf.keras.models.load_model(
     #     os.path.join(dirpath, "model.h5"), compile=False
@@ -95,6 +102,7 @@ def initialize_iceflow_emulator(cfg, state):
     # pretrained_weights = [layer.get_weights() for layer in iceflow_model_pretrained.layers[:N]]
     # for i in range(N):
     #     state.iceflow_model.layers[i].set_weights(pretrained_weights[i])
+
 
 def update_iceflow_emulated(cfg, state):
     # Define the input of the NN, include scaling
@@ -106,16 +114,16 @@ def update_iceflow_emulated(cfg, state):
 
     X = fieldin_to_X(cfg, fieldin)
 
-    if cfg.modules.iceflow.iceflow.exclude_borders>0:
+    if cfg.modules.iceflow.iceflow.exclude_borders > 0:
         iz = cfg.modules.iceflow.iceflow.exclude_borders
         X = tf.pad(X, [[0, 0], [iz, iz], [iz, iz], [0, 0]], "SYMMETRIC")
-        
-    if cfg.modules.iceflow.iceflow.multiple_window_size==0:
+
+    if cfg.modules.iceflow.iceflow.multiple_window_size == 0:
         Y = state.iceflow_model(X)
     else:
         Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
 
-    if cfg.modules.iceflow.iceflow.exclude_borders>0:
+    if cfg.modules.iceflow.iceflow.exclude_borders > 0:
         iz = cfg.modules.iceflow.iceflow.exclude_borders
         Y = Y[:, iz:-iz, iz:-iz, :]
 
@@ -149,51 +157,53 @@ def update_iceflow_emulated(cfg, state):
 
     update_2d_iceflow_variables(cfg, state)
 
+
 def weertman_sliding_law(velbase, c, s):
 
-    # velbase_mag = tf.linalg.norm(velbase) # L2 norm
-    # velbase_mag = U_basal ** 2 + V_basal** 2 # (Ny, Nx, 1)
-    velbase_mag = velbase[...,0:1] ** 2 + velbase[...,1:2]** 2 # (Ny, Nx, 1)
-    # velbase = tf.stack([velbase[...,0], velbase[...,1]], axis=-1) # (Ny, Nx, 2)
-    
-    # print('weertman_sliding_law')
-    # print(velbase_mag)
-    # print(velbase_mag.shape, 'and', velbase.shape)
-    return c * velbase_mag ** ((s - 2)/2) * velbase # Check broadcasting
-    # return c * velbase_mag ** ((s - 2)/2) * U_basal, c * velbase_mag ** ((s - 2)/2) * V_basal # Check broadcasting
-    # return c * velbase_mag ** (m - 1) * velbase # Check broadcasting
+    velbase_mag = velbase[..., 0:1] ** 2 + velbase[..., 1:2] ** 2  # (Ny, Nx, 1)
+
+    return (
+        tf.squeeze(c * velbase_mag ** ((s - 2) / 2) * velbase[..., 0:1]), # ubasal
+        tf.squeeze(c * velbase_mag ** ((s - 2) / 2) * velbase[..., 1:2]), # vbasal
+    )
+
 
 def update_iceflow_emulator(cfg, state):
-    if (state.it < 0) | (state.it % cfg.modules.iceflow.iceflow.retrain_emulator_freq == 0):
+    if (state.it < 0) | (
+        state.it % cfg.modules.iceflow.iceflow.retrain_emulator_freq == 0
+    ):
         fieldin = [vars(state)[f] for f in cfg.modules.iceflow.iceflow.fieldin]
 
-########################
+        ########################
 
         # thkext = tf.pad(state.thk,[[1,1],[1,1]],"CONSTANT",constant_values=1)
         # # this permits to locate the calving front in a cell in the 4 directions
         # state.CF_W = tf.where((state.thk>0)&(thkext[1:-1,:-2]==0),1.0,0.0)
-        # state.CF_E = tf.where((state.thk>0)&(thkext[1:-1,2:]==0),1.0,0.0) 
+        # state.CF_E = tf.where((state.thk>0)&(thkext[1:-1,2:]==0),1.0,0.0)
         # state.CF_S = tf.where((state.thk>0)&(thkext[:-2,1:-1]==0),1.0,0.0)
         # state.CF_N = tf.where((state.thk>0)&(thkext[2:,1:-1]==0),1.0,0.0)
 
-########################
+        ########################
 
         XX = fieldin_to_X(cfg, fieldin)
 
-        X = _split_into_patches(XX, cfg.modules.iceflow.iceflow.retrain_emulator_framesizemax)
-        
+        X = _split_into_patches(
+            XX, cfg.modules.iceflow.iceflow.retrain_emulator_framesizemax
+        )
+
         Ny = X.shape[1]
         Nx = X.shape[2]
-        
-        PAD = compute_PAD(cfg,Nx,Ny)
+
+        PAD = compute_PAD(cfg, Nx, Ny)
 
         state.COST_EMULATOR = []
 
-        nbit = int((state.it >= 0) * cfg.modules.iceflow.iceflow.retrain_emulator_nbit + (
-            state.it < 0
-        ) * cfg.modules.iceflow.iceflow.retrain_emulator_nbit_init)
+        nbit = int(
+            (state.it >= 0) * cfg.modules.iceflow.iceflow.retrain_emulator_nbit
+            + (state.it < 0) * cfg.modules.iceflow.iceflow.retrain_emulator_nbit_init
+        )
 
-        iz = cfg.modules.iceflow.iceflow.exclude_borders 
+        iz = cfg.modules.iceflow.iceflow.exclude_borders
 
         for epoch in range(nbit):
             cost_emulator = tf.Variable(0.0)
@@ -201,39 +211,56 @@ def update_iceflow_emulator(cfg, state):
             for i in range(X.shape[0]):
                 with tf.GradientTape(persistent=True) as t:
 
-                    Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
-                    
+                    Y = state.iceflow_model(
+                        tf.pad(X[i : i + 1, :, :, :], PAD, "CONSTANT")
+                    )[:, :Ny, :Nx, :]
+
                     # Manually doing sliding loss (for ground truth)
                     c = tf.Variable(cfg.modules.iceflow.iceflow.init_slidingco)
                     s = cfg.modules.iceflow.iceflow.exp_weertman
-                    
-                    U = Y[:, :, :, 0:cfg.modules.iceflow.iceflow.Nz]
-                    V = Y[:, :, :, cfg.modules.iceflow.iceflow.Nz:]
 
-                    U_basal = U[0,...,0]
-                    V_basal = V[0,...,0]                
-                    
+                    U = Y[:, :, :, 0 : cfg.modules.iceflow.iceflow.Nz]
+                    V = Y[:, :, :, cfg.modules.iceflow.iceflow.Nz :]
+
+                    U_basal = U[0, ..., 0]
+                    V_basal = V[0, ..., 0]
+
                     velbase = tf.stack([U_basal, V_basal], axis=-1)
-                    
-                    # Sliding loss (ground truth - matches what was done before in IGM without using the gradient directly)
-                    N = U_basal**2 + V_basal**2 # velbase magntude
-                    C_slid = (c/s) * N ** (s / 2)
-                    sliding_loss = tf.reduce_sum(C_slid)
-                    
-                    if iz>0:
-                        C_shear, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
-                    else:
-                        C_shear, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, :, :, :], Y[:, :, :, :])
- 
-                    COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
-                    
-                    if (epoch + 1) % 100 == 0:
-                        print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
 
-#                    state.C_shear = tf.pad(C_shear[0],[[0,1],[0,1]],"CONSTANT")
-#                    state.C_slid  = tf.pad(C_slid[0],[[0,1],[0,1]],"CONSTANT")
-#                    state.C_grav  = tf.pad(C_grav[0],[[0,1],[0,1]],"CONSTANT")
-#                    state.C_float = C_float[0] 
+                    # Sliding loss (ground truth - matches what was done before in IGM without using the gradient directly)
+                    # N = U_basal**2 + V_basal**2  # velbase magntude
+                    # C_slid = (c / s) * N ** (s / 2)
+                    # sliding_loss = tf.reduce_sum(C_slid)
+
+                    if iz > 0:
+                        C_shear, C_grav, C_float = iceflow_energy_XY(
+                            cfg,
+                            X[i : i + 1, iz:-iz, iz:-iz, :],
+                            Y[:, iz:-iz, iz:-iz, :],
+                        )
+                    else:
+                        C_shear, C_grav, C_float = iceflow_energy_XY(
+                            cfg, X[i : i + 1, :, :, :], Y[:, :, :, :]
+                        )
+
+                    COST = (
+                        tf.reduce_mean(C_shear)
+                        + tf.reduce_mean(C_grav)
+                        + tf.reduce_mean(C_float)
+                    )
+
+                    if (epoch + 1) % 100 == 0:
+                        print(
+                            "---------- > ",
+                            tf.reduce_mean(C_shear).numpy(),
+                            tf.reduce_mean(C_grav).numpy(),
+                            tf.reduce_mean(C_float).numpy(),
+                        )
+
+                    #                    state.C_shear = tf.pad(C_shear[0],[[0,1],[0,1]],"CONSTANT")
+                    #                    state.C_slid  = tf.pad(C_slid[0],[[0,1],[0,1]],"CONSTANT")
+                    #                    state.C_grav  = tf.pad(C_grav[0],[[0,1],[0,1]],"CONSTANT")
+                    #                    state.C_float = C_float[0]
 
                     # print(state.C_shear.shape, state.C_slid.shape, state.C_grav.shape, state.C_float.shape,state.thk.shape )
 
@@ -246,43 +273,62 @@ def update_iceflow_emulator(cfg, state):
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
                         print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 
+                # Original method (ground truth)
+                # sliding_loss_velocities = t.gradient(sliding_loss, [U_basal, V_basal])
 
-                # Original method (ground truth)                
-                sliding_loss_velocities = t.gradient(sliding_loss, [U_basal, V_basal]) 
+                # Manually computing gradients (non-vectorized)
+                # dN_dU = 2 * U_basal
+                # dN_dV = 2 * V_basal
+                # dC_slid_dN = (c / 2) * N ** ((s/2) - 1)
 
-                # Manually computing gradients (non-vectorized)               
-                dN_dU = 2 * U_basal
-                dN_dV = 2 * V_basal
-                dC_slid_dN = (c / 2) * N ** ((s/2) - 1)
+                # grad_weertman_u = dC_slid_dN * dN_dU
+                # grad_weertman_v = dC_slid_dN * dN_dV
 
-                grad_weertman_u = dC_slid_dN * dN_dU
-                grad_weertman_v = dC_slid_dN * dN_dV
-                
                 # Manually computing gradients (vectorized)
-                my_grad_weertman = weertman_sliding_law(velbase, c, s) # Ny, Nx, 2
-                
-                # All gradients other than sliding loss    
+                my_grad_weertman = weertman_sliding_law(velbase, c, s)  # Ny, Nx, 2
+
+                # print(sliding_loss_velocities.shape)
+                # print(sliding_loss_velocities.shape)
+                # exit()
+
+                # All gradients other than sliding loss
                 grads = t.gradient(COST, state.iceflow_model.trainable_variables)
 
                 # Sliding loss gradients
-                sliding_gradients = t.gradient([U_basal, V_basal], state.iceflow_model.trainable_variables, output_gradients=sliding_loss_velocities)
-                
+                sliding_gradients = t.gradient(
+                    [U_basal, V_basal],
+                    state.iceflow_model.trainable_variables,
+                    output_gradients=my_grad_weertman,
+                )
+
                 # Combining sliding loss gradients with other loss term gradients
-                combined_gradients = [grad + sliding_grad for grad, sliding_grad in zip(grads, sliding_gradients)]
+                combined_gradients = [
+                    grad + sliding_grad
+                    for grad, sliding_grad in zip(grads, sliding_gradients)
+                ]
 
                 state.opti_retrain.apply_gradients(
                     zip(combined_gradients, state.iceflow_model.trainable_variables)
                 )
 
-                state.opti_retrain.lr = cfg.modules.iceflow.iceflow.retrain_emulator_lr * (
-                    0.95 ** (epoch / 1000)
+                state.opti_retrain.lr = (
+                    cfg.modules.iceflow.iceflow.retrain_emulator_lr
+                    * (0.95 ** (epoch / 1000))
                 )
 
             state.COST_EMULATOR.append(cost_emulator)
-            
-    
-    if len(cfg.modules.iceflow.iceflow.save_cost_emulator)>0:
-        np.savetxt(cfg.modules.iceflow.iceflow.output_directory+cfg.modules.iceflow.iceflow.save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
+
+    if len(cfg.modules.iceflow.iceflow.save_cost_emulator) > 0:
+        np.savetxt(
+            cfg.modules.iceflow.iceflow.output_directory
+            + cfg.modules.iceflow.iceflow.save_cost_emulator
+            + "-"
+            + str(state.it)
+            + ".dat",
+            np.array(state.COST_EMULATOR),
+            fmt="%5.10f",
+        )
+
 
 def _split_into_patches(X, nbmax):
     XX = []
@@ -302,7 +348,7 @@ def _split_into_patches(X, nbmax):
 
 def save_iceflow_model(cfg, state):
     directory = "iceflow-model"
-    
+
     import shutil
 
     if os.path.exists(directory):
@@ -323,9 +369,15 @@ def save_iceflow_model(cfg, state):
     fid.close()
 
     fid = open(os.path.join(directory, "vert_grid.dat"), "w")
-    fid.write("%4.0f  %s \n" % (cfg.modules.iceflow.iceflow.Nz, "# number of vertical grid point (Nz)"))
+    fid.write(
+        "%4.0f  %s \n"
+        % (cfg.modules.iceflow.iceflow.Nz, "# number of vertical grid point (Nz)")
+    )
     fid.write(
         "%2.2f  %s \n"
-        % (cfg.modules.iceflow.iceflow.vert_spacing, "# param for vertical spacing (vert_spacing)")
+        % (
+            cfg.modules.iceflow.iceflow.vert_spacing,
+            "# param for vertical spacing (vert_spacing)",
+        )
     )
     fid.close()

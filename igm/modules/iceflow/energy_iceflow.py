@@ -191,7 +191,7 @@ def _iceflow_energy(
             C = (slidingco + 10 ** (-12)) ** -(1.0 / exp_weertman)
 
     p = 1.0 + 1.0 / exp_glen
-    s = 1.0 + 1.0 / exp_weertman
+    # s = 1.0 + 1.0 / exp_weertman
 
     sloptopgx, sloptopgy = _compute_gradient_stag(usurf - thk, dX, dX)
     sloptopgx = tf.expand_dims(sloptopgx, axis=1)
@@ -235,12 +235,12 @@ def _iceflow_energy(
     sloptopgx, sloptopgy = _compute_gradient_stag(lsurf, dX, dX)
 
     # C_slid is unit Mpa y^m m^(-m) * m^(1+m) * y^(-1-m)  = Mpa  m/y
-    N = (
-        _stag4(U[:, 0, :, :] ** 2 + V[:, 0, :, :] ** 2)
-        + regu_weertman**2
-        + (_stag4(U[:, 0, :, :]) * sloptopgx + _stag4(V[:, 0, :, :]) * sloptopgy) ** 2
-    )
-    C_slid = _stag4(C) * N ** (s / 2) / s
+    # N = (
+    #     _stag4(U[:, 0, :, :] ** 2 + V[:, 0, :, :] ** 2)
+    #     + regu_weertman**2
+    #     + (_stag4(U[:, 0, :, :]) * sloptopgx + _stag4(V[:, 0, :, :]) * sloptopgy) ** 2
+    # )
+    # C_slid = _stag4(C) * N ** (s / 2) / s
 
     slopsurfx, slopsurfy = _compute_gradient_stag(usurf, dX, dX)
     slopsurfx = tf.expand_dims(slopsurfx, axis=1)
@@ -345,7 +345,8 @@ def _iceflow_energy(
 
     # C_pen = 10000 * tf.where(thk>0,0.0, tf.reduce_sum( tf.abs(U), axis=1)**2 )
 
-    return C_shear, C_slid, C_grav, C_float
+    return C_shear, C_grav, C_float
+    # return C_shear, C_slid, C_grav, C_float
 
 
 # @tf.function(experimental_relax_shapes=True)

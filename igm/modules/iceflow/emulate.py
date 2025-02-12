@@ -160,11 +160,21 @@ def update_iceflow_emulated(cfg, state):
 
 def weertman_sliding_law(cfg, emulator_output):
 
-    # Returns a tuple with (basis_vectors, sliding_law_shear_stree)
-    # For example, for weertman sliding law, the basis vectors are U_basal and V_basal
-    # and the sliding law shear stress is the actual sliding law (tau_s = c * ||basal_velocity||^(s-2)*basal_velocity)
-    # You can the sliding law here (equation 17, where s = 1 + m): https://github.com/jouvetg/igm-paper/blob/main/paper.pdf
-    # as well as here (equation 2.16): https://www.cambridge.org/core/services/aop-cambridge-core/content/view/F2D0D3A274405887B512A474D0C64C1D/S0022112016005930a.pdf/mechanical-error-estimators-for-shallow-ice-flow-models.pdf
+    """
+    Returns a tuple of basis_vectors and sliding_shear_stress for the loss computation in IGM.
+    
+    For example, for weertman sliding law, the basis vectors are U_basal and V_basal
+    and the sliding law shear stress is the actual sliding law (tau_s = c * ||basal_velocity||^(s-2)*basal_velocity).
+    
+    You can the sliding law here (equation 17, where s = 1 + m): https://github.com/jouvetg/igm-paper/blob/main/paper.pdf
+    as well as here (equation 2.16): https://www.cambridge.org/core/services/aop-cambridge-core/content/view/F2D0D3A274405887B512A474D0C64C1D/S0022112016005930a.pdf/mechanical-error-estimators-for-shallow-ice-flow-models.pdf
+
+    Returns
+    -------
+    Tuple
+        (basis_vectors, sliding_shear_stress)
+    """
+
 
     # Manually doing sliding loss (for ground truth)
     c = tf.Variable(cfg.modules.iceflow.iceflow.init_slidingco)
@@ -237,17 +247,6 @@ def update_iceflow_emulator(cfg, state):
                     basis_vectors, sliding_shear_stress = weertman_sliding_law(
                         cfg=cfg, emulator_output=Y
                     )
-                    # # Manually doing sliding loss (for ground truth)
-                    # c = tf.Variable(cfg.modules.iceflow.iceflow.init_slidingco)
-                    # s = cfg.modules.iceflow.iceflow.exp_weertman
-
-                    # U = Y[:, :, :, 0 : cfg.modules.iceflow.iceflow.Nz]
-                    # V = Y[:, :, :, cfg.modules.iceflow.iceflow.Nz :]
-
-                    # U_basal = U[0, ..., 0]
-                    # V_basal = V[0, ..., 0]
-
-                    # velbase = tf.stack([U_basal, V_basal], axis=-1)
 
                     if iz > 0:
                         C_shear, C_grav, C_float = iceflow_energy_XY(
@@ -290,12 +289,9 @@ def update_iceflow_emulator(cfg, state):
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
                         print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 
-                # Manually computing gradients (vectorized)
-                # my_grad_weertman = weertman_sliding_law(U_basal, V_basal, c, s)
-
                 # Sliding loss gradients
                 sliding_gradients = t.gradient(
-                    [basis_vectors[0], basis_vectors[1]],
+                    [*basis_vectors],
                     state.iceflow_model.trainable_variables,
                     output_gradients=sliding_shear_stress,
                 )

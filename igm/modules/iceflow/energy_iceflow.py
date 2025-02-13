@@ -181,14 +181,18 @@ def _iceflow_energy(
     # B has Unit Mpa y^(1/n)
     B = 2.0 * arrhenius ** (-1.0 / exp_glen)
 
-    if new_friction_param:
-        C = 1.0 * slidingco  # C has unit Mpa y^m m^(-m)
-    else:
-        if exp_weertman == 1:
-            # C has unit Mpa y^m m^(-m)
-            C = 1.0 * slidingco
-        else:
-            C = (slidingco + 10 ** (-12)) ** -(1.0 / exp_weertman)
+
+    C = 1.0 * slidingco # ? Can we just replace this with any sliding law coefficient?
+    
+    
+    # if new_friction_param:
+    #     C = 1.0 * slidingco  # C has unit Mpa y^m m^(-m)
+    # else:
+    #     if exp_weertman == 1:
+    #         # C has unit Mpa y^m m^(-m)
+    #         C = 1.0 * slidingco
+    #     else:
+    #         C = (slidingco + 10 ** (-12)) ** -(1.0 / exp_weertman)
 
     p = 1.0 + 1.0 / exp_glen
     # s = 1.0 + 1.0 / exp_weertman

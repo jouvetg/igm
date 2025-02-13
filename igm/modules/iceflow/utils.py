@@ -17,8 +17,10 @@ def initialize_iceflow_fields(cfg, state):
             )
 
     if not hasattr(state, "slidingco"):
+        sliding_law_method = cfg.modules.iceflow.iceflow.sliding_law.method
+        sliding_law_coefficient = getattr(cfg.modules.iceflow.iceflow.sliding_law.coefficient, sliding_law_method)
         state.slidingco = tf.Variable(
-            tf.ones_like(state.thk) * cfg.modules.iceflow.iceflow.init_slidingco, trainable=False
+            tf.ones_like(state.thk) * sliding_law_coefficient, trainable=False
         )
 
     # here we create a new velocity field

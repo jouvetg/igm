@@ -158,7 +158,7 @@ def update_iceflow_emulated(cfg, state):
     update_2d_iceflow_variables(cfg, state)
 
 
-def weertman_sliding_law(cfg, emulator_output):
+def weertman_sliding_law(cfg, emulator_output, effective_pressure=None):
 
     """
     Returns a tuple of basis_vectors and sliding_shear_stress for the loss computation in IGM.
@@ -290,6 +290,16 @@ def regularized_coulomb_sliding_law(cfg, emulator_output, effective_pressure): #
 
     return basis_vectors, sliding_shear_stress
 
+def get_sliding_law_function(method):
+
+    if method == "weertman":
+        return weertman_sliding_law
+    elif method == "coulomb":
+        return regularized_coulomb_sliding_law
+    elif method == "budd":
+        return budd_sliding_law
+    else:
+        raise NotImplementedError("Sliding law method not implemented. Please specify between 'weertman', 'coulomb' or 'budd'.")
 
 def update_iceflow_emulator(cfg, state):
     if (state.it < 0) | (
@@ -338,19 +348,17 @@ def update_iceflow_emulator(cfg, state):
                         tf.pad(X[i : i + 1, :, :, :], PAD, "CONSTANT")
                     )[:, :Ny, :Nx, :]
 
-
-                    # Simple effective pressure calculation
-                    effective_pressure = get_simple_effective_pressure(state)
-
-                    # basis_vectors, sliding_shear_stress = regularized_coulomb_sliding_law(
-                    #     cfg=cfg, emulator_output=Y, effective_pressure=effective_pressure
-                    # )
-                    basis_vectors, sliding_shear_stress = budd_sliding_law(
-                        cfg=cfg, emulator_output=Y, effective_pressure=effective_pressure
-                    )
-                    # basis_vectors, sliding_shear_stress = weertman_sliding_law(
-                    #     cfg=cfg, emulator_output=Y
-                    # )
+                    # Basal shear stress computation for loss function
+                    sliding_law_method = cfg.modules.iceflow.iceflow.sliding_law.method
+                    sliding_law = get_sliding_law_function(sliding_law_method)
+                    
+                    if sliding_law_method != "weertman":
+                        # Simple effective pressure calculation
+                        effective_pressure = get_simple_effective_pressure(state)
+                    else:
+                        effective_pressure = None
+                    
+                    basis_vectors, sliding_shear_stress = sliding_law(cfg, Y, effective_pressure)
 
                     if iz > 0:
                         C_shear, C_grav, C_float = iceflow_energy_XY(

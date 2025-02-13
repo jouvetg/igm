@@ -11,7 +11,17 @@ iceflow:
     regu_glen: 1e-5 # help="Regularization parameter for Glen's flow law"
     regu_weertman: 1e-10 # help="Regularization parameter for Weertman's sliding law"
     exp_glen: 3.0 # help="Glen's flow law exponent"
-    exp_weertman: 3.0 # help="Weertman's law exponent
+    exp_weertman: 3.0 # help="Weertman temporary fix ...
+    sliding_law:
+      exponent:
+        weertman: 3.0 # help="Weertman's law exponent
+        budd: 3 # help="Budds's law exponent
+        coulomb: 3 # help="coulombs's law exponent
+      coefficient:
+        weertman: 0.0464 # help="Weertman's law coefficient
+        budd: 5e-9 # help="Budds's law coefficient
+        coulomb: 0.25 # help="coulombs's law coefficient
+    gamma_0: 2e-17
     gravity_cst: 9.81 # help="Gravitational constant"
     ice_density: 910.0 # help="Density of ice"
     new_friction_param: True # help="Sliding coeeficient (this describe slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco as before)"

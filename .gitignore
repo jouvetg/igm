@@ -43,3 +43,6 @@ multirun/
 energy_iceflow_DG.py
 emulate_DG.py
 optimize_fw.py
+
+subglacial_hydrology/
+sub_glacial_hydrology.py

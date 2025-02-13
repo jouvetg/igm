@@ -177,8 +177,8 @@ def weertman_sliding_law(cfg, emulator_output):
 
 
     # Manually doing sliding loss (for ground truth)
-    c = tf.Variable(cfg.modules.iceflow.iceflow.init_slidingco)
-    s = cfg.modules.iceflow.iceflow.exp_weertman
+    c = tf.Variable(cfg.modules.iceflow.iceflow.sliding_law.coefficient.weertman)
+    s = cfg.modules.iceflow.iceflow.sliding_law.exponent.weertman
 
     U = emulator_output[:, :, :, 0 : cfg.modules.iceflow.iceflow.Nz]
     V = emulator_output[:, :, :, cfg.modules.iceflow.iceflow.Nz :]
@@ -192,6 +192,100 @@ def weertman_sliding_law(cfg, emulator_output):
     sliding_shear_stress = (
         tf.squeeze(c * velbase_mag ** ((s - 2) / 2) * U_basal),
         tf.squeeze(c * velbase_mag ** ((s - 2) / 2) * V_basal),
+    )
+
+    return basis_vectors, sliding_shear_stress
+
+def get_simple_effective_pressure(state):
+    p_i = 910
+    g = 9.81
+    percentage = 0.45
+    
+    ice_overburden_pressure = p_i * g * state.thk
+    water_pressure = ice_overburden_pressure * percentage
+    
+    effective_pressure = ice_overburden_pressure - water_pressure
+    
+    return effective_pressure
+
+def budd_sliding_law(cfg, emulator_output, effective_pressure):
+
+    """
+    Returns a tuple of basis_vectors and sliding_shear_stress for the loss computation in IGM.
+    
+    ...
+
+    Returns
+    -------
+    Tuple
+        (basis_vectors, sliding_shear_stress)
+    """
+
+
+    # Manually doing sliding loss (for ground truth)
+    c = cfg.modules.iceflow.iceflow.sliding_law.coefficient.budd
+    n = cfg.modules.iceflow.iceflow.sliding_law.exponent.budd
+    N = effective_pressure
+
+    U = emulator_output[:, :, :, 0 : cfg.modules.iceflow.iceflow.Nz]
+    V = emulator_output[:, :, :, cfg.modules.iceflow.iceflow.Nz :]
+
+    U_basal = U[0, ..., 0]
+    V_basal = V[0, ..., 0]
+
+    velbase_mag = (U_basal**2 + V_basal**2) ** (1/2) # assuming l2 norm...
+    basis_vectors = (U_basal, V_basal)
+    
+    sliding_shear_stress_u = (velbase_mag * N / c) ** (1/n) * (U_basal / velbase_mag)
+    sliding_shear_stress_v = (velbase_mag * N / c) ** (1/n) * (V_basal / velbase_mag)
+    # sliding_shear_stress_u = (c / N) ** (-1/n) * U_basal * tf.abs(U_basal) ** (1/n - 1) # check if its absolute value or not...
+    # sliding_shear_stress_v = (c / N) ** (-1/n) * V_basal * tf.abs(V_basal) ** (1/n - 1) # check if its absolute value or not...
+    
+    sliding_shear_stress = (
+        sliding_shear_stress_u,
+        sliding_shear_stress_v,
+    )
+
+    return basis_vectors, sliding_shear_stress
+
+def regularized_coulomb_sliding_law(cfg, emulator_output, effective_pressure): # also called coulumb
+
+    """
+    Returns a tuple of basis_vectors and sliding_shear_stress for the loss computation in IGM.
+    
+    https://agupubs.onlinelibrary.wiley.com/doi/pdfdirect/10.1029/2019GL082526
+
+    Returns
+    -------
+    Tuple
+        (basis_vectors, sliding_shear_stress)
+    """
+
+    c = cfg.modules.iceflow.iceflow.sliding_law.coefficient.coulomb
+    n = cfg.modules.iceflow.iceflow.sliding_law.exponent.coulomb
+    N = effective_pressure
+    gamma_0 = cfg.modules.iceflow.iceflow.gamma_0 
+    # equivalent to A_s * C^n in regularized couluomb law (equation 3)
+    # https://www.science.org/doi/10.1126/sciadv.abe7798
+    
+    U = emulator_output[:, :, :, 0 : cfg.modules.iceflow.iceflow.Nz]
+    V = emulator_output[:, :, :, cfg.modules.iceflow.iceflow.Nz :]
+
+    U_basal = U[0, ..., 0]
+    V_basal = V[0, ..., 0]
+
+    velbase_mag = (U_basal**2 + V_basal**2) ** (1/2) # assuming l2 norm...
+    basis_vectors = (U_basal, V_basal)
+    
+    numerator = velbase_mag
+    denominator = velbase_mag + gamma_0 * (N ** n)
+    
+    sliding_shear_stress_u = (c * N) * (numerator / denominator) ** (1/n) * (U_basal/velbase_mag)
+    sliding_shear_stress_v = (c * N) * (numerator / denominator) ** (1/n) * (V_basal/velbase_mag)
+    
+    sliding_shear_stress = (
+        sliding_shear_stress_u,
+        sliding_shear_stress_v,
     )
 
     return basis_vectors, sliding_shear_stress
@@ -244,9 +338,19 @@ def update_iceflow_emulator(cfg, state):
                         tf.pad(X[i : i + 1, :, :, :], PAD, "CONSTANT")
                     )[:, :Ny, :Nx, :]
 
-                    basis_vectors, sliding_shear_stress = weertman_sliding_law(
-                        cfg=cfg, emulator_output=Y
+
+                    # Simple effective pressure calculation
+                    effective_pressure = get_simple_effective_pressure(state)
+
+                    # basis_vectors, sliding_shear_stress = regularized_coulomb_sliding_law(
+                    #     cfg=cfg, emulator_output=Y, effective_pressure=effective_pressure
+                    # )
+                    basis_vectors, sliding_shear_stress = budd_sliding_law(
+                        cfg=cfg, emulator_output=Y, effective_pressure=effective_pressure
                     )
+                    # basis_vectors, sliding_shear_stress = weertman_sliding_law(
+                    #     cfg=cfg, emulator_output=Y
+                    # )
 
                     if iz > 0:
                         C_shear, C_grav, C_float = iceflow_energy_XY(
@@ -289,7 +393,7 @@ def update_iceflow_emulator(cfg, state):
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
                         print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 
-                # Sliding loss gradients
+                # Sliding loss gradients                
                 sliding_gradients = t.gradient(
                     [*basis_vectors],
                     state.iceflow_model.trainable_variables,

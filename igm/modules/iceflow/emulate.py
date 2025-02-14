@@ -369,78 +369,15 @@ def update_iceflow_emulator(cfg, state):
                     # # Basal shear stress computation for loss function
                     sliding_law_method = cfg.modules.iceflow.iceflow.sliding_law.method
                     sliding_law = get_sliding_law_function(sliding_law_method)
+                    
                     effective_pressure = None
-                    basis_vectors, sliding_shear_stress_law = sliding_law(cfg, Y, effective_pressure)
+                    if sliding_law_method != "weertman":
+                        effective_pressure = state.effective_pressure # some issue if no effective pressure is defined
+                        
+                    basis_vectors, sliding_shear_stress = sliding_law(cfg, Y, effective_pressure)
                     
-                    # print(Nx, Ny, sliding_shear_stress_law)
-                    
+                    U_basal, V_basal = basis_vectors # ? Is there a way to make this more generalizable for different sliding laws / different bases?
                     number_of_cells = tf.cast(Nx * Ny, tf.float32)
-                    
-                    # print(sliding_shear_stress_law[1])
-                    # exit()
-                    # taking mean to match IGM implementation (weighting) as other loss terms are also averaged over the domain
-                    # for i in range(len(sliding_shear_stress_law)):
-                        # print(sliding_shear_stress_law[i])
-                    
-                    # sliding_shear_stress_law = sliding_shear_stress_law / number_of_cells
-                    # print(sliding_shear_stress_law[0].shape)
-                    # exit()
-                    
-                    # if sliding_law_method != "weertman":
-                        # effective_pressure = state.effective_pressure
-                    #     # effective_pressure = get_simple_effective_pressure(state)
-                    U = Y[:, :, :, 0 : cfg.modules.iceflow.iceflow.Nz]
-                    V = Y[:, :, :, cfg.modules.iceflow.iceflow.Nz :]
-
-                    U_basal = U[0, ..., 0]
-                    V_basal = V[0, ..., 0]
-                    
-                    # c = 1.0 * cfg.modules.iceflow.iceflow.sliding_law.coefficient.weertman
-                    s = 1.0 + 1.0 / cfg.modules.iceflow.iceflow.sliding_law.exponent.weertman
-    
-                    # N = U_basal ** 2 + V_basal ** 2
-                    # C_slid = c * N ** (s / 2) / s
-    
-                    # cost_sliding = tf.reduce_mean(C_slid)
-                    
-                    # Manually doing sliding loss (for ground truth)
-                    c = tf.Variable(cfg.modules.iceflow.iceflow.init_slidingco)
-                    # s = cfg.modules.iceflow.iceflow.exp_weertman
-
-                    # U = Y[:, :, :, 0 : cfg.modules.iceflow.iceflow.Nz]
-                    # V = Y[:, :, :, cfg.modules.iceflow.iceflow.Nz :]
-
-                    # U_basal = U[0, ..., 0]
-                    # V_basal = V[0, ..., 0]
-
-                    # velbase = tf.stack([U_basal, V_basal], axis=-1)
-
-                    ### Sliding loss (ground truth - matches what was done before in IGM without using the gradient directly)
-
-                    lsurf = state.usurf - state.thk
-                    sloptopgx, sloptopgy = _compute_gradient_stag(tf.expand_dims(lsurf, axis=0), tf.expand_dims(state.dX, axis=0), tf.expand_dims(state.dX, axis=0))
-                    C = state.slidingco
-
-                    # C_slid is unit Mpa m^-1 m/y m = Mpa m/y
-                    # N = (
-                    #     _stag4(U_basal ** 2 + V_basal ** 2)
-                    #     + cfg.modules.iceflow.iceflow.regu_weertman**2
-                    #     + (_stag4(U_basal) * sloptopgx + _stag4(V_basal) * sloptopgy) ** 2
-                    # )
-                    # C_slid = _stag4(tf.expand_dims(C, axis=0)) * N ** (s / 2) / s
-                    
-                    N = U_basal**2 + V_basal**2  # velbase magntude
-                    C_slid = (c / s) * N ** (s / 2)
-
-                    ###
-                    
-
-                    sliding_loss = tf.reduce_mean(C_slid)
-                    # print(sliding_loss)
-                    # exit()
-                    
-
-                    # basis_vectors, sliding_shear_stress = sliding_law(cfg, Y, effective_pressure)
 
                     if iz > 0:
                         C_shear, C_slid_inside, C_grav, C_float = iceflow_energy_XY(
@@ -448,54 +385,22 @@ def update_iceflow_emulator(cfg, state):
                             X[i : i + 1, iz:-iz, iz:-iz, :],
                             Y[:, iz:-iz, iz:-iz, :],
                         )
-                        # C_shear, C_grav, C_float = iceflow_energy_XY(
-                        #     cfg,
-                        #     X[i : i + 1, iz:-iz, iz:-iz, :],
-                        #     Y[:, iz:-iz, iz:-iz, :],
-                        # )
                     else:
                         C_shear, C_slid_inside, C_grav, C_float = iceflow_energy_XY(
                             cfg, X[i : i + 1, :, :, :], Y[:, :, :, :]
                         )
-                        # C_shear, C_grav, C_float = iceflow_energy_XY(
-                        #     cfg, X[i : i + 1, :, :, :], Y[:, :, :, :]
-                        # )
-
-                    # print("SLIDING LOSSES COMPARED")
-                    # print(C_slid_inside)
-                    # print(C_slid)
-                    # exit()
-                    COST_all = (
-                        # tf.reduce_mean(C_shear)
-                        tf.reduce_mean(C_slid)
-                        # + tf.reduce_mean(C_grav)
-                        # + tf.reduce_mean(C_float)
-                        + tf.reduce_mean(C_shear)
-                        + tf.reduce_mean(C_grav)
-                        + tf.reduce_mean(C_float)
-                    )
                     
                     COST_no_sliding = (
-                        # tf.reduce_mean(C_shear)
-                        # + tf.reduce_mean(C_slid)
-                        # + tf.reduce_mean(C_grav)
-                        # + tf.reduce_mean(C_float)
                         tf.reduce_mean(C_shear)
                         + tf.reduce_mean(C_grav)
                         + tf.reduce_mean(C_float)
                     )
                     
-                    
-                    
-                    # basis_vectors, sliding_shear_stress = tf.gradient(COS)
 
                     if (epoch + 1) % 100 == 0:
                         print(
                             "---------- > ",
-                            # tf.reduce_mean(C_shear).numpy(),
-                            # tf.reduce_mean(C_slid).numpy(),
-                            # tf.reduce_mean(C_grav).numpy(),
-                            # tf.reduce_mean(C_float).numpy(),
+
                             tf.reduce_mean(C_shear).numpy(),
                             tf.reduce_mean(C_grav).numpy(),
                             tf.reduce_mean(C_float).numpy(),
@@ -508,65 +413,35 @@ def update_iceflow_emulator(cfg, state):
 
                     # print(state.C_shear.shape, state.C_slid.shape, state.C_grav.shape, state.C_float.shape,state.thk.shape )
 
-                    cost_emulator = cost_emulator + COST_all
+                    cost_emulator = cost_emulator + COST_no_sliding
 
                     if (epoch + 1) % 100 == 0:
                         U, V = Y_to_UV(cfg, Y)
                         U = U[0]
                         V = V[0]
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
-                        print("train : ", epoch, COST_all.numpy(), np.max(velsurf_mag))
+                        print("train : ", epoch, COST_no_sliding.numpy(), np.max(velsurf_mag))
                 
-                # basis_vectors, sliding_shear_stress_law = sliding_law(cfg, Y, effective_pressure)
-                # print('what')
-                # print(number_of_cells)
-                sliding_shear_stress = t.gradient(sliding_loss, [U_basal, V_basal])
-
-                # print("autograd",sliding_shear_stress)
-                # print("manual",sliding_shear_stress_law)
-                # exit()
-                
-                # Sliding loss gradients                
-                sliding_gradients = t.gradient(
-                    [U_basal, V_basal],
-                    state.iceflow_model.trainable_variables,
-                    output_gradients=sliding_shear_stress,
-                )
                 
                 sliding_gradients_manual = t.gradient(
                     [U_basal, V_basal],
                     state.iceflow_model.trainable_variables,
-                    output_gradients=sliding_shear_stress_law,
+                    output_gradients=sliding_shear_stress,
                 )
-                
-                # for i in range(len(sliding_gradients_manual)):
-                    # sliding_gradients_manual[i] = sliding_gradients_manual[i] / number_of_cells
-                    
-                # sliding_gradients_manual = sliding_gradients_manual / number_of_cells
-                # print("autograd gradients",sliding_gradients[-1])
-                # print("manual gradients",sliding_gradients_manual[-1])
-                # exit()
 
                 # All gradients other than sliding loss
                 grads_no_sliding = t.gradient(COST_no_sliding, state.iceflow_model.trainable_variables)
-                grads_all = t.gradient(COST_all, state.iceflow_model.trainable_variables)
+
 
                 # Combining sliding loss gradients with other loss term gradients
                 combined_gradients = [
-                    grad + (sliding_grad / number_of_cells)
+                    grad + (sliding_grad / number_of_cells) # divide by number of cells as other loss terms in IGM use reduce_mean and not reduce_sum
                     for grad, sliding_grad in zip(grads_no_sliding, sliding_gradients_manual)
-                ]
-                
-                # print('final grads')
-                # print(combined_gradients[-3], grads_all[-3])
-                # exit()
+                ]                
 
                 state.opti_retrain.apply_gradients(
                     zip(combined_gradients, state.iceflow_model.trainable_variables)
                 )
-                # state.opti_retrain.apply_gradients(
-                #     zip(grads_all, state.iceflow_model.trainable_variables)
-                # )
 
                 state.opti_retrain.lr = (
                     cfg.modules.iceflow.iceflow.retrain_emulator_lr

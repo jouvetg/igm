@@ -380,13 +380,13 @@ def update_iceflow_emulator(cfg, state):
                     number_of_cells = tf.cast(Nx * Ny, tf.float32)
 
                     if iz > 0:
-                        C_shear, C_slid_inside, C_grav, C_float = iceflow_energy_XY(
+                        C_shear, C_grav, C_float = iceflow_energy_XY(
                             cfg,
                             X[i : i + 1, iz:-iz, iz:-iz, :],
                             Y[:, iz:-iz, iz:-iz, :],
                         )
                     else:
-                        C_shear, C_slid_inside, C_grav, C_float = iceflow_energy_XY(
+                        C_shear, C_grav, C_float = iceflow_energy_XY(
                             cfg, X[i : i + 1, :, :, :], Y[:, :, :, :]
                         )
                     

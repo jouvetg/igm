@@ -197,18 +197,6 @@ def weertman_sliding_law(cfg, emulator_output, effective_pressure=None):
 
     return basis_vectors, sliding_shear_stress
 
-def get_simple_effective_pressure(state):
-    p_i = 910
-    g = 9.81
-    percentage = 0.45
-    
-    ice_overburden_pressure = p_i * g * state.thk
-    water_pressure = ice_overburden_pressure * percentage
-    
-    effective_pressure = ice_overburden_pressure - water_pressure
-    
-    return effective_pressure
-
 def budd_sliding_law(cfg, emulator_output, effective_pressure):
 
     """
@@ -235,17 +223,17 @@ def budd_sliding_law(cfg, emulator_output, effective_pressure):
     V_basal = V[0, ..., 0]
 
     velbase_mag = (U_basal**2 + V_basal**2) ** (1/2) # assuming l2 norm...
-    basis_vectors = (U_basal, V_basal)
+    basis_vectors = [U_basal, V_basal]
     
     sliding_shear_stress_u = (velbase_mag * N / c) ** (1/n) * (U_basal / velbase_mag)
     sliding_shear_stress_v = (velbase_mag * N / c) ** (1/n) * (V_basal / velbase_mag)
     # sliding_shear_stress_u = (c / N) ** (-1/n) * U_basal * tf.abs(U_basal) ** (1/n - 1) # check if its absolute value or not...
     # sliding_shear_stress_v = (c / N) ** (-1/n) * V_basal * tf.abs(V_basal) ** (1/n - 1) # check if its absolute value or not...
     
-    sliding_shear_stress = (
+    sliding_shear_stress = [
         sliding_shear_stress_u,
         sliding_shear_stress_v,
-    )
+    ]
 
     return basis_vectors, sliding_shear_stress
 
@@ -276,7 +264,7 @@ def regularized_coulomb_sliding_law(cfg, emulator_output, effective_pressure): #
     V_basal = V[0, ..., 0]
 
     velbase_mag = (U_basal**2 + V_basal**2) ** (1/2) # assuming l2 norm...
-    basis_vectors = (U_basal, V_basal)
+    basis_vectors = [U_basal, V_basal]
     
     numerator = velbase_mag
     denominator = velbase_mag + gamma_0 * (N ** n)
@@ -284,10 +272,10 @@ def regularized_coulomb_sliding_law(cfg, emulator_output, effective_pressure): #
     sliding_shear_stress_u = (c * N) * (numerator / denominator) ** (1/n) * (U_basal/velbase_mag)
     sliding_shear_stress_v = (c * N) * (numerator / denominator) ** (1/n) * (V_basal/velbase_mag)
     
-    sliding_shear_stress = (
+    sliding_shear_stress = [
         sliding_shear_stress_u,
         sliding_shear_stress_v,
-    )
+    ]
 
     return basis_vectors, sliding_shear_stress
 
@@ -301,23 +289,6 @@ def get_sliding_law_function(method):
         return budd_sliding_law
     else:
         raise NotImplementedError("Sliding law method not implemented. Please specify between 'weertman', 'coulomb' or 'budd'.")
-
-def _stag4(B):
-    return (B[:, 1:, 1:] + B[:, 1:, :-1] + B[:, :-1, 1:] + B[:, :-1, :-1]) / 4
-
-@tf.function(experimental_relax_shapes=True)
-def _compute_gradient_stag(s, dX, dY):
-    """
-    compute spatial gradient, outcome on stagerred grid
-    """
-
-    E = 2.0 * (s[:, :, 1:] - s[:, :, :-1]) / (dX[:, :, 1:] + dX[:, :, :-1])
-    diffx = 0.5 * (E[:, 1:, :] + E[:, :-1, :])
-
-    EE = 2.0 * (s[:, 1:, :] - s[:, :-1, :]) / (dY[:, 1:, :] + dY[:, :-1, :])
-    diffy = 0.5 * (EE[:, :, 1:] + EE[:, :, :-1])
-
-    return diffx, diffy
 
 def update_iceflow_emulator(cfg, state):
     if (state.it < 0) | (

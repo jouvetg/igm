@@ -13,11 +13,11 @@ iceflow:
     exp_glen: 3.0 # help="Glen's flow law exponent"
     exp_weertman: 3.0 # help="Weertman temporary fix ...
     sliding_law:
-      method: coulomb # default sliding law
+      method: weertman # default sliding law
       exponent:
-        weertman: 3 # help="Weertman's law exponent
-        budd: 3 # help="Budds's law exponent
-        coulomb: 3 # help="coulombs's law exponent
+        weertman: 3.0 # help="Weertman's law exponent
+        budd: 3.0 # help="Budds's law exponent
+        coulomb: 3.0 # help="coulombs's law exponent
       coefficient:
         weertman: 0.0464 # help="Weertman's law coefficient
         budd: 5e-9 # help="Budds's law coefficient

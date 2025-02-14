@@ -35,5 +35,10 @@ modules:
     start: 1900.0
     end: 2000.0
     save: 10.0
+
+output:
+  write_ncdf:
+    # output_file: isosia_100m_hydrology_hydra_weertman.nc
+    vars_to_save: [topg, slidingco, smb, topg_initial, usurf, thk, velbar_mag, velsurf_mag, velbase_mag, basal_slope_dotted_velocity, effective_pressure, cavity_effective_pressure, channel_effective_pressure, dtopgdt_theory, dtopgdt_measured, quarrying_erosion, topg_net_erosion]
     
     

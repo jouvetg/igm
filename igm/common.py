@@ -150,6 +150,7 @@ def load_modules(
     )
 
     user_process_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.process_modules_foldername}"
+    print("huh")
     load_user_modules(
         cfg=cfg,
         state=state,
@@ -157,6 +158,7 @@ def load_modules(
         imported_modules_list=imported_modules,
         module_folder=user_process_modules_folder,
     )
+    print("huh2")
     load_modules_igm(
         cfg=cfg,
         state=state,

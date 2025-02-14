@@ -180,22 +180,8 @@ def _iceflow_energy(
 
     # B has Unit Mpa y^(1/n)
     B = 2.0 * arrhenius ** (-1.0 / exp_glen)
-
-
     C = 1.0 * slidingco # ? Can we just replace this with any sliding law coefficient?
-    
-    
-    # if new_friction_param:
-    #     C = 1.0 * slidingco  # C has unit Mpa y^m m^(-m)
-    # else:
-    #     if exp_weertman == 1:
-    #         # C has unit Mpa y^m m^(-m)
-    #         C = 1.0 * slidingco
-    #     else:
-    #         C = (slidingco + 10 ** (-12)) ** -(1.0 / exp_weertman)
-
     p = 1.0 + 1.0 / exp_glen
-    # s = 1.0 + 1.0 / exp_weertman
 
     sloptopgx, sloptopgy = _compute_gradient_stag(usurf - thk, dX, dX)
     sloptopgx = tf.expand_dims(sloptopgx, axis=1)
@@ -237,16 +223,6 @@ def _iceflow_energy(
     lsurf = usurf - thk
 
     sloptopgx, sloptopgy = _compute_gradient_stag(lsurf, dX, dX)
-
-
-    # C_slid is unit Mpa m^-1 m/y m = Mpa m/y
-    # N = (
-    #     _stag4(U[:, 0, :, :] ** 2 + V[:, 0, :, :] ** 2)
-    #     + regu_weertman**2
-    #     + (_stag4(U[:, 0, :, :]) * sloptopgx + _stag4(V[:, 0, :, :]) * sloptopgy) ** 2
-    # )
-    
-    # C_slid_inside = _stag4(C) * N ** (s / 2) / s
     
     slopsurfx, slopsurfy = _compute_gradient_stag(usurf, dX, dX)
     slopsurfx = tf.expand_dims(slopsurfx, axis=1)
@@ -352,7 +328,6 @@ def _iceflow_energy(
     # C_pen = 10000 * tf.where(thk>0,0.0, tf.reduce_sum( tf.abs(U), axis=1)**2 )
 
     return C_shear, C_grav, C_float
-    # return C_shear, C_slid_inside, C_grav, C_float
 
 
 # @tf.function(experimental_relax_shapes=True)

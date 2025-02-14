@@ -432,7 +432,6 @@ def update_iceflow_emulator(cfg, state):
                 # All gradients other than sliding loss
                 grads_no_sliding = t.gradient(COST_no_sliding, state.iceflow_model.trainable_variables)
 
-
                 # Combining sliding loss gradients with other loss term gradients
                 combined_gradients = [
                     grad + (sliding_grad / number_of_cells) # divide by number of cells as other loss terms in IGM use reduce_mean and not reduce_sum

@@ -268,9 +268,10 @@ def regularized_coulomb_sliding_law(cfg, emulator_output, effective_pressure): #
     
     numerator = velbase_mag
     denominator = velbase_mag + gamma_0 * (N ** n)
-    
-    sliding_shear_stress_u = (c * N) * (numerator / denominator) ** (1/n) * (U_basal/velbase_mag)
-    sliding_shear_stress_v = (c * N) * (numerator / denominator) ** (1/n) * (V_basal/velbase_mag)
+    sliding_shear_stress_u = c * (numerator / denominator) ** (1/n) * (U_basal/velbase_mag)
+    sliding_shear_stress_v = c * (numerator / denominator) ** (1/n) * (V_basal/velbase_mag)
+    # sliding_shear_stress_u = (c * N) * (numerator / denominator) ** (1/n) * (U_basal/velbase_mag)
+    # sliding_shear_stress_v = (c * N) * (numerator / denominator) ** (1/n) * (V_basal/velbase_mag)
     
     sliding_shear_stress = [
         sliding_shear_stress_u,
@@ -343,7 +344,10 @@ def update_iceflow_emulator(cfg, state):
                     
                     effective_pressure = None
                     if sliding_law_method != "weertman":
-                        effective_pressure = state.effective_pressure # some issue if no effective pressure is defined
+                        if not hasattr(state, "effective_pressure"):
+                            effective_pressure = 910 * 9.81 * state.thk * 0.2 # simple effective pressure (20% of overburden ice pressure)
+                        else:
+                            effective_pressure = state.effective_pressure
                         
                     basis_vectors, sliding_shear_stress = sliding_law(cfg, Y, effective_pressure)
                     

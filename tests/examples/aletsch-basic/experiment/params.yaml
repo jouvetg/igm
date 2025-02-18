@@ -8,6 +8,7 @@ core:
   url_data: https://www.dropbox.com/scl/fo/kd7dix5j1tm75nj941pvi/h?rlkey=q7jtmf9yn3a970cqygdwne25j&dl=0
   logging: True
   logging_level: 30
+  hardware.visible_gpus: [3]
 
 defaults:
   - override /modules: [smb_simple, iceflow, time, thk, vert_flow, print_info, particles]
@@ -35,10 +36,14 @@ modules:
     start: 1900.0
     end: 2000.0
     save: 10.0
+  iceflow:
+    iceflow:
+      sliding_law:
+        method: coulomb
 
 output:
   write_ncdf:
-    # output_file: isosia_100m_hydrology_hydra_weertman.nc
+    # output_file: aletsch_basic_test.nc
     vars_to_save: [topg, slidingco, smb, topg_initial, usurf, thk, velbar_mag, velsurf_mag, velbase_mag, basal_slope_dotted_velocity, effective_pressure, cavity_effective_pressure, channel_effective_pressure, dtopgdt_theory, dtopgdt_measured, quarrying_erosion, topg_net_erosion]
     
     

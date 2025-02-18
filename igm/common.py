@@ -132,54 +132,56 @@ def load_modules(
         f"{HydraConfig.get().runtime.cwd}/{cfg.core.structure.root_foldername}"
     )
 
-    user_input_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.input_modules_foldername}"
+    if "input" in cfg:
+        user_input_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.input_modules_foldername}"
+        load_user_modules(
+            cfg=cfg,
+            state=state,
+            modules_list=cfg.input,
+            imported_modules_list=imported_input_modules,
+            module_folder=user_input_modules_folder,
+        )
+        load_modules_igm(
+            cfg=cfg,
+            state=state,
+            modules_list=cfg.input,
+            imported_modules_list=imported_input_modules,
+            module_type="input",
+        )
 
-    load_user_modules(
-        cfg=cfg,
-        state=state,
-        modules_list=cfg.input,
-        imported_modules_list=imported_input_modules,
-        module_folder=user_input_modules_folder,
-    )
-    load_modules_igm(
-        cfg=cfg,
-        state=state,
-        modules_list=cfg.input,
-        imported_modules_list=imported_input_modules,
-        module_type="input",
-    )
+    if "modules" in cfg:
+        user_process_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.process_modules_foldername}"
+        load_user_modules(
+            cfg=cfg,
+            state=state,
+            modules_list=cfg.modules,
+            imported_modules_list=imported_modules,
+            module_folder=user_process_modules_folder,
+        )
+        load_modules_igm(
+            cfg=cfg,
+            state=state,
+            modules_list=cfg.modules,
+            imported_modules_list=imported_modules,
+            module_type="modules",
+        )
 
-    user_process_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.process_modules_foldername}"
-    load_user_modules(
-        cfg=cfg,
-        state=state,
-        modules_list=cfg.modules,
-        imported_modules_list=imported_modules,
-        module_folder=user_process_modules_folder,
-    )
-    load_modules_igm(
-        cfg=cfg,
-        state=state,
-        modules_list=cfg.modules,
-        imported_modules_list=imported_modules,
-        module_type="modules",
-    )
-
-    user_output_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.output_modules_foldername}"
-    load_user_modules(
-        cfg=cfg,
-        state=state,
-        modules_list=cfg.output,
-        imported_modules_list=imported_output_modules,
-        module_folder=user_output_modules_folder,
-    )
-    load_modules_igm(
-        cfg=cfg,
-        state=state,
-        modules_list=cfg.output,
-        imported_modules_list=imported_output_modules,
-        module_type="output",
-    )
+    if "output" in cfg:
+        user_output_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.output_modules_foldername}"
+        load_user_modules(
+            cfg=cfg,
+            state=state,
+            modules_list=cfg.output,
+            imported_modules_list=imported_output_modules,
+            module_folder=user_output_modules_folder,
+        )
+        load_modules_igm(
+            cfg=cfg,
+            state=state,
+            modules_list=cfg.output,
+            imported_modules_list=imported_output_modules,
+            module_type="output",
+        )
     
     # Reorder modules
     input_order, module_order, output_order = get_orders()

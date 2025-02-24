@@ -9,7 +9,7 @@ from hydra.utils import get_original_cwd
 from pathlib import Path
 
 from igm.modules.utils import *
-
+import igm
 from .include_icemask import include_icemask
 
 def run(cfg, state):

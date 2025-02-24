@@ -39,7 +39,8 @@ modules:
   iceflow:
     iceflow:
       sliding_law:
-        method: coulomb
+        method: weertman
+      retrain_emulator_nbit_init: 1000
 
 output:
   write_ncdf:

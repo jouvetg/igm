@@ -44,10 +44,22 @@ def define_vertical_weight(cfg, state):
     weight = tf.Variable(weight[1:] - weight[:-1], dtype=tf.float32, trainable=False)
     state.vert_weight = tf.expand_dims(tf.expand_dims(weight, axis=-1), axis=-1)
 
-
+# import matplotlib
+# matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 def update_2d_iceflow_variables(cfg, state):
     state.uvelbase = state.U[0, :, :]
     state.vvelbase = state.V[0, :, :]
+    
+    # plt.figure(1)
+    # state.U_custom = state.U[1, ...]
+    # state.V_custom = state.V[1, ...]
+    # plt.imshow(state.V[0, ...])
+    # plt.show()
+    # print(state.uvelbase)
+    # print(state.vvelbase)
+    # print(state.vert_weight)
+    # exit()
     state.ubar = tf.reduce_sum(state.U * state.vert_weight, axis=0)
     state.vbar = tf.reduce_sum(state.V * state.vert_weight, axis=0)
     state.uvelsurf = state.U[-1, :, :]

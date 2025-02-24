@@ -117,6 +117,7 @@ def update(cfg, state):
             update_iceflow_emulator(cfg, state)
 
         update_iceflow_emulated(cfg, state)
+        # exit()
 
     elif cfg.modules.iceflow.iflo_type == "solved":
         update_iceflow_solved(cfg, state)

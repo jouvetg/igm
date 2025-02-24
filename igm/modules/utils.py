@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (C) 2021-2025 IGM authors 
+# Copyright (C) 2021-2025 IGM authors
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 """
@@ -18,8 +18,9 @@ __all__ = [
     "compute_divflux",
     "interp1d_tf",
     "complete_data",
-    "interpolate_bilinear_tf"
+    "interpolate_bilinear_tf",
 ]
+
 
 def str2bool(v):
     return v.lower() in ("true", "1")
@@ -46,6 +47,7 @@ def getmag3d(u, v):
         axis=0,
     )
 
+
 @tf.function()
 def compute_upwind_gradient_tf(u, v, s, dx):
     #  upwind computation of u ds/dx + v ds/dy
@@ -68,6 +70,7 @@ def compute_upwind_gradient_tf(u, v, s, dx):
 
     ##  Final shape is (ny,nx)
     return Rx + Ry
+
 
 @tf.function()
 def compute_gradient_tf(s, dx, dy):
@@ -103,9 +106,54 @@ def compute_gradient_tf(s, dx, dy):
 
     return diffx, diffy
 
+# @tf.function()
+def compute_divflux_adaptive(u, v, h, dx, dy):
+    """
+    upwind compuation with adaptive boundary conditions (influx/outflux depending on bordering cells).
+    We manually override the fluxes (since overriding the thickness might not fix it as the emulator could affect velocites)
+    at the boundaries to avoid ice build up at the domain boundaries.
+    """
+
+    ## Compute u and v on the staggered grid
+    u = tf.concat(
+        [u[:, 0:1], 0.5 * (u[:, :-1] + u[:, 1:]), u[:, -1:]], 1
+    )  # has shape (ny,nx+1)
+    v = tf.concat(
+        [v[0:1, :], 0.5 * (v[:-1, :] + v[1:, :]), v[-1:, :]], 0
+    )  # has shape (ny+1,nx)
+
+
+    # Hx = tf.concat([h[:, 0:1], h, h[:, -1:]], axis=1)
+    # Hy = tf.concat([h[0:1, :], h, h[-1:, :]], axis=0)
+
+    # Extend h with constant value at the domain boundaries (theres are NOT the boundary conditions, as velocity cause cause issues)
+    Hx = tf.pad(h, [[0, 0], [1, 1]], "SYMMETRIC")  # has shape (ny,nx+2)
+    Hy = tf.pad(h, [[1, 1], [0, 0]], "SYMMETRIC")  # has shape (ny+2,nx)
+    
+    ## Compute fluxes by selcting the upwind quantities
+    Qx = u * tf.where(u > 0, Hx[:, :-1], Hx[:, 1:])  # has shape (ny,nx+1)
+    Qy = v * tf.where(v > 0, Hy[:-1, :], Hy[1:, :])  # has shape (ny+1,nx)
+
+    # Outflow boundary conditions
+    interior_Qx = Qx[:, 1:-1]
+    interior_Qy = Qy[1:-1, :]
+    
+    Qx = tf.concat([interior_Qx[:, 0:1], interior_Qx, interior_Qx[:, -1:]], axis=1)
+    Qy = tf.concat([interior_Qy[0:1, :], interior_Qy, interior_Qy[-1:, :]], axis=0)
+    
+    divergence_of_flux = (Qx[:, 1:] - Qx[:, :-1]) / dx + (Qy[1:, :] - Qy[:-1, :]) / dy
+    # print(Qx)
+    # print("VALS")
+    # print(Qx[:, 1:] - Qx[:, :-1])
+    # print(Qy[1:, :] - Qy[:-1, :])
+    # print(divergence_of_flux)
+    # print(Qy)
+    # exit()
+    
+    return divergence_of_flux, Qx, Qy
 
 @tf.function()
-def compute_divflux(u, v, h, dx, dy, method='upwind'):
+def compute_divflux(u, v, h, dx, dy, method="upwind"):
     """
     upwind computation of the divergence of the flux : d(u h)/dx + d(v h)/dy
     First, u and v are computed on the staggered grid (i.e. cell edges)
@@ -114,7 +162,7 @@ def compute_divflux(u, v, h, dx, dy, method='upwind'):
     Last, computing the divergence on the staggered grid yields values def on the original grid
     """
 
-    if method == 'upwind':
+    if method == "upwind":
 
         ## Compute u and v on the staggered grid
         u = tf.concat(
@@ -124,94 +172,126 @@ def compute_divflux(u, v, h, dx, dy, method='upwind'):
             [v[0:1, :], 0.5 * (v[:-1, :] + v[1:, :]), v[-1:, :]], 0
         )  # has shape (ny+1,nx)
 
-        # Extend h with constant value at the domain boundaries
-        Hx = tf.pad(h, [[0, 0], [1, 1]], "CONSTANT")  # has shape (ny,nx+2)
-        Hy = tf.pad(h, [[1, 1], [0, 0]], "CONSTANT")  # has shape (ny+2,nx)
+        # Outflow boundary condition : zero gradient (trying to fix ice build up... not sure if this fixes it)
+        # interior_Qx = Qx[:, 1:-1]
+        # interior_Qy = Qy[1:-1, :]
 
+        # Hx = tf.concat([h[:, 0:1], h, h[:, -1:]], axis=1)
+        # Hy = tf.concat([h[0:1, :], h, h[-1:, :]], axis=0)
+
+        # Extend h with constant value at the domain boundaries
+        Hx = tf.pad(h, [[0, 0], [1, 1]], "SYMMETRIC")  # has shape (ny,nx+2)
+        Hy = tf.pad(h, [[1, 1], [0, 0]], "SYMMETRIC")  # has shape (ny+2,nx)
+        
         ## Compute fluxes by selcting the upwind quantities
         Qx = u * tf.where(u > 0, Hx[:, :-1], Hx[:, 1:])  # has shape (ny,nx+1)
         Qy = v * tf.where(v > 0, Hy[:-1, :], Hy[1:, :])  # has shape (ny+1,nx)
 
-    elif method == 'centered':
-
-        Qx = u * h  
-        Qy = v * h  
+        # print(Qx)
+        # print(Qy)
         
+    elif method == "centered":
+
+        Qx = u * h
+        Qy = v * h
+
         Qx = tf.concat(
             [Qx[:, 0:1], 0.5 * (Qx[:, :-1] + Qx[:, 1:]), Qx[:, -1:]], 1
-        )  # has shape (ny,nx+1) 
-        
+        )  # has shape (ny,nx+1)
+
         Qy = tf.concat(
             [Qy[0:1, :], 0.5 * (Qy[:-1, :] + Qy[1:, :]), Qy[-1:, :]], 0
         )  # has shape (ny+1,nx)
-        
-        ## Computation of the divergence, final shape is (ny,nx)
-    return (Qx[:, 1:] - Qx[:, :-1]) / dx + (Qy[1:, :] - Qy[:-1, :]) / dy
 
- 
+        ## Computation of the divergence, final shape is (ny,nx)
+    return (Qx[:, 1:] - Qx[:, :-1]) / dx + (Qy[1:, :] - Qy[:-1, :]) / dy, Qx, Qy
+
+
 def minmod(a, b):
-    return tf.where( (tf.abs(a)<tf.abs(b))&(a*b>0.0), a, tf.where((tf.abs(a)>tf.abs(b))&(a*b>0.0),b,0))
-    
+    return tf.where(
+        (tf.abs(a) < tf.abs(b)) & (a * b > 0.0),
+        a,
+        tf.where((tf.abs(a) > tf.abs(b)) & (a * b > 0.0), b, 0),
+    )
+
+
 def maxmod(a, b):
-    return tf.where( (tf.abs(a)<tf.abs(b))&(a*b>0.0), b, tf.where((tf.abs(a)>tf.abs(b))&(a*b>0.0),a,0))
+    return tf.where(
+        (tf.abs(a) < tf.abs(b)) & (a * b > 0.0),
+        b,
+        tf.where((tf.abs(a) > tf.abs(b)) & (a * b > 0.0), a, 0),
+    )
+
 
 @tf.function()
 def compute_divflux_slope_limiter(u, v, h, dx, dy, dt, slope_type):
     """
     upwind computation of the divergence of the flux : d(u h)/dx + d(v h)/dy
     propose a slope limiter for the upwind scheme with 3 options : godunov, minmod, superbee
-    
+
     References :
     - Numerical Methods for Engineers, Leif Rune Hellevik, book
       https://folk.ntnu.no/leifh/teaching/tkt4140/._main074.html
-    
+
     - hydro_examples github page, Michael Zingale, Ian Hawke
      collection of simple python codes that demonstrate some basic techniques used in hydrodynamics codes.
      https://github.com/python-hydro/hydro_examples
     """
-    
-    u = tf.concat( [u[:, 0:1], 0.5 * (u[:, :-1] + u[:, 1:]), u[:, -1:]], 1 )  # has shape (ny,nx+1)
-    v = tf.concat( [v[0:1, :], 0.5 * (v[:-1, :] + v[1:, :]), v[-1:, :]], 0 )  # has shape (ny+1,nx)
 
-    Hx = tf.pad(h, [[0,0],[2,2]], 'CONSTANT') # (ny,nx+4)
-    Hy = tf.pad(h, [[2,2],[0,0]], 'CONSTANT') # (ny+4,nx)
-    
-    sigpx = (Hx[:,2:]-Hx[:,1:-1])/dx    # (ny,nx+2)
-    sigmx = (Hx[:,1:-1]-Hx[:,:-2])/dx   # (ny,nx+2) 
+    u = tf.concat(
+        [u[:, 0:1], 0.5 * (u[:, :-1] + u[:, 1:]), u[:, -1:]], 1
+    )  # has shape (ny,nx+1)
+    v = tf.concat(
+        [v[0:1, :], 0.5 * (v[:-1, :] + v[1:, :]), v[-1:, :]], 0
+    )  # has shape (ny+1,nx)
 
-    sigpy = (Hy[2:,:] -Hy[1:-1,:])/dy   # (ny+2,nx)
-    sigmy = (Hy[1:-1,:]-Hy[:-2,:])/dy   # (ny+2,nx) 
+    Hx = tf.pad(h, [[0, 0], [2, 2]], "CONSTANT")  # (ny,nx+4)
+    Hy = tf.pad(h, [[2, 2], [0, 0]], "CONSTANT")  # (ny+4,nx)
+
+    sigpx = (Hx[:, 2:] - Hx[:, 1:-1]) / dx  # (ny,nx+2)
+    sigmx = (Hx[:, 1:-1] - Hx[:, :-2]) / dx  # (ny,nx+2)
+
+    sigpy = (Hy[2:, :] - Hy[1:-1, :]) / dy  # (ny+2,nx)
+    sigmy = (Hy[1:-1, :] - Hy[:-2, :]) / dy  # (ny+2,nx)
 
     if slope_type == "godunov":
- 
-        slopex = tf.zeros_like(sigpx)  
-        slopey = tf.zeros_like(sigpy)  
-        
+
+        slopex = tf.zeros_like(sigpx)
+        slopey = tf.zeros_like(sigpy)
+
     elif slope_type == "minmod":
- 
-        slopex  = minmod(sigmx,sigpx) 
-        slopey  = minmod(sigmy,sigpy)
+
+        slopex = minmod(sigmx, sigpx)
+        slopey = minmod(sigmy, sigpy)
 
     elif slope_type == "superbee":
 
-        sig1x  = minmod( sigpx , 2.0*sigmx )
-        sig2x  = minmod( sigmx , 2.0*sigpx )
-        slopex = maxmod( sig1x, sig2x)
+        sig1x = minmod(sigpx, 2.0 * sigmx)
+        sig2x = minmod(sigmx, 2.0 * sigpx)
+        slopex = maxmod(sig1x, sig2x)
 
-        sig1y  = minmod( sigpy , 2.0*sigmy )
-        sig2y  = minmod( sigmy , 2.0*sigpy )
-        slopey = maxmod( sig1y, sig2y)
+        sig1y = minmod(sigpy, 2.0 * sigmy)
+        sig2y = minmod(sigmy, 2.0 * sigpy)
+        slopey = maxmod(sig1y, sig2y)
 
-    w   = Hx[:,1:-2] + 0.5*dx*(1.0 - u*dt/dx)*slopex[:,:-1]      #  (ny,nx+1)      
-    e   = Hx[:,2:-1] - 0.5*dx*(1.0 + u*dt/dx)*slopex[:,1:]       #  (ny,nx+1)    
-    
-    s   = Hy[1:-2,:] + 0.5*dy*(1.0 - v*dt/dy)*slopey[:-1,:]      #  (ny+1,nx)      
-    n   = Hy[2:-1,:] - 0.5*dy*(1.0 + v*dt/dy)*slopey[1:,:]       #  (ny+1,nx)    
-     
-    Qx = u * tf.where(u > 0, w, e)  #  (ny,nx+1)   
-    Qy = v * tf.where(v > 0, s, n)  #  (ny+1,nx)   
-     
-    return (Qx[:, 1:] - Qx[:, :-1]) / dx + (Qy[1:, :] - Qy[:-1, :]) / dy  
+    w = Hx[:, 1:-2] + 0.5 * dx * (1.0 - u * dt / dx) * slopex[:, :-1]  #  (ny,nx+1)
+    e = Hx[:, 2:-1] - 0.5 * dx * (1.0 + u * dt / dx) * slopex[:, 1:]  #  (ny,nx+1)
+
+    s = Hy[1:-2, :] + 0.5 * dy * (1.0 - v * dt / dy) * slopey[:-1, :]  #  (ny+1,nx)
+    n = Hy[2:-1, :] - 0.5 * dy * (1.0 + v * dt / dy) * slopey[1:, :]  #  (ny+1,nx)
+
+    Qx = u * tf.where(u > 0, w, e)  #  (ny,nx+1)
+    Qy = v * tf.where(v > 0, s, n)  #  (ny+1,nx)
+
+    # # Outflow boundary condition : zero gradient (trying to fix ice build up... not sure if this fixes it)
+    # interior_Qx = Qx[:, 1:-1]
+    # interior_Qy = Qy[1:-1, :]
+
+    # Qx = tf.concat([interior_Qx[:, 0:1], interior_Qx, interior_Qx[:, -1:]], axis=1)
+    # Qy = tf.concat([interior_Qy[0:1, :], interior_Qy, interior_Qy[-1:, :]], axis=0)
+
+    return (Qx[:, 1:] - Qx[:, :-1]) / dx + (Qy[1:, :] - Qy[:-1, :]) / dy, Qx, Qy
+
 
 @tf.function()
 def interp1d_tf(xs, ys, x):
@@ -268,21 +348,24 @@ def complete_data(state):
 
     # define dX
     if not hasattr(state, "dX"):
-        state.dX = tf.ones_like(state.X) * state.dx       
-    
+        state.dX = tf.ones_like(state.X) * state.dx
+
     # if thickness is not defined in the netcdf, then it is set to zero
     if not hasattr(state, "thk"):
-        state.thk = tf.Variable(tf.zeros((state.y.shape[0], state.x.shape[0])), trainable=False)
-        
+        state.thk = tf.Variable(
+            tf.zeros((state.y.shape[0], state.x.shape[0])), trainable=False
+        )
+
     assert hasattr(state, "topg") | hasattr(state, "usurf")
-    
+
     # case usurf defined, topg is not defined
     if not hasattr(state, "topg"):
-        state.topg = tf.Variable(state.usurf - state.thk, trainable=False) 
+        state.topg = tf.Variable(state.usurf - state.thk, trainable=False)
 
     # case usurf not defined, topg is defined
-    if not hasattr(state, "usurf"): 
-        state.usurf = tf.Variable(state.topg + state.thk, trainable=False) 
+    if not hasattr(state, "usurf"):
+        state.usurf = tf.Variable(state.topg + state.thk, trainable=False)
+
 
 @tf.function
 def interpolate_bilinear_tf(

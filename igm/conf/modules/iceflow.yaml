@@ -20,6 +20,7 @@ iceflow:
         coulomb: 3.0 # help="coulombs's law exponent
       coefficient:
         weertman: 0.0464 # help="Weertman's law coefficient
+        weertman_regularized: 0.0464 # help="Weertman's law coefficient
         budd: 5e-9 # help="Budds's law coefficient
         coulomb: 0.25 # help="coulombs's law coefficient
     gamma_0: 2e-17

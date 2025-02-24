@@ -54,13 +54,19 @@ def _compute_strainrate_Glen_tf(U, V, thk, slidingco, dX, ddz, sloptopgx, slopto
         # zero otherwise
         dUdz = 0.0
         dVdz = 0.0
-
+    
+    custom_dVdy = dVdy
+    custom_V = V
+    
     # This correct for the change of coordinate z -> z - b
     dUdx = dUdx - dUdz * sloptopgx
     dUdy = dUdy - dUdz * sloptopgy
     dVdx = dVdx - dVdz * sloptopgx
     dVdy = dVdy - dVdz * sloptopgy
 
+    # print()
+    # exit()
+    
     Exx = dUdx
     Eyy = dVdy
     Ezz = -dUdx - dVdy
@@ -71,7 +77,7 @@ def _compute_strainrate_Glen_tf(U, V, thk, slidingco, dX, ddz, sloptopgx, slopto
     srx = 0.5 * ( Exx**2 + Exy**2 + Exy**2 + Eyy**2 + Ezz**2 )
     srz = 0.5 * ( Exz**2 + Eyz**2 + Exz**2 + Eyz**2 )
 
-    return srx, srz
+    return srx, srz, Exx, Exy, Eyy, Ezz, Exz, Eyz, slc, custom_dVdy, custom_V
 
 
 def _stag2(B):
@@ -130,6 +136,9 @@ def iceflow_energy(cfg, U, V, fieldin):
         cfg.modules.iceflow.iceflow.force_negative_gravitational_energy
     )
 
+def biject_power(x, n):
+  cond = tf.greater_equal(x, 0)
+  return tf.where(cond, tf.math.pow(x, n), -tf.math.pow(-x, n))
 
 @tf.function(experimental_relax_shapes=True)
 def _iceflow_energy(
@@ -190,7 +199,7 @@ def _iceflow_energy(
     # TODO : sloptopgx, sloptopgy must be the elevaion of layers! not the bedrock, this probably has very little effects.
 
     # sr has unit y^(-1)
-    srx, srz = _compute_strainrate_Glen_tf(
+    srx, srz, Exx, Exy, Eyy, Ezz, Exz, Eyz, slc, custom_dVdy, custom_V  = _compute_strainrate_Glen_tf(
         U, V, thk, C, dX, dz, sloptopgx, sloptopgy, thr=thr_ice_thk
     )
     
@@ -208,7 +217,23 @@ def _iceflow_energy(
         C_shear = _stag4(B) * tf.reduce_sum(dz * ((srcapped + regu_glen**2) ** ((p-2) / 2)) * sr, axis=1 ) / p
     else:
         C_shear = tf.reduce_sum( _stag8(B) * dz * ((srcapped + regu_glen**2) ** ((p-2) / 2)) * sr, axis=1 ) / p
-        
+
+    # state.B = B
+    # state.srcapped = srcapped
+    # print(_stag8(B).shape)
+    # exit()
+    
+    # print(B.shape,_stag4(B), _stag8(B), dz, p)
+    # print(_stag4(B).shape)
+    # print(len(B.shape))
+    # print(srcapped.shape)
+    # print(sr.shape)
+    # print('power', (srcapped + regu_glen**2) ** ((p-2) / 2))
+    # print(biject_power((srcapped + regu_glen**2), ((p-2) / 2)))
+    # print(p)
+    # print('inside', C_shear.numpy(), tf.reduce_any(tf.math.is_nan(C_shear)).numpy())
+    # exit()
+    # print('C_shear_shape', C_shear.shape)
     if iflo_regu > 0:
         
         srx = tf.where(COND, srx, 0.0)
@@ -327,7 +352,7 @@ def _iceflow_energy(
 
     # C_pen = 10000 * tf.where(thk>0,0.0, tf.reduce_sum( tf.abs(U), axis=1)**2 )
 
-    return C_shear, C_grav, C_float
+    return C_shear, C_grav, C_float, B, srcapped, srx, srz, Exx, Exy, Eyy, Ezz, Exz, Eyz, slc, custom_dVdy, custom_V
 
 
 # @tf.function(experimental_relax_shapes=True)

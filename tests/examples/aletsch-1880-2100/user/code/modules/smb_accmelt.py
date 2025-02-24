@@ -27,9 +27,6 @@ import tensorflow as tf
 from netCDF4 import Dataset
 from scipy.interpolate import interp1d
 import time
-from hydra.utils import get_original_cwd
-from pathlib import Path
-
 
  ## add custumized smb function
 # def params(parser):  
@@ -106,7 +103,7 @@ def initialize(cfg,state):
         load smb data to run the Aletsch Glacier simulation 
     """
 
-    filepath = Path(get_original_cwd()).joinpath(os.path.join("data", 'massbalance.nc'))
+    filepath = state.original_cwd.joinpath(os.path.join("data", 'massbalance.nc'))
     nc = Dataset(filepath, "r")
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")
@@ -119,7 +116,7 @@ def initialize(cfg,state):
     nc.close()
     
     
-    nc = Dataset(Path(get_original_cwd()).joinpath(os.path.join("data", 'bassin.nc')), "r" )
+    nc = Dataset(state.original_cwd.joinpath(os.path.join("data", 'bassin.nc')), "r" )
     x = np.squeeze(nc.variables["x"]).astype("float32")
     y = np.squeeze(nc.variables["y"]).astype("float32")
 
@@ -148,7 +145,7 @@ def initialize(cfg,state):
     # read mass balance parameters
     state.mb_parameters = tf.Variable(
         np.loadtxt(
-            Path(get_original_cwd()).joinpath(os.path.join("data", 'mbparameter.dat')),
+            state.original_cwd.joinpath(os.path.join("data", 'mbparameter.dat')),
             skiprows=2,
             dtype=np.float32,
         )

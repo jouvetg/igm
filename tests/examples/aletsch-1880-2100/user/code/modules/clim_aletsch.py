@@ -9,9 +9,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import time
 
-from hydra.utils import get_original_cwd
-from pathlib import Path
-
 def params(parser):
 
     # CLIMATE PARAMETERS
@@ -38,7 +35,7 @@ def  initialize(cfg,state):
 
     # read temperature and precipitation data from temp_prec.dat
     temp_prec = np.loadtxt(
-        Path(get_original_cwd()).joinpath(os.path.join("data", "temp_prec.dat")),
+        state.original_cwd.joinpath(os.path.join("data", "temp_prec.dat")),
         dtype=np.float32,
         skiprows=2,
     )

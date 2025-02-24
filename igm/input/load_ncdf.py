@@ -5,9 +5,6 @@ import tensorflow as tf
 from netCDF4 import Dataset
 from scipy.interpolate import RectBivariateSpline
 
-from hydra.utils import get_original_cwd
-from pathlib import Path
-
 from igm.modules.utils import *
 
 from .include_icemask import include_icemask
@@ -16,7 +13,7 @@ def run(cfg, state):
     if hasattr(state, "logger"):
         state.logger.info("LOAD NCDF file")
 
-    filepath = Path(get_original_cwd()).joinpath(cfg.input.load_ncdf.input_file)
+    filepath = state.original_cwd.joinpath(cfg.input.load_ncdf.input_file)
 
     nc = Dataset(filepath, "r")
 

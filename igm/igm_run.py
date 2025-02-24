@@ -73,9 +73,11 @@ def main(cfg: DictConfig) -> None:
     if cfg.core.print_params:
         print(OmegaConf.to_yaml(cfg))
 
+    state.original_cwd = Path(get_original_cwd())
+
     # ! Needs to be before the input the way it is setup - otherwise, it will throw an error... (at least with local not loadncdf)
     if not cfg.core.url_data == "":
-        folder_path = Path(get_original_cwd()).joinpath(cfg.core.folder_data)
+        folder_path = state.original_cwd.joinpath(cfg.core.folder_data)
         download_unzip_and_store(cfg.core.url_data, folder_path)
 
     imported_input_modules, imported_modules, imported_output_modules = (

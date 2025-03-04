@@ -44,5 +44,6 @@ setup(
         "salem",
         "pyyaml",
         "importlib_resources",
+        "tqdm"
     ],
 )

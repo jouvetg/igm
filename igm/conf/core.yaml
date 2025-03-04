@@ -18,6 +18,7 @@ core:
   # Misc
   print_params: True
   print_comp: False
+  print_info: True
   
   # Custom Modules
   structure:

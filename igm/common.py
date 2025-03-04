@@ -46,7 +46,8 @@ class State:
 
 from omegaconf import DictConfig, OmegaConf
 from hydra.core.hydra_config import HydraConfig
-
+from tqdm import tqdm
+import datetime
 
 def setup_igm_modules(cfg, state) -> List[ModuleType]:
     return load_modules(cfg, state)
@@ -58,6 +59,27 @@ def initialize_modules(modules: List, cfg: Any, state: State) -> None:
             state.logger.info(f"Initializing module: {module.__name__.split('.')[-1]}")
         module.initialize(cfg, state)
 
+def print_info(state):
+ 
+    if state.it % 100 == 1:
+        if hasattr(state, "pbar"):
+            state.pbar.close()
+        state.pbar = tqdm(desc=f"IGM", 
+                          ascii=False, 
+                          dynamic_ncols=True,
+                          bar_format="{desc} {postfix}")   
+
+    if hasattr(state, "pbar"):
+        state.pbar.set_postfix({ 
+            "🕒": datetime.datetime.now().strftime("%H:%M:%S"),
+            "🔄": f"{state.it:06.0f}",
+            "⏱ Time": f"{state.t.numpy():09.1f} yr",
+            "⏳ Step": f"{state.dt_target:04.2f} yr",
+            "❄️ Volume": f"{np.sum(state.thk) * (state.dx**2) / 10**9:108.2f} km³",
+#            "💾 GPU Mem (MB)": tf.config.experimental.get_memory_info("GPU:0")['current'] / 1024**2
+        })
+        state.pbar.update(1)
+
 
 def run_model(modules: List, output_modules: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
@@ -65,7 +87,14 @@ def run_model(modules: List, output_modules: List, cfg: Any, state: State) -> No
             for module in modules:
                 module.update(cfg, state)
             run_outputs(output_modules, cfg, state)
-            
+            if cfg.core.print_info:
+                print_info(state)
+
+
+
+
+           
+        
 # def run_finalizers(modules: List, cfg: Any, state: State) -> None:
 #     for module in modules:
 #         module.finalize(cfg, state)

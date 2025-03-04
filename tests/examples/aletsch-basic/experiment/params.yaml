@@ -11,7 +11,7 @@ core:
 
 defaults:
   - override /input: [local]
-  - override /modules: [time, thk, iceflow, smb_simple, print_info] # vert_flow, particles, 
+  - override /modules: [time, thk, iceflow, smb_simple] # vert_flow, particles, 
   - override /output: [write_ncdf, plot2d]
   # - override /hydra/launcher: joblib # no error but does not seem to work compared to if you call it on the command line...
   # experiment: params # can we make it work here?
@@ -46,7 +46,7 @@ modules:
       - [2100, 0.009, 0.005, 3300, 2.0]
   time:
     start: 1900.0
-    end: 2000.0
+    end: 2900.0
     save: 10.0
     
 output:

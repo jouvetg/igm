@@ -6,7 +6,7 @@ hydra:
 
 defaults:
   - override /input: [Bueler2005C]
-  - override /modules: [forcing_Bueler2005C, iceflow, time, thk, print_info]
+  - override /modules: [forcing_Bueler2005C, iceflow, time, thk]
   - override /output: [write_ncdf,plot2d]
 
 modules:

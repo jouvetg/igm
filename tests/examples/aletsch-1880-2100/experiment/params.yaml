@@ -9,7 +9,7 @@ defaults:
   - /user/conf/modules@modules.clim_aletsch: clim_aletsch
 
   - override /input: [load_ncdf]
-  - override /modules: [clim_aletsch, smb_accmelt, iceflow, time, thk, rockflow, vert_flow, print_info, particles]
+  - override /modules: [clim_aletsch, smb_accmelt, iceflow, time, thk, rockflow, vert_flow, particles]
   - override /output: [write_ncdf, plot2d]
 
 hydra:

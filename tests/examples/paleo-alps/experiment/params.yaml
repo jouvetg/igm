@@ -14,7 +14,7 @@ defaults:
   - /user/conf/modules@modules.smb_signal: smb_signal # Loads the base configuration. Needs to be before an `override` I believe, otherwise, we get an assertion error
   
   - override /input: [load_tif]
-  - override /modules: [time, iceflow, thk, smb_signal, print_info]
+  - override /modules: [time, iceflow, thk, smb_signal]
   - override /output: [plot2d, write_ncdf]
 #  - override /hydra/launcher: joblib
 

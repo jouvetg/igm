@@ -5,7 +5,7 @@ hydra:
     chdir: True
 
 defaults:
-  - override /modules: [time, iceflow, thk, clim_oggm, smb_oggm, print_info]
+  - override /modules: [time, iceflow, thk, clim_oggm, smb_oggm]
   - override /input: [oggm_shop]
   - override /output: [write_ncdf,plot2d]
 

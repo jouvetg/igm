@@ -8,7 +8,7 @@ defaults:
   - /user/conf/modules@modules.mysmb: mysmb
   
   - override /input: [oggm_shop]
-  - override /modules: [mysmb, iceflow, time, thk, vert_flow, particles, print_info]
+  - override /modules: [mysmb, iceflow, time, thk, vert_flow, particles]
   - override /output: [write_ncdf,plot2d]
 
 input:

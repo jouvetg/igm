@@ -1,3 +1,0 @@
-include_icemask:
-  shapefile: icemask.shp # help="Icemask input file (default: icemask.shp)"
-  invert: False # help="Invert ice mask if the mask is where the ice should be (default: False)"

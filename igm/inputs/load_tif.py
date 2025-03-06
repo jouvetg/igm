@@ -22,12 +22,10 @@ def run(cfg, state):
             state.profile_tif_file = rasterio.open(file, "r").profile
             with rasterio.open(file) as src:
                 vars()[var] = np.flipud(src.read(1))
-                height = vars()[var].shape[0]
-                width = vars()[var].shape[1]
-                cols, rows = np.meshgrid(np.arange(width), np.arange(height))
-                x, y = rasterio.transform.xy(src.transform, rows, cols)
-                x = np.array(x)[0, :]
-                y = np.flip(np.array(y)[:, 0])
+                height, width = vars()[var].shape
+                x = np.array(rasterio.transform.xy(src.transform, 0, np.arange(width))[0]) 
+                y = np.array(rasterio.transform.xy(src.transform, np.arange(height), 0)[1])
+                y = y[::-1]
             del src
 
     # coarsen if requested

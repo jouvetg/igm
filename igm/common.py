@@ -81,7 +81,7 @@ def print_info(state):
         state.pbar.update(1)
 
 
-def run_modules(processes: List, output_modules: List, cfg: Any, state: State) -> None:
+def update_modules(processes: List, output_modules: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
         while state.t < cfg.processes.time.end:
             for module in processes:
@@ -90,14 +90,9 @@ def run_modules(processes: List, output_modules: List, cfg: Any, state: State) -
             if cfg.core.print_info:
                 print_info(state)
 
-
-
-
-           
-        
-# def run_finalizers(processes: List, cfg: Any, state: State) -> None:
-#     for module in processes:
-#         module.finalize(cfg, state)
+def finalize_modules(processes: List, cfg: Any, state: State) -> None:
+    for module in processes:
+        module.finalize(cfg, state)
 
 
 def run_outputs(output_modules: List, cfg: Any, state: State) -> None:

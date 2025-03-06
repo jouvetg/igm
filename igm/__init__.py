@@ -17,7 +17,7 @@ from .common import (
     add_logger,
     # save_params,
     initialize_modules,
-    run_model,
+    run_modules,
     # run_finalizers,
     run_outputs,
     setup_igm_modules,

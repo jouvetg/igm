@@ -16,6 +16,8 @@ defaults:
 hydra:
   searchpath:
     - file:///${cwd} # adds cwd to the search path
+  job:
+    chdir: True
 
 # modules:
   # order: null # this is a list of modules that will be executed in order

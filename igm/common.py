@@ -81,7 +81,7 @@ def print_info(state):
         state.pbar.update(1)
 
 
-def run_model(processes: List, output_modules: List, cfg: Any, state: State) -> None:
+def run_modules(processes: List, output_modules: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
         while state.t < cfg.processes.time.end:
             for module in processes:

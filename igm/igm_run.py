@@ -11,7 +11,7 @@ from igm import (
     # save_params,
     IGM_DESCRIPTION,
     initialize_modules,
-    run_model,
+    run_modules,
     # run_finalizers,
     setup_igm_modules,
     # setup_igm_params,
@@ -83,7 +83,7 @@ def main(cfg: DictConfig) -> None:
         folder_path = state.original_cwd.joinpath(cfg.core.folder_data)
         download_unzip_and_store(cfg.core.url_data, folder_path)
 
-    imported_input_modules, imported_modules, imported_output_modules = (
+    imported_input_modules, imported_processes_modules, imported_output_modules = (
         setup_igm_modules(cfg, state)
     )
 
@@ -106,9 +106,9 @@ def main(cfg: DictConfig) -> None:
 
 
     with strategy.scope():
-        initialize_modules(imported_modules, cfg, state)
-        run_model(imported_modules, imported_output_modules, cfg, state)
-        # run_finalizers(imported_modules, cfg, state) # Remove finalizers?
+        initialize_modules(imported_processes_modules, cfg, state)
+        run_modules(imported_processes_modules, imported_output_modules, cfg, state)
+        # run_finalizers(imported_processes_modules, cfg, state) # Remove finalizers?
 
     if cfg.core.print_comp:
         print_comp(state)

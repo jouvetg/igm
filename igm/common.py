@@ -250,20 +250,29 @@ def load_user_modules(
     for module_name in modules_list:
         # print("module name", module_name)
         # Local Directory
-        try:
+        try: 
             module = SourceFileLoader(
                 f"{module_name}", f".{module_name}.py"
             ).load_module()
         except FileNotFoundError:
             # print(f'{module_name} [not found] in local working directory: {HydraConfig.get().runtime.cwd}. Trying custom modules directory...')
 
-            # Custom Modules Folder
-            try:
+            # User Modules Folder
+            try: 
                 module = SourceFileLoader(
                     f"{module_name}", f"{module_folder}/{module_name}.py"
                 ).load_module()
             except FileNotFoundError:
-                pass
+                # User Modules Folder Folder
+                try:
+                    module = SourceFileLoader(
+                        f"{module_name}", f"{module_folder}/{module_name}/{module_name}.py"
+                    ).load_module()
+                except FileNotFoundError:
+                    pass
+                else:
+                    # validate_module(module)
+                    imported_modules_list.append(module)
                 # print(f'{module_name} [not found] in local directory or custom modules directory')
             else:
                 # print(f'{module_name} [found] in custom modules directory: {HydraConfig.get().runtime.cwd}/{cfg.core.custom_modules_folder}')

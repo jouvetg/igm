@@ -71,20 +71,20 @@ with open('params.yaml', 'w') as file:
 
     print("", file=file)
     print("defaults:", file=file) 
-    print("  - override /input: [" + ", ".join(imodules) + "]", file=file)
-    print("  - override /modules: [" + ", ".join(modules) + "]", file=file)
-    print("  - override /output: [" + ", ".join(omodules) + "]", file=file)
+    print("  - override /inputs: [" + ", ".join(imodules) + "]", file=file)
+    print("  - override /processes: [" + ", ".join(modules) + "]", file=file)
+    print("  - override /outputs: [" + ", ".join(omodules) + "]", file=file)
 
     print("", file=file)
-    print("input:", file=file)
+    print("inputs:", file=file)
     print_in_file(imodules,file)
 
     print("", file=file)
-    print("modules:", file=file)
+    print("processes:", file=file)
     print_in_file(modules,file)
 
     print("", file=file)
-    print("output:", file=file)
+    print("outputs:", file=file)
     print_in_file(omodules,file)
 
 

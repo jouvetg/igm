@@ -9,6 +9,7 @@ from igm import (
     State,
     # params_core,
     # save_params,
+    IGM_DESCRIPTION,
     initialize_modules,
     run_model,
     # run_finalizers,
@@ -37,6 +38,8 @@ for gpu_instance in physical_devices:
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig) -> None:
+    print(IGM_DESCRIPTION)
+
     state = State()  # class acting as a dictionary
 
     if cfg.core.hardware.gpu_info:

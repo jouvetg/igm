@@ -75,7 +75,7 @@ def print_info(state):
             "🔄": f"{state.it:06.0f}",
             "⏱ Time": f"{state.t.numpy():09.1f} yr",
             "⏳ Step": f"{state.dt_target:04.2f} yr",
-            "❄️ Volume": f"{np.sum(state.thk) * (state.dx**2) / 10**9:108.2f} km³",
+            "❄️  Volume": f"{np.sum(state.thk) * (state.dx**2) / 10**9:108.2f} km³",
 #            "💾 GPU Mem (MB)": tf.config.experimental.get_memory_info("GPU:0")['current'] / 1024**2
         })
         state.pbar.update(1)
@@ -224,17 +224,18 @@ def load_modules(
     output_order_dict = {name: index for index, name in enumerate(output_order)}
     imported_output_modules = sorted(imported_output_modules, key=lambda module: output_order_dict[get_module_name(module)])
 
-    print(f"{'':-^100}")
-    print(f"{'INPUT Modules':-^100}")
-    for i, input_module in enumerate(imported_input_modules):
-        print(f" {i}: {input_module}")
-    print(f"{'PHYSICAL Modules':-^100}")
-    for i, module in enumerate(imported_modules):
-        print(f" {i}: {module}")
-    print(f"{'OUTPUT Modules':-^100}")
-    for i, output_module in enumerate(imported_output_modules):
-        print(f" {i}: {output_module}")
-    print(f"{'':-^100}")
+    if cfg.core.print_imported_modules:
+        print(f"{'':-^100}")
+        print(f"{'INPUTS Modules':-^100}")
+        for i, input_module in enumerate(imported_input_modules):
+            print(f" {i}: {input_module}")
+        print(f"{'PROCESSES Modules':-^100}")
+        for i, module in enumerate(imported_modules):
+            print(f" {i}: {module}")
+        print(f"{'OUTPUTS Modules':-^100}")
+        for i, output_module in enumerate(imported_output_modules):
+            print(f" {i}: {output_module}")
+        print(f"{'':-^100}")
 
     return imported_input_modules, imported_modules, imported_output_modules
 
@@ -247,7 +248,7 @@ def load_user_modules(
 
     # print("Testing for custom modules first - then will load default IGM modules...")
     for module_name in modules_list:
-        print("module name", module_name)
+        # print("module name", module_name)
         # Local Directory
         try:
             module = SourceFileLoader(

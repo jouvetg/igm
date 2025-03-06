@@ -12,6 +12,7 @@ from . import inputs, outputs
 
 from .common import (
     State,
+    IGM_DESCRIPTION,
     load_modules,
     add_logger,
     # save_params,

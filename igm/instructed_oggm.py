@@ -121,7 +121,7 @@ class IGM_Model2D(Model2D):
 
         self.icemask = mb_filter
 
-        igm.modules.process.iceflow.initialize(self.params, self.state)
+        igm.processes.process.iceflow.initialize(self.params, self.state)
 
     def step(self, dt):
         # recast glacier variables into igm-like variables
@@ -130,11 +130,11 @@ class IGM_Model2D(Model2D):
         self.state.usurf.assign(self.surface_h)
 
         # compute ubar and vbar
-        igm.modules.process.iceflow.update(self.params, self.state)
+        igm.processes.process.iceflow.update(self.params, self.state)
 
         # retrurn the divergence of the flux using upwind fluxes
         divflux = (
-            igm.modules.utils.compute_divflux(
+            igm.processes.utils.compute_divflux(
                 self.state.ubar,
                 self.state.vbar,
                 self.state.thk,

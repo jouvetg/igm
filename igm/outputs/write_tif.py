@@ -16,7 +16,7 @@ def run(cfg, state):
     import rasterio
 
     if state.saveresult:
-        for var in cfg.output.write_tif.vars_to_save:
+        for var in cfg.outputs.write_tif.vars_to_save:
             file = var + "-" + str(int(state.t)).zfill(6) + ".tif"
 
             if hasattr(state, "profile_tif_file"):

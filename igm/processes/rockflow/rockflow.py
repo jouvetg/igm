@@ -10,7 +10,7 @@ import tensorflow as tf
 import igm
 import time
 
-from igm.modules.utils import *
+from igm.processes.utils import *
 
 
 # def params(parser):
@@ -31,10 +31,10 @@ def update(cfg, state):
 
     slop = getmag(slopsurfx, slopsurfy)
 
-    dirx = -cfg.modules.rockflow.flow_speed * tf.where(
+    dirx = -cfg.processes.rockflow.flow_speed * tf.where(
         tf.not_equal(slop, 0), slopsurfx / slop, 1
     )
-    diry = -cfg.modules.rockflow.flow_speed * tf.where(
+    diry = -cfg.processes.rockflow.flow_speed * tf.where(
         tf.not_equal(slop, 0), slopsurfy / slop, 1
     )
 

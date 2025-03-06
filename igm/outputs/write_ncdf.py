@@ -11,7 +11,7 @@ import tensorflow as tf
 import argparse
 from netCDF4 import Dataset
 
-from igm.modules.utils import getmag
+from igm.processes.utils import getmag
 
 
 def initialize(cfg, state):
@@ -59,19 +59,19 @@ def run(cfg, state):
     if state.saveresult:
         state.tcomp_write_ncdf.append(time.time())
 
-        if "velbar_mag" in cfg.output.write_ncdf.vars_to_save:
+        if "velbar_mag" in cfg.outputs.write_ncdf.vars_to_save:
             state.velbar_mag = getmag(state.ubar, state.vbar)
 
-        if "velsurf_mag" in cfg.output.write_ncdf.vars_to_save:
+        if "velsurf_mag" in cfg.outputs.write_ncdf.vars_to_save:
             state.velsurf_mag = getmag(state.uvelsurf, state.vvelsurf)
 
-        if "velbase_mag" in cfg.output.write_ncdf.vars_to_save:
+        if "velbase_mag" in cfg.outputs.write_ncdf.vars_to_save:
             state.velbase_mag = getmag(state.uvelbase, state.vvelbase)
 
-        if "meanprec" in cfg.output.write_ncdf.vars_to_save:
+        if "meanprec" in cfg.outputs.write_ncdf.vars_to_save:
             state.meanprec = tf.math.reduce_mean(state.precipitation, axis=0)
 
-        if "meantemp" in cfg.output.write_ncdf.vars_to_save:
+        if "meantemp" in cfg.outputs.write_ncdf.vars_to_save:
             state.meantemp = tf.math.reduce_mean(state.air_temp, axis=0)
 
         if not hasattr(state, "already_called_update_write_ncdf"):
@@ -80,7 +80,7 @@ def run(cfg, state):
             if hasattr(state, "logger"):
                 state.logger.info("Initialize NCDF ex output Files")
 
-            nc = Dataset(cfg.output.write_ncdf.output_file, "w", format="NETCDF4")
+            nc = Dataset(cfg.outputs.write_ncdf.output_file, "w", format="NETCDF4")
 
             nc.createDimension("time", None)
             E = nc.createVariable("time", np.dtype("float32").char, ("time",))
@@ -106,17 +106,17 @@ def run(cfg, state):
             if hasattr(state, 'pyproj_srs'):
                 nc.pyproj_srs = state.pyproj_srs
 
-            if "iflo_Nz" in cfg.modules.iceflow.iceflow:
-                nc.createDimension("z", cfg.modules.iceflow.iceflow.iflo_Nz)
+            if "iflo_Nz" in cfg.processes.iceflow.iceflow:
+                nc.createDimension("z", cfg.processes.iceflow.iceflow.iflo_Nz)
                 E = nc.createVariable("z", np.dtype("float32").char, ("z",))
                 E.units = "m"
                 E.long_name = "z"
                 E.axis = "Z"
                 E[:] = np.arange(
-                    cfg.modules.iceflow.iceflow.iflo_Nz
+                    cfg.processes.iceflow.iceflow.iflo_Nz
                 )  # TODO: fix this, that's not what we want
 
-            for var in cfg.output.write_ncdf.vars_to_save:
+            for var in cfg.outputs.write_ncdf.vars_to_save:
                 if hasattr(state, var):
                     if vars(state)[var].numpy().ndim == 2:
                         E = nc.createVariable(
@@ -139,12 +139,12 @@ def run(cfg, state):
                     "Write NCDF ex file at time : " + str(state.t.numpy())
                 )
 
-            nc = Dataset(cfg.output.write_ncdf.output_file, "a", format="NETCDF4" )
+            nc = Dataset(cfg.outputs.write_ncdf.output_file, "a", format="NETCDF4" )
 
             d = nc.variables["time"][:].shape[0]
             nc.variables["time"][d] = state.t.numpy()
 
-            for var in cfg.output.write_ncdf.vars_to_save:
+            for var in cfg.outputs.write_ncdf.vars_to_save:
                 if hasattr(state, var):
                     if vars(state)[var].numpy().ndim == 2:
                         nc.variables[var][d, :, :] = vars(state)[var].numpy()

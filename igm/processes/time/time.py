@@ -44,19 +44,19 @@ def initialize(cfg, state):
     state.tcomp_time = []
 
     # Initialize the time with starting time
-    state.t = tf.Variable(float(cfg.modules.time.start))
+    state.t = tf.Variable(float(cfg.processes.time.start))
 
     # the first loop is not advancing
     state.it = -1
     state.itsave = -1
 
-    state.dt = tf.Variable(float(cfg.modules.time.step_max))
+    state.dt = tf.Variable(float(cfg.processes.time.step_max))
 
-    state.dt_target = tf.Variable(float(cfg.modules.time.step_max))
+    state.dt_target = tf.Variable(float(cfg.processes.time.step_max))
 
     state.time_save = np.ndarray.tolist(
-        np.arange(cfg.modules.time.start, cfg.modules.time.end, cfg.modules.time.save)
-    ) + [cfg.modules.time.end]
+        np.arange(cfg.processes.time.start, cfg.processes.time.end, cfg.processes.time.save)
+    ) + [cfg.processes.time.end]
 
     state.time_save = tf.constant(state.time_save, dtype="float32")
 
@@ -77,12 +77,12 @@ def update(cfg, state):
         tf.reduce_max(tf.abs(state.vbar)),
     )
     # dt_target account for both cfl and dt_max
-    if (velomax > 0) & (cfg.modules.time.cfl>0):
+    if (velomax > 0) & (cfg.processes.time.cfl>0):
         state.dt_target =  tf.minimum(
-            cfg.modules.time.cfl * state.dx / velomax, cfg.modules.time.step_max
+            cfg.processes.time.cfl * state.dx / velomax, cfg.processes.time.step_max
         )
     else:
-        state.dt_target = cfg.modules.time.step_max
+        state.dt_target = cfg.processes.time.step_max
 
     state.dt = state.dt_target
 

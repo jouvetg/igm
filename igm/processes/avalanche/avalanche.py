@@ -27,14 +27,14 @@ import time
 def initialize(cfg, state):
     state.tcomp_avalanche = []
     
-    if "time" not in cfg.modules:
+    if "time" not in cfg.processes:
         raise ValueError("The 'time' module is required for the 'avalanche' module.")
     
-    state.tlast_avalanche = tf.Variable(cfg.modules.time.start, dtype=tf.float32)
+    state.tlast_avalanche = tf.Variable(cfg.processes.time.start, dtype=tf.float32)
 
 
 def update(cfg, state):
-    if (state.t - state.tlast_avalanche) >= cfg.modules.avalanche.update_freq:
+    if (state.t - state.tlast_avalanche) >= cfg.processes.avalanche.update_freq:
         if hasattr(state, "logger"):
             state.logger.info("Update AVALANCHE at time : " + str(state.t.numpy()))
 
@@ -44,7 +44,7 @@ def update(cfg, state):
         Zb = state.topg
         Zi = Zb + H
         dHRepose = state.dx * tf.math.tan(
-            cfg.modules.avalanche.angleOfRepose * np.pi / 180.0
+            cfg.processes.avalanche.angleOfRepose * np.pi / 180.0
         )
         Ho = tf.maximum(H, 0)
 

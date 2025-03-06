@@ -53,8 +53,8 @@ def setup_igm_modules(cfg, state) -> List[ModuleType]:
     return load_modules(cfg, state)
 
 
-def initialize_modules(modules: List, cfg: Any, state: State) -> None:
-    for module in modules:
+def initialize_modules(processes: List, cfg: Any, state: State) -> None:
+    for module in processes:
         if cfg.core.logging:
             state.logger.info(f"Initializing module: {module.__name__.split('.')[-1]}")
         module.initialize(cfg, state)
@@ -81,10 +81,10 @@ def print_info(state):
         state.pbar.update(1)
 
 
-def run_model(modules: List, output_modules: List, cfg: Any, state: State) -> None:
+def run_model(processes: List, output_modules: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
-        while state.t < cfg.modules.time.end:
-            for module in modules:
+        while state.t < cfg.processes.time.end:
+            for module in processes:
                 module.update(cfg, state)
             run_outputs(output_modules, cfg, state)
             if cfg.core.print_info:
@@ -95,8 +95,8 @@ def run_model(modules: List, output_modules: List, cfg: Any, state: State) -> No
 
            
         
-# def run_finalizers(modules: List, cfg: Any, state: State) -> None:
-#     for module in modules:
+# def run_finalizers(processes: List, cfg: Any, state: State) -> None:
+#     for module in processes:
 #         module.finalize(cfg, state)
 
 
@@ -139,11 +139,11 @@ def get_orders():
     for default in defaults:
 
         key = list(default.keys())[0] # ? Cleaner / more robust way to do this?
-        if key == 'override /input':
+        if key == 'override /inputs':
             input_order = default[key]
-        elif key == 'override /modules':
+        elif key == 'override /processes':
             modules_order = default[key]
-        elif key == 'override /output':
+        elif key == 'override /outputs':
             output_order = default[key]
 
     return input_order, modules_order, output_order
@@ -161,55 +161,55 @@ def load_modules(
         f"{HydraConfig.get().runtime.cwd}/{cfg.core.structure.root_foldername}"
     )
 
-    if "input" in cfg:
+    if "inputs" in cfg:
         user_input_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.input_modules_foldername}"
         load_user_modules(
             cfg=cfg,
             state=state,
-            modules_list=cfg.input,
+            modules_list=cfg.inputs,
             imported_modules_list=imported_input_modules,
             module_folder=user_input_modules_folder,
         )
         load_modules_igm(
             cfg=cfg,
             state=state,
-            modules_list=cfg.input,
+            modules_list=cfg.inputs,
             imported_modules_list=imported_input_modules,
-            module_type="input",
+            module_type="inputs",
         )
 
-    if "modules" in cfg:
+    if "processes" in cfg:
         user_process_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.process_modules_foldername}"
         load_user_modules(
             cfg=cfg,
             state=state,
-            modules_list=cfg.modules,
+            modules_list=cfg.processes,
             imported_modules_list=imported_modules,
             module_folder=user_process_modules_folder,
         )
         load_modules_igm(
             cfg=cfg,
             state=state,
-            modules_list=cfg.modules,
+            modules_list=cfg.processes,
             imported_modules_list=imported_modules,
-            module_type="modules",
+            module_type="processes",
         )
 
-    if "output" in cfg:
+    if "outputs" in cfg:
         user_output_modules_folder = f"{root_foldername}/{cfg.core.structure.code_foldername}/{cfg.core.structure.output_modules_foldername}"
         load_user_modules(
             cfg=cfg,
             state=state,
-            modules_list=cfg.output,
+            modules_list=cfg.outputs,
             imported_modules_list=imported_output_modules,
             module_folder=user_output_modules_folder,
         )
         load_modules_igm(
             cfg=cfg,
             state=state,
-            modules_list=cfg.output,
+            modules_list=cfg.outputs,
             imported_modules_list=imported_output_modules,
-            module_type="output",
+            module_type="outputs",
         )
     
     # Reorder modules
@@ -289,7 +289,7 @@ def load_modules_igm(
 
         module_path = f"igm.{module_type}.{module_name}"
         module = importlib.import_module(module_path)
-        if module_type == "modules":
+        if module_type == "processes":
             validate_module(module)
         imported_modules_list.append(module)
 

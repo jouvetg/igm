@@ -1,5 +1,5 @@
 
-# from igm.modules.utils import *
+# from igm.processes.utils import *
 
 # def params_pretraining(parser):
  

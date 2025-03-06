@@ -47,5 +47,5 @@ class Pix2PixHDPipeline:
             f"First column from Image after converting to 8bit (if needed): {image[:,0]}"
         )
         self.exporter.export(
-            image=image, filename=f"texture_{year}.{self.cfg.modules.texture.format}"
+            image=image, filename=f"texture_{year}.{self.cfg.processes.texture.format}"
         )

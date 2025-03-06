@@ -8,7 +8,7 @@ import os
 import time
 import tensorflow as tf
 import shutil
-from igm.modules.utils import *
+from igm.processes.utils import *
 
 
 def initialize(cfg, state):
@@ -19,7 +19,7 @@ def initialize(cfg, state):
         shutil.rmtree(directory)
     os.mkdir(directory)
 
-    if cfg.output.write_particles.add_topography:
+    if cfg.outputs.write_particles.add_topography:
         ftt = os.path.join("trajectories", "topg.csv")
         array = tf.transpose(
             tf.stack(
@@ -65,7 +65,7 @@ def run(cfg, state):
         with open(ft, "a") as f:
             print(state.t.numpy(), file=f)
 
-        if cfg.output.write_particles.add_topography:
+        if cfg.outputs.write_particles.add_topography:
             ftt = os.path.join(
                 "trajectories",
                 "usurf-" + "{:06d}".format(int(state.t.numpy())) + ".csv",

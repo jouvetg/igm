@@ -61,8 +61,8 @@ def params(parser: Any) -> None:
 
 def initialize(cfg: Any, state: Any) -> None:
     state.tcomp_texture = []
-    logging.basicConfig(level=cfg.modules.texture.verbosity)
-    if not os.path.exists(cfg.modules.texture.model_path):
+    logging.basicConfig(level=cfg.processes.texture.verbosity)
+    if not os.path.exists(cfg.processes.texture.model_path):
         model_url = "https://drive.google.com/drive/folders/1Rmw_tCVplnjGfhjnZtVDae7djOmu5ZKP?usp=sharing"
 
         # TODO: Only available to download folder if you use external packages (i do not know, but for now, I will let the user manually download from google drive)
@@ -94,9 +94,9 @@ def initialize(cfg: Any, state: Any) -> None:
     coefficients = tf.constant([2.0448825, 0.62188774], shape=(1, 2))
     state.ndvi_emulator = LinearRegressor(coefficients=coefficients, b=b)
 
-    if cfg.modules.texture.format == "png":
+    if cfg.processes.texture.format == "png":
         state.texture_exporter = PngExporter()
-    elif cfg.modules.texture.format == "tif" or cfg.modules.texture.format == "tiff":
+    elif cfg.processes.texture.format == "tif" or cfg.processes.texture.format == "tiff":
         state.texture_exporter = TiffExporter(state=state)
     else:
         raise NotImplementedError(
@@ -151,8 +151,8 @@ def update(cfg: Any, state: Any) -> None:
                 )  # or data.width but its always going to be a square here
 
         # ! Not tested yet but trying it out
-        if cfg.modules.texture.resolution != -1:  # overrides the resolution
-            resolution = cfg.modules.texture.resolution
+        if cfg.processes.texture.resolution != -1:  # overrides the resolution
+            resolution = cfg.processes.texture.resolution
 
         logging.info(f"Long side resolution for resizing: {resolution}")
 

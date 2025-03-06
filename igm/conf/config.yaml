@@ -9,9 +9,9 @@ cwd: ${get_cwd:0} #0 is a dummy input since resolvers require callables
 defaults:
   - _self_
   - core
-  - optional modules: null
-  - optional input: null # made it not mandatory so that one can use 'igm_run -h' without +experiement
-  - optional output: null # output can be empty as opposed to input (???), which requires something (could change if we have synthetic case...)
+  - optional processes: null
+  - optional inputs: null # made it not mandatory so that one can use 'igm_run -h' without +experiement
+  - optional outputs: null # output can be empty as opposed to input (???), which requires something (could change if we have synthetic case...)
   
 hydra:
   searchpath:

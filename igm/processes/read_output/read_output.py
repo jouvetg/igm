@@ -8,7 +8,7 @@ import os
 import tensorflow as tf
 from netCDF4 import Dataset
  
-from igm.modules.utils import *
+from igm.processes.utils import *
  
 # def params(parser):
 #     parser.add_argument(
@@ -50,7 +50,7 @@ from igm.modules.utils import *
  
 def initialize(cfg, state):
  
-    nc = Dataset(cfg.modules.read_output.input_file, "r")
+    nc = Dataset(cfg.processes.read_output.input_file, "r")
 
     state.x    = np.squeeze(nc.variables["x"]).astype("float32")
     state.y    = np.squeeze(nc.variables["y"]).astype("float32")
@@ -62,12 +62,12 @@ def initialize(cfg, state):
         vars(state)[var+'_'+'t'] = np.squeeze(nc.variables[var]).astype("float32")
  
     # crop if requested
-    if cfg.modules.read_output.crop:
-        i0 = max(0, int((cfg.modules.read_output.xmin - x[0]) / (x[1] - x[0])))
-        i1 = min(int((cfg.modules.read_output.xmax - x[0]) / (x[1] - x[0])), x.shape[0] - 1)
+    if cfg.processes.read_output.crop:
+        i0 = max(0, int((cfg.processes.read_output.xmin - x[0]) / (x[1] - x[0])))
+        i1 = min(int((cfg.processes.read_output.xmax - x[0]) / (x[1] - x[0])), x.shape[0] - 1)
         i1 = max(i0 + 1, i1)
-        j0 = max(0, int((cfg.modules.read_output.ymin - y[0]) / (y[1] - y[0])))
-        j1 = min(int((cfg.modules.read_output.ymax - y[0]) / (y[1] - y[0])), y.shape[0] - 1)
+        j0 = max(0, int((cfg.processes.read_output.ymin - y[0]) / (y[1] - y[0])))
+        j1 = min(int((cfg.processes.read_output.ymax - y[0]) / (y[1] - y[0])), y.shape[0] - 1)
         j1 = max(j0 + 1, j1) 
         for var in state.list_var:
             vars(state)[var+'_'+'t'] = vars(state)[var+'_'+'t'][j0:j1, i0:i1]
@@ -79,10 +79,10 @@ def initialize(cfg, state):
 
     nc.close()
     
-    cfg.modules.time.start = state.time[0]
-    cfg.modules.time.end   = state.time[-1]
+    cfg.processes.time.start = state.time[0]
+    cfg.processes.time.end   = state.time[-1]
      
-    state.t = tf.Variable(float(cfg.modules.time.start))
+    state.t = tf.Variable(float(cfg.processes.time.start))
     state.it = 0
     state.saveresult = True
 

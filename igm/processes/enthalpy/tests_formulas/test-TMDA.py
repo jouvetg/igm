@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 
-from igm.modules.process.enthalpy import *
+from igm.processes.process.enthalpy import *
 
 M = tf.ones((10))
 U = -2 * tf.ones((9))

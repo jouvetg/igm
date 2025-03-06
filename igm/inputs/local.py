@@ -4,7 +4,7 @@ import tensorflow as tf
 
 def run(cfg, state):
 
-    filepath = state.original_cwd.joinpath(cfg.input.local.filename)
+    filepath = state.original_cwd.joinpath(cfg.inputs.local.filename)
     with xr.open_dataset(
         filepath
     ) as f:
@@ -12,29 +12,29 @@ def run(cfg, state):
 
     if "time" in ds.dims:
         state.logger.info(
-            f"Time dimension found. Selecting the first time step at {cfg.modules.time.start}"
+            f"Time dimension found. Selecting the first time step at {cfg.processes.time.start}"
         )
-        ds = ds.sel(time=ds.time[cfg.modules.time.start])
+        ds = ds.sel(time=ds.time[cfg.processes.time.start])
 
     ds = xr.where(ds > 1e35, np.nan, ds)
 
-    crop = np.any(list(dict(cfg.input.local.crop).values()))
+    crop = np.any(list(dict(cfg.inputs.local.crop).values()))
     if crop:
         state.logger.info("Cropping dataset")
         ds = ds.sel(
-            x=slice(cfg.input.local.crop.xmin, cfg.input.local.crop.xmax),
-            y=slice(cfg.input.local.crop.ymin, cfg.input.local.crop.ymax),
+            x=slice(cfg.inputs.local.crop.xmin, cfg.inputs.local.crop.xmax),
+            y=slice(cfg.inputs.local.crop.ymin, cfg.inputs.local.crop.ymax),
         )
 
     max_coarsening_ratio = max(
-        cfg.input.local.coarsening.ratio.x, cfg.input.local.coarsening.ratio.y
+        cfg.inputs.local.coarsening.ratio.x, cfg.inputs.local.coarsening.ratio.y
     )
     if max_coarsening_ratio > 1:
         state.logger.info("Coarsening dataset")
         ds = ds.coarsen(
-            x=cfg.input.local.coarsening.ratio.x,
-            y=cfg.input.local.coarsening.ratio.y,
-            boundary=cfg.input.local.coarsening.boundary,
+            x=cfg.inputs.local.coarsening.ratio.x,
+            y=cfg.inputs.local.coarsening.ratio.y,
+            boundary=cfg.inputs.local.coarsening.boundary,
         ).mean()
 
     # Interpolating needed?

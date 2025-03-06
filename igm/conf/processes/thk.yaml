@@ -1,6 +1,5 @@
-# @package modules.thk
-
-slope_type: superbee # Help: Type of slope limiter for the ice thickness equation (godunov or superbee)
-ratio_density: 0.910 # Help: density of ice divided by density of water
-default_sealevel: 0.0 # Help: Default sea level if not provided by the user
+thk:
+  slope_type: superbee # Help: Type of slope limiter for the ice thickness equation (godunov or superbee)
+  ratio_density: 0.910 # Help: density of ice divided by density of water
+  default_sealevel: 0.0 # Help: Default sea level if not provided by the user
 

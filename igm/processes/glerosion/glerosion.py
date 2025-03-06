@@ -8,7 +8,7 @@ import os, sys, shutil
 import time
 import tensorflow as tf
 
-from igm.modules.utils import *
+from igm.processes.utils import *
 
 
 # def params(parser):
@@ -37,14 +37,14 @@ from igm.modules.utils import *
 def initialize(cfg, state):
     state.tcomp_glerosion = []
     
-    if "time" not in cfg.modules:
+    if "time" not in cfg.processes:
         raise ValueError("The 'time' module is required for the 'glerosion' module.")
     
-    state.tlast_erosion = tf.Variable(cfg.modules.time.start, dtype=tf.float32)
+    state.tlast_erosion = tf.Variable(cfg.processes.time.start, dtype=tf.float32)
 
 
 def update(cfg, state):
-    if (state.t - state.tlast_erosion) >= cfg.modules.glerosion.update_freq:
+    if (state.t - state.tlast_erosion) >= cfg.processes.glerosion.update_freq:
         if hasattr(state, "logger"):
             state.logger.info(
                 "update topg_glacial_erosion at time : " + str(state.t.numpy())
@@ -55,7 +55,7 @@ def update(cfg, state):
         velbase_mag = getmag(state.U[0], state.V[0])
 
         # apply erosion law, erosion rate is proportional to a power of basal sliding speed
-        dtopgdt = cfg.modules.glerosion.cst * (velbase_mag**cfg.modules.glerosion.exp)
+        dtopgdt = cfg.processes.glerosion.cst * (velbase_mag**cfg.processes.glerosion.exp)
 
         state.topg = state.topg - (state.t - state.tlast_erosion) * dtopgdt
 

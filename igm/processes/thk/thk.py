@@ -6,7 +6,7 @@
 import datetime, time
 import tensorflow as tf
 
-from igm.modules.utils import compute_divflux_slope_limiter
+from igm.processes.utils import compute_divflux_slope_limiter
 # from igm.tests.Bueler2005 import initialize as initialize_Bueler
 
 def params(parser):
@@ -37,9 +37,9 @@ def initialize(cfg, state):
     # define the lower ice surface
     if hasattr(state, "sealevel"):
         # ! This is not clear which modules provides state.topg and allows us to use state.thk!!!
-        state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.ratio_density*state.thk + state.sealevel)
+        state.lsurf = tf.maximum(state.topg,-cfg.processes.thk.ratio_density*state.thk + state.sealevel)
     else:
-        state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.ratio_density*state.thk + cfg.modules.thk.default_sealevel)
+        state.lsurf = tf.maximum(state.topg,-cfg.processes.thk.ratio_density*state.thk + cfg.processes.thk.default_sealevel)
 
     # define the upper ice surface
     state.usurf = state.lsurf + state.thk
@@ -58,7 +58,7 @@ def update(cfg, state):
 
         # compute the divergence of the flux
         state.divflux = compute_divflux_slope_limiter(
-            state.ubar, state.vbar, state.thk, state.dx, state.dx, state.dt, slope_type=cfg.modules.thk.slope_type
+            state.ubar, state.vbar, state.thk, state.dx, state.dx, state.dt, slope_type=cfg.processes.thk.slope_type
         )
 
         # if not smb model is given, set smb to zero
@@ -70,9 +70,9 @@ def update(cfg, state):
 
         # define the lower ice surface
         if hasattr(state, "sealevel"):
-            state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.ratio_density*state.thk + state.sealevel)
+            state.lsurf = tf.maximum(state.topg,-cfg.processes.thk.ratio_density*state.thk + state.sealevel)
         else:
-            state.lsurf = tf.maximum(state.topg,-cfg.modules.thk.ratio_density*state.thk + cfg.modules.thk.default_sealevel)
+            state.lsurf = tf.maximum(state.topg,-cfg.processes.thk.ratio_density*state.thk + cfg.processes.thk.default_sealevel)
 
         # define the upper ice surface
         state.usurf = state.lsurf + state.thk

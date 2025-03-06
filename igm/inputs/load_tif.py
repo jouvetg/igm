@@ -3,14 +3,14 @@ import numpy as np
 import os, glob
 import tensorflow as tf
 
-from igm.modules.utils import *
+from igm.processes.utils import *
 
 from .include_icemask import include_icemask
     
 def run(cfg, state):
     import rasterio
 
-    filepath = state.original_cwd.joinpath(cfg.input.load_tif.folder)
+    filepath = state.original_cwd.joinpath(cfg.inputs.load_tif.folder)
 
     files = glob.glob(os.path.join(filepath, "*.tif"))
     
@@ -31,29 +31,29 @@ def run(cfg, state):
             del src
 
     # coarsen if requested
-    if cfg.input.load_tif.coarsen > 1:
-        xx = x[:: cfg.input.load_tif.coarsen]
-        yy = y[:: cfg.input.load_tif.coarsen]
+    if cfg.inputs.load_tif.coarsen > 1:
+        xx = x[:: cfg.inputs.load_tif.coarsen]
+        yy = y[:: cfg.inputs.load_tif.coarsen]
         for file in files:
             var = os.path.split(file)[-1].split(".")[0]
             if (not var in ["x", "y"]) & (vars()[var].ndim == 2):
                 vars()[var] = vars()[var][
-                    :: cfg.input.load_tif.coarsen, :: cfg.input.load_tif.coarsen
+                    :: cfg.inputs.load_tif.coarsen, :: cfg.inputs.load_tif.coarsen
                 ]
         #                vars()[var] = RectBivariateSpline(y, x, vars()[var])(yy, xx) # does not work
         x = xx
         y = yy
 
     # crop if requested
-    if cfg.input.load_tif.crop:
-        i0 = max(0, int((cfg.input.load_tif.xmin - x[0]) / (x[1] - x[0])))
-        i1 = min(int((cfg.input.load_tif.xmax - x[0]) / (x[1] - x[0])), x.shape[0] - 1)
+    if cfg.inputs.load_tif.crop:
+        i0 = max(0, int((cfg.inputs.load_tif.xmin - x[0]) / (x[1] - x[0])))
+        i1 = min(int((cfg.inputs.load_tif.xmax - x[0]) / (x[1] - x[0])), x.shape[0] - 1)
         i1 = max(i0 + 1, i1)
-        j0 = max(0, int((cfg.input.load_tif.ymin - y[0]) / (y[1] - y[0])))
-        j1 = min(int((cfg.input.load_tif.ymax - y[0]) / (y[1] - y[0])), y.shape[0] - 1)
+        j0 = max(0, int((cfg.inputs.load_tif.ymin - y[0]) / (y[1] - y[0])))
+        j1 = min(int((cfg.inputs.load_tif.ymax - y[0]) / (y[1] - y[0])), y.shape[0] - 1)
         j1 = max(j0 + 1, j1)
-        #        i0,i1 = int((cfg.input.load_tif.xmin-x[0])/(x[1]-x[0])),int((cfg.input.load_tif.xmax-x[0])/(x[1]-x[0]))
-        #        j0,j1 = int((cfg.input.load_tif.ymin-y[0])/(y[1]-y[0])),int((cfg.input.load_tif.ymax-y[0])/(y[1]-y[0]))
+        #        i0,i1 = int((cfg.inputs.load_tif.xmin-x[0])/(x[1]-x[0])),int((cfg.inputs.load_tif.xmax-x[0])/(x[1]-x[0]))
+        #        j0,j1 = int((cfg.inputs.load_tif.ymin-y[0])/(y[1]-y[0])),int((cfg.inputs.load_tif.ymax-y[0])/(y[1]-y[0]))
         for file in files:
             var = os.path.split(file)[-1].split(".")[0]
             if not var in ["x", "y"]:
@@ -71,5 +71,5 @@ def run(cfg, state):
 
     complete_data(state)
 
-    if cfg.input.load_tif.icemask_include:
-        include_icemask(state, mask_shapefile=cfg.input.load_tif.icemask_shapefile, mask_invert=cfg.input.load_tif.icemask_invert)
+    if cfg.inputs.load_tif.icemask_include:
+        include_icemask(state, mask_shapefile=cfg.inputs.load_tif.icemask_shapefile, mask_invert=cfg.inputs.load_tif.icemask_invert)

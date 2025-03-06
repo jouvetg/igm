@@ -18,8 +18,8 @@ from igm import (
     add_logger,
     download_unzip_and_store,
     print_comp,
-    input,
-    output,
+    inputs,
+    outputs,
 )
 
 from pathlib import Path
@@ -75,7 +75,7 @@ def main(cfg: DictConfig) -> None:
 
     state.original_cwd = Path(get_original_cwd())
 
-    # ! Needs to be before the input the way it is setup - otherwise, it will throw an error... (at least with local not loadncdf)
+    # ! Needs to be before the inputs the way it is setup - otherwise, it will throw an error... (at least with local not loadncdf)
     if not cfg.core.url_data == "":
         folder_path = state.original_cwd.joinpath(cfg.core.folder_data)
         download_unzip_and_store(cfg.core.url_data, folder_path)
@@ -84,22 +84,22 @@ def main(cfg: DictConfig) -> None:
         setup_igm_modules(cfg, state)
     )
 
-    input_methods = list(cfg.input.keys())
+    input_methods = list(cfg.inputs.keys())
     if len(input_methods) > 1:
-        raise ValueError("Only one input method is allowed.")
+        raise ValueError("Only one inputs method is allowed.")
     imported_input_modules[0].run(cfg, state)
 
     output_modules = []
-    if "output" in cfg:
-        output_methods = list(cfg.output.keys())
+    if "outputs" in cfg:
+        output_methods = list(cfg.outputs.keys())
         for output_method in output_methods:
-            output_module = getattr(output, output_method)
+            output_module = getattr(outputs, output_method)
             output_modules.append(output_module)
 
         for output_module in output_modules:
             output_module.initialize(
                 cfg, state
-            )  # do we need to initialize output modules? This is not very clean...
+            )  # do we need to initialize outputs modules? This is not very clean...
 
 
     with strategy.scope():

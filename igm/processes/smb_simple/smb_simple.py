@@ -7,7 +7,7 @@ import numpy as np
 import os, sys, shutil
 import time
 import tensorflow as tf
-from igm.modules.utils import interp1d_tf
+from igm.processes.utils import interp1d_tf
 
 
 # def params(parser):
@@ -34,14 +34,14 @@ from igm.modules.utils import interp1d_tf
 
 def initialize(cfg, state):
 
-    if cfg.modules.smb_simple.array == []:
+    if cfg.processes.smb_simple.array == []:
         state.smbpar = np.loadtxt(
-            cfg.modules.smb_simple.file,
+            cfg.processes.smb_simple.file,
             skiprows=1,
             dtype=np.float32,
         )
     else:
-        state.smbpar = np.array(cfg.modules.smb_simple.array[1:]).astype(np.float32)
+        state.smbpar = np.array(cfg.processes.smb_simple.array[1:]).astype(np.float32)
 
     state.tcomp_smb_simple = []
     state.tlast_mb = tf.Variable(-1.0e5000)
@@ -50,7 +50,7 @@ def initialize(cfg, state):
 def update(cfg, state):
 
     # update smb each X years
-    if (state.t - state.tlast_mb) >= cfg.modules.smb_simple.update_freq:
+    if (state.t - state.tlast_mb) >= cfg.processes.smb_simple.update_freq:
         if hasattr(state, "logger"):
             state.logger.info(
                 "Construct mass balance at time : " + str(state.t.numpy())

@@ -25,6 +25,6 @@ core:
     root_foldername: user
     conf_foldername: conf
     code_foldername: code
-    input_modules_foldername: input
-    process_modules_foldername: modules
-    output_modules_foldername: output
+    input_modules_foldername: inputs
+    process_modules_foldername: processes
+    output_modules_foldername: outputs

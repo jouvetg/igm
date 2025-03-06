@@ -7,8 +7,8 @@ import sys
 import os
 # sys.path.append(os.getcwd()) # I guess by default sys.path does not have cwd. not sure if this is the convention though...
     
-from . import modules
-from . import input, output
+from . import processes
+from . import inputs, outputs
 
 from .common import (
     State,

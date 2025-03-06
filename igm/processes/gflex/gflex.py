@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import time
-from igm.modules.utils import *
+from igm.processes.utils import *
 
 
 
@@ -45,21 +45,21 @@ from igm.modules.utils import *
 def initialize(cfg, state):
     from gflex.f2d import F2D
 
-    if "time" not in cfg.modules:
+    if "time" not in cfg.processes:
         raise ValueError("The 'time' module is required for the 'gflex' module.")
 
     if not hasattr(state,"tcomp_gflex"):
         state.tcomp_gflex = []
-        state.tlast_gflex = tf.Variable(cfg.modules.time.start, dtype=tf.float32)
+        state.tlast_gflex = tf.Variable(cfg.processes.time.start, dtype=tf.float32)
         state.topg0 = state.usurf - state.thk
 
     state.flex = F2D()
 
-    state.flex.giafreq = cfg.modules.gflex.update_freq
-    state.flex.giatime = cfg.modules.gflex.update_freq
-    state.flex.dx = cfg.modules.gflex.dx
+    state.flex.giafreq = cfg.processes.gflex.update_freq
+    state.flex.giatime = cfg.processes.gflex.update_freq
+    state.flex.dx = cfg.processes.gflex.dx
     state.flex.Quiet = False
-    state.flex.pad = cfg.modules.gflex.pad
+    state.flex.pad = cfg.processes.gflex.pad
     state.flex.Method = "FD"
     state.flex.PlateSolutionType = "vWC1994"
     state.flex.Solver = "direct"
@@ -75,7 +75,7 @@ def initialize(cfg, state):
     state.flex.BC_N = "0Displacement0Slope"
 
     if not hasattr(state, "Te"):
-        state.flex.Te0 = np.ones_like(state.thk.numpy()) * cfg.modules.gflex.default_Te
+        state.flex.Te0 = np.ones_like(state.thk.numpy()) * cfg.processes.gflex.default_Te
     else:
         state.flex.Te0 = state.Te    
     if not hasattr(state,"tcomp_gflex"):
@@ -123,7 +123,7 @@ def update(cfg, state):
         
         return pad_width
 
-    if (state.t - state.tlast_gflex) >= cfg.modules.gflex.update_freq:
+    if (state.t - state.tlast_gflex) >= cfg.processes.gflex.update_freq:
         if hasattr(state, "logger"):
             state.logger.info("Update gflex at time : " + str(state.t.numpy()))
 

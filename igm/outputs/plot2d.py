@@ -10,7 +10,7 @@ import matplotlib
 import datetime, time
 import tensorflow as tf
 
-from igm.modules.utils import *
+from igm.processes.utils import *
 
 
 # def params(parser):
@@ -49,7 +49,7 @@ from igm.modules.utils import *
 def initialize(cfg, state):
     state.extent = [np.min(state.x), np.max(state.x), np.min(state.y), np.max(state.y)]
 
-    if cfg.output.plot2d.editor == "vs":
+    if cfg.outputs.plot2d.editor == "vs":
         plt.ion()  # enable interactive mode
 
     state.tcomp_plot2d = []
@@ -63,7 +63,7 @@ def run(cfg, state):
     if state.saveresult:
         state.tcomp_plot2d.append(time.time())
 
-        if cfg.output.plot2d.var == "velbar_mag":
+        if cfg.outputs.plot2d.var == "velbar_mag":
             state.velbar_mag = getmag(state.ubar, state.vbar)
 
         im0 = state.ax.imshow(
@@ -74,24 +74,24 @@ def run(cfg, state):
 #            alpha=0.65,
         )
  
-        if cfg.output.plot2d.var=="velbar_mag":
+        if cfg.outputs.plot2d.var=="velbar_mag":
             im = state.ax.imshow(
-                np.where(state.thk > 0, vars(state)[cfg.output.plot2d.var], np.nan),
+                np.where(state.thk > 0, vars(state)[cfg.outputs.plot2d.var], np.nan),
                 origin="lower",
                 cmap="turbo",
                 extent=state.extent, 
-                norm=matplotlib.colors.LogNorm(vmin=1, vmax=cfg.output.plot2d.var_max)
+                norm=matplotlib.colors.LogNorm(vmin=1, vmax=cfg.outputs.plot2d.var_max)
             )
         else:
             im = state.ax.imshow(
-                np.where(state.thk > 0, vars(state)[cfg.output.plot2d.var], np.nan),
+                np.where(state.thk > 0, vars(state)[cfg.outputs.plot2d.var], np.nan),
                 origin="lower",
                 cmap='jet',
                 vmin=0,
-                vmax=cfg.output.plot2d.var_max,
+                vmax=cfg.outputs.plot2d.var_max,
                 extent=state.extent,
             )
-        if cfg.output.plot2d.particles:
+        if cfg.outputs.plot2d.particles:
             if hasattr(state, "particle_x"):
                 if hasattr(state, "ip"):
                     state.ip.set_visible(False)
@@ -108,11 +108,11 @@ def run(cfg, state):
         state.ax.set_title("YEAR : " + str(state.t.numpy()), size=15)
 
         if not hasattr(state, "already_set_cbar"):
-            state.cbar = plt.colorbar(im, label=cfg.output.plot2d.var)
+            state.cbar = plt.colorbar(im, label=cfg.outputs.plot2d.var)
             state.already_set_cbar = True
 
-        if cfg.output.plot2d.live:
-            if cfg.output.plot2d.editor == "vs":
+        if cfg.outputs.plot2d.live:
+            if cfg.outputs.plot2d.editor == "vs":
                 state.fig.canvas.draw()  # re-drawing the figure
                 state.fig.canvas.flush_events()  # to flush the GUI events
             else:
@@ -122,7 +122,7 @@ def run(cfg, state):
                 display(state.fig)
         else:
             plt.savefig(
-                cfg.output.plot2d.var + "-" + str(state.t.numpy()).zfill(4) + ".png",
+                cfg.outputs.plot2d.var + "-" + str(state.t.numpy()).zfill(4) + ".png",
                 bbox_inches="tight",
                 pad_inches=0.2,
             )

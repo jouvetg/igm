@@ -1,37 +1,40 @@
+#!/usr/bin/env python3
 
+"""
+# Copyright (C) 2021-2025 IGM authors 
+Published under the GNU GPL (Version 3), check at the LICENSE file
+"""
 
 import numpy as np
 import datetime, time
 import tensorflow as tf
 import sys
 from igm.processes.utils import *
-
-# Final version of vertflow (cf my report for all the details)
-
-
-def params(parser):
-    parser.add_argument(
-        "--vflo_method",
-        type=str,
-        default="kinematic",
-        help="Method to retrive the vertical velocity (kinematic, incompressibility)",
-    )
-
+ 
 
 def initialize(cfg, state):
     state.tcomp_vert_flow = []
-
-
 
 def update(cfg, state):
     """ """
 
     state.tcomp_vert_flow.append(time.time())
 
-    if cfg.processes.vert_flow.method == "kinematic":
-        state.W = _compute_vertical_velocity_kinematic(cfg, state)
-    else:
-        state.W = _compute_vertical_velocity_incompressibility(cfg, state)
+    # original version by GJ
+    if cfg.processes.vert_flow.version == 1:
+
+        if cfg.processes.vert_flow.method == "kinematic":
+            state.W = _compute_vertical_velocity_kinematic_v1(cfg, state)
+        elif cfg.processes.vert_flow.method == "incompressibility":
+            state.W = _compute_vertical_velocity_incompressibility_v1(cfg, state)
+    
+    # improved version by CMS
+    elif cfg.processes.vert_flow.version == 2:
+
+        if cfg.processes.vert_flow.method == "kinematic":
+            state.W = _compute_vertical_velocity_kinematic_v2(cfg, state)
+        elif cfg.processes.vert_flow.method == "incompressibility":
+            state.W = _compute_vertical_velocity_incompressibility_v2(cfg, state)
 
     state.wvelbase = state.W[0]
     state.wvelsurf = state.W[-1]
@@ -44,7 +47,54 @@ def update(cfg, state):
 def finalize(cfg, state):
     pass
 
-def _compute_vertical_velocity_kinematic(cfg, state):
+
+def _compute_vertical_velocity_kinematic_v1(cfg, state):
+
+    # implementation GJ
+ 
+    # use the formula w = u dot \nabla l + \nable \cdot (u l)
+ 
+    # get the vertical thickness layers
+    zeta = np.arange(cfg.processes.iceflow.iceflow.Nz) / (cfg.processes.iceflow.iceflow.Nz - 1)
+    temp = (zeta / cfg.processes.iceflow.iceflow.vert_spacing) * (
+        1.0 + (cfg.processes.iceflow.iceflow.vert_spacing - 1.0) * zeta
+    )
+    temd = temp[1:] - temp[:-1]
+    dz = tf.stack([state.thk * z for z in temd], axis=0)
+
+    sloptopgx, sloptopgy = compute_gradient_tf(state.topg, state.dx, state.dx)
+    
+    sloplayx = [sloptopgx]
+    sloplayy = [sloptopgy]
+    divfl    = [tf.zeros_like(state.thk)]
+    
+    for l in range(1,state.U.shape[0]):
+
+        cumdz = tf.reduce_sum(dz[:l], axis=0)
+         
+        sx, sy = compute_gradient_tf(state.topg + cumdz, state.dx, state.dx)
+        
+        sloplayx.append(sx)
+        sloplayy.append(sy)
+
+        ub = tf.reduce_sum(state.vert_weight[:l] * state.U[:l], axis=0) / tf.reduce_sum(state.vert_weight[:l], axis=0)
+        vb = tf.reduce_sum(state.vert_weight[:l] * state.V[:l], axis=0) / tf.reduce_sum(state.vert_weight[:l], axis=0)         
+        div = compute_divflux(ub, vb, cumdz, state.dx, state.dx, method='centered')
+
+        divfl.append(div)
+    
+    sloplayx = tf.stack(sloplayx, axis=0)
+    sloplayy = tf.stack(sloplayy, axis=0)
+    divfl    = tf.stack(divfl, axis=0)
+     
+    W = state.U * sloplayx + state.V * sloplayy - divfl
+    
+    return W
+
+
+def _compute_vertical_velocity_kinematic_v2(cfg, state):
+
+    # implementation CMS
 
     dz = vertical_disc_tf(state.thk, cfg.processes.iceflow.iceflow.Nz, cfg.processes.iceflow.iceflow.vert_spacing)
 
@@ -62,8 +112,47 @@ def compute_w_kinematic_tf(U,V,topg,thk,dz,dx,vert_weight):
     W =  - divCM + U * sxCM + V * syCM
     return W
 
+ 
+def _compute_vertical_velocity_incompressibility_v1(cfg, state):
 
-def _compute_vertical_velocity_incompressibility(cfg, state):
+    # implementation GJ
+
+    # Compute horinzontal derivatives
+    dUdx = (state.U[:, :, 2:] - state.U[:, :, :-2]) / (2 * state.dX[0, 0])
+    dVdy = (state.V[:, 2:, :] - state.V[:, :-2, :]) / (2 * state.dX[0, 0])
+
+    dUdx = tf.pad(dUdx, [[0, 0], [0, 0], [1, 1]], "CONSTANT")
+    dVdy = tf.pad(dVdy, [[0, 0], [1, 1], [0, 0]], "CONSTANT")
+
+    dUdx = (dUdx[1:] + dUdx[:-1]) / 2  # compute between the layers
+    dVdy = (dVdy[1:] + dVdy[:-1]) / 2  # compute between the layers
+
+    # get dVdz from impcrompressibility condition
+    dVdz = -dUdx - dVdy
+
+    # get the basal vertical velocities
+    sloptopgx, sloptopgy = compute_gradient_tf(state.topg, state.dx, state.dx)
+    wvelbase = state.U[0] * sloptopgx + state.V[0] * sloptopgy
+
+    # get the vertical thickness layers
+    zeta = np.arange(cfg.processes.iceflow.iceflow.Nz) / (cfg.processes.iceflow.iceflow.Nz - 1)
+    temp = (zeta / cfg.processes.iceflow.iceflow.vert_spacing) * (
+        1.0 + (cfg.processes.iceflow.iceflow.vert_spacing - 1.0) * zeta
+    )
+    temd = temp[1:] - temp[:-1]
+    dz = tf.stack([state.thk * z for z in temd], axis=0)
+
+    W = []
+    W.append(wvelbase)
+    for l in range(dVdz.shape[0]):
+        W.append(W[-1] + dVdz[l] * dz[l])
+    W = tf.stack(W)
+
+    return W
+
+def _compute_vertical_velocity_incompressibility_v2(cfg, state):
+
+    # implementation CMS
 
     dz = vertical_disc_tf(state.thk, cfg.processes.iceflow.iceflow.Nz, cfg.processes.iceflow.iceflow.vert_spacing)
     dz = tf.concat([tf.expand_dims(tf.zeros_like(state.thk),0),dz],axis=0)
@@ -76,10 +165,7 @@ def _compute_vertical_velocity_incompressibility(cfg, state):
     intdwdz = tf.cumsum(dz * (dudx + dvdy), axis=0)
     W =   sloptopgx * state.U[0] + sloptopgy * state.V[0] - intdwdz
 
-    return W
-
-
-
+    return W 
 
 @tf.function()
 def vertical_disc_tf(thk, Nz, vert_spacing):

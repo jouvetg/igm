@@ -463,12 +463,15 @@ def _read_glathida(x, y, usurf, proj, path_glathida, state):
         elevation_normalized = fsurf(xx, yy, grid=False)
         thickness_normalized = np.maximum(elevation_normalized - bedrock, 0)
 
+        dx = x[1]-x[0]
+        dy = y[1]-y[0]
+        
         # Rasterize thickness
         thickness_gridded = (
             pd.DataFrame(
                 {
-                    "col": np.floor((xx - np.min(x)) / (x[1] - x[0])).astype(int),
-                    "row": np.floor((yy - np.min(y)) / (y[1] - y[0])).astype(int),
+                    "col": np.floor((xx - np.min(x) + dx/2) / dx).astype(int),
+                    "row": np.floor((yy - np.min(y) + dy/2) / dy).astype(int),
                     "thickness": thickness_normalized,
                 }
             )

@@ -37,7 +37,7 @@ def initialize(params, state):
 
 
 def update(params, state):
-    if (state.t - state.tlast_avalanche) >= params.avalanche_update_freq:
+    if (state.t - state.tlast_avalanche) >= params.aval_update_freq:
         if hasattr(state, "logger"):
             state.logger.info("Update AVALANCHE at time : " + str(state.t.numpy()))
 
@@ -49,7 +49,7 @@ def update(params, state):
         
         # the elevation difference of the cells that is considered to be stable
         dHRepose = state.dx * tf.math.tan(
-            params.avalanche_angleOfRepose * np.pi / 180.0
+            params.aval_angleOfRepose * np.pi / 180.0
         )
         Ho = tf.maximum(H, 0)
 

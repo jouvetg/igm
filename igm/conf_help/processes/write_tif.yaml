@@ -1,4 +1,0 @@
-write_tif:
-  wtif_vars_to_save: # help="List of variables to be saved as geotiff files"
-      - usurf
-      - thk

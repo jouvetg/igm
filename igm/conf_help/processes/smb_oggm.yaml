@@ -1,4 +1,9 @@
-smb_oggm:
-  smb_oggm_update_freq: 1 # help="Update the mass balance each X years"
-  smb_oggm_ice_density: 910.0 # help="Density of ice for conversion of SMB into ice equivalent"
-  smb_oggm_wat_density: 1000.0 # help="Density of water"
+- Name: update_freq
+  Description: "Update the mass balance each X years"
+  Units: years
+- Name: ice_density
+  Description: "Density of ice for conversion of SMB into ice equivalent"
+  Units: kilograms per cubic meter
+- Name: wat_density
+  Description: "Density of water"
+  Units: kilograms per cubic meter

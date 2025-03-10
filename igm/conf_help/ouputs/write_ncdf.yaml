@@ -1,0 +1,6 @@
+- Name: output_file
+  Description: "Output ncdf data file"
+  Units: file path
+- Name: vars_to_save
+  Description: "List of variables to be recorded in the ncdf file"
+  Units: list 

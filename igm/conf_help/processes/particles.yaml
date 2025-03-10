@@ -1,5 +1,12 @@
-particles:
-  part_tracking_method: 3d # help="Method for tracking particles (3d or simple)"
-  part_frequency_seeding: 50 # help="Frequency of seeding (unit : year)"
-  part_density_seeding: 0.2 # help="Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)"
-  tlast_seeding_init: -1.0e5000 # help="Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value alouds to differ it
+- Name: tracking_method
+  Description: "Method for tracking particles (3d or simple)"
+  Units: string
+- Name: frequency_seeding
+  Description: "Frequency of seeding"
+  Units: years
+- Name: density_seeding
+  Description: "Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, etc.)"
+  Units: dimensionless
+- Name: tlast_seeding_init
+  Description: "Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value allows to defer it"
+  Units: years

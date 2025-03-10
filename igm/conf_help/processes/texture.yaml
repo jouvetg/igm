@@ -1,8 +1,15 @@
-texture:
-  texture_format: png # help="Format of the texture image (png, tif, or tiff)"
-  texture_model_path: ${hydra.runtime.cwd} # help="Name of the folder for the texture model (tf format)"
-  texture_verbosity: 30 # help="Python Logger verbosity level (10=DEBUG, 20=INFO, 30=WARNING, 40=ERROR, 50=CRITICAL)"
-  divide_by_density: 1 # help="This parameter solves an imcompatibility (this option will be removed in the future)"
-  texture_resolution: -1 # help="This parameter solves an imcompatibility (this option will be removed in the future)"
-
-# confirm this path still works for the module!
+- Name: format
+  Description: "Format of the texture image (png, tif, or tiff)"
+  Units: string
+- Name: model_path
+  Description: "Name of the folder for the texture model (tf format)"
+  Units: file path
+- Name: verbosity
+  Description: "Python Logger verbosity level (10=DEBUG, 20=INFO, 30=WARNING, 40=ERROR, 50=CRITICAL)"
+  Units: integer
+- Name: divide_by_density
+  Description: "This parameter solves an incompatibility (this option will be removed in the future)"
+  Units: boolean
+- Name: resolution
+  Description: "This parameter solves an incompatibility (this option will be removed in the future)"
+  Units: integer

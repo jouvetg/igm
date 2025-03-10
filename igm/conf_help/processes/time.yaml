@@ -1,0 +1,15 @@
+- Name: time_igm_time_start
+  Description: "Start time of the simulation"
+  Units: years
+- Name: time_igm_time_end
+  Description: "End time of the simulation"
+  Units: years
+- Name: time_igm_time_save
+  Description: "Frequency of saving the simulation results"
+  Units: years
+- Name: time_igm_time_cfl
+  Description: "CFL condition for time stepping"
+  Units: dimensionless
+- Name: time_igm_time_step_max
+  Description: "Maximum time step allowed"
+  Units: years

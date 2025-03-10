@@ -1,2 +1,3 @@
-rockflow:
-  rock_flow_speed: 1.0 # help="Speed of rock flow along the slope in m/y"
+- Name: rockflow_rock_flow_speed
+  Description: "Speed of rock flow along the slope"
+  Units: meters per year

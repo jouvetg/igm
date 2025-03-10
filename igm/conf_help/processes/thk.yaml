@@ -1,5 +1,9 @@
-thk:
-  thk_slope_type: superbee # Help: Type of slope limiter for the ice thickness equation (godunov or superbee)
-  thk_ratio_density: 0.910 # Help: density of ice divided by density of water
-  thk_default_sealevel: 0.0 # Help: Default sea level if not provided by the user
-
+- Name: slope_type
+  Description: "Type of slope limiter for the ice thickness equation (godunov or superbee)"
+  Units: string
+- Name: ratio_density
+  Description: "Density of ice divided by density of water"
+  Units: dimensionless
+- Name: default_sealevel
+  Description: "Default sea level if not provided by the user"
+  Units: meters

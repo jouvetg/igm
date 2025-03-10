@@ -1,24 +1,24 @@
-- Name: input_file
+- Name: filename
   Description: "NetCDF input data file"
   Units: file path
-- Name: method_coarsen
+- Name: coarsening.boundary
   Description: "Method for coarsening the data from NetCDF file: skipping or cubic_spline"
   Units: string
-- Name: coarsen
-  Description: "Coarsen the data from NetCDF file by a certain (integer) number: 2 would be twice coarser ignore data each 2 grid points"
-  Units: integer
-- Name: crop
-  Description: "Crop the data from NetCDF file with given top/down/left/right bounds"
-  Units: boolean
-- Name: xmin
+- Name: coarsening.ratio.x
+  Description: "Coarsen ratio x"
+  Units: ???
+- Name: coarsening.ratio.y
+  Description: "Coarsen ratio y"
+  Units: ???
+- Name: crop.xmin
   Description: "X left coordinate for cropping the NetCDF data"
   Units: float
-- Name: xmax
+- Name: crop.xmax
   Description: "X right coordinate for cropping the NetCDF data"
   Units: float
-- Name: ymin
+- Name: crop.ymin
   Description: "Y bottom coordinate for cropping the NetCDF data"
   Units: float
-- Name: ymax
+- Name: crop.ymax
   Description: "Y top coordinate for cropping the NetCDF data"
   Units: float

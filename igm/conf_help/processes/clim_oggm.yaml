@@ -1,15 +1,15 @@
-- Name: clim_oggm_update_freq
+- Name: update_freq
   Description: "Update the climate each X years"
   Units: years
 - Name: smb_oggm_file
   Description: "Name of the imput file for the climate outide the given datatime frame (time, delta_temp, prec_scali)"
   Units: string
-- Name: clim_oggm_clim_trend_array
+- Name: clim_trend_array
   Description: "Define climate trend outside available time window"
-  Units: 2D array?
-- Name: clim_oggm_ref_period
+  Units: list
+- Name: ref_period
   Description: "Define the reference period to pick year outside available time window"
-  Units: years?
-- Name: clim_oggm_seed_par
+  Units: list
+- Name: seed_par
   Description: "Seeding parameter to fix for pickying randomly yer in the ref period"
-  Units: Number
+  Units: integer

@@ -1,0 +1,3 @@
+- Name: vars_to_save
+  Description: "List of variables to be saved as geotiff files"
+  Units: list

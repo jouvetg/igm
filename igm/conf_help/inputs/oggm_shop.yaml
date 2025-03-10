@@ -1,0 +1,42 @@
+- Name: RGI_ID
+  Description: "RGI ID"
+  Units: string
+- Name: preprocess
+  Description: "Use preprocessing"
+  Units: boolean
+- Name: RGI_version
+  Description: "This is a temporary fix, is 6 or 7"
+  Units: integer
+- Name: dx
+  Description: "Spatial resolution (need preprocess false to change it)"
+  Units: integer
+- Name: border
+  Description: "Safe border margin (need preprocess false to change it)"
+  Units: integer
+- Name: thk_source
+  Description: "Millan ice thickness or consensus ice thickness"
+  Units: string
+- Name: vel_source
+  Description: "Source of the surface velocities (millan_ice_velocity or its_live)"
+  Units: string
+- Name: incl_glathida
+  Description: "Make observation file (for IGM inverse)"
+  Units: boolean
+- Name: path_glathida
+  Description: "Path where the Glathida Folder is stored, so that you don't need to redownload it at every use of the script, if empty it will be in the home directory (only relevant for RGI6.0)"
+  Units: file path
+- Name: save_in_ncdf
+  Description: "Write prepared data into a geology file"
+  Units: boolean
+- Name: remove_RGI_folder
+  Description: "Remove RGI folder"
+  Units: boolean
+- Name: sub_entity_mask
+  Description: "Ice mask shows individual RGI 7.0G entities within each larger RGI 7.0C complex"
+  Units: boolean
+- Name: RGI_product
+  Description: "Glacier complexes (C) or individual basins (G) (default is G, individual basins)"
+  Units: string
+- Name: run_batch
+  Description: "Run all the glaciers in the world"
+  Units: boolean

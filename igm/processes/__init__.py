@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
-
-# Copyright (C) 2021-2025 IGM authors 
-# Published under the GNU GPL (Version 3), check at the LICENSE file
+from . import time, thk, iceflow, vert_flow, enthalpy
+from . import smb_accpdd, smb_oggm, smb_simple
+from . import clim_glacialindex, clim_oggm
+from . import texture, gflex, avalanche, particles, rockflow, read_output

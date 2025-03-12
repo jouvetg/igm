@@ -55,7 +55,6 @@ def initialize(cfg, state):
 
 
     state.tlast_seeding = cfg.processes.particles.tlast_seeding_init
-    state.tcomp_particles = []
 
     # initialize trajectories
     state.particle_x = tf.Variable([])
@@ -127,7 +126,6 @@ def update(cfg, state):
         state.tlast_seeding = state.t.numpy()
 
     if (state.particle_x.shape[0] > 0) & (state.it >= 0):
-        state.tcomp_particles.append(time.time())
 
         # find the indices of trajectories
         # these indicies are real values to permit 2D interpolations (particles are not necessary on points of the grid)
@@ -272,9 +270,6 @@ def update(cfg, state):
 
         #    if int(state.t)%10==0:
         #        print("nb of part : ",state.xpos.shape)
-
-        state.tcomp_particles[-1] -= time.time()
-        state.tcomp_particles[-1] *= -1
 
 
 def finalize(cfg, state):

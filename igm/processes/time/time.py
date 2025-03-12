@@ -41,8 +41,6 @@ import tensorflow as tf
 
 def initialize(cfg, state):
 
-    state.tcomp_time = []
-
     # Initialize the time with starting time
     state.t = tf.Variable(float(cfg.processes.time.start))
 
@@ -68,8 +66,6 @@ def update(cfg, state):
         state.logger.info(
             "Update DT from the CFL condition at time : " + str(state.t.numpy())
         )
-
-    state.tcomp_time.append(time.time())
 
     # compute maximum ice velocitiy magnitude 
     velomax = tf.maximum(
@@ -99,9 +95,6 @@ def update(cfg, state):
         state.t.assign(state.t + state.dt)
 
     state.it += 1
-
-    state.tcomp_time[-1] -= time.time()
-    state.tcomp_time[-1] *= -1
 
 
 def finalize(params, state):

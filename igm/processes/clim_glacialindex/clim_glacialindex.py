@@ -57,7 +57,6 @@ def initialize(cfg, state):
     state.LR = tf.Variable(state.LR_snap[0], dtype="float32")
 
     state.tlast_clim = tf.Variable(-1.0e50, dtype="float32")
-    state.tcomp_clim = []
 
 
 def update(cfg, state):
@@ -65,7 +64,6 @@ def update(cfg, state):
         if hasattr(state, "logger"):
             state.logger.info("update climate at time : " + str(state.t.numpy()))
 
-        state.tcomp_clim.append(time.time())
 
         s = interp1d_tf(state.signal[:, 0], state.signal[:, 1], state.t)
 
@@ -97,9 +95,6 @@ def update(cfg, state):
         state.meantemp = tf.math.reduce_mean(state.air_temp, axis=0)
 
         state.tlast_clim.assign(state.t)
-
-        state.tcomp_clim[-1] -= time.time()
-        state.tcomp_clim[-1] *= -1
 
 
 def finalize(cfg, state):

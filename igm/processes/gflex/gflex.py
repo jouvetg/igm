@@ -127,8 +127,6 @@ def update(cfg, state):
         if hasattr(state, "logger"):
             state.logger.info("Update gflex at time : " + str(state.t.numpy()))
 
-        state.tcomp_gflex.append(time.time())
-
         state.flex.Te = np.float32(state.flex.Te0)       
         state.flex.qs = state.thk.numpy() * 917 * 9.81  # convert thicknesses to loads
         
@@ -187,9 +185,6 @@ def update(cfg, state):
         # plt.colorbar()
 
         state.tlast_gflex.assign(state.t)
-
-        state.tcomp_gflex[-1] -= time.time()
-        state.tcomp_gflex[-1] *= -1
 
 
 def finalize(cfg, state):

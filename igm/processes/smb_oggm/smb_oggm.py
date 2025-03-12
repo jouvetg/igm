@@ -38,7 +38,6 @@ import json
 #     )
 
 def initialize(cfg, state):
-    state.tcomp_smb_oggm = []
     state.tlast_mb = tf.Variable(-1.0e5000)
 
     # load the given parameters from the json file
@@ -68,8 +67,6 @@ def update(cfg, state):
             state.logger.info(
                 "Construct mass balance at time : " + str(state.t.numpy())
             )
-
-        state.tcomp_smb_oggm.append(time.time())
 
         # keep solid precipitation when temperature < thr_temp_snow
         # with linear transition to 0 between thr_temp_snow and thr_temp_rain
@@ -110,9 +107,6 @@ def update(cfg, state):
             )
 
         state.tlast_mb.assign(state.t)
-
-        state.tcomp_smb_oggm[-1] -= time.time()
-        state.tcomp_smb_oggm[-1] *= -1
 
 
 def finalize(cfg, state):

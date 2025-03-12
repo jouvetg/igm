@@ -17,6 +17,10 @@ from oggm.cfg import G, SEC_IN_YEAR, SEC_IN_DAY
 import igm
 from oggm.core.sia2d import Model2D
 
+import hydra
+from omegaconf import DictConfig, OmegaConf
+from hydra import initialize, compose
+ 
 
 class IGM_Model2D(Model2D):
     def filter_ice_border(ice_thick):
@@ -78,8 +82,9 @@ class IGM_Model2D(Model2D):
 
         self.state = igm.State() 
 
-        # Here one should load the cfg file from the config file of iceflow
-
+        with initialize(config_path="../../igm/igm/conf", version_base=None):  # Initialize Hydra
+            self.cfg = compose(config_name="config")  # Load the config file
+ 
         # Parameter
         self.cfl = 0.25
         self.max_dt = SEC_IN_YEAR

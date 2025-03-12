@@ -68,7 +68,6 @@ import tensorflow as tf
 
 
 def initialize(cfg, state):
-    state.tcomp_smb_accpdd = []
     state.tlast_mb = tf.Variable(-1.0e5000)
 
 
@@ -111,8 +110,6 @@ def update(cfg, state):
             state.logger.info(
                 "Construct mass balance at time : " + str(state.t.numpy())
             )
-
-        state.tcomp_smb_accpdd.append(time.time())
 
         # keep solid precipitation when temperature < smb_accpdd_thr_temp_snow
         # with linear transition to 0 between smb_accpdd_thr_temp_snow and smb_accpdd_thr_temp_rain
@@ -199,9 +196,6 @@ def update(cfg, state):
             )
 
         state.tlast_mb.assign(state.t)
-
-        state.tcomp_smb_accpdd[-1] -= time.time()
-        state.tcomp_smb_accpdd[-1] *= -1
 
 
 def finalize(cfg, state):

@@ -60,7 +60,7 @@ def params(parser: Any) -> None:
 
 
 def initialize(cfg: Any, state: Any) -> None:
-    state.tcomp_texture = []
+
     logging.basicConfig(level=cfg.processes.texture.verbosity)
     if not os.path.exists(cfg.processes.texture.model_path):
         model_url = "https://drive.google.com/drive/folders/1Rmw_tCVplnjGfhjnZtVDae7djOmu5ZKP?usp=sharing"
@@ -123,7 +123,6 @@ def nearest_power_of_two(number, method="ceil"):
 
 def update(cfg: Any, state: Any) -> None:
     if state.saveresult:
-        state.tcomp_texture.append(time.time())
 
         preparer = Pix2PixHDImagePreparer(
             state=state, cfg=cfg, ndvi_emulator=state.ndvi_emulator
@@ -200,9 +199,6 @@ def update(cfg: Any, state: Any) -> None:
         )
 
         pipeline.run()
-
-        state.tcomp_texture[-1] -= time.time()
-        state.tcomp_texture[-1] *= -1
 
 
 def finalize(cfg: Any, state: Any) -> None:

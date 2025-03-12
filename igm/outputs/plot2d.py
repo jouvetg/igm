@@ -52,8 +52,6 @@ def initialize(cfg, state):
     if cfg.outputs.plot2d.editor == "vs":
         plt.ion()  # enable interactive mode
 
-    state.tcomp_plot2d = []
-
     state.fig = plt.figure(dpi=200)
     state.ax = state.fig.add_subplot(1, 1, 1)
     state.ax.axis("off")
@@ -61,7 +59,6 @@ def initialize(cfg, state):
 
 def run(cfg, state):
     if state.saveresult:
-        state.tcomp_plot2d.append(time.time())
 
         if cfg.outputs.plot2d.var == "velbar_mag":
             state.velbar_mag = getmag(state.ubar, state.vbar)
@@ -126,9 +123,6 @@ def run(cfg, state):
                 bbox_inches="tight",
                 pad_inches=0.2,
             )
-
-        state.tcomp_plot2d[-1] -= time.time()
-        state.tcomp_plot2d[-1] *= -1
 
 
 def finalize(params, state):

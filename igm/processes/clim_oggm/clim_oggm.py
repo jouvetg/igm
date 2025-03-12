@@ -115,7 +115,6 @@ def initialize(cfg, state):
     )
 
     state.tlast_clim_oggm = tf.Variable(-(10**10), dtype="float32", trainable=False)
-    state.tcomp_clim_oggm = []
 
     if cfg.processes.clim_oggm.clim_trend_array == []:
         state.climpar = np.loadtxt(
@@ -135,8 +134,6 @@ def update(cfg, state):
     if (state.t - state.tlast_clim_oggm) >= cfg.processes.clim_oggm.update_freq:
         if hasattr(state, "logger"):
             state.logger.info("update climate at time : " + str(state.t.numpy()))
-
-        state.tcomp_clim_oggm.append(time.time())
 
         # find out the index that corresponds to the current year
         index_year = int(state.t - state.yr_0)
@@ -183,8 +180,6 @@ def update(cfg, state):
 
         state.tlast_clim_oggm.assign(state.t)
 
-        state.tcomp_clim_oggm[-1] -= time.time()
-        state.tcomp_clim_oggm[-1] *= -1
 
 
 def finalize(cfg, state):

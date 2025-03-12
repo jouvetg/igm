@@ -13,12 +13,10 @@ from igm.processes.utils import *
  
 
 def initialize(cfg, state):
-    state.tcomp_vert_flow = []
+    pass
 
 def update(cfg, state):
     """ """
-
-    state.tcomp_vert_flow.append(time.time())
 
     # original version by GJ
     if cfg.processes.vert_flow.version == 1:
@@ -38,9 +36,6 @@ def update(cfg, state):
 
     state.wvelbase = state.W[0]
     state.wvelsurf = state.W[-1]
-
-    state.tcomp_vert_flow[-1] -= time.time()
-    state.tcomp_vert_flow[-1] *= -1
 
 
 

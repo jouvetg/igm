@@ -35,7 +35,6 @@ from igm.processes.utils import *
 
 
 def initialize(cfg, state):
-    state.tcomp_glerosion = []
     
     if "time" not in cfg.processes:
         raise ValueError("The 'time' module is required for the 'glerosion' module.")
@@ -50,8 +49,6 @@ def update(cfg, state):
                 "update topg_glacial_erosion at time : " + str(state.t.numpy())
             )
 
-        state.tcomp_glerosion.append(time.time())
-
         velbase_mag = getmag(state.U[0], state.V[0])
 
         # apply erosion law, erosion rate is proportional to a power of basal sliding speed
@@ -63,9 +60,6 @@ def update(cfg, state):
         state.usurf = state.topg + state.thk
 
         state.tlast_erosion.assign(state.t)
-
-        state.tcomp_glerosion[-1] -= time.time()
-        state.tcomp_glerosion[-1] *= -1
 
 
 def finalize(cfg, state):

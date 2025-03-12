@@ -43,7 +43,6 @@ def initialize(cfg, state):
     else:
         state.smbpar = np.array(cfg.processes.smb_simple.array[1:]).astype(np.float32)
 
-    state.tcomp_smb_simple = []
     state.tlast_mb = tf.Variable(-1.0e5000)
 
 
@@ -55,8 +54,6 @@ def update(cfg, state):
             state.logger.info(
                 "Construct mass balance at time : " + str(state.t.numpy())
             )
-
-        state.tcomp_smb_simple.append(time.time())
 
         # get the smb parameters at given time t
         gradabl = interp1d_tf(state.smbpar[:, 0], state.smbpar[:, 1], state.t)
@@ -77,8 +74,6 @@ def update(cfg, state):
 
         state.tlast_mb.assign(state.t)
 
-        state.tcomp_smb_simple[-1] -= time.time()
-        state.tcomp_smb_simple[-1] *= -1
 
 
 def finalize(params, state):

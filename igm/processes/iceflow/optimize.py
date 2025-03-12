@@ -82,8 +82,6 @@ def optimize(cfg, state):
             learning_rate=cfg.processes.iceflow.iceflow.retrain_emulator_lr
         )
 
-    state.tcomp_optimize = []
-
     # this thing is outdated with using iflo_new_friction_param default as we use scaling of one.
     sc = {}
     sc["thk"] = cfg.processes.iceflow.optimize.scaling_thk
@@ -99,8 +97,7 @@ def optimize(cfg, state):
     # main loop
     for i in range(cfg.processes.iceflow.optimize.nbitmax):
         with tf.GradientTape() as t, tf.GradientTape() as s:
-            state.tcomp_optimize.append(time.time())
-            
+
             if cfg.processes.iceflow.optimize.step_size_decay < 1:
                 optimizer.lr = cfg.processes.iceflow.optimize.step_size * (cfg.processes.iceflow.optimize.step_size_decay ** (i / 100))
 
@@ -240,9 +237,6 @@ def optimize(cfg, state):
             #state.divflux = tf.where(ACT, state.divflux, 0.0)
 
             _compute_rms_std_optimization(state, i)
-
-            state.tcomp_optimize[-1] -= time.time()
-            state.tcomp_optimize[-1] *= -1
 
             if i % cfg.processes.iceflow.optimize.output_freq == 0:
                 if cfg.processes.iceflow.optimize.plot2d:

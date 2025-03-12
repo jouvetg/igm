@@ -68,8 +68,6 @@ def initialize(cfg, state):
     if hasattr(state, "optimize_initializer_called"):
         return
 
-    state.tcomp_iceflow = []
-
     if cfg.processes.iceflow.iceflow.run_pretraining:
         pretraining(cfg, state)
 
@@ -110,8 +108,6 @@ def update(cfg, state):
     if hasattr(state, "logger"):
         state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
-    state.tcomp_iceflow.append(time.time())
-
     if cfg.processes.iceflow.iceflow.type == "emulated":
         if cfg.processes.iceflow.iceflow.retrain_emulator_freq > 0:
             update_iceflow_emulator(cfg, state)
@@ -123,9 +119,6 @@ def update(cfg, state):
 
     elif cfg.processes.iceflow.iflo_type == "diagnostic":
         update_iceflow_diagnostic(cfg, state)
-
-    state.tcomp_iceflow[-1] -= time.time()
-    state.tcomp_iceflow[-1] *= -1
 
 def finalize(cfg, state):
 

@@ -185,7 +185,6 @@ def initialize(cfg, state):
         cfg.processes.enthalpy.tauc_max,
     )
 
-    state.tcomp_enthalpy = []
 
     # arrhenius must be 3D for the Enthlapy to work
     assert cfg.processes.iceflow.iceflow.dim_arrhenius == 3
@@ -195,7 +194,6 @@ def update(cfg, state):
     if hasattr(state, "logger"):
         state.logger.info("Update ENTHALPY at time : " + str(state.t.numpy()))
 
-    state.tcomp_enthalpy.append(time.time())
 
     # compute the surface temperature taken the negative part of the mean air temperature
     surftemp = (
@@ -347,9 +345,6 @@ def update(cfg, state):
     )  # unit is Pa s**(1/3)
 
     state.arrheniusav = tf.reduce_sum(state.arrhenius * state.vert_weight, axis=0)
-
-    state.tcomp_enthalpy[-1] -= time.time()
-    state.tcomp_enthalpy[-1] *= -1
 
 
 def finalize(cfg, state):

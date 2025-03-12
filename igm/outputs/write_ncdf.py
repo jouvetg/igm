@@ -15,7 +15,6 @@ from igm.processes.utils import getmag
 
 
 def initialize(cfg, state):
-    state.tcomp_write_ncdf = []
 
     # give information on variables for output ncdf, TODO: IMPROVE
     state.var_info_ncdf_ex = {}
@@ -57,7 +56,6 @@ def initialize(cfg, state):
 
 def run(cfg, state):
     if state.saveresult:
-        state.tcomp_write_ncdf.append(time.time())
 
         if "velbar_mag" in cfg.outputs.write_ncdf.vars_to_save:
             state.velbar_mag = getmag(state.ubar, state.vbar)
@@ -153,5 +151,3 @@ def run(cfg, state):
 
             nc.close()
 
-        state.tcomp_write_ncdf[-1] -= time.time()
-        state.tcomp_write_ncdf[-1] *= -1

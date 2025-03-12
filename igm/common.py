@@ -19,6 +19,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+import time
 
 import igm
 
@@ -81,12 +82,19 @@ def print_info(state):
         state.pbar.update(1)
 
 
-def update_modules(processes: List, output_modules: List, cfg: Any, state: State) -> None:
+def update_modules(processes: List, outputs: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
+        if cfg.core.print_comp:
+            state.tcomp = {module.__name__.split('.')[-1]: [] for module in processes+outputs}
         while state.t < cfg.processes.time.end:
             for module in processes:
+                m=module.__name__.split('.')[-1]
+                if cfg.core.print_comp:
+                    state.tcomp[m].append(time.time())
                 module.update(cfg, state)
-            run_outputs(output_modules, cfg, state)
+                if cfg.core.print_comp:
+                    state.tcomp[m][-1] -= time.time() ; state.tcomp[m][-1] *= -1
+            run_outputs(outputs, cfg, state)
             if cfg.core.print_info:
                 print_info(state)
 
@@ -97,7 +105,12 @@ def finalize_modules(processes: List, cfg: Any, state: State) -> None:
 
 def run_outputs(output_modules: List, cfg: Any, state: State) -> None:
     for module in output_modules:
+        m=module.__name__.split('.')[-1]
+        if cfg.core.print_comp:
+            state.tcomp[m].append(time.time())
         module.run(cfg, state)
+        if cfg.core.print_comp:
+            state.tcomp[m][-1] -= time.time() ; state.tcomp[m][-1] *= -1
 
 
 def add_logger(cfg, state) -> None:
@@ -386,28 +399,14 @@ def print_comp(state):
 
     ################################################################
 
-    modules = [A for A in state.__dict__.keys() if "tcomp_" in A]
-
-    state.tcomp_all = [np.sum([np.sum(getattr(state, m)) for m in modules])]
+    modules = list(state.tcomp.keys())
 
     print("Computational statistics report:")
     with open("computational-statistics.txt", "w") as f:
         for m in modules:
-            CELA = (
-                m[6:],
-                np.mean(getattr(state, m)),
-                np.sum(getattr(state, m)),
-                len(getattr(state, m)),
-            )
-            print(
-                "     %24s  |  mean time per it : %8.4f  |  total : %8.4f  |  number it : %8.0f"
-                % CELA,
-                file=f,
-            )
-            print(
-                "     %24s  |  mean time per it : %8.4f  |  total : %8.4f  |  number it  : %8.0f"
-                % CELA
-            )
+            CELA = ( m, np.mean(state.tcomp[m]), np.sum(state.tcomp[m]) )
+            print("     %14s  |  mean time per it : %8.4f  |  total : %8.4f" % CELA, file=f)
+            print("     %14s  |  mean time per it : %8.4f  |  total : %8.4f" % CELA)
 
     _plot_computational_pie(state)
 
@@ -428,12 +427,11 @@ def _plot_computational_pie(state):
     total = []
     name = []
 
-    modules = [A for A in state.__dict__.keys() if "tcomp_" in A]
-    modules.remove("tcomp_all")
+    modules = list(state.tcomp.keys())
 
     for m in modules:
-        total.append(np.sum(getattr(state, m)[1:]))
-        name.append(m[6:])
+        total.append(np.sum(state.tcomp[m][1:]))
+        name.append(m)
 
     sumallindiv = np.sum(total)
 

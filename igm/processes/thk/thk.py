@@ -44,7 +44,6 @@ def initialize(cfg, state):
     # define the upper ice surface
     state.usurf = state.lsurf + state.thk
 
-    state.tcomp_thk = []
 
 def update(cfg, state):
 
@@ -53,8 +52,6 @@ def update(cfg, state):
             state.logger.info(
                 "Ice thickness equation at time : " + str(state.t.numpy())
             )
-
-        state.tcomp_thk.append(time.time())
 
         # compute the divergence of the flux
         state.divflux = compute_divflux_slope_limiter(
@@ -76,9 +73,6 @@ def update(cfg, state):
 
         # define the upper ice surface
         state.usurf = state.lsurf + state.thk
-
-        state.tcomp_thk[-1] -= time.time()
-        state.tcomp_thk[-1] *= -1
 
 
 def finalize(params, state):

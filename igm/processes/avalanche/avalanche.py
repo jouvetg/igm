@@ -25,7 +25,6 @@ import time
 
 
 def initialize(cfg, state):
-    state.tcomp_avalanche = []
     
     if "time" not in cfg.processes:
         raise ValueError("The 'time' module is required for the 'avalanche' module.")
@@ -38,7 +37,6 @@ def update(cfg, state):
         if hasattr(state, "logger"):
             state.logger.info("Update AVALANCHE at time : " + str(state.t.numpy()))
 
-        state.tcomp_avalanche.append(time.time())
 
         H = state.thk
         Zb = state.topg
@@ -119,9 +117,6 @@ def update(cfg, state):
         state.usurf = state.topg + state.thk
 
         state.tlast_avalanche.assign(state.t)
-
-        state.tcomp_avalanche[-1] -= time.time()
-        state.tcomp_avalanche[-1] *= -1
 
 
 def finalize(cfg, state):

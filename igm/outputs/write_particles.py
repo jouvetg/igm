@@ -12,7 +12,6 @@ from igm.processes.utils import *
 
 
 def initialize(cfg, state):
-    state.tcomp_write_particles = []
 
     directory = "trajectories"
     if os.path.exists(directory):
@@ -31,7 +30,6 @@ def initialize(cfg, state):
 
 def run(cfg, state):
     if state.saveresult:
-        state.tcomp_write_particles.append(time.time())
 
         f = os.path.join(
             "trajectories",
@@ -81,6 +79,4 @@ def run(cfg, state):
             )
             np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
 
-        state.tcomp_write_particles[-1] -= time.time()
-        state.tcomp_write_particles[-1] *= -1
 

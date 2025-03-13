@@ -17,38 +17,6 @@ from oggm.cfg import G, SEC_IN_YEAR, SEC_IN_DAY
 import igm
 from oggm.core.sia2d import Model2D
 
-class DictToObj:
-    """Recursively convert a dictionary to an object with attribute-style access."""
-    def __init__(self, dictionary):
-        for key, value in dictionary.items():
-            if isinstance(value, dict):
-                setattr(self, key, DictToObj(value))
-            else:
-                setattr(self, key, value)
-
-    def __getitem__(self, key):
-        return getattr(self, key)  # Allow dictionary-like access
-
-    def __repr__(self):
-        return str(self.__dict__)
-
-    def to_dict(self):
-        """Convert back to a dictionary."""
-        return {key: value.to_dict() if isinstance(value, DictToObj) else value for key, value in self.__dict__.items()}
-
-# Load YAML file relative to the script location
-def load_yaml_as_object(yaml_filename):
-
-    import os, yaml
-    script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
-    yaml_path = os.path.join(script_dir, yaml_filename)  # Build the full path
-
-    with open(yaml_path, 'r') as file:
-        yaml_dict = yaml.safe_load(file)  # Load as dict
-    
-    return DictToObj(yaml_dict)  # Convert to object
-
-
 class IGM_Model2D(Model2D):
     def filter_ice_border(ice_thick):
         """Sets the ice thickness at the border of the domain to zero."""
@@ -109,8 +77,8 @@ class IGM_Model2D(Model2D):
 
         self.state = igm.State() 
 
-        self.cfg = load_yaml_as_object(os.path.join("conf","processes","iceflow.yaml"))
-        self.cfg.processes = self.cfg
+        self.cfg = igm.EmptyClass()  
+        self.cfg.processes = igm.load_yaml_as_cfg(os.path.join("conf","processes","iceflow.yaml"))
 
         # Parameter
         self.cfl = 0.25

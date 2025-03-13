@@ -501,3 +501,43 @@ def _plot_memory_pie(state):
     plt.tight_layout()
     plt.savefig("memory-pie.png", pad_inches=0)
     plt.close("all")
+
+###########################################################
+
+# These function permits to read specific yaml files without calling hydra
+# This is not ideal yet, used for instructed_oggm and testing
+
+class EmptyClass:
+    pass
+
+class DictToObj:
+    """Recursively convert a dictionary to an object with attribute-style access."""
+    def __init__(self, dictionary):
+        for key, value in dictionary.items():
+            if isinstance(value, dict):
+                setattr(self, key, DictToObj(value))
+            else:
+                setattr(self, key, value)
+
+    def __getitem__(self, key):
+        return getattr(self, key)  # Allow dictionary-like access
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    def to_dict(self):
+        """Convert back to a dictionary."""
+        return {key: value.to_dict() if isinstance(value, DictToObj) else value for key, value in self.__dict__.items()}
+ 
+def load_yaml_as_cfg(yaml_filename):
+
+    import os, yaml
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
+    yaml_path = os.path.join(script_dir, yaml_filename)  # Build the full path
+
+    with open(yaml_path, 'r') as file:
+        yaml_dict = yaml.safe_load(file)  # Load as dict
+    
+    return DictToObj(yaml_dict)  # Convert to object
+
+##########################################################

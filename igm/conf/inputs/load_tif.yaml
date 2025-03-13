@@ -1,11 +1,10 @@
 load_tif:
   coarsen: 1 # help="coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points"
-  crop: "False" # help="Crop the data with xmin, xmax, ymin, ymax (default: False)"
-  xmin: -1e20 # help="crop_xmin"
-  # xmin: -10**20 # help="crop_xmin" # careful -> this notation does not work with yaml, use the 1e notation...
-  xmax: 1e20 # help="crop_xmax"
-  ymin: -1e20 # help="crop_ymin"
-  ymax: 1e20 # help="crop_ymax"
+  crop: False # help="Crop the data with xmin, xmax, ymin, ymax (default: False)"
+  xmin: -1.0e+20 # help="crop_xmin" 
+  xmax: 1.0e+20 # help="crop_xmax"
+  ymin: -1.0e+20 # help="crop_ymin"
+  ymax: 1.0e+20 # help="crop_ymax"
   folder: "" # help="folder"
   icemask_include: False # help="Include ice mask in the NetCDF file"
   icemask_shapefile: icemask.shp # help="Shapefile for ice mask"

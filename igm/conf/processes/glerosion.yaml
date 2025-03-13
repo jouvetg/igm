@@ -1,4 +1,4 @@
 glerosion:
-  cst: 2.7 * 10 ** (-7) # help="Erosion multiplicative factor, here taken from Herman, F. et al. Erosion by an Alpine glacier. Science 350, 193–195 (2015)",
+  cst: 2.7e-7 # help="Erosion multiplicative factor, here taken from Herman, F. et al. Erosion by an Alpine glacier. Science 350, 193–195 (2015)",
   exp: 2 # help="Erosion exponent factor, here taken from Herman, F. et al. Erosion by an Alpine glacier. Science 350, 193–195 (2015)",
   update_freq: 1 # help="Update the erosion only each X years (Default: 1)"

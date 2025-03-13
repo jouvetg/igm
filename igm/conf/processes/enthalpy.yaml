@@ -3,7 +3,7 @@ enthalpy:
   spy: 31556926.0 # help="Number of seconds per years [s y-1]",
   ki: 2.1 # help="Conductivity of cold ice [W m-1 K-1] (Aschwanden and al, JOG, 2012)",
   ci: 2009.0 # help="Specific heat capacity of ice [W s kg-1 K-1] (Aschwanden and al, JOG, 2012)",
-  Lh: 3.34e5 # help="latent heat of fusion [W s kg-1] = [E] (Aschwanden and al, JOG, 2012)",
+  Lh: 3.34e+5 # help="latent heat of fusion [W s kg-1] = [E] (Aschwanden and al, JOG, 2012)",
   KtdivKc: 1e-1 # help="Ratio of temp vs cold ice diffusivity Kt / Kc [no unit] (Aschwanden and al, JOG, 2012)",
   claus_clape: 7.9e-8 # help="Clausius-Clapeyron constant [K Pa-1] (Aschwanden and al, JOG, 2012)",
   melt_temp: 273.15 # help="Melting point at standart pressure [K] (Aschwanden and al, JOG, 2012)",
@@ -19,5 +19,5 @@ enthalpy:
   drain_ice_column: True # help="Transform the water content beyond a thr=0.01 into water, drain it, and add it to basal melt rate",
   default_bheatflx: 0.065 # help="Geothermal heat flux [W m-2]",
   temperature_offset_air_to_ice: 0.0 # help="This is the offset between the air temperature and the ice temperature as records show [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder than the temperature of ice to be given as boundary upper condition to the Enthlapy model",
-  tauc_min: 1e5 # help="lower bound for tauc [Pa]"
-  tauc_max: 1e10 # help="lower bound for tauc [Pa]"
+  tauc_min: 1.0e+5 # help="lower bound for tauc [Pa]"
+  tauc_max: 1.0e+10 # help="lower bound for tauc [Pa]"

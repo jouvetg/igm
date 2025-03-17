@@ -21,14 +21,14 @@ def solve_iceflow(cfg, state, U, V):
 
     Cost_Glen = []
 
+    fieldin = [tf.expand_dims(vars(state)[f], axis=0) for f in cfg.processes.iceflow.iceflow.fieldin]
+
+    early_stopping = EarlyStopping(relative_min_delta=0.001, patience=10)
+
     for i in range(cfg.processes.iceflow.iceflow.solve_nbitmax):
         with tf.GradientTape() as t:
             t.watch(U)
             t.watch(V)
-
-            fieldin = [
-                tf.expand_dims(vars(state)[f], axis=0) for f in cfg.processes.iceflow.iceflow.fieldin
-            ]
 
             C_shear, C_slid, C_grav, C_float = iceflow_energy(
                 cfg, tf.expand_dims(U, axis=0), tf.expand_dims(V, axis=0), fieldin
@@ -39,8 +39,8 @@ def solve_iceflow(cfg, state, U, V):
 
             Cost_Glen.append(COST)
 
-            if (i + 1) % 100 == 0:
-                print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
+            #if (i + 1) % 100 == 0:
+            #    print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
 
 #            state.C_shear = tf.pad(C_shear[0],[[0,1],[0,1]],"CONSTANT")
 #            state.C_slid  = tf.pad(C_slid[0],[[0,1],[0,1]],"CONSTANT")
@@ -48,18 +48,24 @@ def solve_iceflow(cfg, state, U, V):
 #            state.C_float = C_float[0] 
 
             # Stop if the cost no longer decreases
-            if cfg.processes.iceflow.iceflow.solve_stop_if_no_decrease:
-                if i > 1:
-                    if Cost_Glen[-1] >= Cost_Glen[-2]:
-                        break
+            # if cfg.processes.iceflow.iceflow.solve_stop_if_no_decrease:
+            #     if i > 1:
+            #         if Cost_Glen[-1] >= Cost_Glen[-2]:
+            #             break
 
-            grads = t.gradient(COST, [U, V])
+        grads = t.gradient(COST, [U, V])
+ 
+        state.optimizer.apply_gradients(zip(grads, [U, V]))
+ 
+        # if (i + 1) % 100 == 0:
+        #     velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
+        #     print("solve :", i, COST.numpy(), np.max(velsurf_mag)) 
 
-            state.optimizer.apply_gradients(zip(grads, [U, V]))
+#        if i % 20 == 0:
+#            print("Solve : ", i, ": ", COST.numpy())
 
-            if (i + 1) % 100 == 0:
-                velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
-                print("solve :", i, COST.numpy(), np.max(velsurf_mag))
+        if early_stopping.should_stop(COST.numpy()): 
+            break
 
     U = tf.where(state.thk > 0, U, 0)
     V = tf.where(state.thk > 0, V, 0)

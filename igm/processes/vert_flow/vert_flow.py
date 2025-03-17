@@ -18,21 +18,25 @@ def initialize(cfg, state):
 def update(cfg, state):
     """ """
 
-    # original version by GJ
-    if cfg.processes.vert_flow.version == 1:
+    if cfg.processes.iceflow.iceflow.Nz == 2:
+        state.W = _compute_vertical_velocity_twolayers(cfg, state)
+    else:
 
-        if cfg.processes.vert_flow.method == "kinematic":
-            state.W = _compute_vertical_velocity_kinematic_v1(cfg, state)
-        elif cfg.processes.vert_flow.method == "incompressibility":
-            state.W = _compute_vertical_velocity_incompressibility_v1(cfg, state)
+        # original version by GJ
+        if cfg.processes.vert_flow.version == 1:
+
+            if cfg.processes.vert_flow.method == "kinematic":
+                state.W = _compute_vertical_velocity_kinematic_v1(cfg, state)
+            elif cfg.processes.vert_flow.method == "incompressibility":
+                state.W = _compute_vertical_velocity_incompressibility_v1(cfg, state)
     
-    # improved version by CMS
-    elif cfg.processes.vert_flow.version == 2:
+        # improved version by CMS
+        elif cfg.processes.vert_flow.version == 2:
 
-        if cfg.processes.vert_flow.method == "kinematic":
-            state.W = _compute_vertical_velocity_kinematic_v2(cfg, state)
-        elif cfg.processes.vert_flow.method == "incompressibility":
-            state.W = _compute_vertical_velocity_incompressibility_v2(cfg, state)
+            if cfg.processes.vert_flow.method == "kinematic":
+                state.W = _compute_vertical_velocity_kinematic_v2(cfg, state)
+            elif cfg.processes.vert_flow.method == "incompressibility":
+                state.W = _compute_vertical_velocity_incompressibility_v2(cfg, state)
 
     state.wvelbase = state.W[0]
     state.wvelsurf = state.W[-1]
@@ -310,3 +314,40 @@ def grady_non_flat_layers_tf(U,dY,Z,vert_weight,thk):
     grady = flat_grady - sy*dUdz
 
     return grady
+
+
+def _compute_vertical_velocity_twolayers(params, state):
+
+    @tf.function()
+    def compute_divflux_d(u, v, h, dx, dy):
+        
+        #derivatives computed with centered method
+        Qx = u * h  
+        Qy = v * h  
+        
+        dQx_x = tf.concat(
+            [Qx[:, 0:1], 0.5 * (Qx[:, :-1] + Qx[:, 1:]), Qx[:, -1:]], 1
+        ) 
+        
+        dQy_y = tf.concat(
+            [Qy[0:1, :], 0.5 * (Qy[:-1, :] + Qy[1:, :]), Qy[-1:, :]], 0
+        ) 
+
+        gradQx = (dQx_x[:, 1:] - dQx_x[:, :-1]) / dx
+        gradQy = (dQy_y[1:, :] - dQy_y[:-1, :]) / dy
+
+        return gradQx + gradQy
+
+    sloptopgx, sloptopgy  = compute_gradient_tf(state.topg, state.dx, state.dx)
+
+    slopusurfx,slopusurfy = compute_gradient_tf(state.usurf, state.dx, state.dx)
+
+    div = compute_divflux_d(state.ubar, state.vbar, state.thk, state.dx, state.dx)
+
+    wbase =  state.U[0] * sloptopgx + state.V[0] * sloptopgy
+
+    wsurf = state.U[-1] * slopusurfx + state.V[-1] * slopusurfy - div[-1]
+
+    return tf.stack([wbase,wsurf],axis=0)
+
+

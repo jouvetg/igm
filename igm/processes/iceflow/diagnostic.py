@@ -5,45 +5,88 @@ from .utils import *
 from .solve import *
 from .emulate import *
 
+import time
+
 def initialize_iceflow_diagnostic(cfg,state):
 
     initialize_iceflow_emulator(cfg,state)
     
     initialize_iceflow_solver(cfg,state)
 
-    state.UT = tf.Variable(
-        tf.zeros((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
-    )
-    state.VT = tf.Variable(
-        tf.zeros((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
-    )
+    state.diagno = []
+
+    state.velsurf_mag_exa = tf.zeros_like(state.thk)
+    state.velsurf_mag_app = tf.zeros_like(state.thk)
+
+    # state.UT = tf.Variable(
+    #     tf.zeros((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
+    # )
+    # state.VT = tf.Variable(
+    #     tf.zeros((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
+    # )
+
+    print("it,l1,l2,COST_Glen,COST_Emulator,nb_it_solve,nb_it_emula,time_solve,time_retra")
 
 def update_iceflow_diagnostic(cfg, state):
+
+    ################ Solve
+
+    time_solve = time.time()
+
+    U, V, Cost_Glen = solve_iceflow(cfg, state, state.U, state.V)
+
+    COST_Glen     = Cost_Glen[-1].numpy()
+
+    time_solve -= time.time()
+    time_solve *= -1
+ 
+    state.U.assign(U)
+    state.V.assign(V)
     
-    if cfg.processes.iceflow.iceflow.retrain_emulator_freq > 0:
-        update_iceflow_emulator(cfg, state)
+    update_2d_iceflow_variables(cfg, state)
+
+    ################ Retrain
+
+    time_retra = time.time()
+
+    update_iceflow_emulator(cfg, state)
+
+    fieldin = [vars(state)[f] for f in cfg.processes.iceflow.iceflow.fieldin]
+    X = fieldin_to_X(cfg, fieldin)
+    Y = state.iceflow_model(X)
+    U, V = Y_to_UV(cfg, Y)
+
+    if len(state.COST_EMULATOR) > 0:
         COST_Emulator = state.COST_EMULATOR[-1].numpy()
     else:
-        COST_Emulator = 0.0
+        COST_Emulator = np.NaN
 
-    update_iceflow_emulated(cfg, state)
+#    if len(state.GRAD_NORM) > 0:
+#        GRAD_Norm     = state.GRAD_NORM[-1].numpy()
+#    else:
+    GRAD_Norm = np.NaN
 
-    if state.it % 10 == 0:
-        UT, VT, Cost_Glen = solve_iceflow(cfg, state, state.UT, state.VT)
-        state.UT.assign(UT)
-        state.VT.assign(VT)
-        COST_Glen = Cost_Glen[-1].numpy()
+    time_retra -= time.time()
+    time_retra *= -1
 
-        print("nb solve iterations :", len(Cost_Glen))
+    ################ Analysis
 
-        l1, l2 = computemisfit(state, state.thk, state.U - state.UT, state.V - state.VT)
+    nb_it_solve = len(Cost_Glen)
+    nb_it_emula = len(state.COST_EMULATOR)
 
-        ERR = [state.t.numpy(), COST_Glen, COST_Emulator, l1, l2]
+    l1, l2 = computemisfit(state, state.thk, state.U - U, state.V - V)
 
-        print(ERR)
+    vol = np.sum(state.thk) * (state.dx**2) / 10**9
 
-        with open("errors.txt", "ab") as f:
-            np.savetxt(f, np.expand_dims(ERR, axis=0), delimiter=",", fmt="%5.5f")
+    state.diagno.append([state.t,state.it, l1, l2, COST_Glen, COST_Emulator, nb_it_solve, nb_it_emula, time_solve, time_retra, GRAD_Norm, vol])
+
+    state.velsurf_mag_app = tf.linalg.norm(tf.stack([U[0,-1], V[0,-1]], axis=0), axis=0)
+    state.velsurf_mag_exa = tf.linalg.norm(tf.stack([state.U[-1], state.V[-1]], axis=0), axis=0)
+
+    if state.it % 100 == 0: 
+        np.savetxt("errors_diagno.txt", np.stack(state.diagno), delimiter=",", fmt="%10.3f",
+                header="time, it,l1,l2,COST_Glen,COST_Emulator,nb_it_solve,nb_it_emula,time_solve,time_retra, GRAD_Norm, vol",
+                comments='')
 
 
 def computemisfit(state, thk, U, V):
@@ -58,3 +101,7 @@ def computemisfit(state, thk, U, V):
     nl2diff = tf.reduce_sum(MA * tf.abs(VEL) ** 2) / tf.reduce_sum(MA)
 
     return nl1diff.numpy(), np.sqrt(nl2diff)
+
+def finalize_iceflow_diagnostic(cfg, state):
+ 
+    pass

@@ -73,14 +73,8 @@ def optimize(cfg, state):
     
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
         optimizer = tf.keras.optimizers.Adam(learning_rate=cfg.processes.iceflow.optimize.step_size)
-        opti_retrain = tf.keras.optimizers.Adam(
-            learning_rate=cfg.processes.iceflow.iceflow.retrain_emulator_lr
-        )
     else:
         optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=cfg.processes.iceflow.optimize.step_size)
-        opti_retrain = tf.keras.optimizers.legacy.Adam(
-            learning_rate=cfg.processes.iceflow.iceflow.retrain_emulator_lr
-        )
 
     # this thing is outdated with using iflo_new_friction_param default as we use scaling of one.
     sc = {}
@@ -96,7 +90,7 @@ def optimize(cfg, state):
 
     # main loop
     for i in range(cfg.processes.iceflow.optimize.nbitmax):
-        with tf.GradientTape() as t, tf.GradientTape() as s:
+        with tf.GradientTape() as t:
 
             if cfg.processes.iceflow.optimize.step_size_decay < 1:
                 optimizer.lr = cfg.processes.iceflow.optimize.step_size * (cfg.processes.iceflow.optimize.step_size_decay ** (i / 100))
@@ -181,22 +175,7 @@ def optimize(cfg, state):
                 cost["arrh_regu"] = regu_arrhenius(cfg, state) 
   
             cost_total = tf.reduce_sum(tf.convert_to_tensor(list(cost.values())))
-
-            # Here one allow retraining of the ice flow emaultor
-            if cfg.processes.iceflow.optimize.retrain_iceflow_model:
-                C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X, Y)
-
-                cost["glen"] = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
-                             + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
-                
-                grads = s.gradient(cost["glen"], state.iceflow_model.trainable_variables)
-
-                opti_retrain.apply_gradients(
-                    zip(grads, state.iceflow_model.trainable_variables)
-                )
-
-            print_costs(cfg, state, cost, i)
-
+ 
             #################
 
             var_to_opti = [ ]
@@ -236,6 +215,48 @@ def optimize(cfg, state):
 
             #state.divflux = tf.where(ACT, state.divflux, 0.0)
 
+            # Here one allow retraining of the ice flow emaultor
+            if cfg.processes.iceflow.optimize.retrain_iceflow_model:
+
+                cost["glen"] = 0
+
+                fieldin = [vars(state)[f] for f in cfg.processes.iceflow.iceflow.fieldin]
+
+                XX = fieldin_to_X(cfg, fieldin)
+
+                X = split_into_patches(XX, cfg.processes.iceflow.iceflow.retrain_emulator_framesizemax)
+ 
+                for epoch in range(cfg.processes.iceflow.iceflow.retrain_emulator_nbit):
+
+                    # state.opti_retrain.lr = cfg.processes.iceflow.iceflow.retrain_emulator_lr * 10**tf.random.uniform(shape=[], minval=-2, maxval=1, dtype=tf.float32)
+
+                    # state.opti_retrain.lr = cfg.processes.iceflow.iceflow.retrain_emulator_lr * (0.85 ** (epoch / 100))
+
+                    for itr in range(X.shape[0]):
+                        with tf.GradientTape() as s:
+
+                            # evalutae th ice flow emulator                
+                            if cfg.processes.iceflow.iceflow.multiple_window_size==0:
+                                Y = state.iceflow_model(X[itr:itr+1, :, :, :])
+                            else:
+                                Y = state.iceflow_model(tf.pad(X[itr:itr+1, :, :, :], state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
+            
+                            C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[itr:itr+1, :, :, :], Y)
+
+                            cost["glen"] += tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
+                                        + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
+                                
+                            #gpu_info = tf.config.experimental.get_memory_info("GPU:0")
+                            #print(f"D : GPU memory: {gpu_info['current'] / 1024**2:.2f} MB")
+                            
+                            grads = s.gradient(cost["glen"], state.iceflow_model.trainable_variables) 
+
+                            state.opti_retrain.apply_gradients(
+                                zip(grads, state.iceflow_model.trainable_variables)
+                            )
+
+            print_costs(cfg, state, cost, i)
+
             _compute_rms_std_optimization(state, i)
 
             if i % cfg.processes.iceflow.optimize.output_freq == 0:
@@ -245,7 +266,7 @@ def optimize(cfg, state):
                     update_ncdf_optimize(cfg, state, i)
 
             # stopping criterion: stop if the cost no longer decrease
-            # if i>params.opti_nbitmin:
+            # if i>cfg.processes.iceflow.optimize_nbitmin:
             #     cost = [c[0] for c in costs]
             #     if np.mean(cost[-10:])>np.mean(cost[-20:-10]):
             #         break;
@@ -261,7 +282,7 @@ def optimize(cfg, state):
         if cfg.processes.iceflow.optimize.save_iterat_in_ncdf:
             update_ncdf_optimize(cfg, state, i)
 
-#    for f in params.opti_control:
+#    for f in cfg.processes.iceflow.optimize_control:
 #        vars(state)[f] = vars()[f] * sc[f]
 
     # now that the ice thickness is optimized, we can fix the bed once for all! (ONLY FOR GROUNDED ICE)

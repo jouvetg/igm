@@ -167,7 +167,7 @@ def update_iceflow_emulator(cfg, state):
 
         XX = fieldin_to_X(cfg, fieldin)
 
-        X = _split_into_patches(XX, cfg.processes.iceflow.iceflow.retrain_emulator_framesizemax)
+        X = split_into_patches(XX, cfg.processes.iceflow.iceflow.retrain_emulator_framesizemax)
         
         Ny = X.shape[1]
         Nx = X.shape[2]
@@ -233,7 +233,7 @@ def update_iceflow_emulator(cfg, state):
     if len(cfg.processes.iceflow.iceflow.save_cost_emulator)>0:
         np.savetxt(cfg.processes.iceflow.iceflow.output_directory+cfg.processes.iceflow.iceflow.save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
 
-def _split_into_patches(X, nbmax):
+def split_into_patches(X, nbmax):
     XX = []
     ny = X.shape[1]
     nx = X.shape[2]

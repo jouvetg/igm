@@ -114,10 +114,10 @@ def update(cfg, state):
 
         update_iceflow_emulated(cfg, state)
 
-    elif cfg.processes.iceflow.iflo_type == "solved":
+    elif cfg.processes.iceflow.iceflow.type == "solved":
         update_iceflow_solved(cfg, state)
 
-    elif cfg.processes.iceflow.iflo_type == "diagnostic":
+    elif cfg.processes.iceflow.iceflow.type == "diagnostic":
         update_iceflow_diagnostic(cfg, state)
 
 def finalize(cfg, state):

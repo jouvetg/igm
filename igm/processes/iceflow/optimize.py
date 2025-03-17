@@ -87,6 +87,11 @@ def optimize(cfg, state):
 
     for f in cfg.processes.iceflow.optimize.control:
         vars()[f] = tf.Variable(vars(state)[f] / sc[f])
+        if cfg.processes.iceflow.optimize.log_slidingco & (f == "slidingco"):
+            vars()[f] = tf.Variable(( tf.math.log(vars(state)[f]) / tf.math.log(10.0) ) / sc[f]) 
+        else:
+            vars()[f] = tf.Variable(vars(state)[f] / sc[f]) 
+
 
     # main loop
     for i in range(cfg.processes.iceflow.optimize.nbitmax):
@@ -100,7 +105,10 @@ def optimize(cfg, state):
                 t.watch(vars()[f])
 
             for f in cfg.processes.iceflow.optimize.control:
-                vars(state)[f] = vars()[f] * sc[f]
+                if cfg.processes.iceflow.optimize.log_slidingco & (f == "slidingco"):
+                    vars(state)[f] = (10**(vars()[f] * sc[f]))
+                else:
+                    vars(state)[f] = vars()[f] * sc[f]
 
             fieldin = [vars(state)[f] for f in cfg.processes.iceflow.iceflow.fieldin]
 
@@ -204,10 +212,19 @@ def optimize(cfg, state):
 
             ###################
 
+            for f in cfg.processes.iceflow.optimize.control:
+                if cfg.processes.iceflow.optimize.log_slidingco & (f == "slidingco"):
+                    vars(state)[f] = (10**(vars()[f] * sc[f]))
+                else:
+                    vars(state)[f] = vars()[f] * sc[f]
+
             # get back optimized variables in the pool of state.variables
             if "thk" in cfg.processes.iceflow.optimize.control:
                 state.thk = tf.where(state.icemaskobs > 0.5, state.thk, 0)
 #                state.thk = tf.where(state.thk < 0.01, 0, state.thk)
+            if "slidingco" in cfg.processes.iceflow.optimize.control:
+                state.slidingco = tf.where(state.slidingco < 0, 0, state.slidingco)
+
 
             state.divflux = compute_divflux(
                 state.ubar, state.vbar, state.thk, state.dx, state.dx, method=cfg.processes.iceflow.optimize.divflux_method
@@ -523,8 +540,9 @@ def regu_slidingco(cfg,state):
                 + np.sqrt(cfg.processes.iceflow.optimize.smooth_anisotropy_factor_sl)
                 * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx)) )
  
-    REGU_S = REGU_S + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
-    # this last line serve to enforce non-negative slidingco
+    if not cfg.processes.iceflow.optimize.log_slidingco:
+        REGU_S = REGU_S + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
+        # this last line serve to enforce non-negative slidingco
  
     return REGU_S
 

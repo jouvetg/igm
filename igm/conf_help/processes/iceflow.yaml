@@ -283,6 +283,9 @@
 - Name: optimize.fix_opti_normalization_issue
   Description: "Formerly, the oce was mixing reduce_mean and l2_loss leading to dependence to the resolution of the grid"
   Units: boolean
+- Name: optimize.log_slidingco
+  Description: "Optimize the log of the sliding coefficient instead of the slidingco itself"
+  Units: boolean
 - Name: pretraining.data_dir
   Description: "Directory of the data of the glacier catalog"
   Units: file path

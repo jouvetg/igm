@@ -76,6 +76,12 @@
 - Name: iceflow.retrain_emulator_lr
   Description: "Learning rate for the retraining of the emulator"
   Units: float
+- Name: iceflow.retrain_emulator_lr_init
+  Description: "Initial Learning rate for the retraining of the emulator"
+  Units: None
+- Name: iceflow.retrain_warm_up_time
+  Description: "Warm-up time allowing intense initial training"
+  Units: year  
 - Name: iceflow.retrain_emulator_nbit_init
   Description: "Number of iterations done at the first time step for the retraining of the emulator"
   Units: integer

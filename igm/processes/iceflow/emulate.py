@@ -89,6 +89,8 @@ def initialize_iceflow_emulator(cfg, state):
             state.iceflow_model = cnn(cfg, nb_inputs, nb_outputs)
         elif cfg.processes.iceflow.iceflow.network=='unet':
             state.iceflow_model = unet(cfg, nb_inputs, nb_outputs)
+        elif cfg.processes.iceflow.iceflow.network=='fourier':
+            state.iceflow_model = fourier(cfg, nb_inputs, nb_outputs)
 
     # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
     # dirpath = importlib_resources.files(emulators).joinpath(direct_name)
@@ -155,7 +157,10 @@ def update_iceflow_emulated(cfg, state):
 
 
 def update_iceflow_emulator(cfg, state):
-    if (state.it < 0) | (state.it % cfg.processes.iceflow.iceflow.retrain_emulator_freq == 0):
+
+    warm_up = int(state.t <= cfg.processes.time.start + cfg.processes.iceflow.iceflow.retrain_warm_up_time)
+
+    if warm_up | (state.it % cfg.processes.iceflow.iceflow.retrain_emulator_freq == 0):
         fieldin = [vars(state)[f] for f in cfg.processes.iceflow.iceflow.fieldin]
 
 ########################
@@ -180,9 +185,11 @@ def update_iceflow_emulator(cfg, state):
 
         state.COST_EMULATOR = []
 
-        nbit = int((state.it >= 0) * cfg.processes.iceflow.iceflow.retrain_emulator_nbit + (
-            state.it < 0
-        ) * cfg.processes.iceflow.iceflow.retrain_emulator_nbit_init)
+        nbit =     warm_up * cfg.processes.iceflow.iceflow.retrain_emulator_nbit_init \
+             + (1-warm_up) * cfg.processes.iceflow.iceflow.retrain_emulator_nbit
+
+        state.opti_retrain.lr =     warm_up * cfg.processes.iceflow.iceflow.retrain_emulator_lr_init \
+                              + (1-warm_up) * cfg.processes.iceflow.iceflow.retrain_emulator_lr
 
         iz = cfg.processes.iceflow.iceflow.exclude_borders 
 
@@ -226,6 +233,8 @@ def update_iceflow_emulator(cfg, state):
                 state.opti_retrain.apply_gradients(
                     zip(grads, state.iceflow_model.trainable_variables)
                 )
+
+#                gradient_norm = tf.linalg.global_norm(grads)
 
                 state.opti_retrain.lr = cfg.processes.iceflow.iceflow.retrain_emulator_lr * (
                     0.95 ** (epoch / 1000)

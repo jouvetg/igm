@@ -53,11 +53,9 @@ def solve_iceflow(cfg, state, U, V):
                     if Cost_Glen[-1] >= Cost_Glen[-2]:
                         break
 
-            grads = tf.Variable(t.gradient(COST, [U, V]))
+            grads = t.gradient(COST, [U, V])
 
-            state.optimizer.apply_gradients(
-                zip([grads[i] for i in range(grads.shape[0])], [U, V])
-            )
+            state.optimizer.apply_gradients(zip(grads, [U, V]))
 
             if (i + 1) % 100 == 0:
                 velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)

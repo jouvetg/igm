@@ -26,6 +26,8 @@ iceflow:
     dim_arrhenius: 2 # help="Dimension of the arrhenius factor (horizontal 2D or 3D)"
     retrain_emulator_freq: 10 # help="Frequency at which the emulator is retrained, 0 means never, 1 means at each time step, 2 means every two time steps, etc."
     retrain_emulator_lr: 0.00002 # help="Learning rate for the retraining of the emulator"
+    retrain_emulator_lr_init: 0.001
+    retrain_warm_up_time: 0
     retrain_emulator_nbit_init: 1 # help="Number of iterations done at the first time step for the retraining of the emulator"
     retrain_emulator_nbit: 1 # help="Number of iterations done at each time step for the retraining of the emulator"
     retrain_emulator_framesizemax: 750 # help="Size of the patch used for retraining the emulator, this is usefull for large size arrays, otherwise the GPU memory can be overloaded"

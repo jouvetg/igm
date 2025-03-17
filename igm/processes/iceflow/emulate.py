@@ -14,11 +14,15 @@ def initialize_iceflow_emulator(cfg, state):
 
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
         state.opti_retrain = getattr(tf.keras.optimizers,cfg.processes.iceflow.iceflow.optimizer_emulator)(
-            learning_rate=cfg.processes.iceflow.iceflow.retrain_emulator_lr
+            learning_rate=cfg.processes.iceflow.iceflow.retrain_emulator_lr,
+            epsilon=cfg.processes.iceflow.iceflow.optimizer_emulator_epsilon,
+            clipnorm=cfg.processes.iceflow.iceflow.optimizer_emulator_clipnorm
         )
     else:
         state.opti_retrain = getattr(tf.keras.optimizers.legacy,cfg.processes.iceflow.iceflow.optimizer_emulator)( 
-            learning_rate=cfg.processes.iceflow.iceflow.retrain_emulator_lr
+            learning_rate=cfg.processes.iceflow.iceflow.retrain_emulator_lr,
+            epsilon=cfg.processes.iceflow.iceflow.optimizer_emulator_epsilon,
+            clipnorm=cfg.processes.iceflow.iceflow.optimizer_emulator_clipnorm
         )
 
     direct_name = (

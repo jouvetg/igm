@@ -145,6 +145,12 @@
 - Name: iceflow.optimizer_emulator
   Description: "Type of Optimizer for the emulator"
   Units: string
+- Name: iceflow.optimizer_emulator_epsilon
+  Description: "A small constant for numerical stability for the Adam optimizer"
+  Units: float
+- Name: iceflow.optimizer_emulator_clipnorm
+  Description: "If set, the gradient of each weight is individually clipped so that its norm is no higher than this value."
+  Units: float
 - Name: iceflow.save_cost_emulator
   Description: ""
   Units: string

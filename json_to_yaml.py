@@ -12,7 +12,7 @@ translate = {
   "smb_accpdd": "smb_accpdd",
   "smb_accmelt": "smb_accmelt",
   "smb_oggm": "smb_oggm",
-  "smb_simple": "smb_simple",
+  "smb_simple": "simple",
   "vert_flow": "vflo",
   "enthalpy": "enth",
   "write_ncdf": "wncd",

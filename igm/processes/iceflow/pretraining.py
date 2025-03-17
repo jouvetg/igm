@@ -16,7 +16,6 @@ from .utils import *
 from .emulate import *
 from .solve import *
 from .energy_iceflow import *
-from .diagnostic import *
  
 def pretraining(cfg, state):
     state.direct_name = (

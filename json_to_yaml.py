@@ -3,14 +3,27 @@ import json
 translate = {
   "time": "time",
   "thk": "thk",
+  "avalanche": "aval",
   "load_ncdf": "lncd",
+  "load_tif": "ltif",
   "plot2d": "plt2d",
   "clim_glacialindex": "clim",
-  "smb_accpdd": "smb",
-  "iceflow": "iflo",
-  "enthalpy": "enth",
+  "clim_oggm": "clim_oggm",
+  "smb_accpdd": "smb_accpdd",
+  "smb_accmelt": "smb_accmelt",
+  "smb_oggm": "smb_oggm",
+  "smb_simple": "smb_simple",
   "vert_flow": "vflo",
-  "write_ncdf": "wncd"
+  "enthalpy": "enth",
+  "write_ncdf": "wncd",
+  "read_output": "rncd",
+  "oggm_shop": "oggm",
+  "particles": "part"
+}
+
+translate_iceflow = {
+  "iceflow": "iflo",
+  "optimize": "opti"
 }
 
 def remove_comments(json_str) -> str:
@@ -49,20 +62,36 @@ del params_dict["modules_postproc"]
 def print_in_file(modules,file):
     for key in modules:
         print("  "+key+":", file=file)
-        if key in translate:
-            param_module = [s for s in params_dict if s.startswith(translate[key])]
-            param_module = sorted(param_module)
-            for s in param_module:
-                print("    ",s.split('_',1)[-1],":",params_dict[s], file=file)
+
+        if key=="iceflow":
+            param_iceflow = [s for s in params_dict if s.startswith('iflo')]
+            if len(param_iceflow)>0:
+                param_iceflow = sorted(param_iceflow)
+                print("    iceflow:", file=file)
+                for s in param_iceflow:
+                    print("      ",s.split('_',1)[-1],":",params_dict[s], file=file)
+
+            param_optimize = [s for s in params_dict if s.startswith('opti')]
+            if len(param_optimize)>0:
+                param_optimize = sorted(param_optimize)
+                print("    optimize:", file=file)
+                for s in param_optimize:
+                    print("      ",s.split('_',1)[-1],":",params_dict[s], file=file)
+        else:
+            if key in translate:
+                param_module = [s for s in params_dict if s.startswith(translate[key])]
+                param_module = sorted(param_module)
+                for s in param_module:
+                    print("    ",s.split('_',1)[-1],":",params_dict[s], file=file)
 
 with open('params.yaml', 'w') as file:
 
     print("# @package _global_", file=file)
     print("", file=file)
 
-    print("hydra:", file=file)
-    print("  job:", file=file)
-    print("    chdir: True", file=file)
+#    print("hydra:", file=file)
+#    print("  job:", file=file)
+#    print("    chdir: True", file=file)
 
     print("", file=file)
     print("core:", file=file)

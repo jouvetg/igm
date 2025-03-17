@@ -77,6 +77,7 @@ def print_info(state):
             "⏱ Time": f"{state.t.numpy():09.1f} yr",
             "⏳ Step": f"{state.dt_target:04.2f} yr",
             "❄️  Volume": f"{np.sum(state.thk) * (state.dx**2) / 10**9:108.2f} km³",
+#            "#  Particles": f"{len(state.particle_x)}",
 #            "💾 GPU Mem (MB)": tf.config.experimental.get_memory_info("GPU:0")['current'] / 1024**2
         })
         state.pbar.update(1)

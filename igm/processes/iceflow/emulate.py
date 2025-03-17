@@ -158,7 +158,10 @@ def update_iceflow_emulated(cfg, state):
 
 def update_iceflow_emulator(cfg, state):
 
-    warm_up = int(state.t <= cfg.processes.time.start + cfg.processes.iceflow.iceflow.retrain_warm_up_time)
+    if hasattr(state, "t"):
+        warm_up = int(state.t <= cfg.processes.time.start + cfg.processes.iceflow.iceflow.retrain_warm_up_time)
+    else:
+        warm_up = 0
 
     if warm_up | (state.it % cfg.processes.iceflow.iceflow.retrain_emulator_freq == 0):
         fieldin = [vars(state)[f] for f in cfg.processes.iceflow.iceflow.fieldin]

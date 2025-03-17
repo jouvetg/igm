@@ -232,6 +232,8 @@ def optimize(cfg, state):
 
             #state.divflux = tf.where(ACT, state.divflux, 0.0)
 
+            _compute_rms_std_optimization(state, i)
+
             # Here one allow retraining of the ice flow emaultor
             if cfg.processes.iceflow.optimize.retrain_iceflow_model:
 
@@ -273,8 +275,6 @@ def optimize(cfg, state):
                             )
 
             print_costs(cfg, state, cost, i)
-
-            _compute_rms_std_optimization(state, i)
 
             if i % cfg.processes.iceflow.optimize.output_freq == 0:
                 if cfg.processes.iceflow.optimize.plot2d:

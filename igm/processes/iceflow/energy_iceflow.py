@@ -200,6 +200,7 @@ def _iceflow_energy(
 
     if new_friction_param:
         C = 1.0 * slidingco  # C has unit Mpa y^m m^(-m)
+        #C = slidingco**2 * 10**(-6)  # C has unit Mpa y^m m^(-m)  TEST TEST TEST
     else:
         if exp_weertman == 1:
             # C has unit Mpa y^m m^(-m)

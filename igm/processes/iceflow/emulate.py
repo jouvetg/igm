@@ -9,6 +9,7 @@ from .neural_network import *
 
 from igm.processes.iceflow import emulators
 import importlib_resources
+import igm
   
 def initialize_iceflow_emulator(cfg, state):
 
@@ -82,15 +83,9 @@ def initialize_iceflow_emulator(cfg, state):
             cfg.processes.iceflow.iceflow.Nz - 1
         )
         nb_outputs = 2 * cfg.processes.iceflow.iceflow.Nz
-        # state.iceflow_model = getattr(igm, cfg.processes.iceflow.iceflow.network)(
-        #     cfg, nb_inputs, nb_outputs
-        # )
-        if cfg.processes.iceflow.iceflow.network=='cnn':
-            state.iceflow_model = cnn(cfg, nb_inputs, nb_outputs)
-        elif cfg.processes.iceflow.iceflow.network=='unet':
-            state.iceflow_model = unet(cfg, nb_inputs, nb_outputs)
-        elif cfg.processes.iceflow.iceflow.network=='fourier':
-            state.iceflow_model = fourier(cfg, nb_inputs, nb_outputs)
+        state.iceflow_model = getattr(igm.processes.iceflow.emulate, cfg.processes.iceflow.iceflow.network)(
+            cfg, nb_inputs, nb_outputs
+        )
 
     # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
     # dirpath = importlib_resources.files(emulators).joinpath(direct_name)

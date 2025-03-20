@@ -49,7 +49,7 @@ def update_iceflow_diagnostic(cfg, state):
 
     time_retra = time.time()
 
-    update_iceflow_emulator(cfg, state)
+    update_iceflow_emulator(cfg, state, state.it)
 
     fieldin = [vars(state)[f] for f in cfg.processes.iceflow.iceflow.fieldin]
     X = fieldin_to_X(cfg, fieldin)

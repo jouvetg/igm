@@ -98,8 +98,7 @@ def initialize(cfg, state):
     assert (cfg.processes.iceflow.iceflow.exclude_borders==0) | (cfg.processes.iceflow.iceflow.multiple_window_size==0)
 
     if cfg.processes.iceflow.iceflow.run_data_assimilation:
-        state.it = -1
-        update_iceflow_emulator(cfg, state)
+        update_iceflow_emulator(cfg, state, 0)
         optimize(cfg, state)
         
 
@@ -110,7 +109,7 @@ def update(cfg, state):
 
     if cfg.processes.iceflow.iceflow.type == "emulated":
         if cfg.processes.iceflow.iceflow.retrain_emulator_freq > 0:
-            update_iceflow_emulator(cfg, state)
+            update_iceflow_emulator(cfg, state, state.it)
 
         update_iceflow_emulated(cfg, state)
 

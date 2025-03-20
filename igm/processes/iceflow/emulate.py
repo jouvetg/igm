@@ -156,14 +156,16 @@ def update_iceflow_emulated(cfg, state):
     update_2d_iceflow_variables(cfg, state)
 
 
-def update_iceflow_emulator(cfg, state):
+def update_iceflow_emulator(cfg, state, it):
+ 
+    run_it = False
+    if cfg.processes.iceflow.iceflow.retrain_emulator_freq > 0:
+       run_it = (it % cfg.processes.iceflow.iceflow.retrain_emulator_freq == 0)
+ 
+    warm_up = int(it <= cfg.processes.iceflow.iceflow.retrain_warm_up_it)
 
-    if hasattr(state, "t"):
-        warm_up = int(state.t <= cfg.processes.time.start + cfg.processes.iceflow.iceflow.retrain_warm_up_time)
-    else:
-        warm_up = 0
-
-    if warm_up | (state.it % cfg.processes.iceflow.iceflow.retrain_emulator_freq == 0):
+    if (warm_up | run_it):
+        
         fieldin = [vars(state)[f] for f in cfg.processes.iceflow.iceflow.fieldin]
 
 ########################
@@ -188,11 +190,12 @@ def update_iceflow_emulator(cfg, state):
 
         state.COST_EMULATOR = []
 
-        nbit =     warm_up * cfg.processes.iceflow.iceflow.retrain_emulator_nbit_init \
-             + (1-warm_up) * cfg.processes.iceflow.iceflow.retrain_emulator_nbit
-
-        state.opti_retrain.lr =     warm_up * cfg.processes.iceflow.iceflow.retrain_emulator_lr_init \
-                              + (1-warm_up) * cfg.processes.iceflow.iceflow.retrain_emulator_lr
+        if warm_up:
+            nbit = cfg.processes.iceflow.iceflow.retrain_emulator_nbit_init
+            state.opti_retrain.lr = cfg.processes.iceflow.iceflow.retrain_emulator_lr_init
+        else:
+            nbit = cfg.processes.iceflow.iceflow.retrain_emulator_nbit
+            state.opti_retrain.lr = cfg.processes.iceflow.iceflow.retrain_emulator_lr
 
         iz = cfg.processes.iceflow.iceflow.exclude_borders 
 
@@ -247,7 +250,7 @@ def update_iceflow_emulator(cfg, state):
             
     
     if len(cfg.processes.iceflow.iceflow.save_cost_emulator)>0:
-        np.savetxt(cfg.processes.iceflow.iceflow.output_directory+cfg.processes.iceflow.iceflow.save_cost_emulator+'-'+str(state.it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
+        np.savetxt(cfg.processes.iceflow.iceflow.output_directory+cfg.processes.iceflow.iceflow.save_cost_emulator+'-'+str(it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
 
 def split_into_patches(X, nbmax):
     XX = []

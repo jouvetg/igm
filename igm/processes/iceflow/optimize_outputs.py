@@ -222,6 +222,9 @@ def update_plot_inversion(cfg, state, i):
         vmin=0.01,
         vmax=0.06,
         cmap=cmap,
+#        tf.sqrt(state.slidingco/1.0e-6),
+#        vmin=100,
+#        vmax=500,
     )
     if i == 0:
         plt.colorbar(im1, format="%.2f", ax=ax2)

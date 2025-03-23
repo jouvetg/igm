@@ -7,28 +7,19 @@ def initialize_iceflow_fields(cfg, state):
     # here we initialize variable parmaetrizing ice flow
     if not hasattr(state, "arrhenius"):
         if cfg.processes.iceflow.iceflow.dim_arrhenius == 3:
-            state.arrhenius = tf.Variable(
-                tf.ones((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
-                * cfg.processes.iceflow.iceflow.init_arrhenius * cfg.processes.iceflow.iceflow.enhancement_factor, trainable=False
-            )
+            state.arrhenius = \
+                tf.ones((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1])) \
+                * cfg.processes.iceflow.iceflow.init_arrhenius * cfg.processes.iceflow.iceflow.enhancement_factor
         else:
-            state.arrhenius = tf.Variable(
-                tf.ones_like(state.thk) * cfg.processes.iceflow.iceflow.init_arrhenius * cfg.processes.iceflow.iceflow.enhancement_factor, trainable=False
-            )
+            state.arrhenius = tf.ones_like(state.thk) * cfg.processes.iceflow.iceflow.init_arrhenius * cfg.processes.iceflow.iceflow.enhancement_factor
 
     if not hasattr(state, "slidingco"):
-        state.slidingco = tf.Variable(
-            tf.ones_like(state.thk) * cfg.processes.iceflow.iceflow.init_slidingco, trainable=False
-        )
+        state.slidingco = tf.ones_like(state.thk) * cfg.processes.iceflow.iceflow.init_slidingco
 
     # here we create a new velocity field
     if not hasattr(state, "U"):
-        state.U = tf.Variable(
-            tf.zeros((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1])), trainable=False
-        )
-        state.V = tf.Variable(
-            tf.zeros((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1])), trainable=False
-        )
+        state.U = tf.zeros((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1])) 
+        state.V = tf.zeros((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1])) 
 
 def define_vertical_weight(cfg, state):
     """

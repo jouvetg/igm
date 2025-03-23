@@ -40,8 +40,8 @@ def update(cfg, state):
 
     thkexp = tf.repeat(tf.expand_dims(state.thk, axis=0), state.U.shape[0], axis=0)
 
-    state.U.assign(tf.where(thkexp > 0, state.U, dirx))
-    state.V.assign(tf.where(thkexp > 0, state.V, diry))
+    state.U = tf.where(thkexp > 0, state.U, dirx)
+    state.V = tf.where(thkexp > 0, state.V, diry)
 
 
 def finalize(cfg, state):

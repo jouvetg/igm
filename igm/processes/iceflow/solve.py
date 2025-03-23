@@ -19,6 +19,9 @@ def solve_iceflow(cfg, state, U, V):
     solve_iceflow
     """
 
+    U = tf.Variable(U)
+    V = tf.Variable(V)
+
     Cost_Glen = []
 
     fieldin = [tf.expand_dims(vars(state)[f], axis=0) for f in cfg.processes.iceflow.iceflow.fieldin]
@@ -74,6 +77,9 @@ def solve_iceflow(cfg, state, U, V):
 
 def solve_iceflow_lbfgs(cfg, state, U, V):
 
+    U = tf.Variable(U)
+    V = tf.Variable(V)
+
     import tensorflow_probability as tfp
 
     Cost_Glen = []
@@ -122,29 +128,25 @@ def solve_iceflow_lbfgs(cfg, state, U, V):
 def update_iceflow_solved(cfg, state):
 
     if cfg.processes.iceflow.iceflow.optimizer_lbfgs:
-        U, V, Cost_Glen = solve_iceflow_lbfgs(cfg, state, state.U, state.V)
+        state.U, state.V, Cost_Glen = solve_iceflow_lbfgs(cfg, state, state.U, state.V)
     else:
-        U, V, Cost_Glen = solve_iceflow(cfg, state, state.U, state.V)
- 
-    state.U.assign(U)
-    state.V.assign(V)
+        state.U, state.V, Cost_Glen = solve_iceflow(cfg, state, state.U, state.V)
+
     
     if cfg.processes.iceflow.iceflow.force_max_velbar > 0:
         velbar_mag = getmag3d(state.U, state.V)
-        state.U.assign(
+        state.U = \
             tf.where(
                 velbar_mag >= cfg.processes.iceflow.iceflow.force_max_velbar,
                 cfg.processes.iceflow.iceflow.force_max_velbar * (state.U / velbar_mag),
                 state.U,
-            )
-        )
-        state.V.assign(
+            ) 
+        state.V = \
             tf.where(
                 velbar_mag >= cfg.processes.iceflow.iceflow.force_max_velbar,
                 cfg.processes.iceflow.iceflow.force_max_velbar * (state.V / velbar_mag),
                 state.V,
-            )
-        )
+            ) 
         
     if len(cfg.processes.iceflow.iceflow.save_cost_solver)>0:
         np.savetxt(cfg.processes.iceflow.iceflow.output_directory+cfg.processes.iceflow.iceflow.save_cost_solver+'-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")

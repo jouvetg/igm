@@ -124,29 +124,24 @@ def update_iceflow_emulated(cfg, state):
     U = U[0]
     V = V[0]
 
-    U = tf.where(state.thk > 0, U, 0)
-    V = tf.where(state.thk > 0, V, 0)
-
-    state.U.assign(U)
-    state.V.assign(V)
+    state.U = tf.where(state.thk > 0, U, 0)
+    state.V = tf.where(state.thk > 0, V, 0)
 
     # If requested, the speeds are artifically upper-bounded
     if cfg.processes.iceflow.iceflow.force_max_velbar > 0:
         velbar_mag = getmag3d(state.U, state.V)
-        state.U.assign(
+        state.U = \
             tf.where(
                 velbar_mag >= cfg.processes.iceflow.iceflow.force_max_velbar,
                 cfg.processes.iceflow.iceflow.force_max_velbar * (state.U / velbar_mag),
                 state.U,
             )
-        )
-        state.V.assign(
+        state.V = \
             tf.where(
                 velbar_mag >= cfg.processes.iceflow.iceflow.force_max_velbar,
                 cfg.processes.iceflow.iceflow.force_max_velbar * (state.V / velbar_mag),
                 state.V,
-            )
-        )
+            ) 
 
     update_2d_iceflow_variables(cfg, state)
 

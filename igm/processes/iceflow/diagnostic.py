@@ -33,16 +33,13 @@ def update_iceflow_diagnostic(cfg, state):
 
     time_solve = time.time()
 
-    U, V, Cost_Glen = solve_iceflow(cfg, state, state.U, state.V)
+    state.U, state.V, Cost_Glen = solve_iceflow(cfg, state, state.U, state.V)
 
     COST_Glen     = Cost_Glen[-1].numpy()
 
     time_solve -= time.time()
     time_solve *= -1
- 
-    state.U.assign(U)
-    state.V.assign(V)
-    
+  
     update_2d_iceflow_variables(cfg, state)
 
     ################ Retrain

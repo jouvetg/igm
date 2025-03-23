@@ -113,31 +113,7 @@ def optimize(cfg, state):
                 else:
                     vars(state)[f] = vars()[f] * sc[f]
 
-            fieldin = [vars(state)[f] for f in cfg.processes.iceflow.iceflow.fieldin]
-
-            X = fieldin_to_X(cfg, fieldin) # temporary doing cfg.processes.iceflow due to the naming issues
-
-            # evalutae th ice flow emulator                
-            if cfg.processes.iceflow.iceflow.multiple_window_size==0:
-                Y = state.iceflow_model(X)
-            else:
-                Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
-
-            U, V = Y_to_UV(cfg, Y) # temporary doing cfg.processes.iceflow due to the naming issues
-
-            U = U[0]
-            V = V[0]
-
-            U = tf.where(state.thk > 0, U, 0)
-            V = tf.where(state.thk > 0, V, 0)
-           
-            # this is strange, but it having state.U instead of U, slidingco is not more optimized ....
-            state.uvelbase = U[0, :, :]
-            state.vvelbase = V[0, :, :]
-            state.ubar = tf.reduce_sum(U * state.vert_weight, axis=0)
-            state.vbar = tf.reduce_sum(V * state.vert_weight, axis=0)
-            state.uvelsurf = U[-1, :, :]
-            state.vvelsurf = V[-1, :, :]
+            update_iceflow_emulated(cfg, state)
  
             if not cfg.processes.iceflow.optimize.smooth_anisotropy_factor == 1:
                 _compute_flow_direction_for_anisotropic_smoothing(state)
@@ -237,47 +213,7 @@ def optimize(cfg, state):
             #state.divflux = tf.where(ACT, state.divflux, 0.0)
 
             _compute_rms_std_optimization(state, i)
-
-            # # Here one allow retraining of the ice flow emaultor
-            # if cfg.processes.iceflow.optimize.retrain_iceflow_model:
-
-            #     cost["glen"] = 0
-
-            #     fieldin = [vars(state)[f] for f in cfg.processes.iceflow.iceflow.fieldin]
-
-            #     XX = fieldin_to_X(cfg, fieldin)
-
-            #     X = split_into_patches(XX, cfg.processes.iceflow.iceflow.retrain_emulator_framesizemax)
- 
-            #     for epoch in range(cfg.processes.iceflow.iceflow.retrain_emulator_nbit):
-
-            #         # state.opti_retrain.lr = cfg.processes.iceflow.iceflow.retrain_emulator_lr * 10**tf.random.uniform(shape=[], minval=-2, maxval=1, dtype=tf.float32)
-
-            #         # state.opti_retrain.lr = cfg.processes.iceflow.iceflow.retrain_emulator_lr * (0.85 ** (epoch / 100))
-
-            #         for itr in range(X.shape[0]):
-            #             with tf.GradientTape() as s:
-
-            #                 # evalutae th ice flow emulator                
-            #                 if cfg.processes.iceflow.iceflow.multiple_window_size==0:
-            #                     Y = state.iceflow_model(X[itr:itr+1, :, :, :])
-            #                 else:
-            #                     Y = state.iceflow_model(tf.pad(X[itr:itr+1, :, :, :], state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
             
-            #                 C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[itr:itr+1, :, :, :], Y)
-
-            #                 cost["glen"] += tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
-            #                             + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
-                                
-            #                 #gpu_info = tf.config.experimental.get_memory_info("GPU:0")
-            #                 #print(f"D : GPU memory: {gpu_info['current'] / 1024**2:.2f} MB")
-                            
-            #                 grads = s.gradient(cost["glen"], state.iceflow_model.trainable_variables) 
-
-            #                 state.opti_retrain.apply_gradients(
-            #                     zip(grads, state.iceflow_model.trainable_variables)
-            #                 )
-
         if cfg.processes.iceflow.optimize.retrain_iceflow_model:
             update_iceflow_emulator(cfg, state, i+1) ; cost["glen"] = state.COST_EMULATOR[-1]
             

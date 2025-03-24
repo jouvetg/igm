@@ -44,22 +44,12 @@ import tensorflow as tf
 
 from igm.processes.utils import *
 
-from .params_pretraining import *
-from .params_optimize import *
-from .params_iceflow import *
 from .emulate import *
 from .solve import *
 from .diagnostic import *
 from .utils import *
 from .optimize import *
 from .pretraining import *
-
-# def params(parser):
-#     pass
-
-#     params_pretraining(parser)
-#     params_optimize(parser)
-#     params_iceflow(parser)
 
 def initialize(cfg, state):
 

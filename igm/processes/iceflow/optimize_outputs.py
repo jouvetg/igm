@@ -132,8 +132,8 @@ def plot_cost_functions():
         lines = file.readlines()
         label = lines[0].strip().split()
         
-        print(lines)
-        print(lines[1:][0].strip().split())
+#        print(lines)
+#        print(lines[1:][0].strip().split())
         
         costs = [np.array(line.strip().split(), dtype=float) for line in lines[1:]]
         # costs = [np.array(line.strip().split(), dtype=float) for line in lines[1:]]

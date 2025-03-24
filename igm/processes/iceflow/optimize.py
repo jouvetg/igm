@@ -17,10 +17,56 @@ from .utils import *
 from .emulate import *
 from .optimize_outputs import *
 from .optimize_params_cook import *
- 
-from omegaconf import DictConfig, OmegaConf
- 
+  
 def optimize(cfg, state):
+
+    initialize_optimize(cfg, state)
+  
+    # iterate over the optimization process
+    for i in range(cfg.processes.iceflow.optimize.nbitmax+1):
+
+        cost = {}
+
+        # one step of data assimilation
+        optimize_update(cfg, state, cost, i)
+
+        _compute_rms_std_optimization(state, i)
+            
+        # one step of retraning the iceflow emulator
+        if cfg.processes.iceflow.optimize.retrain_iceflow_model:
+            update_iceflow_emulator(cfg, state, i+1) 
+            cost["glen"] = state.COST_EMULATOR[-1]
+            
+        print_costs(cfg, state, cost, i)
+
+        if i % cfg.processes.iceflow.optimize.output_freq == 0:
+            if cfg.processes.iceflow.optimize.plot2d:
+                update_plot_inversion(cfg, state, i)
+            if cfg.processes.iceflow.optimize.save_iterat_in_ncdf:
+                update_ncdf_optimize(cfg, state, i)
+
+            # stopping criterion: stop if the cost no longer decrease
+            # if i>cfg.processes.iceflow.optimize_nbitmin:
+            #     cost = [c[0] for c in costs]
+            #     if np.mean(cost[-10:])>np.mean(cost[-20:-10]):
+            #         break;  
+
+    # now that the ice thickness is optimized, we can fix the bed once for all! (ONLY FOR GROUNDED ICE)
+    state.topg = state.usurf - state.thk
+
+    if not cfg.processes.iceflow.optimize.save_result_in_ncdf=="":
+        output_ncdf_optimize_final(cfg, state)
+
+    plot_cost_functions() # ! Bug right now with plotting values... (extra headers)
+
+    save_rms_std(cfg, state)
+
+    # Flag so we can check if initialize was already called
+    state.optimize_initializer_called = True
+
+####################################
+
+def initialize_optimize(cfg, state):
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
 
@@ -28,12 +74,9 @@ def optimize(cfg, state):
     # state.usurfobs = tf.Variable(gaussian_filter(state.usurfobs.numpy(), 3, mode="reflect"))
     # state.usurf    = tf.Variable(gaussian_filter(state.usurf.numpy(), 3, mode="reflect"))
 
-    # make sure this condition is satisfied
-    # print(OmegaConf.to_yaml(cfg))
-    # print(cfg)
     assert ("usurf" in cfg.processes.iceflow.optimize.cost) == ("usurf" in cfg.processes.iceflow.optimize.control)
 
-    # make sure that there are lease some profiles in thkobs
+    # make sure that there are least some profiles in thkobs
     if tf.reduce_all(tf.math.is_nan(state.thkobs)):
         if "thk" in cfg.processes.iceflow.optimize.cost:
             cfg.processes.iceflow.optimize.cost.remove("thk")
@@ -72,193 +115,141 @@ def optimize(cfg, state):
             return
     
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-        optimizer = tf.keras.optimizers.Adam(learning_rate=cfg.processes.iceflow.optimize.step_size)
+        state.optimizer = tf.keras.optimizers.Adam(learning_rate=cfg.processes.iceflow.optimize.step_size)
     else:
-        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=cfg.processes.iceflow.optimize.step_size)
+        state.optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=cfg.processes.iceflow.optimize.step_size)
 
-    # this thing is outdated with using iflo_new_friction_param default as we use scaling of one.
+def optimize_update(cfg, state, cost, i):
+
     sc = {}
     sc["thk"] = cfg.processes.iceflow.optimize.scaling_thk
     sc["usurf"] = cfg.processes.iceflow.optimize.scaling_usurf
     sc["slidingco"] = cfg.processes.iceflow.optimize.scaling_slidingco
     sc["arrhenius"] = cfg.processes.iceflow.optimize.scaling_arrhenius
-    
-    Ny, Nx = state.thk.shape
 
-    for f in cfg.processes.iceflow.optimize.control:
-        vars()[f] = tf.Variable(vars(state)[f] / sc[f])
-        if cfg.processes.iceflow.optimize.log_slidingco & (f == "slidingco"):
-            # vars()[f] = tf.Variable(( tf.math.log(vars(state)[f]) / tf.math.log(10.0) ) / sc[f]) 
-            vars()[f] = tf.Variable( tf.sqrt(vars(state)[f] / sc[f]) ) 
-        else:
-            vars()[f] = tf.Variable(vars(state)[f] / sc[f]) 
+    if i==0:
 
-
-    # main loop
-    for i in range(cfg.processes.iceflow.optimize.nbitmax):
-            
-        with tf.GradientTape() as t:
-
-            if cfg.processes.iceflow.optimize.step_size_decay < 1:
-                optimizer.lr = cfg.processes.iceflow.optimize.step_size * (cfg.processes.iceflow.optimize.step_size_decay ** (i / 100))
-
-            # is necessary to remember all operation to derive the gradients w.r.t. control variables
-            for f in cfg.processes.iceflow.optimize.control:
-                t.watch(vars()[f])
-
-            for f in cfg.processes.iceflow.optimize.control:
-                if cfg.processes.iceflow.optimize.log_slidingco & (f == "slidingco"):
-#                    vars(state)[f] = (10**(vars()[f] * sc[f]))
-                    vars(state)[f] =  (vars()[f]**2) * sc[f]
-                else:
-                    vars(state)[f] = vars()[f] * sc[f]
-
-            update_iceflow_emulated(cfg, state)
- 
-            if not cfg.processes.iceflow.optimize.smooth_anisotropy_factor == 1:
-                _compute_flow_direction_for_anisotropic_smoothing(state)
-
-            cost = {} 
-                 
-            # misfit between surface velocity
-            if "velsurf" in cfg.processes.iceflow.optimize.cost:
-                cost["velsurf"] = misfit_velsurf(cfg,state)
-
-            # misfit between ice thickness profiles
-            if "thk" in cfg.processes.iceflow.optimize.cost:
-                cost["thk"] = misfit_thk(cfg.processes.iceflow.optimize.thkobs_std, state)
-
-            # misfit between divergence of flux
-            if ("divfluxfcz" in cfg.processes.iceflow.optimize.cost):
-                cost["divflux"] = cost_divfluxfcz(cfg, state, i)
-            elif ("divfluxobs" in cfg.processes.iceflow.optimize.cost):
-                cost["divflux"] = cost_divfluxobs(cfg, state, i)
- 
-            # misfit between top ice surfaces
-            if "usurf" in cfg.processes.iceflow.optimize.cost:
-                cost["usurf"] = misfit_usurf(cfg.processes.iceflow.optimize.usurfobs_std, state) 
-
-            # force zero thikness outisde the mask
-            if "icemask" in cfg.processes.iceflow.optimize.cost:
-                cost["icemask"] = 10**10 * tf.math.reduce_mean( tf.where(state.icemaskobs > 0.5, 0.0, state.thk**2) )
-
-            # Here one enforces non-negative ice thickness, and possibly zero-thickness in user-defined ice-free areas.
-            if "thk" in cfg.processes.iceflow.optimize.control:
-                cost["thk_positive"] = 10**10 * tf.math.reduce_mean( tf.where(state.thk >= 0, 0.0, state.thk**2) )
-                
-            if cfg.processes.iceflow.optimize.infer_params:
-                cost["volume"] = cost_vol(cfg, state)
-    
-            # Here one adds a regularization terms for the bed toporgraphy to the cost function
-            if "thk" in cfg.processes.iceflow.optimize.control:
-                cost["thk_regu"] = regu_thk(cfg, state)
-
-            # Here one adds a regularization terms for slidingco to the cost function
-            if "slidingco" in cfg.processes.iceflow.optimize.control:
-                cost["slid_regu"] = regu_slidingco(cfg, state)
-
-            # Here one adds a regularization terms for arrhenius to the cost function
-            if "arrhenius" in cfg.processes.iceflow.optimize.control:
-                cost["arrh_regu"] = regu_arrhenius(cfg, state) 
-  
-            cost_total = tf.reduce_sum(tf.convert_to_tensor(list(cost.values())))
- 
-            #################
-
-            var_to_opti = [ ]
-            for f in cfg.processes.iceflow.optimize.control:
-                var_to_opti.append(vars()[f])
-
-            # Compute gradient of COST w.r.t. X
-            grads = tf.Variable(t.gradient(cost_total, var_to_opti))
-
-            # this serve to restict the optimization of controls to the mask
-            if cfg.processes.iceflow.optimize.sole_mask:
-                for ii in range(grads.shape[0]):
-                    if not "slidingco" == cfg.processes.iceflow.optimize.control[ii]:
-                        grads[ii].assign(tf.where((state.icemaskobs > 0.5), grads[ii], 0))
-                    else:
-                        grads[ii].assign(tf.where((state.icemaskobs == 1), grads[ii], 0))
+        for f in cfg.processes.iceflow.optimize.control:
+            vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f])
+            if cfg.processes.iceflow.optimize.log_slidingco & (f == "slidingco"):
+                # vars(state)[f+'_sc'] = tf.Variable(( tf.math.log(vars(state)[f]) / tf.math.log(10.0) ) / sc[f]) 
+                vars(state)[f+'_sc'] = tf.Variable( tf.sqrt(vars(state)[f] / sc[f]) ) 
             else:
-                for ii in range(grads.shape[0]):
-                    if not "slidingco" == cfg.processes.iceflow.optimize.control[ii]:
-                        grads[ii].assign(tf.where((state.icemaskobs > 0.5), grads[ii], 0))
+                vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f]) 
 
-            # One step of descent -> this will update input variable X
-            optimizer.apply_gradients(
-                zip([grads[i] for i in range(grads.shape[0])], var_to_opti)
-            )
+    with tf.GradientTape() as t:
 
-            ###################
+        if cfg.processes.iceflow.optimize.step_size_decay < 1:
+            state.optimizer.lr = cfg.processes.iceflow.optimize.step_size * (cfg.processes.iceflow.optimize.step_size_decay ** (i / 100))
 
-            for f in cfg.processes.iceflow.optimize.control:
-                if cfg.processes.iceflow.optimize.log_slidingco & (f == "slidingco"):
-                    # vars(state)[f] = (10**(vars()[f] * sc[f]))
-                    vars(state)[f] =  (vars()[f]**2) * sc[f]
+        # is necessary to remember all operation to derive the gradients w.r.t. control variables
+        for f in cfg.processes.iceflow.optimize.control:
+            t.watch(vars(state)[f+'_sc'])
+
+        for f in cfg.processes.iceflow.optimize.control:
+            if cfg.processes.iceflow.optimize.log_slidingco & (f == "slidingco"):
+#                    vars(state)[f] = (10**(vars(state)[f+'_sc'] * sc[f]))
+                vars(state)[f] =  (vars(state)[f+'_sc']**2) * sc[f]
+            else:
+                vars(state)[f] = vars(state)[f+'_sc'] * sc[f]
+
+        update_iceflow_emulated(cfg, state)
+
+        if not cfg.processes.iceflow.optimize.smooth_anisotropy_factor == 1:
+            _compute_flow_direction_for_anisotropic_smoothing(state)
+                
+        # misfit between surface velocity
+        if "velsurf" in cfg.processes.iceflow.optimize.cost:
+            cost["velsurf"] = misfit_velsurf(cfg,state)
+
+        # misfit between ice thickness profiles
+        if "thk" in cfg.processes.iceflow.optimize.cost:
+            cost["thk"] = misfit_thk(cfg.processes.iceflow.optimize.thkobs_std, state)
+
+        # misfit between divergence of flux
+        if ("divfluxfcz" in cfg.processes.iceflow.optimize.cost):
+            cost["divflux"] = cost_divfluxfcz(cfg, state, i)
+        elif ("divfluxobs" in cfg.processes.iceflow.optimize.cost):
+            cost["divflux"] = cost_divfluxobs(cfg, state, i)
+
+        # misfit between top ice surfaces
+        if "usurf" in cfg.processes.iceflow.optimize.cost:
+            cost["usurf"] = misfit_usurf(cfg.processes.iceflow.optimize.usurfobs_std, state) 
+
+        # force zero thikness outisde the mask
+        if "icemask" in cfg.processes.iceflow.optimize.cost:
+            cost["icemask"] = 10**10 * tf.math.reduce_mean( tf.where(state.icemaskobs > 0.5, 0.0, state.thk**2) )
+
+        # Here one enforces non-negative ice thickness, and possibly zero-thickness in user-defined ice-free areas.
+        if "thk" in cfg.processes.iceflow.optimize.control:
+            cost["thk_positive"] = 10**10 * tf.math.reduce_mean( tf.where(state.thk >= 0, 0.0, state.thk**2) )
+            
+        if cfg.processes.iceflow.optimize.infer_params:
+            cost["volume"] = cost_vol(cfg, state)
+
+        # Here one adds a regularization terms for the bed toporgraphy to the cost function
+        if "thk" in cfg.processes.iceflow.optimize.control:
+            cost["thk_regu"] = regu_thk(cfg, state)
+
+        # Here one adds a regularization terms for slidingco to the cost function
+        if "slidingco" in cfg.processes.iceflow.optimize.control:
+            cost["slid_regu"] = regu_slidingco(cfg, state)
+
+        # Here one adds a regularization terms for arrhenius to the cost function
+        if "arrhenius" in cfg.processes.iceflow.optimize.control:
+            cost["arrh_regu"] = regu_arrhenius(cfg, state) 
+
+        cost_total = tf.reduce_sum(tf.convert_to_tensor(list(cost.values())))
+
+        #################
+
+        var_to_opti = [ ]
+        for f in cfg.processes.iceflow.optimize.control:
+            var_to_opti.append(vars(state)[f+'_sc'])
+
+        # Compute gradient of COST w.r.t. X
+        grads = tf.Variable(t.gradient(cost_total, var_to_opti))
+
+        # this serve to restict the optimization of controls to the mask
+        if cfg.processes.iceflow.optimize.sole_mask:
+            for ii in range(grads.shape[0]):
+                if not "slidingco" == cfg.processes.iceflow.optimize.control[ii]:
+                    grads[ii].assign(tf.where((state.icemaskobs > 0.5), grads[ii], 0))
                 else:
-                    vars(state)[f] = vars()[f] * sc[f]
+                    grads[ii].assign(tf.where((state.icemaskobs == 1), grads[ii], 0))
+        else:
+            for ii in range(grads.shape[0]):
+                if not "slidingco" == cfg.processes.iceflow.optimize.control[ii]:
+                    grads[ii].assign(tf.where((state.icemaskobs > 0.5), grads[ii], 0))
 
-            # get back optimized variables in the pool of state.variables
-            if "thk" in cfg.processes.iceflow.optimize.control:
-                state.thk = tf.where(state.icemaskobs > 0.5, state.thk, 0)
+        # One step of descent -> this will update input variable X
+        state.optimizer.apply_gradients(
+            zip([grads[i] for i in range(grads.shape[0])], var_to_opti)
+        )
+
+        ###################
+
+        for f in cfg.processes.iceflow.optimize.control:
+            if cfg.processes.iceflow.optimize.log_slidingco & (f == "slidingco"):
+                # vars(state)[f] = (10**(vars(state)[f+'_sc'] * sc[f]))
+                vars(state)[f] =  (vars(state)[f+'_sc']**2) * sc[f]
+            else:
+                vars(state)[f] = vars(state)[f+'_sc'] * sc[f]
+
+        # get back optimized variables in the pool of state.variables
+        if "thk" in cfg.processes.iceflow.optimize.control:
+            state.thk = tf.where(state.icemaskobs > 0.5, state.thk, 0)
 #                state.thk = tf.where(state.thk < 0.01, 0, state.thk)
-            if "slidingco" in cfg.processes.iceflow.optimize.control:
-                state.slidingco = tf.where(state.slidingco < 0, 0, state.slidingco)
+        if "slidingco" in cfg.processes.iceflow.optimize.control:
+            state.slidingco = tf.where(state.slidingco < 0, 0, state.slidingco)
 
 
-            state.divflux = compute_divflux(
-                state.ubar, state.vbar, state.thk, state.dx, state.dx, method=cfg.processes.iceflow.optimize.divflux_method
-            )
+        state.divflux = compute_divflux(
+            state.ubar, state.vbar, state.thk, state.dx, state.dx, 
+            method=cfg.processes.iceflow.optimize.divflux_method
+        )
 
-            #state.divflux = tf.where(ACT, state.divflux, 0.0)
-
-            _compute_rms_std_optimization(state, i)
-            
-        if cfg.processes.iceflow.optimize.retrain_iceflow_model:
-            update_iceflow_emulator(cfg, state, i+1) ; cost["glen"] = state.COST_EMULATOR[-1]
-            
-        print_costs(cfg, state, cost, i)
-
-        if i % cfg.processes.iceflow.optimize.output_freq == 0:
-            if cfg.processes.iceflow.optimize.plot2d:
-                update_plot_inversion(cfg, state, i)
-            if cfg.processes.iceflow.optimize.save_iterat_in_ncdf:
-                update_ncdf_optimize(cfg, state, i)
-
-            # stopping criterion: stop if the cost no longer decrease
-            # if i>cfg.processes.iceflow.optimize_nbitmin:
-            #     cost = [c[0] for c in costs]
-            #     if np.mean(cost[-10:])>np.mean(cost[-20:-10]):
-            #         break;
-
-	# for final iteration
-    i = cfg.processes.iceflow.optimize.nbitmax
-
-    print_costs(cfg, state, cost, i)
-
-    if i % cfg.processes.iceflow.optimize.output_freq == 0:
-        if cfg.processes.iceflow.optimize.plot2d:
-            update_plot_inversion(cfg, state, i)
-        if cfg.processes.iceflow.optimize.save_iterat_in_ncdf:
-            update_ncdf_optimize(cfg, state, i)
-
-#    for f in cfg.processes.iceflow.optimize_control:
-#        vars(state)[f] = vars()[f] * sc[f]
-
-    # now that the ice thickness is optimized, we can fix the bed once for all! (ONLY FOR GROUNDED ICE)
-    state.topg = state.usurf - state.thk
-
-    if not cfg.processes.iceflow.optimize.save_result_in_ncdf=="":
-        output_ncdf_optimize_final(cfg, state)
-
-    # plot_cost_functions() # ! Bug right now with plotting values... (extra headers)
-
-    plt.close("all")
-
-    save_rms_std(cfg, state)
-
-    # Flag so we can check if initialize was already called
-    state.optimize_initializer_called = True
+        #state.divflux = tf.where(ACT, state.divflux, 0.0)
  
 ####################################
 

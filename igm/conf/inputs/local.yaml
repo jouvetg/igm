@@ -1,14 +1,18 @@
 local:
-  filename: ???
-  # coarsening_method: skipping
+  type: netcdf
+  folder: data
+  filename: input.nc
   coarsening:
     boundary: trim
     ratio:
       x: 1
       y: 1
   crop:
-    xmin: null #4.2e5
+    xmin: null
     xmax: null
     ymin: null
     ymax: null
-  
+  icemask:
+    include: False
+    shapefile: icemask.shp 
+    invert: False

@@ -1,24 +1,55 @@
-- Name: filename
+type:
+  Type: str
+  Units: none
   Description: "NetCDF input data file"
-  Units: file path
-- Name: coarsening.boundary
+folder:
+  Type: str
+  Units: none
+  Description: "NetCDF input data file"
+filename:
+  Type: str
+  Units: none
+  Description: "NetCDF input data file"
+  
+coarsening.boundary:
+  Type: str
+  Units: none
   Description: "Method for coarsening the data from NetCDF file: skipping or cubic_spline"
-  Units: string
-- Name: coarsening.ratio.x
+coarsening.ratio.x:
+  Type: float
+  Units: none
   Description: "Coarsen ratio x"
-  Units: ???
-- Name: coarsening.ratio.y
-  Description: "Coarsen ratio y"
-  Units: ???
-- Name: crop.xmin
-  Description: "X left coordinate for cropping the NetCDF data"
-  Units: float
-- Name: crop.xmax
-  Description: "X right coordinate for cropping the NetCDF data"
-  Units: float
-- Name: crop.ymin
-  Description: "Y bottom coordinate for cropping the NetCDF data"
-  Units: float
-- Name: crop.ymax
-  Description: "Y top coordinate for cropping the NetCDF data"
-  Units: float
+coarsening.ratio.y:
+  Type: float
+  Units: none
+  Description: "Coarsen ratio y" 
+
+crop.xmin:
+  Type: float
+  Units: m
+  Description: "X left coordinate for cropping the NetCDF data" 
+crop.xmax:
+  Type: float
+  Units: m
+  Description: "X right coordinate for cropping the NetCDF data" 
+crop.ymin:
+  Type: float
+  Units: m
+  Description: "Y bottom coordinate for cropping the NetCDF data" 
+crop.ymax:
+  Type: float
+  Units: m
+  Description: "Y top coordinate for cropping the NetCDF data" 
+
+icemask.include:
+  Type: bool
+  Units: boolean
+  Description: Include ice mask in the NetCDF file
+icemask.shapefile:
+  Type: str
+  Units: file path
+  Description: Shapefile for ice mask
+icemask.invert:
+  Type: bool
+  Units: boolean
+  Description: Invert the ice mask

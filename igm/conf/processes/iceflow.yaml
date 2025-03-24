@@ -120,3 +120,5 @@ iceflow:
     min_coarsen: 0 # help="Minimum coarsening factor"
     max_coarsen: 2 # help="Maximum coarsening factor"
     soft_begining: 500 # help="soft_begining, if 0 explore all parameters btwe min and max, otherwise, only explore from this iteration while keeping mid-value fir the first it." 
+
+    

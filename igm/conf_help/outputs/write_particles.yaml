@@ -1,3 +1,4 @@
-- Name: add_topography
-  Description: "Add topg"
+add_topography:
+  Type: bool
   Units: boolean
+  Description: Add topography

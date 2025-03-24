@@ -1,3 +1,4 @@
-- Name: rockflow_rock_flow_speed
+flow_speed:
+  Type: float
   Description: "Speed of rock flow along the slope"
   Units: meters per year

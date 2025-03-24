@@ -1,9 +1,16 @@
-- Name: update_freq
-  Description: "Update the mass balance each X years"
+update_freq:
+  Type: float
   Units: years
-- Name: ice_density
+  Description: "Update the mass balance each X years"
+ice_density:
+  Type: float
+  Units: kilograms per cubic meter
   Description: "Density of ice for conversion of SMB into ice equivalent"
+wat_density:
+  Type: float
   Units: kilograms per cubic meter
-- Name: wat_density
   Description: "Density of water"
-  Units: kilograms per cubic meter
+melt_enhancer:
+  Type: float
+  Units: dimensionless
+  Description: "Melt enhancer factor"

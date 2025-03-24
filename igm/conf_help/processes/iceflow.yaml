@@ -1,330 +1,447 @@
-- Name: iceflow.run_pretraining
-  Description: ""
-  Units: boolean
-- Name: iceflow.run_data_assimilation
-  Description: "Run the data assimilation scheme"
-  Units: boolean
-- Name: iceflow.type
-  Description: "Type of iceflow: it can be emulated (default), solved, or in diagnostic mode to investigate the fidelity of the emulator towards the solver"
-  Units: string
-- Name: iceflow.pretrained_emulator
-  Description: "Do we take a pretrained emulator or start from scratch?"
-  Units: boolean
-- Name: iceflow.emulator
-  Description: "Directory path of the deep-learning pretrained ice flow model, take from the library if empty string"
-  Units: file path
-- Name: iceflow.init_slidingco
-  Description: "Initial sliding coefficient slidingco"
-  Units: float
-- Name: iceflow.init_arrhenius
-  Description: "Initial arrhenius factor arrhenius"
-  Units: float
-- Name: iceflow.enhancement_factor
-  Description: "Enhancement factor multiplying the arrhenius factor"
-  Units: float
-- Name: iceflow.regu_glen
-  Description: "Regularization parameter for Glen's flow law"
-  Units: float
-- Name: iceflow.regu_weertman
-  Description: "Regularization parameter for Weertman's sliding law"
-  Units: float
-- Name: iceflow.exp_glen
-  Description: "Glen's flow law exponent"
-  Units: integer
-- Name: iceflow.exp_weertman
-  Description: "Weertman's law exponent"
-  Units: integer
-- Name: iceflow.gravity_cst
-  Description: "Gravitational constant"
-  Units: float
-- Name: iceflow.ice_density
-  Description: "Density of ice"
-  Units: float
-- Name: iceflow.new_friction_param
-  Description: "Sliding coefficient (this describes slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco as before)"
-  Units: boolean
-- Name: iceflow.save_model
-  Description: "Save the iceflow emulator at the end of the simulation"
-  Units: boolean
-- Name: iceflow.Nz
-  Description: "Number of grid points for the vertical discretization"
-  Units: integer
-- Name: iceflow.vert_spacing
-  Description: "Parameter controlling the discretization density to get more points near the bed than near the surface. 1.0 means equal vertical spacing."
-  Units: float
-- Name: iceflow.thr_ice_thk
-  Description: "Threshold Ice thickness for computing strain rate"
-  Units: float
-- Name: iceflow.solve_step_size
-  Description: "Step size for the optimizer used when solving Blatter-Pattyn in solver mode"
-  Units: float
-- Name: iceflow.solve_nbitmax
-  Description: "Maximum number of iterations for the optimizer used when solving Blatter-Pattyn in solver mode"
-  Units: integer
-- Name: iceflow.solve_stop_if_no_decrease
-  Description: "This permits to stop the solver if the energy does not decrease"
-  Units: boolean
-- Name: iceflow.fieldin
-  Description: "Input fields of the iceflow emulator"
-  Units: list
-- Name: iceflow.dim_arrhenius
-  Description: "Dimension of the arrhenius factor (horizontal 2D or 3D)"
-  Units: integer
-- Name: iceflow.retrain_emulator_freq
-  Description: "Frequency at which the emulator is retrained, 0 means never, 1 means at each time step, 2 means every two time steps, etc."
-  Units: integer
-- Name: iceflow.retrain_emulator_lr
-  Description: "Learning rate for the retraining of the emulator"
-  Units: float
-- Name: iceflow.retrain_emulator_lr_init
-  Description: "Initial Learning rate for the retraining of the emulator"
-  Units: None
-- Name: iceflow.retrain_warm_up_it
-  Description: "Warm-up nb of iteration allowing intense initial training"
-  Units: year  
-- Name: iceflow.retrain_emulator_nbit_init
-  Description: "Number of iterations done at the first time step for the retraining of the emulator"
-  Units: integer
-- Name: iceflow.retrain_emulator_nbit
-  Description: "Number of iterations done at each time step for the retraining of the emulator"
-  Units: integer
-- Name: iceflow.retrain_emulator_framesizemax
-  Description: "Size of the patch used for retraining the emulator, this is useful for large size arrays, otherwise the GPU memory can be overloaded"
-  Units: integer
-- Name: iceflow.multiple_window_size
-  Description: "If a U-net, this forces window size to be a multiple of 2**N"
-  Units: integer
-- Name: iceflow.force_max_velbar
-  Description: "This permits to artificially upper-bound velocities, active if > 0"
-  Units: float
-- Name: iceflow.network
-  Description: "This is the type of network, it can be cnn or unet"
-  Units: string
-- Name: iceflow.activation
-  Description: "Activation function, it can be lrelu, relu, tanh, sigmoid, etc."
-  Units: string
-- Name: iceflow.nb_layers
-  Description: "Number of layers in the CNN"
-  Units: integer
-- Name: iceflow.nb_blocks
-  Description: "Number of block layers in the U-net"
-  Units: integer
-- Name: iceflow.nb_out_filter
-  Description: "Number of output filters in the CNN"
-  Units: integer
-- Name: iceflow.conv_ker_size
-  Description: "Size of the convolution kernel"
-  Units: integer
-- Name: iceflow.dropout_rate
-  Description: "Dropout rate in the CNN"
-  Units: float
-- Name: iceflow.weight_initialization
-  Description: "glorot_uniform, he_normal, lecun_normal"
-  Units: string
-- Name: iceflow.exclude_borders
-  Description: "This is a quick fix of the border issue, otherwise the physics-informed emulator shows zero velocity at the border"
-  Units: integer
-- Name: iceflow.cf_eswn
-  Description: "This forces calving front at the border of the domain in the side given in the list"
-  Units: list
-- Name: iceflow.cf_cond
-  Description: "This forces calving front at the border of the domain in the side given in the list"
-  Units: boolean
-- Name: iceflow.regu
-  Description: "This regularizes the energy forcing ice flow to be smooth in the horizontal direction"
-  Units: float
-- Name: iceflow.min_sr
-  Description: "Minimum strain rate"
-  Units: float
-- Name: iceflow.max_sr
-  Description: "Maximum strain rate"
-  Units: float
-- Name: iceflow.force_negative_gravitational_energy
-  Description: "Force energy gravitational term to be negative"
-  Units: boolean
-- Name: iceflow.optimizer_solver
-  Description: "Type of Optimizer for the solver"
-  Units: string
-- Name: iceflow.optimizer_lbfgs
-  Description: "iflo_optimizer_lbfgs"
-  Units: boolean
-- Name: iceflow.optimizer_emulator
-  Description: "Type of Optimizer for the emulator"
-  Units: string
-- Name: iceflow.optimizer_emulator_epsilon
-  Description: "A small constant for numerical stability for the Adam optimizer"
-  Units: float
-- Name: iceflow.optimizer_emulator_clipnorm
-  Description: "If set, the gradient of each weight is individually clipped so that its norm is no higher than this value."
-  Units: float
-- Name: iceflow.save_cost_emulator
-  Description: ""
-  Units: string
-- Name: iceflow.save_cost_solver
-  Description: ""
-  Units: string
-- Name: iceflow.output_directory
-  Description: ""
-  Units: file path
-- Name: optimize.vars_to_save
-  Description: "List of variables to be recorded in the ncdf file"
-  Units: list
-- Name: optimize.init_zero_thk
-  Description: "Initialize the optimization with zero ice thickness"
-  Units: boolean
-- Name: optimize.regu_param_thk
-  Description: "Regularization weight for the ice thickness in the optimization"
-  Units: float
-- Name: optimize.regu_param_slidingco
-  Description: "Regularization weight for the slidingco field in the optimization"
-  Units: float
-- Name: optimize.regu_param_arrhenius
-  Description: "Regularization weight for the arrhenius field in the optimization"
-  Units: float
-- Name: optimize.regu_param_div
-  Description: "Regularization weight for the divergence field in the optimization"
-  Units: float
-- Name: optimize.smooth_anisotropy_factor
-  Description: "Smooth anisotropy factor for the ice thickness regularization in the optimization"
-  Units: float
-- Name: optimize.smooth_anisotropy_factor_sl
-  Description: "Smooth anisotropy factor for the slidingco regularization in the optimization"
-  Units: float
-- Name: optimize.convexity_weight
-  Description: "Convexity weight for the ice thickness regularization in the optimization"
-  Units: float
-- Name: optimize.convexity_power
-  Description: "Power b in the area-volume scaling V ~ a * A^b taken from 'An estimate of global glacier volume', A. Grinsted, TC, 2013"
-  Units: float
-- Name: optimize.usurfobs_std
-  Description: "Confidence/STD of the top ice surface as input data for the optimization"
-  Units: float
-- Name: optimize.velsurfobs_std
-  Description: "Confidence/STD of the surface ice velocities as input data for the optimization (if 0, velsurfobs_std field must be given)"
-  Units: float
-- Name: optimize.thkobs_std
-  Description: "Confidence/STD of the ice thickness profiles (unless given)"
-  Units: float
-- Name: optimize.divfluxobs_std
-  Description: "Confidence/STD of the flux divergence as input data for the optimization (if 0, divfluxobs_std field must be given)"
-  Units: float
-- Name: optimize.divflux_method
-  Description: "Compute the divergence of the flux using the upwind or centered method"
-  Units: string
-- Name: optimize.force_zero_sum_divflux
-  Description: "Add a penalty to the cost function to force the sum of the divergence of the flux to be zero"
-  Units: boolean
-- Name: optimize.scaling_thk
-  Description: "Scaling factor for the ice thickness in the optimization, serves to adjust step-size of each control relative to each other"
-  Units: float
-- Name: optimize.scaling_usurf
-  Description: "Scaling factor for the ice thickness in the optimization, serves to adjust step-size of each control relative to each other"
-  Units: float
-- Name: optimize.scaling_slidingco
-  Description: "Scaling factor for the slidingco in the optimization, serves to adjust step-size of each control relative to each other"
-  Units: float
-- Name: optimize.scaling_arrhenius
-  Description: "Scaling factor for the Arrhenius in the optimization, serves to adjust step-size of each control relative to each other"
-  Units: float
-- Name: optimize.control
-  Description: "List of optimized variables for the optimization"
-  Units: list
-- Name: optimize.cost
-  Description: "List of cost components for the optimization"
-  Units: list
-- Name: optimize.nbitmin
-  Description: "Min iterations for the optimization"
-  Units: integer
-- Name: optimize.nbitmax
-  Description: "Max iterations for the optimization"
-  Units: integer
-- Name: optimize.step_size
-  Description: "Step size for the optimization"
-  Units: float
-- Name: optimize.step_size_decay
-  Description: "Decay step size parameter for the optimization"
-  Units: float
-- Name: optimize.output_freq
-  Description: "Frequency of the output for the optimization"
-  Units: integer
-- Name: optimize.save_result_in_ncdf
-  Description: "Geology input file"
-  Units: file path
-- Name: optimize.plot2d_live
-  Description: "plot2d_live_inversion"
-  Units: boolean
-- Name: optimize.plot2d
-  Description: "plot 2d inversion"
-  Units: boolean
-- Name: optimize.save_iterat_in_ncdf
-  Description: "write_ncdf_optimize"
-  Units: boolean
-- Name: optimize.editor_plot2d
-  Description: "optimized for VS code (vs) or spyder (sp) for live plot"
-  Units: string
-- Name: optimize.uniformize_thkobs
-  Description: "uniformize the density of thkobs"
-  Units: boolean
-- Name: optimize.sole_mask
-  Description: "sole_mask"
-  Units: boolean
-- Name: optimize.retrain_iceflow_model
-  Description: "Retrain the iceflow model simultaneously?"
-  Units: boolean
-- Name: optimize.to_regularize
-  Description: "Field to regularize: topg or thk"
-  Units: string
-- Name: optimize.include_low_speed_term
-  Description: "opti_include_low_speed_term"
-  Units: boolean
-- Name: optimize.infer_params
-  Description: "Infer slidingco and convexity weight from velocity observations"
-  Units: boolean
-- Name: optimize.tidewater_glacier
-  Description: "Is the glacier you're trying to infer parameters for a tidewater type?"
-  Units: boolean
-- Name: optimize.vol_std
-  Description: "Confidence/STD of the volume estimates from volume-area scaling"
-  Units: float
-- Name: optimize.fix_opti_normalization_issue
-  Description: "Formerly, the oce was mixing reduce_mean and l2_loss leading to dependence to the resolution of the grid"
-  Units: boolean
-- Name: optimize.log_slidingco
-  Description: "Optimize the log of the sliding coefficient instead of the slidingco itself"
-  Units: boolean
-- Name: pretraining.data_dir
-  Description: "Directory of the data of the glacier catalog"
-  Units: file path
-- Name: pretraining.batch_size
-  Description: "Batch size"
-  Units: integer
-- Name: pretraining.freq_test
-  Description: "Frequency of the test"
-  Units: integer
-- Name: pretraining.train_iceflow_emulator_restart_lr
-  Description: "Restart frequency for the learning rate"
-  Units: integer
-- Name: pretraining.epochs
-  Description: "Number of epochs"
-  Units: integer
-- Name: pretraining.min_arrhenius
-  Description: "Minimum Arrhenius factor"
-  Units: float
-- Name: pretraining.max_arrhenius
-  Description: "Maximum Arrhenius factor"
-  Units: float
-- Name: pretraining.min_slidingco
-  Description: "Minimum sliding coefficient"
-  Units: float
-- Name: pretraining.max_slidingco
-  Description: "Maximum sliding coefficient"
-  Units: float
-- Name: pretraining.min_coarsen
-  Description: "Minimum coarsening factor"
-  Units: integer
-- Name: pretraining.max_coarsen
-  Description: "Maximum coarsening factor"
-  Units: integer
-- Name: pretraining.soft_beginning
-  Description: "soft_beginning, if 0 explore all parameters between min and max, otherwise, only explore from this iteration while keeping mid-value for the first it."
-  Units: integer
+iceflow:
+  run_pretraining:
+    Type: boolean
+    Description: ""
+    Units: boolean
+  run_data_assimilation:
+    Type: boolean
+    Description: "Run the data assimilation scheme"
+    Units: boolean
+  type:
+    Type: string
+    Description: "Type of iceflow: it can be emulated (default), solved, or in diagnostic mode to investigate the fidelity of the emulator towards the solver"
+    Units: string
+  pretrained_emulator:
+    Type: boolean
+    Description: "Do we take a pretrained emulator or start from scratch?"
+    Units: boolean
+  emulator:
+    Type: file path
+    Description: "Directory path of the deep-learning pretrained ice flow model, take from the library if empty string"
+    Units: file path
+  init_slidingco:
+    Type: float
+    Description: "Initial sliding coefficient slidingco"
+    Units: float
+  init_arrhenius:
+    Type: float
+    Description: "Initial arrhenius factor arrhenius"
+    Units: float
+  enhancement_factor:
+    Type: float
+    Description: "Enhancement factor multiplying the arrhenius factor"
+    Units: float
+  regu_glen:
+    Type: float
+    Description: "Regularization parameter for Glen's flow law"
+    Units: float
+  regu_weertman:
+    Type: float
+    Description: "Regularization parameter for Weertman's sliding law"
+    Units: float
+  exp_glen:
+    Type: integer
+    Description: "Glen's flow law exponent"
+    Units: integer
+  exp_weertman:
+    Type: integer
+    Description: "Weertman's law exponent"
+    Units: integer
+  gravity_cst:
+    Type: float
+    Description: "Gravitational constant"
+    Units: float
+  ice_density:
+    Type: float
+    Description: "Density of ice"
+    Units: float
+  new_friction_param:
+    Type: boolean
+    Description: "Sliding coefficient (this describes slidingco differently with slidingco**-(1.0 / exp_weertman) instead of slidingco as before)"
+    Units: boolean
+  save_model:
+    Type: boolean
+    Description: "Save the iceflow emulator at the end of the simulation"
+    Units: boolean
+  Nz:
+    Type: integer
+    Description: "Number of grid points for the vertical discretization"
+    Units: integer
+  vert_spacing:
+    Type: float
+    Description: "Parameter controlling the discretization density to get more points near the bed than near the surface. 1.0 means equal vertical spacing."
+    Units: float
+  thr_ice_thk:
+    Type: float
+    Description: "Threshold Ice thickness for computing strain rate"
+    Units: float
+  solve_step_size:
+    Type: float
+    Description: "Step size for the optimizer used when solving Blatter-Pattyn in solver mode"
+    Units: float
+  solve_nbitmax:
+    Type: integer
+    Description: "Maximum number of iterations for the optimizer used when solving Blatter-Pattyn in solver mode"
+    Units: integer
+  solve_stop_if_no_decrease:
+    Type: boolean
+    Description: "This permits to stop the solver if the energy does not decrease"
+    Units: boolean
+  fieldin:
+    Type: list
+    Description: "Input fields of the iceflow emulator"
+    Units: list
+  dim_arrhenius:
+    Type: integer
+    Description: "Dimension of the arrhenius factor (horizontal 2D or 3D)"
+    Units: integer
+  retrain_emulator_freq:
+    Type: integer
+    Description: "Frequency at which the emulator is retrained, 0 means never, 1 means at each time step, 2 means every two time steps, etc."
+    Units: integer
+  retrain_emulator_lr:
+    Type: float
+    Description: "Learning rate for the retraining of the emulator"
+    Units: float
+  retrain_emulator_lr_init:
+    Type: None
+    Description: "Initial Learning rate for the retraining of the emulator"
+    Units: None
+  retrain_warm_up_it:
+    Type: year
+    Description: "Warm-up nb of iteration allowing intense initial training"
+    Units: year
+  retrain_emulator_nbit_init:
+    Type: integer
+    Description: "Number of iterations done at the first time step for the retraining of the emulator"
+    Units: integer
+  retrain_emulator_nbit:
+    Type: integer
+    Description: "Number of iterations done at each time step for the retraining of the emulator"
+    Units: integer
+  retrain_emulator_framesizemax:
+    Type: integer
+    Description: "Size of the patch used for retraining the emulator, this is useful for large size arrays, otherwise the GPU memory can be overloaded"
+    Units: integer
+  multiple_window_size:
+    Type: integer
+    Description: "If a U-net, this forces window size to be a multiple of 2**N"
+    Units: integer
+  force_max_velbar:
+    Type: float
+    Description: "This permits to artificially upper-bound velocities, active if > 0"
+    Units: float
+  network:
+    Type: string
+    Description: "This is the type of network, it can be cnn or unet"
+    Units: string
+  activation:
+    Type: string
+    Description: "Activation function, it can be lrelu, relu, tanh, sigmoid, etc."
+    Units: string
+  nb_layers:
+    Type: integer
+    Description: "Number of layers in the CNN"
+    Units: integer
+  nb_blocks:
+    Type: integer
+    Description: "Number of block layers in the U-net"
+    Units: integer
+  nb_out_filter:
+    Type: integer
+    Description: "Number of output filters in the CNN"
+    Units: integer
+  conv_ker_size:
+    Type: integer
+    Description: "Size of the convolution kernel"
+    Units: integer
+  dropout_rate:
+    Type: float
+    Description: "Dropout rate in the CNN"
+    Units: float
+  weight_initialization:
+    Type: string
+    Description: "glorot_uniform, he_normal, lecun_normal"
+    Units: string
+  exclude_borders:
+    Type: integer
+    Description: "This is a quick fix of the border issue, otherwise the physics-informed emulator shows zero velocity at the border"
+    Units: integer
+  cf_eswn:
+    Type: list
+    Description: "This forces calving front at the border of the domain in the side given in the list"
+    Units: list
+  cf_cond:
+    Type: boolean
+    Description: "This forces calving front at the border of the domain in the side given in the list"
+    Units: boolean
+  regu:
+    Type: float
+    Description: "This regularizes the energy forcing ice flow to be smooth in the horizontal direction"
+    Units: float
+  min_sr:
+    Type: float
+    Description: "Minimum strain rate"
+    Units: float
+  max_sr:
+    Type: float
+    Description: "Maximum strain rate"
+    Units: float
+  force_negative_gravitational_energy:
+    Type: boolean
+    Description: "Force energy gravitational term to be negative"
+    Units: boolean
+  optimizer_solver:
+    Type: string
+    Description: "Type of Optimizer for the solver"
+    Units: string
+  optimizer_lbfgs:
+    Type: boolean
+    Description: "iflo_optimizer_lbfgs"
+    Units: boolean
+  optimizer_emulator:
+    Type: string
+    Description: "Type of Optimizer for the emulator"
+    Units: string
+  optimizer_emulator_epsilon:
+    Type: float
+    Description: "A small constant for numerical stability for the Adam optimizer"
+    Units: float
+  optimizer_emulator_clipnorm:
+    Type: float
+    Description: "If set, the gradient of each weight is individually clipped so that its norm is no higher than this value."
+    Units: float
+  save_cost_emulator:
+    Type: string
+    Description: ""
+    Units: string
+  save_cost_solver:
+    Type: string
+    Description: ""
+    Units: string
+  output_directory:
+    Type: file path
+    Description: ""
+    Units: file path
+optimize:
+  vars_to_save:
+    Type: list
+    Description: "List of variables to be recorded in the ncdf file"
+    Units: list
+  init_zero_thk:
+    Type: boolean
+    Description: "Initialize the optimization with zero ice thickness"
+    Units: boolean
+  regu_param_thk:
+    Type: float
+    Description: "Regularization weight for the ice thickness in the optimization"
+    Units: float
+  regu_param_slidingco:
+    Type: float
+    Description: "Regularization weight for the slidingco field in the optimization"
+    Units: float
+  regu_param_arrhenius:
+    Type: float
+    Description: "Regularization weight for the arrhenius field in the optimization"
+    Units: float
+  regu_param_div:
+    Type: float
+    Description: "Regularization weight for the divergence field in the optimization"
+    Units: float
+  smooth_anisotropy_factor:
+    Type: float
+    Description: "Smooth anisotropy factor for the ice thickness regularization in the optimization"
+    Units: float
+  smooth_anisotropy_factor_sl:
+    Type: float
+    Description: "Smooth anisotropy factor for the slidingco regularization in the optimization"
+    Units: float
+  convexity_weight:
+    Type: float
+    Description: "Convexity weight for the ice thickness regularization in the optimization"
+    Units: float
+  convexity_power:
+    Type: float
+    Description: "Power b in the area-volume scaling V ~ a * A^b taken from 'An estimate of global glacier volume', A. Grinsted, TC, 2013"
+    Units: float
+  usurfobs_std:
+    Type: float
+    Description: "Confidence/STD of the top ice surface as input data for the optimization"
+    Units: float
+  velsurfobs_std:
+    Type: float
+    Description: "Confidence/STD of the surface ice velocities as input data for the optimization (if 0, velsurfobs_std field must be given)"
+    Units: float
+  thkobs_std:
+    Type: float
+    Description: "Confidence/STD of the ice thickness profiles (unless given)"
+    Units: float
+  divfluxobs_std:
+    Type: float
+    Description: "Confidence/STD of the flux divergence as input data for the optimization (if 0, divfluxobs_std field must be given)"
+    Units: float
+  divflux_method:
+    Type: string
+    Description: "Compute the divergence of the flux using the upwind or centered method"
+    Units: string
+  force_zero_sum_divflux:
+    Type: boolean
+    Description: "Add a penalty to the cost function to force the sum of the divergence of the flux to be zero"
+    Units: boolean
+  scaling_thk:
+    Type: float
+    Description: "Scaling factor for the ice thickness in the optimization, serves to adjust step-size of each control relative to each other"
+    Units: float
+  scaling_usurf:
+    Type: float
+    Description: "Scaling factor for the ice thickness in the optimization, serves to adjust step-size of each control relative to each other"
+    Units: float
+  scaling_slidingco:
+    Type: float
+    Description: "Scaling factor for the slidingco in the optimization, serves to adjust step-size of each control relative to each other"
+    Units: float
+  scaling_arrhenius:
+    Type: float
+    Description: "Scaling factor for the Arrhenius in the optimization, serves to adjust step-size of each control relative to each other"
+    Units: float
+  control:
+    Type: list
+    Description: "List of optimized variables for the optimization"
+    Units: list
+  cost:
+    Type: list
+    Description: "List of cost components for the optimization"
+    Units: list
+  nbitmin:
+    Type: integer
+    Description: "Min iterations for the optimization"
+    Units: integer
+  nbitmax:
+    Type: integer
+    Description: "Max iterations for the optimization"
+    Units: integer
+  step_size:
+    Type: float
+    Description: "Step size for the optimization"
+    Units: float
+  step_size_decay:
+    Type: float
+    Description: "Decay step size parameter for the optimization"
+    Units: float
+  output_freq:
+    Type: integer
+    Description: "Frequency of the output for the optimization"
+    Units: integer
+  save_result_in_ncdf:
+    Type: file path
+    Description: "Geology input file"
+    Units: file path
+  plot2d_live:
+    Type: boolean
+    Description: "plot2d_live_inversion"
+    Units: boolean
+  plot2d:
+    Type: boolean
+    Description: "plot 2d inversion"
+    Units: boolean
+  save_iterat_in_ncdf:
+    Type: boolean
+    Description: "write_ncdf_optimize"
+    Units: boolean
+  editor_plot2d:
+    Type: string
+    Description: "optimized for VS code (vs) or spyder (sp) for live plot"
+    Units: string
+  uniformize_thkobs:
+    Type: boolean
+    Description: "uniformize the density of thkobs"
+    Units: boolean
+  sole_mask:
+    Type: boolean
+    Description: "sole_mask"
+    Units: boolean
+  retrain_iceflow_model:
+    Type: boolean
+    Description: "Retrain the iceflow model simultaneously?"
+    Units: boolean
+  to_regularize:
+    Type: string
+    Description: "Field to regularize: topg or thk"
+    Units: string
+  include_low_speed_term:
+    Type: boolean
+    Description: "opti_include_low_speed_term"
+    Units: boolean
+  infer_params:
+    Type: boolean
+    Description: "Infer slidingco and convexity weight from velocity observations"
+    Units: boolean
+  tidewater_glacier:
+    Type: boolean
+    Description: "Is the glacier you're trying to infer parameters for a tidewater type?"
+    Units: boolean
+  vol_std:
+    Type: float
+    Description: "Confidence/STD of the volume estimates from volume-area scaling"
+    Units: float
+  fix_opti_normalization_issue:
+    Type: boolean
+    Description: "Formerly, the oce was mixing reduce_mean and l2_loss leading to dependence to the resolution of the grid"
+    Units: boolean
+  log_slidingco:
+    Type: boolean
+    Description: "Optimize the log of the sliding coefficient instead of the slidingco itself"
+    Units: boolean
+  velsurfobs_thr:
+    Type: float
+    Description: "Threshold for the surface ice velocities as input data for the optimization, anything below this value will be ignored"
+    Units: "meters per year?"
+pretraining:
+  data_dir:
+    Type: str
+    Description: "Directory of the data of the glacier catalog"
+    Units: dimensionaless
+  batch_size:
+    Type: int
+    Description: "Batch size"
+    Units: dimensionaless
+  freq_test:
+    Type: int
+    Description: "Frequency of the test"
+    Units: dimensionaless
+  train_iceflow_emulator_restart_lr:
+    Type: int
+    Description: "Restart frequency for the learning rate"
+    Units: dimensionaless
+  epochs:
+    Type: int
+    Description: "Number of epochs"
+    Units: dimensionaless
+  min_arrhenius:
+    Type: float
+    Description: "Minimum Arrhenius factor"
+    Units: dimensionaless
+  max_arrhenius:
+    Type: float
+    Description: "Maximum Arrhenius factor"
+    Units: dimensionaless
+  min_slidingco:
+    Type: float
+    Description: "Minimum sliding coefficient"
+    Units: dimensionaless
+  max_slidingco:
+    Type: float
+    Description: "Maximum sliding coefficient"
+    Units: dimensionaless
+  min_coarsen:
+    Type: int
+    Description: "Minimum coarsening factor"
+    Units: dimensionaless
+  max_coarsen:
+    Type: int
+    Description: "Maximum coarsening factor"
+    Units: dimensionaless
+  soft_begining:
+    Type: int
+    Description: "soft_begining, if 0 explore all parameters between min and max, otherwise, only explore from this iteration while keeping mid-value for the first it."
+    Units: dimensionaless

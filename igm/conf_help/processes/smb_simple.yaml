@@ -1,9 +1,12 @@
-- Name: update_freq
-  Description: "Update the mass balance each X years"
+update_freq:
+  Type: float
   Units: years
-- Name: file
+  Description: "Update the mass balance each X years"
+file:
+  Type: string
+  Units: string
   Description: "Name of the input file for the simple mass balance model (time, gradabl, gradacc, ela, accmax)"
-  Units: file path
-- Name: array
-  Description: "Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)"
+array:
+  Type: list
   Units: list
+  Description: "Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)"

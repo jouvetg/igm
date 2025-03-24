@@ -1,21 +1,28 @@
-- Name: update_freq
-  Description: "Update the climate each X years"
+update_freq:
+  Type: float
   Units: years
-- Name: climate_0_file
-  Description: "Climate file"
+  Description: Frequency at which to update the climate module
+climate_0_file:
+  Type: str
   Units: file path
-- Name: climate_1_file
-  Description: "Climate file"
+  Description: Climate file
+climate_1_file:
+  Type: str
   Units: file path
-- Name: signal_file
-  Description: "Climate signal file for GI"
+  Description: Climate file
+signal_file:
+  Type: str
   Units: file path
-- Name: vertical_lapse_rate_0
-  Description: "Vertical lapse rate 0"
+  Description: Climate signal file for GI
+vertical_lapse_rate_0:
+  Type: float
   Units: degrees Celsius per kilometer
-- Name: vertical_lapse_rate_1
-  Description: "Vertical lapse rate 1"
+  Description: Vertical lapse rate 0
+vertical_lapse_rate_1:
+  Type: float
   Units: degrees Celsius per kilometer
-- Name: temporal_resampling
-  Description: "Temporal resampling"
+  Description: Vertical lapse rate 1
+temporal_resampling:
+  Type: str
   Units: None
+  Description: Temporal resampling

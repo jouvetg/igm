@@ -1,15 +1,20 @@
-- Name: editor
-  Description: "Optimized for VS code (vs) or spyder (sp) for live plot"
+editor:
+  Type: str
   Units: string
-- Name: live
-  Description: "Display plots live the results during computation instead of making png"
+  Description: Optimized for VS code (vs) or spyder (sp) for live plot
+live:
+  Type: bool
   Units: boolean
-- Name: particles
-  Description: "Display particles is True, does not display if False"
+  Description: Display plots live the results during computation instead of making png
+particles:
+  Type: bool
   Units: boolean
-- Name: var
-  Description: "Name of the variable to plot"
+  Description: Display particles is True, does not display if False
+var:
+  Type: str
   Units: string
-- Name: var_max
-  Description: "Maximum value of the varplot variable used to adjust the scaling of the colorbar"
+  Description: Name of the variable to plot
+var_max:
+  Type: float
   Units: float
+  Description: Maximum value of the varplot variable used to adjust the scaling of the colorbar

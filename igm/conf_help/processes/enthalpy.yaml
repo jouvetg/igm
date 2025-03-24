@@ -1,68 +1,88 @@
-- Name: water_density
+water_density:
+  Type: float
   Description: "Constant of the Water density"
-  Units: $kg \\times m^{-3}$
-- Name: spy
-  Description: "Number of seconds per years "
-  Units: $s y^{-1}$
-- Name: ki
-  Description: "Conductivity of cold ice  (Aschwanden and al, JOG, 2012)"
+  Units: $$kg~m^{-3}$$
+spy:
+  Type: float
+  Description: "Number of seconds per years"
+  Units: $$s y^{-1}$$
+ki:
+  Type: float
+  Description: "Conductivity of cold ice (Aschwanden and al, JOG, 2012)"
   Units: [W m-1 K-1]
-- Name: ci
-  Description: "Specific heat capacity of ice  (Aschwanden and al, JOG, 2012)"
+ci:
+  Type: float
+  Description: "Specific heat capacity of ice (Aschwanden and al, JOG, 2012)"
   Units: [W s kg-1 K-1]
-- Name: Lh
-  Description: "latent heat of fusion  (Aschwanden and al, JOG, 2012)"
+Lh:
+  Type: float
+  Description: "Latent heat of fusion (Aschwanden and al, JOG, 2012)"
   Units: "[W s kg-1] = [E]"
-- Name: KtdivKc
-  Description: "Ratio of temp vs cold ice diffusivity  (Aschwanden and al, JOG, 2012)"
+KtdivKc:
+  Type: float
+  Description: "Ratio of temp vs cold ice diffusivity (Aschwanden and al, JOG, 2012)"
   Units: Kt / Kc [no unit]
-- Name: claus_clape
-  Description: "Clausius-Clapeyron constant  (Aschwanden and al, JOG, 2012)"
+claus_clape:
+  Type: float
+  Description: "Clausius-Clapeyron constant (Aschwanden and al, JOG, 2012)"
   Units: [K Pa-1]
-- Name: melt_temp
-  Description: "Melting point at standart pressure  (Aschwanden and al, JOG, 2012)"
+melt_temp:
+  Type: float
+  Description: "Melting point at standard pressure (Aschwanden and al, JOG, 2012)"
   Units: [K]
-- Name: ref_temp
-  Description: "Reference temperature  (Aschwanden and al, JOG, 2012)"
+ref_temp:
+  Type: float
+  Description: "Reference temperature (Aschwanden and al, JOG, 2012)"
   Units: [K]
-- Name: till_friction_angle
-  Description: "Till friction angle in the Mohr-Coulomb friction law "
+till_friction_angle:
+  Type: float
+  Description: "Till friction angle in the Mohr-Coulomb friction law"
   Units: [deg]
-- Name: till_friction_angle_bed_min
-  Description: "till_friction_angle_bed_min"
-  Units:
-- Name: till_friction_angle_bed_max
-  Description: "till_friction_angle_bed_max"
-  Units:
-- Name: till_friction_angle_phi_min
-  Description: "till_friction_angle_phi_min"
-  Units:
-- Name: till_friction_angle_phi_max
-  Description: "till_friction_angle_phi_max"
-  Units:
-- Name: uthreshold
-  Description: "uthreshold"
+till_friction_angle_bed_min:
+  Type: float
+  Description: "Minimum till friction angle at the bed"
+  Units: [deg]
+till_friction_angle_bed_max:
+  Type: float
+  Description: "Maximum till friction angle at the bed"
+  Units: [deg]
+till_friction_angle_phi_min:
+  Type: float
+  Description: "Minimum till friction angle phi"
+  Units: [deg]
+till_friction_angle_phi_max:
+  Type: float
+  Description: "Maximum till friction angle phi"
+  Units: [deg]
+uthreshold:
+  Type: float
+  Description: "Threshold velocity"
   Units: [m/y]
-- Name: drain_rate
+drain_rate:
+  Type: float
   Description: "Drain rate at 1 mm/y (Bueler and Pelt, GMD, 2015)"
   Units: [m y-1]
-- Name: till_wat_max
-  Description: "Maximum water till tickness  (Bueler and Pelt, GMD, 2015)"
+till_wat_max:
+  Type: float
+  Description: "Maximum water till thickness (Bueler and Pelt, GMD, 2015)"
   Units: [m]
-- Name: drain_ice_column
-  Description: "Transform the water content beyond a thr=0.01 into water, drain it, and add it to basal melt rate"
-  Units:
-- Name: default_bheatflx
-  Description: "Geothermal heat flux "
+drain_ice_column:
+  Type: float
+  Description: "Transform the water content beyond a threshold into water, drain it, and add it to basal melt rate"
+  Units: [m]
+default_bheatflx:
+  Type: float
+  Description: "Geothermal heat flux"
   Units: [W m-2]
-- Name: temperature_offset_air_to_ice
-  Description: "This is the offset between the air temperature and the ice temperature as records show [e.g., Reeh 1991] shows that the mean temperature at the ice surface is about X°C colder than the temperature of ice to be given as boundary upper condition to the Enthlapy model"
-  Units:
-- Name: tauc_min
-  Description: "lower bound for tauc "
+temperature_offset_air_to_ice:
+  Type: float
+  Description: "Offset between the air temperature and the ice temperature"
+  Units: [K]
+tauc_min:
+  Type: float
+  Description: "Lower bound for tauc"
   Units: [Pa]
-- Name: tauc_max
-  Description: "lower bound for tauc "
+tauc_max:
+  Type: float
+  Description: "Upper bound for tauc"
   Units: [Pa]
-
-

@@ -1,6 +1,8 @@
-- Name: update_freq
-  Description: "Frequency at which to update the avalanche module"
+update_freq:
+  Type: float
   Units: years
-- Name: angleOfRepose
-  Description: "Angle of repose"
+  Description: Frequency at which to update the avalanche module
+angleOfRepose:
+  Type: float
   Units: Degrees
+  Description: Angle of repose

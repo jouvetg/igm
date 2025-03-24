@@ -1,15 +1,20 @@
-- Name: time_igm_time_start
+start:
+  Type: float
+  Units: years
   Description: "Start time of the simulation"
+end:
+  Type: float
   Units: years
-- Name: time_igm_time_end
   Description: "End time of the simulation"
+save:
+  Type: float
   Units: years
-- Name: time_igm_time_save
   Description: "Frequency of saving the simulation results"
-  Units: years
-- Name: time_igm_time_cfl
-  Description: "CFL condition for time stepping"
+cfl:
+  Type: float
   Units: dimensionless
-- Name: time_igm_time_step_max
-  Description: "Maximum time step allowed"
+  Description: "CFL condition for time stepping"
+step_max:
+  Type: float
   Units: years
+  Description: "Maximum time step allowed"

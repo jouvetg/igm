@@ -1,21 +1,40 @@
-- Name: coarsen
-  Description: "Coarsen the data to a coarser resolution (default: 1), e.g. 2 would be twice coarser ignore data each 2 grid points"
+coarsen:
+  Type: int
   Units: integer
-- Name: crop
-  Description: "Crop the data with xmin, xmax, ymin, ymax (default: False)"
+  Description: Coarsen the data from NetCDF file by a certain (integer) number (2 would be twice coarser ignore data each 2 grid points)
+crop:
+  Type: bool
   Units: boolean
-- Name: xmin
-  Description: "Crop xmin"
+  Description: Crop the data from NetCDF file with given top/down/left/right bounds
+xmin:
+  Type: float
   Units: float
-- Name: xmax
-  Description: "Crop xmax"
+  Description: Crop the data from NetCDF file with the given minimum x bound
+xmax:
+  Type: float
   Units: float
-- Name: ymin
-  Description: "Crop ymin"
+  Description: Crop the data from NetCDF file with the given maximum x bound
+ymin:
+  Type: float
   Units: float
-- Name: ymax
-  Description: "Crop ymax"
+  Description: Crop the data from NetCDF file with the given minimum y bound
+ymax:
+  Type: float
   Units: float
-- Name: folder
-  Description: "Folder for the tif files"
+  Description: Crop the data from NetCDF file with the given maximum y bound
+folder:
+  Type: str
   Units: file path
+  Description: Folder containing the tif files
+icemask_include:
+  Type: bool
+  Units: boolean
+  Description: Include ice mask in the NetCDF file
+icemask_shapefile:
+  Type: str
+  Units: file path
+  Description: Shapefile for ice mask
+icemask_invert:
+  Type: bool
+  Units: boolean
+  Description: Invert the ice mask

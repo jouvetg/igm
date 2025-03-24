@@ -1,12 +1,16 @@
-- Name: tracking_method
-  Description: "Method for tracking particles (3d or simple)"
+tracking_method:
+  Type: str
   Units: string
-- Name: frequency_seeding
-  Description: "Frequency of seeding"
+  Description: Method for tracking particles (3d or simple)
+frequency_seeding:
+  Type: float
   Units: years
-- Name: density_seeding
-  Description: "Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, etc.)"
+  Description: Frequency of seeding
+density_seeding:
+  Type: float
   Units: dimensionless
-- Name: tlast_seeding_init
-  Description: "Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value allows to defer it"
+  Description: Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, etc.)
+tlast_seeding_init:
+  Type: float
   Units: years
+  Description: Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value allows to defer it

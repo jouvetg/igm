@@ -1,3 +1,4 @@
-- Name: output_file
-  Description: "Output ncdf data file (time series)"
+output_file:
+  Type: str
   Units: file path
+  Description: Output ncdf data file (time series)

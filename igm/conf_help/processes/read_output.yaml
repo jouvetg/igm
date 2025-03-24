@@ -1,18 +1,24 @@
-- Name: input_file
-  Description: "NetCDF input data file"
+input_file:
+  Type: str
   Units: file path
-- Name: crop
-  Description: "Crop the data from NetCDF file with given top/down/left/right bounds"
+  Description: NetCDF input data file
+crop:
+  Type: bool
   Units: boolean
-- Name: xmin
-  Description: "X left coordinate for cropping the NetCDF data"
+  Description: Crop the data from NetCDF file with given top/down/left/right bounds
+xmin:
+  Type: float
   Units: float
-- Name: xmax
-  Description: "X right coordinate for cropping the NetCDF data"
+  Description: X left coordinate for cropping the NetCDF data
+xmax:
+  Type: float
   Units: float
-- Name: ymin
-  Description: "Y bottom coordinate for cropping the NetCDF data"
+  Description: X right coordinate for cropping the NetCDF data
+ymin:
+  Type: float
   Units: float
-- Name: ymax
-  Description: "Y top coordinate for cropping the NetCDF data"
+  Description: Y bottom coordinate for cropping the NetCDF data
+ymax:
+  Type: float
   Units: float
+  Description: Y top coordinate for cropping the NetCDF data

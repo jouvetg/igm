@@ -1,15 +1,20 @@
-- Name: format
-  Description: "Format of the texture image (png, tif, or tiff)"
+format:
+  Type: string
   Units: string
-- Name: model_path
-  Description: "Name of the folder for the texture model (tf format)"
+  Description: "Format of the texture image (png, tif, or tiff)"
+model_path:
+  Type: file path
   Units: file path
-- Name: verbosity
+  Description: "Name of the folder for the texture model (tf format)"
+verbosity:
+  Type: integer
+  Units: integer
   Description: "Python Logger verbosity level (10=DEBUG, 20=INFO, 30=WARNING, 40=ERROR, 50=CRITICAL)"
-  Units: integer
-- Name: divide_by_density
-  Description: "This parameter solves an incompatibility (this option will be removed in the future)"
+divide_by_density:
+  Type: boolean
   Units: boolean
-- Name: resolution
   Description: "This parameter solves an incompatibility (this option will be removed in the future)"
+resolution:
+  Type: integer
   Units: integer
+  Description: "This parameter solves an incompatibility (this option will be removed in the future)"

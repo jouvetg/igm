@@ -104,14 +104,14 @@ def run(cfg, state):
             if hasattr(state, 'pyproj_srs'):
                 nc.pyproj_srs = state.pyproj_srs
 
-            if "iflo_Nz" in cfg.processes.iceflow.iceflow:
-                nc.createDimension("z", cfg.processes.iceflow.iceflow.iflo_Nz)
+            if "Nz" in cfg.processes.iceflow.iceflow:
+                nc.createDimension("z", cfg.processes.iceflow.iceflow.Nz)
                 E = nc.createVariable("z", np.dtype("float32").char, ("z",))
                 E.units = "m"
                 E.long_name = "z"
                 E.axis = "Z"
                 E[:] = np.arange(
-                    cfg.processes.iceflow.iceflow.iflo_Nz
+                    cfg.processes.iceflow.iceflow.Nz
                 )  # TODO: fix this, that's not what we want
 
             for var in cfg.outputs.write_ncdf.vars_to_save:

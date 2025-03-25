@@ -2,9 +2,6 @@ __pycache__
 igm_model.egg-info/
 dist
 sol_analytic
-paper.tex
-fig/
-biblio.bib
 pix2pixhd-texture-model/
 texture-aif-test
 tests/examples/texture-test/
@@ -13,17 +10,10 @@ logdir/
 .DS_Store
 
 # hide output files and data
-
-input_saved.nc
-RGI60-*/
 .vscode/
 data
 *.dat
-thk_MG
 .history/
-outputs/
+output/
 multirun/
 .idea/
-energy_iceflow_DG.py
-emulate_DG.py
-optimize_fw.py

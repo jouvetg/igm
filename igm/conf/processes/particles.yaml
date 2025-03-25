@@ -3,3 +3,5 @@ particles:
   frequency_seeding: 50 # help="Frequency of seeding (unit : year)"
   density_seeding: 0.2 # help="Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)"
   tlast_seeding_init: -1.0e+5000 # help="Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value alouds to differ it
+  write_trajectories: True # help="Write the trajectories of the particles"
+  add_topography: True # help="Add topg when writing particles"

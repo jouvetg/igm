@@ -1,4 +1,0 @@
-add_topography:
-  Type: bool
-  Units: [dimensionless]
-  Description: Add topography

@@ -1,4 +1,4 @@
 output_file:
   Type: str
-  Units: file path
+  Units: [dimensionless]
   Description: Output ncdf data file (time series)

@@ -1,4 +1,4 @@
 vars_to_save:
   Type: list
   Description: List of variables to be saved as geotiff files
-  Units: None
+  Units: [dimensionless]

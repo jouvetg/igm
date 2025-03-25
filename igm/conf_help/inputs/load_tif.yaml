@@ -1,40 +1,40 @@
+folder:
+  Type: str
+  Units: [dimensionless]
+  Description: Folder containing the tif files
 coarsen:
   Type: int
-  Units: integer
+  Units: [dimensionless]
   Description: Coarsen the data from NetCDF file by a certain (integer) number (2 would be twice coarser ignore data each 2 grid points)
 crop:
   Type: bool
-  Units: boolean
+  Units: [dimensionless]
   Description: Crop the data from NetCDF file with given top/down/left/right bounds
 xmin:
   Type: float
-  Units: float
+  Units: m
   Description: Crop the data from NetCDF file with the given minimum x bound
 xmax:
-  Type: float
+  Type: m
   Units: float
   Description: Crop the data from NetCDF file with the given maximum x bound
 ymin:
   Type: float
-  Units: float
+  Units: m
   Description: Crop the data from NetCDF file with the given minimum y bound
 ymax:
   Type: float
-  Units: float
+  Units: m
   Description: Crop the data from NetCDF file with the given maximum y bound
-folder:
-  Type: str
-  Units: file path
-  Description: Folder containing the tif files
 icemask_include:
   Type: bool
-  Units: boolean
+  Units: [dimensionless]
   Description: Include ice mask in the NetCDF file
 icemask_shapefile:
   Type: str
-  Units: file path
+  Units: [dimensionless]
   Description: Shapefile for ice mask
 icemask_invert:
   Type: bool
-  Units: boolean
+  Units: [dimensionless]
   Description: Invert the ice mask

@@ -1,27 +1,27 @@
 type:
   Type: str
-  Units: none
-  Description: "NetCDF input data file"
+  Units: [dimensionless]
+  Description: "Type of file to be loaded, can be netcdf or tif"
 folder:
   Type: str
-  Units: none
-  Description: "NetCDF input data file"
+  Units: [dimensionless]
+  Description: "Folder where the data is stored"
 filename:
   Type: str
-  Units: none
+  Units: [dimensionless]
   Description: "NetCDF input data file"
   
 coarsening.boundary:
   Type: str
-  Units: none
+  Units: [dimensionless]
   Description: "Method for coarsening the data from NetCDF file: skipping or cubic_spline"
 coarsening.ratio.x:
   Type: float
-  Units: none
+  Units: [dimensionless]
   Description: "Coarsen ratio x"
 coarsening.ratio.y:
   Type: float
-  Units: none
+  Units: [dimensionless]
   Description: "Coarsen ratio y" 
 
 crop.xmin:
@@ -43,13 +43,13 @@ crop.ymax:
 
 icemask.include:
   Type: bool
-  Units: boolean
+  Units: [dimensionless]
   Description: Include ice mask in the NetCDF file
 icemask.shapefile:
   Type: str
-  Units: file path
+  Units: [dimensionless]
   Description: Shapefile for ice mask
 icemask.invert:
   Type: bool
-  Units: boolean
+  Units: [dimensionless]
   Description: Invert the ice mask

@@ -1,20 +1,20 @@
 start:
   Type: float
-  Units: years
+  Units: $y$
   Description: "Start time of the simulation"
 end:
   Type: float
-  Units: years
+  Units: $y$
   Description: "End time of the simulation"
 save:
   Type: float
-  Units: years
+  Units: $y$
   Description: "Frequency of saving the simulation results"
 cfl:
   Type: float
-  Units: dimensionless
+  Units: [dimensionless]
   Description: "CFL condition for time stepping"
 step_max:
   Type: float
-  Units: years
+  Units: $y$
   Description: "Maximum time step allowed"

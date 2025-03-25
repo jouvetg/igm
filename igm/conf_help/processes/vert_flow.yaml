@@ -1,8 +1,8 @@
 version:
   Type: integer
   Description: "Version of the vert_flow compute (1 original, 2 improved by claire-mathilde)"
-  Units: integer
+  Units: [dimensionless]
 method:
   Type: string
   Description: "Method to retrieve the vertical velocity (kinematic, incompressibility)"
-  Units: string
+  Units: [dimensionless]

@@ -1,8 +1,8 @@
 update_freq:
   Type: float
-  Units: years
+  Units: $y$
   Description: Frequency at which to update the avalanche module
 angleOfRepose:
   Type: float
   Units: Degrees
-  Description: Angle of repose
+  Description: Angle of repose (threshold for avalanche initiation)

@@ -1,20 +1,20 @@
 update_freq:
   Type: float
-  Units: years
+  Units: $y$
   Description: "Update gflex each X years"
 default_Te:
   Type: float
-  Units: meters
+  Units: $m$
   Description: "Default value for Te (Elastic thickness) if not given as ncdf file"
 dx: 
   Type: float
-  Units: meters
+  Units: $m$
   Description: "Default resolution for computing isostasy"
 pad:
   Type: boolean
-  Units: None
+  Units: [dimensionless]
   Description: "Default padding option"
 quiet:
   Type: boolean
-  Units: None
-  Description: "Default padding option"
+  Units: [dimensionless]
+  Description: "???"

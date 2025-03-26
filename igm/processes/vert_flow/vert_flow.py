@@ -316,7 +316,7 @@ def grady_non_flat_layers_tf(U,dY,Z,vert_weight,thk):
     return grady
 
 
-def _compute_vertical_velocity_twolayers(params, state):
+def _compute_vertical_velocity_twolayers(cfg, state):
 
     @tf.function()
     def compute_divflux_d(u, v, h, dx, dy):

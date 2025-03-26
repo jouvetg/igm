@@ -1,1 +1,1 @@
-from .texture import params, initialize, update, finalize
+from .texture import initialize, update, finalize

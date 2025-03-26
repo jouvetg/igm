@@ -10,33 +10,6 @@ import math
 import tensorflow as tf
 import json
 
-
-# def params(parser):
-#     parser.add_argument(
-#         "--smb_oggm_update_freq",
-#         type=float,
-#         default=1,
-#         help="Update the mass balance each X years ",
-#     )
-#     parser.add_argument(
-#         "--smb_oggm_ice_density",
-#         type=float,
-#         default=910.0,
-#         help="Density of ice for conversion of SMB into ice equivalent",
-#     )
-#     parser.add_argument(
-#         "--smb_oggm_wat_density",
-#         type=float,
-#         default=1000.0,
-#         help="Density of water",
-#     )
-#     parser.add_argument(
-#         "--smb_oggm_melt_enhancer",
-#         type=float,
-#         default=1.0,
-#         help="Melt enhancer factor",
-#     )
-
 def initialize(cfg, state):
     state.tlast_mb = tf.Variable(-1.0e5000)
 

@@ -12,16 +12,6 @@ import time
 
 from igm.processes.utils import *
 
-
-# def params(parser):
-#     parser.add_argument(
-#         "--flow_speed",
-#         type=float,
-#         default=1,
-#         help="Speed of rock flow along the slope in m/y",
-#     )
-
-
 def initialize(cfg, state):
     pass
 

@@ -8,40 +8,6 @@ import tensorflow as tf
 import time
 from igm.processes.utils import *
 
-
-
-# def params(parser):
-#     parser.add_argument(
-#         "--gflex_update_freq",
-#         type=float,
-#         default=100.0,
-#         help="Update gflex each X years (1)",
-#     )
-#     parser.add_argument(
-#         "--gflex_default_Te",
-#         type=float,
-#         default=50000,
-#         help="Default value for Te (Elastic thickness [m]) if not given as ncdf file",
-#     )
-#     parser.add_argument(
-#         "--gflex_dx",
-#         type=float,
-#         default=1000,
-#         help="Default resolution for computing isostasy (m).",
-#     )
-#     parser.add_argument(
-#         "--gflex_pad",
-#         type=str2bool,
-#         default=False,
-#         help="Default padding option",
-#     )
-#     parser.add_argument(
-#         "--gflex_quiet",
-#         type=str2bool,
-#         default=True,
-#         help="Default padding option",
-#     )
-
 def initialize(cfg, state):
     from gflex.f2d import F2D
 

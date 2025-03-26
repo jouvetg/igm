@@ -9,29 +9,6 @@ import time
 import tensorflow as tf
 from igm.processes.utils import interp1d_tf
 
-
-# def params(parser):
-#     pass
-#     parser.add_argument(
-#         "--smb_simple_update_freq",
-#         type=float,
-#         default=1,
-#         help="Update the mass balance each X years (1)",
-#     )
-#     parser.add_argument(
-#         "--smb_simple_file",
-#         type=str,
-#         default="smb_simple_param.txt",
-#         help="Name of the imput file for the simple mass balance model (time, gradabl, gradacc, ela, accmax)",
-#     )
-#     parser.add_argument(
-#         "--smb_simple_array",
-#         type=list,
-#         default=[],
-#         help="Time dependent parameters for simple mass balance model (time, gradabl, gradacc, ela, accmax)",
-#     )
-
-
 def initialize(cfg, state):
 
     if cfg.processes.smb_simple.array == []:
@@ -76,5 +53,5 @@ def update(cfg, state):
 
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

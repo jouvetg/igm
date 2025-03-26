@@ -22,43 +22,6 @@ from .pix2pixhd_model_assets.loading import load_model
 TEXTURE_DEFAULT_DIR = igm.__path__[0] + "/modules/postproc/texture/"
 TEXTURE_CKPT_DIR = os.path.join(TEXTURE_DEFAULT_DIR, "checkpoints")
 
-
-def params(parser: Any) -> None:
-    parser.add_argument(
-        "--texture_format",
-        type=str,
-        default="png",
-        help="Format of the texture image (png, tif, or tiff)",
-    )
-    parser.add_argument(
-        "--texture_model_path",
-        type=str,
-        default=TEXTURE_CKPT_DIR,
-        help="Name of the folder for the texture model (tf format)",
-    )
-    parser.add_argument(
-        "--texture_verbosity",
-        type=int,
-        default=30,
-        help="Python Logger verbosity level (10=DEBUG, 20=INFO, 30=WARNING, 40=ERROR, 50=CRITICAL)",
-    )
-
-    parser.add_argument(
-        "--texture_divide_by_density",
-        type=float,
-        default=1,
-        help="This parameter solves an imcompatibility (this option will be removed in the future)",
-    )
-    parser.add_argument(
-        "--texture_resolution",
-        type=float,
-        default=-1,
-        help="This parameter solves an imcompatibility (this option will be removed in the future)",
-    )
-    # TODO: Add an option where they can overwrite certain features with their own data (e.g. ndvi, water, etc.), so one can you high resolution topg for example...
-    # TODO: Add a logger for verbosity
-
-
 def initialize(cfg: Any, state: Any) -> None:
 
     logging.basicConfig(level=cfg.processes.texture.verbosity)

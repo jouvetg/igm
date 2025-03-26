@@ -12,40 +12,6 @@ import tensorflow as tf
 
 from igm.processes.utils import *
 
-
-# def params(parser):
-#     parser.add_argument(
-#         "--plt2d_editor",
-#         type=str,
-#         default="vs",
-#         help="Optimized for VS code (vs) or spyder (sp) for live plot",
-#     )
-#     parser.add_argument(
-#         "--plt2d_live",
-#         type=str2bool,
-#         default=False,
-#         help="Display plots live the results during computation instead of making png",
-#     )
-#     parser.add_argument(
-#         "--plt2d_particles",
-#         type=str2bool,
-#         default=True,
-#         help="Display particles is True, does not display if False",
-#     )
-#     parser.add_argument(
-#         "--plt2d_var",
-#         type=str,
-#         default="velbar_mag",
-#         help="Name of the variable to plot",
-#     )
-#     parser.add_argument(
-#         "--plt2d_var_max",
-#         type=float,
-#         default=1000,
-#         help="Maximum value of the varplot variable used to adjust the scaling of the colorbar",
-#     )
-
-
 def initialize(cfg, state):
     state.extent = [np.min(state.x), np.max(state.x), np.min(state.y), np.max(state.y)]
 

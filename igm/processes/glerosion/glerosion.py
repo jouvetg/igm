@@ -10,30 +10,6 @@ import tensorflow as tf
 
 from igm.processes.utils import *
 
-
-# def params(parser):
-#     parser.add_argument(
-#         "--glerosion_cst",
-#         type=float,
-#         default=2.7 * 10 ** (-7),
-#         help="Erosion multiplicative factor, here taken from Herman, F. et al. \
-#               Erosion by an Alpine glacier. Science 350, 193–195 (2015)",
-#     )
-#     parser.add_argument(
-#         "--glerosion_exp",
-#         type=float,
-#         default=2,
-#         help="Erosion exponent factor, here taken from Herman, F. et al. \
-#                Erosion by an Alpine glacier. Science 350, 193–195 (2015)",
-#     )
-#     parser.add_argument(
-#         "--glerosion_update_freq",
-#         type=float,
-#         default=1,
-#         help="Update the erosion only each X years (Default: 1)",
-#     )
-
-
 def initialize(cfg, state):
     
     if "time" not in cfg.processes:

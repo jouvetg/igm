@@ -9,64 +9,6 @@ import datetime, time
 import math
 import tensorflow as tf
 
-
-# def params(parser):
-#     parser.add_argument(
-#         "--smb_accpdd_update_freq",
-#         type=float,
-#         default=1,
-#         help="Update the mass balance each X years (1)",
-#     )
-#     parser.add_argument(
-#         "--smb_accpdd_refreeze_factor",
-#         type=float,
-#         default=0.6,
-#         help="Refreezing factor",
-#     )
-#     parser.add_argument(
-#         "--smb_accpdd_thr_temp_snow",
-#         type=float,
-#         default=0.0,
-#         help="Threshold temperature for solid precipitation (0.0)",
-#     )
-#     parser.add_argument(
-#         "--smb_accpdd_thr_temp_rain",
-#         type=float,
-#         default=2.0,
-#         help="Threshold temperature for liquid precipitation (2.0)",
-#     )
-#     parser.add_argument(
-#         "--smb_accpdd_melt_factor_snow",
-#         type=float,
-#         default=0.003 * 365.242198781,
-#         help="Degree-day factor for snow (water eq.) (unit: meter / (Kelvin year))",
-#     )
-#     parser.add_argument(
-#         "--smb_accpdd_melt_factor_ice",
-#         type=float,
-#         default=0.008 * 365.242198781,
-#         help="Degree-day factor for ice (water eq.) (unit: meter / (Kelvin year))",
-#     )
-#     parser.add_argument(
-#         "--smb_accpdd_shift_hydro_year",
-#         type=float,
-#         default=0.75,
-#         help="This serves to start Oct 1. the acc/melt computation (0.75)",
-#     )
-#     parser.add_argument(
-#         "--smb_accpdd_ice_density",
-#         type=float,
-#         default=910.0,
-#         help="Density of ice for conversion of SMB into ice equivalent",
-#     )
-#     parser.add_argument(
-#         "--smb_accpdd_wat_density",
-#         type=float,
-#         default=1000.0,
-#         help="Density of water",
-#     )
-
-
 def initialize(cfg, state):
     state.tlast_mb = tf.Variable(-1.0e5000)
 

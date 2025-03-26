@@ -13,38 +13,6 @@ from netCDF4 import Dataset
 
 from igm.processes.utils import *
 
-# from igm.processes.particles_v1.particles_v1 import seeding_particles
-
-# from igm.processes.process.particles_v1.particles_v1 import seeding_particles
-
-
-# def params(parser):
-#     parser.add_argument(
-#         "--part_tracking_method",
-#         type=str,
-#         default="3d",
-#         help="Method for tracking particles (3d or simple)",
-#     )
-#     parser.add_argument(
-#         "--part_frequency_seeding",
-#         type=int,
-#         default=50,
-#         help="Frequency of seeding (unit : year)",
-#     )
-#     parser.add_argument(
-#         "--part_density_seeding",
-#         type=float,
-#         default=0.2,
-#         help="Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, ect.)",
-#     )
-#     parser.add_argument(
-#         "--part_tlast_seeding_init",
-#         type=int,
-#         default=-1.0e5000,
-#         help="Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value alouds to differ it",
-#     )
-
-
 def initialize(cfg, state):
 
     if cfg.processes.particles.tracking_method == "3d":

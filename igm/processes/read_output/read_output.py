@@ -10,44 +10,6 @@ from netCDF4 import Dataset
  
 from igm.processes.utils import *
  
-# def params(parser):
-#     parser.add_argument(
-#         "--rncd_input_file",
-#         type=str,
-#         default="output.nc",
-#         help="NetCDF input data file",
-#     )
-#     parser.add_argument(
-#         "--rncd_crop",
-#         type=str2bool,
-#         default="False",
-#         help="Crop the data from NetCDF file with given top/down/left/right bounds",
-#     )
-#     parser.add_argument(
-#         "--rncd_xmin",
-#         type=float,
-#         help="X left coordinate for cropping the NetCDF data",
-#         default=-(10**20),
-#     )
-#     parser.add_argument(
-#         "--rncd_xmax",
-#         type=float,
-#         help="X right coordinate for cropping the NetCDF data",
-#         default=10**20,
-#     )
-#     parser.add_argument(
-#         "--rncd_ymin",
-#         type=float,
-#         help="Y bottom coordinate fro cropping the NetCDF data",
-#         default=-(10**20),
-#     )
-#     parser.add_argument(
-#         "--rncd_ymax",
-#         type=float,
-#         help="Y top coordinate for cropping the NetCDF data",
-#         default=10**20,
-#     )
- 
 def initialize(cfg, state):
  
     nc = Dataset(cfg.processes.read_output.input_file, "r")
@@ -86,7 +48,7 @@ def initialize(cfg, state):
     state.it = 0
     state.saveresult = True
 
-def update(params, state):
+def update(cfg, state):
     
     state.t.assign(state.time[state.it])
      
@@ -95,5 +57,5 @@ def update(params, state):
 
     state.it += 1
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

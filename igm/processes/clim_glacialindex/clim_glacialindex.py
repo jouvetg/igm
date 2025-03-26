@@ -15,36 +15,6 @@ import igm
 from hydra.utils import get_original_cwd
 from pathlib import Path
 
-# def params(parser):
-#     # CLIMATE PARAMETERS
-#     parser.add_argument(
-#         "--clim_update_freq",
-#         type=float,
-#         default=100,
-#         help="Update the climate each X years (default: 1)",
-#     )
-#     parser.add_argument(
-#         "--climate_0_file", type=str, default="data/climate.nc", help="climate file"
-#     )
-#     parser.add_argument(
-#         "--climate_1_file", type=str, default="data/climate1.nc", help="climate file"
-#     )
-#     parser.add_argument(
-#         "--climate_signal_file",
-#         type=str,
-#         default="data/GI.dat",
-#         help="climate signal file for GI",
-#     )
-#     parser.add_argument(
-#         "--vertical_lapse_rate_0", type=float, default=6.0, help="vertical_lapse_rate_0"
-#     )
-#     parser.add_argument(
-#         "--vertical_lapse_rate_1", type=float, default=5.74, help="vertical_lapse_rate_1"
-#     )
-#     parser.add_argument(
-#         "--temporal_resampling", type=int, default=12, help="temporal_resampling"
-#     )
-
 def initialize(cfg, state):
     load_climate_data_glacialindex(cfg, state)
 

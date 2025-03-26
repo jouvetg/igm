@@ -12,45 +12,6 @@ from netCDF4 import Dataset
 import json
 from igm.processes.utils import interp1d_tf
 
-
-# def params(parser):
-#     # CLIMATE PARAMETERS
-#     parser.add_argument(
-#         "--clim_oggm_update_freq",
-#         type=float,
-#         default=1,
-#         help="Update the climate each X years",
-#     )
-#     parser.add_argument(
-#         "--clim_oggm_file",
-#         type=str,
-#         default="clim_oggm_file.txt",
-#         help="Name of the imput file for the climate outide the given datatime frame (time, delta_temp, prec_scali)",
-#     )
-#     parser.add_argument(
-#         "--clim_oggm_clim_trend_array",
-#         type=list,
-#         default=[
-#             ["time", "delta_temp", "prec_scal"],
-#             [1900, 0.0, 1.0],
-#             [2020, 0.0, 1.0],
-#         ],
-#         help="Define climate trend outside available time window",
-#     )
-#     parser.add_argument(
-#         "--clim_oggm_ref_period",
-#         type=list,
-#         default=[1960, 1990],
-#         help="Define the reference period to pick year outside available time window",
-#     )
-#     parser.add_argument(
-#         "--clim_oggm_seed_par",
-#         type=list,
-#         default=123,
-#         help="Seeding parameter to fix for pickying randomly yer in the ref period",
-#     )
-
-
 def initialize(cfg, state):
     # load the given parameters from the json file
     

@@ -7,27 +7,6 @@ import datetime, time
 import tensorflow as tf
 
 from igm.processes.utils import compute_divflux_slope_limiter
-# from igm.tests.Bueler2005 import initialize as initialize_Bueler
-
-def params(parser):
-    parser.add_argument(
-        "--thk_slope_type",
-        type=str,
-        default="superbee",
-        help="Type of slope limiter for the ice thickness equation (godunov or superbee)",
-    )
-    parser.add_argument(
-        "--thk_ratio_density",
-        type=float,
-        default=0.910,
-        help="density of ice divided by density of water",
-    )
-    parser.add_argument(
-        "--thk_default_sealevel",
-        type=float,
-        default=0.0,
-        help="Default sea level if not provided by the user",
-    )
 
 def initialize(cfg, state):
 
@@ -75,5 +54,5 @@ def update(cfg, state):
         state.usurf = state.lsurf + state.thk
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

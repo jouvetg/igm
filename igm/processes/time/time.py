@@ -8,37 +8,6 @@ import matplotlib.pyplot as plt
 import datetime, time
 import tensorflow as tf
 
-
-# def params(parser):
-#     parser.add_argument(
-#         "--time_start",
-#         type=float,
-#         default=2000.0,
-#         help="Start modelling time",
-#     )
-#     parser.add_argument(
-#         "--time_end", type=float, default=2100.0, help="End modelling time"
-#     )
-#     parser.add_argument(
-#         "--time_save",
-#         type=float,
-#         default=10,
-#         help="Save result frequency for many modules (in year)",
-#     )
-#     parser.add_argument(
-#         "--time_cfl",
-#         type=float,
-#         default=0.3,
-#         help="CFL number for the stability of the mass conservation scheme, it must be below 1",
-#     )
-#     parser.add_argument(
-#         "--time_step_max",
-#         type=float,
-#         default=1.0,
-#         help="Maximum time step allowed, used only with slow ice",
-#     )
-
-
 def initialize(cfg, state):
 
     # Initialize the time with starting time
@@ -97,5 +66,5 @@ def update(cfg, state):
     state.it += 1
 
 
-def finalize(params, state):
+def finalize(cfg, state):
     pass

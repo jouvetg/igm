@@ -7,23 +7,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import time
 
-
-# def params(parser):
-#     parser.add_argument(
-#         "--avalanche_update_freq",
-#         type=float,
-#         default=1,
-#         help="Update avalanche each X years (1)",
-#     )
-
-#     parser.add_argument(
-#         "--avalanche_angleOfRepose",
-#         type=float,
-#         default=30,
-#         help="Angle of repose (30°)",
-#     )
-
-
 def initialize(cfg, state):
     
     if "time" not in cfg.processes:

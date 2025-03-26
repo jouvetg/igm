@@ -1,12 +1,12 @@
 load_ncdf:
-  input_file: input.nc # help="NetCDF input data file"
-  method_coarsen: skipping # help="Method for coarsening the data from NetCDF file: skipping or cubic_spline"
-  coarsen: 1 # help="Coarsen the data from NetCDF file by a certain (integer) number: 2 would be twice coarser ignore data each 2 grid points"
-  crop: False # help="Crop the data from NetCDF file with given top/down/left/right bounds"
-  xmin: -1.0e+20 # help="X left coordinate for cropping the NetCDF data"
-  xmax: 1.0e+20 # help="X right coordinate for cropping the NetCDF data"
-  ymin: -1.0e+20 # help="Y bottom coordinate fro cropping the NetCDF data"
-  ymax: 1.0e+20 # help="Y top coordinate for cropping the NetCDF data"
-  icemask_include: False # help="Include ice mask in the NetCDF file"
-  icemask_shapefile: icemask.shp # help="Shapefile for ice mask"
-  icemask_invert: False # help="Invert the ice mask"
+  input_file: input.nc
+  method_coarsen: skipping
+  coarsen: 1
+  crop: False
+  xmin: -1.0e+20
+  xmax: 1.0e+20
+  ymin: -1.0e+20
+  ymax: 1.0e+20
+  icemask_include: False
+  icemask_shapefile: icemask.shp
+  icemask_invert: False

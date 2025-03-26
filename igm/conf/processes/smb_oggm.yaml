@@ -1,5 +1,5 @@
 smb_oggm:
-  update_freq: 1 # help="Update the mass balance each X years"
-  ice_density: 910.0 # help="Density of ice for conversion of SMB into ice equivalent"
-  wat_density: 1000.0 # help="Density of water"
-  melt_enhancer: 1 # help="Melt enhancer factor"
+  update_freq: 1
+  ice_density: 910.0
+  wat_density: 1000.0
+  melt_enhancer: 1

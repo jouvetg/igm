@@ -1,6 +1,6 @@
 gflex:
-  update_freq: 100.0 # help="Update gflex each X years (1)"
-  default_Te: 50000 # help="Default value for Te (Elastic thickness [m]) if not given as ncdf file"
-  dx: 1000 # help="Default resolution for computing isostasy (m)."
-  pad: False # help="Default padding option"
-  quiet: True # help="Default padding option"
+  update_freq: 100.0
+  default_Te: 50000
+  dx: 1000
+  pad: False
+  quiet: True

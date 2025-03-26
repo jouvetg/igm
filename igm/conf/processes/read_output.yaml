@@ -1,7 +1,7 @@
 read_output:
-  input_file: output.nc # help="NetCDF input data file"
-  crop: False # help="Crop the data from NetCDF file with given top/down/left/right bounds"
-  xmin: -1.0e+20 # help="X left coordinate for cropping the NetCDF data"
-  xmax: 1.0e+20 # help="X right coordinate for cropping the NetCDF data"
-  ymin: -1.0e+20 # help="Y bottom coordinate fro cropping the NetCDF data"
-  ymax: 1.0e+20 # help="Y top coordinate for cropping the NetCDF data"
+  input_file: output.nc
+  crop: False
+  xmin: -1.0e+20
+  xmax: 1.0e+20
+  ymin: -1.0e+20
+  ymax: 1.0e+20

@@ -1,23 +1,16 @@
 oggm_shop:
-  RGI_ID: "RGI60-11.01450" # help="RGI ID"
-  preprocess: True # help="Use preprocessing"
-  RGI_version: 7 # help="this is temporary fix, is 6 or 7"
-  dx: 100 # help="Spatial resolution (need preprocess false to change it)"
-  border: 30 # help="Safe border margin  (need preprocess false to change it)"
-  thk_source: consensus_ice_thickness # help="millan_ice_thickness or consensus_ice_thickness"
-  vel_source: millan_ice_velocity # help="Source of the surface velocities (millan_ice_velocity or its_live)"
-  incl_glathida: False # help="Make observation file (for IGM inverse)"
-  path_glathida: "" # help="Path where the Glathida Folder is stored, so that you don't need to redownload it at every use of the script, if empty it will be in the home directory (only relevant for RGI6.0)",
-  save_in_ncdf: True # help="Write prepared data into a geology file"
-  remove_RGI_folder: True # help="remove_RGI_folder"
-  sub_entity_mask: False # help="Ice mask shows individual RGI 7.0G entities within each larger RGI 7.0C complex"
-  RGI_product: "G" # help="Glacier complexes (C) or individual basins (G) (default is G, individual basins)"
-  run_batch: False # help="Run all the glaciers in the world"
-  smooth_obs_vel: True # help="Smooth the observed velocities"
-
-# ===================== NOTE =====================
-# aletsch  RGI60-11.01450
-# malspina RGI60-01.13696
-# brady    RGI60-01.20796
-# ethan    RGI60-01.00709
-# ================================================
+  RGI_ID: "RGI60-11.01450"
+  preprocess: True
+  RGI_version: 7
+  dx: 100
+  border: 30
+  thk_source: consensus_ice_thickness
+  vel_source: millan_ice_velocity
+  incl_glathida: False
+  path_glathida: ""
+  save_in_ncdf: True
+  remove_RGI_folder: True
+  sub_entity_mask: False
+  RGI_product: "G"
+  run_batch: False
+  smooth_obs_vel: True

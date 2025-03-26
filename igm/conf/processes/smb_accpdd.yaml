@@ -1,10 +1,10 @@
 smb_accpdd:
-  update_freq: 1 # help="Update the mass balance each X years"
-  refreeze_factor: 0.6 # help="Refreezing factor"
-  thr_temp_snow: 0.0 # help="Threshold temperature for solid precipitation"
-  thr_temp_rain: 2.0 # help="Threshold temperature for liquid precipitation"
-  melt_factor_snow: 1.095726596343 # help="Degree-day factor for snow (ice eq.) (unit: meter / (Kelvin year))"
-  melt_factor_ice:  2.921937590248 # help="Degree-day factor for ice (ice eq.) (unit: meter / (Kelvin year))"
-  shift_hydro_year: 0.75 # help="This serves to start Oct 1. the acc/melt computation"
-  ice_density: 910.0 # help="Density of ice for conversion of SMB into ice equivalent"
-  wat_density: 1000.0 # help="Density of water"
+  update_freq: 1
+  refreeze_factor: 0.6
+  thr_temp_snow: 0.0
+  thr_temp_rain: 2.0
+  melt_factor_snow: 1.095726596343
+  melt_factor_ice:  2.921937590248
+  shift_hydro_year: 0.75
+  ice_density: 910.0
+  wat_density: 1000.0

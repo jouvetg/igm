@@ -4,9 +4,7 @@ local:
   filename: input.nc
   coarsening:
     boundary: trim
-    ratio:
-      x: 1
-      y: 1
+    ratio: 1
   crop:
     xmin: null
     xmax: null

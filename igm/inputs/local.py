@@ -50,14 +50,11 @@ def run(cfg, state):
             y=slice(cfg.inputs.local.crop.ymin, cfg.inputs.local.crop.ymax),
         )
 
-    max_coarsening_ratio = max(
-        cfg.inputs.local.coarsening.ratio.x, cfg.inputs.local.coarsening.ratio.y
-    )
-    if max_coarsening_ratio > 1:
+    if cfg.inputs.local.coarsening.ratio > 1:
         state.logger.info("Coarsening dataset")
         ds = ds.coarsen(
-            x=cfg.inputs.local.coarsening.ratio.x,
-            y=cfg.inputs.local.coarsening.ratio.y,
+            x=cfg.inputs.local.coarsening.ratio,
+            y=cfg.inputs.local.coarsening.ratio,
             boundary=cfg.inputs.local.coarsening.boundary,
         ).mean()
 

@@ -15,14 +15,10 @@ coarsening.boundary:
   Type: str
   Units: [dimensionless]
   Description: "Method for coarsening the data from NetCDF file: skipping or cubic_spline"
-coarsening.ratio.x:
+coarsening.ratio:
   Type: float
   Units: [dimensionless]
-  Description: "Coarsen ratio x"
-coarsening.ratio.y:
-  Type: float
-  Units: [dimensionless]
-  Description: "Coarsen ratio y" 
+  Description: "Coarsen ratio"
 
 crop.xmin:
   Type: float

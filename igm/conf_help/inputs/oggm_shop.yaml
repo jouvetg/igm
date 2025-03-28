@@ -58,3 +58,7 @@ smooth_obs_vel:
   Type: bool
   Description: "Smooth the observed velocities"
   Units: [dimensionless]
+highres:
+  Type: bool
+  Description: "Use high resolution data"
+  Units: [dimensionless]

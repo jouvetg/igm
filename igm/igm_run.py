@@ -84,10 +84,12 @@ def main(cfg: DictConfig) -> None:
         setup_igm_modules(cfg, state)
     )
 
-    input_methods = list(cfg.inputs.keys())
-    if len(input_methods) > 1:
-        raise ValueError("Only one inputs method is allowed.")
-    imported_inputs_modules[0].run(cfg, state)
+#    input_methods = list(cfg.inputs.keys())
+#    if len(input_methods) > 1:
+#        raise ValueError("Only one inputs method is allowed.")
+#    imported_inputs_modules[0].run(cfg, state)
+    for input_method in imported_inputs_modules:
+        input_method.run(cfg, state)
 
     output_modules = []
     if "outputs" in cfg:

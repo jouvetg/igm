@@ -14,3 +14,4 @@ oggm_shop:
   RGI_product: "G"
   run_batch: False
   smooth_obs_vel: True
+  highres: False

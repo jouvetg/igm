@@ -1,39 +1,46 @@
-- Name: saved_params_filename
+saved_params_filename:
+  Type: str
   Description: Filename of the saved parameters (will be depreciated with hydra)
-  Units: -
-- Name: url_data
+  Units: [dimensionless]
+url_data:
+  Type: str
   Description: Url supplied to download .nc data files
-  Units: -
-- Name: folder_data
+  Units: [dimensionless]
+folder_data:
+  Type: str
   Description: data
-  Units: -
-- Name: logging_file
+  Units: [dimensionless]
+logging_file:
   Description: ""
-  Units: -
+  Units: [dimensionless]
 
-
-- Name: logging
+logging:
+  Type: bool
   Description: False
-  Units: -
-- Name: logging_level
+  Units: [dimensionless]
+logging_level:
+  Type: str
   Description: 30
-  Units: -
+  Units: [dimensionless]
 
-  # Hardware
-- Name: gpu_id
+gpu_id:
+  Type: int
   Description: 0
-  Units: -
-- Name: gpu_info
+  Units: [dimensionless]
+gpu_info:
+  Type: bool
   Description: True
-  Units: -
+  Units: [dimensionless]
 
-  # Misc
-- Name: print_params
+print_params:
+  Type: bool
   Description: True
-  Units: -
-- Name: print_comp
+  Units: [dimensionless]
+print_comp:
+  Type: bool
   Description: Print information related to computational performances
-  Units: -
-- Name: print_info
+  Units: [dimensionless]
+print_info:
+  Type: bool
   Description: Print live information when the model is running
-  Units: -
+  Units: [dimensionless]

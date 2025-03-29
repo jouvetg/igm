@@ -23,14 +23,20 @@ logging_level:
   Description: 30
   Units: [dimensionless]
 
-gpu_id:
-  Type: int
-  Description: 0
-  Units: [dimensionless]
-gpu_info:
-  Type: bool
-  Description: True
-  Units: [dimensionless]
+hardware:
+  gpu_info:
+    Type: bool
+    Description: True
+    Units: [dimensionless]
+  visible_gpus:
+    Type: list
+    Description: "visible gpus"
+    Units: [dimensionless]
+  strategy:
+    Type: str
+    Description: "strategy"
+    Units: [dimensionless]
+
 
 print_params:
   Type: bool
@@ -44,3 +50,33 @@ print_info:
   Type: bool
   Description: Print live information when the model is running
   Units: [dimensionless]
+print_imported_modules:
+  Type: bool
+  Description: Print imported modules
+  Units: [dimensionless]
+
+structure:
+  root_foldername:
+    Type: str
+    Description: user
+    Units: [dimensionless]
+  conf_foldername:
+    Type: str
+    Description: conf
+    Units: [dimensionless]
+  code_foldername:
+    Type: str
+    Description: code
+    Units: [dimensionless]
+  input_modules_foldername:
+    Type: str
+    Description: inputs
+    Units: [dimensionless]
+  process_modules_foldername:
+    Type: str
+    Description: processes
+    Units: [dimensionless]
+  output_modules_foldername:
+    Type: str
+    Description: outputs
+    Units: [dimensionless]

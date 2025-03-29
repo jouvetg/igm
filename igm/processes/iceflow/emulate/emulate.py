@@ -3,11 +3,11 @@ import numpy as np
 import tensorflow as tf 
 import os
 
-from .utils import *
-from .energy_iceflow import *
+from ..utils import *
+from ..energy_iceflow.energy_iceflow import *
 from .neural_network import *
 
-from igm.processes.iceflow import emulators
+from igm.processes.iceflow.emulate import emulators
 import importlib_resources
 import igm
   

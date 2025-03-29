@@ -1,7 +1,7 @@
 import numpy as np 
 import tensorflow as tf 
-from .utils import *
-from .energy_iceflow import *
+from ..utils import *
+from ..energy_iceflow.energy_iceflow import *
 
 def initialize_iceflow_solver(cfg,state):
 

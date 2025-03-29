@@ -12,10 +12,10 @@ import xarray
 import sys
  
 from igm.processes.utils import *
-from .utils import *
-from .emulate import *
-from .solve import *
-from .energy_iceflow import *
+from ..utils import *
+from ..emulate.emulate import *
+from ..solve.solve import *
+from ..energy_iceflow.energy_iceflow import *
  
 def pretraining(cfg, state):
     state.direct_name = (

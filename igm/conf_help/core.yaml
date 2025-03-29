@@ -11,6 +11,7 @@ folder_data:
   Description: data
   Units: [dimensionless]
 logging_file:
+  Type: str
   Description: ""
   Units: [dimensionless]
 

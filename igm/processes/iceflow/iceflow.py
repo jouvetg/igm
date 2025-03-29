@@ -35,21 +35,12 @@ emulator as we minmize the same energy, however, with different controls,
 namely directly the velocity field U and V instead of the emulator parameters.
 """
 
-import numpy as np
-import os
-import matplotlib.pyplot as plt
-import datetime, time
-import math
-import tensorflow as tf
-
-from igm.processes.utils import *
-
-from .emulate import *
-from .solve import *
-from .diagnostic import *
+from .emulate.emulate import *
+from .solve.solve import *
+from .diagnostic.diagnostic import *
 from .utils import *
-from .optimize import *
-from .pretraining import *
+from .optimize import optimize
+from .pretrain import pretraining
 
 def initialize(cfg, state):
 
@@ -59,7 +50,7 @@ def initialize(cfg, state):
         return
 
     if cfg.processes.iceflow.iceflow.run_pretraining:
-        pretraining(cfg, state)
+        pretraining.pretraining(cfg, state)
 
     # deinfe the fields of the ice flow such a U, V, but also sliding coefficient, arrhenius, ectt
     initialize_iceflow_fields(cfg, state)
@@ -89,7 +80,7 @@ def initialize(cfg, state):
 
     if cfg.processes.iceflow.iceflow.run_data_assimilation:
         update_iceflow_emulator(cfg, state, 0)
-        optimize(cfg, state)
+        optimize.optimize(cfg, state)
         
 
 def update(cfg, state):

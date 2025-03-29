@@ -1,9 +1,9 @@
 import numpy as np 
 import tensorflow as tf 
 
-from .utils import *
-from .solve import *
-from .emulate import *
+from ..utils import *
+from ..solve.solve import *
+from ..emulate.emulate import *
 
 import time
 

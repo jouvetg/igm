@@ -11,10 +11,10 @@ import math
 import tensorflow as tf
 from scipy import stats 
 
-from igm.processes.utils import * 
-from .energy_iceflow import *
-from .utils import *
-from .emulate import *
+#from igm.processes.utils import * 
+from ..energy_iceflow.energy_iceflow import *
+from ..utils import *
+from ..emulate.emulate import *
 from .optimize_outputs import *
 from .optimize_params_cook import *
   

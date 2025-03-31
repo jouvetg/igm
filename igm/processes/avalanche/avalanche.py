@@ -4,8 +4,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import tensorflow as tf
-import time
+import tensorflow as tf 
 
 def initialize(cfg, state):
     

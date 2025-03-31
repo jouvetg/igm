@@ -4,12 +4,8 @@
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
-import os, sys, shutil
-import matplotlib.pyplot as plt
-import datetime, time
-import tensorflow as tf
-import igm
-from netCDF4 import Dataset
+import os, sys, shutil 
+import tensorflow as tf 
 
 from igm.processes.utils import *
 

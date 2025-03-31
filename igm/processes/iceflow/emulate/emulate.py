@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2021-2025 IGM authors 
+# Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np 
 import tensorflow as tf 
@@ -6,10 +10,8 @@ import os
 from ..utils import *
 from ..energy_iceflow.energy_iceflow import * 
 from .neural_network import *
-
-from igm.processes.iceflow.emulate import emulators
-import importlib_resources
-import igm
+from ..emulate import emulators
+import importlib_resources 
   
 def initialize_iceflow_emulator(cfg, state):
 

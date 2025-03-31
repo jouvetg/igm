@@ -1,5 +1,4 @@
 iceflow:
-  run_pretraining: False
   type: "emulated"
   pretrained_emulator: True
   emulator: ""

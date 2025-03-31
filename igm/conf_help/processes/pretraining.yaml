@@ -1,49 +1,48 @@
-pretraining:
-  data_dir:
-    Type: str
-    Description: "Directory of the data of the glacier catalog"
-    Units: [dimensionless]
-  batch_size:
-    Type: integer
-    Description: "Batch size"
-    Units: [dimensionless]
-  freq_test:
-    Type: integer
-    Description: "Frequency of the test"
-    Units: [dimensionless]
-  train_iceflow_emulator_restart_lr:
-    Type: integer
-    Description: "Restart frequency for the learning rate"
-    Units: [dimensionless]
-  epochs:
-    Type: integer
-    Description: "Number of epochs"
-    Units: [dimensionless]
-  min_arrhenius:
-    Type: float
-    Description: "Minimum Arrhenius factor"
-    Units: [dimensionless]
-  max_arrhenius:
-    Type: float
-    Description: "Maximum Arrhenius factor"
-    Units: ???
-  min_slidingco:
-    Type: float
-    Description: "Minimum sliding coefficient"
-    Units: ???
-  max_slidingco:
-    Type: float
-    Description: "Maximum sliding coefficient"
-    Units: [dimensionless]
-  min_coarsen:
-    Type: integer
-    Description: "Minimum coarsening factor"
-    Units: ???
-  max_coarsen:
-    Type: integer
-    Description: "Maximum coarsening factor"
-    Units: ???
-  soft_begining:
-    Type: integer
-    Description: "soft_begining, if 0 explore all parameters between min and max, otherwise, only explore from this iteration while keeping mid-value for the first it."
-    Units: [dimensionless]
+data_dir:
+  Type: str
+  Description: "Directory of the data of the glacier catalog"
+  Units: [dimensionless]
+batch_size:
+  Type: integer
+  Description: "Batch size"
+  Units: [dimensionless]
+freq_test:
+  Type: integer
+  Description: "Frequency of the test"
+  Units: [dimensionless]
+train_iceflow_emulator_restart_lr:
+  Type: integer
+  Description: "Restart frequency for the learning rate"
+  Units: [dimensionless]
+epochs:
+  Type: integer
+  Description: "Number of epochs"
+  Units: [dimensionless]
+min_arrhenius:
+  Type: float
+  Description: "Minimum Arrhenius factor"
+  Units: [dimensionless]
+max_arrhenius:
+  Type: float
+  Description: "Maximum Arrhenius factor"
+  Units: ???
+min_slidingco:
+  Type: float
+  Description: "Minimum sliding coefficient"
+  Units: ???
+max_slidingco:
+  Type: float
+  Description: "Maximum sliding coefficient"
+  Units: [dimensionless]
+min_coarsen:
+  Type: integer
+  Description: "Minimum coarsening factor"
+  Units: ???
+max_coarsen:
+  Type: integer
+  Description: "Maximum coarsening factor"
+  Units: ???
+soft_begining:
+  Type: integer
+  Description: "soft_begining, if 0 explore all parameters between min and max, otherwise, only explore from this iteration while keeping mid-value for the first it."
+  Units: [dimensionless]

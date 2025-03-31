@@ -11,10 +11,12 @@ import os
 import xarray
 import sys
  
-from igm.processes.utils import * 
-from igm.processes.iceflow.emulate.emulate import *
-from igm.processes.iceflow.solve.solve import *
-from igm.processes.iceflow.energy_iceflow.energy_iceflow import *
+from ..utils import *  
+from ..iceflow.diagnostic.diagnostic import *
+from ..iceflow.emulate.emulate import *
+from ..iceflow.solve.solve import *
+from ..iceflow.energy_iceflow.energy_iceflow import *
+ 
  
 def initialize(cfg, state):
     state.direct_name = (

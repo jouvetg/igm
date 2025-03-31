@@ -2,6 +2,14 @@ import numpy as np
 import tensorflow as tf 
  
 @tf.function()
+def compute_average_velocity_twolayers_tf(U, V):
+
+    Um = (U[:, :, 1:, 1:] + U[:, :, 1:, :-1] + U[:, :, :-1, 1:] + U[:, :, :-1, :-1]) / 4
+    Vm = (V[:, :, 1:, 1:] + V[:, :, 1:, :-1] + V[:, :, :-1, 1:] + V[:, :, :-1, :-1]) / 4
+
+    return Um, Vm
+
+@tf.function()
 def compute_gradient_stag(s, dX, dY):
     """
     compute spatial gradient, outcome on stagerred grid
@@ -41,59 +49,41 @@ def stag8(B):
         + B[:, :-1, :-1, 1:]
         + B[:, :-1, :-1, :-1]
     ) / 8
- 
-def Y_to_UV(cfg, Y):
-    N = cfg.processes.iceflow.iceflow.Nz
 
-    U = tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1])
-    V = tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1])
+@tf.function()
+def get_dz_COND(thk, Nz, vert_spacing):
 
-    return U, V
+    # Vertical discretization
+    if Nz > 1:
+        zeta = np.arange(Nz) / (Nz - 1)  # formerly ...
+        #zeta = tf.range(Nz, dtype=tf.float32) / (Nz - 1)
+        temp = (zeta / vert_spacing) * (1.0 + (vert_spacing - 1.0) * zeta)
+        temd = temp[1:] - temp[:-1]
+        dz = tf.stack([stag4(thk) * z for z in temd], axis=1)  # formerly ..
+        #dz = (tf.expand_dims(tf.expand_dims(temd,axis=-1),axis=-1)*tf.expand_dims(stag4(thk),axis=0))
+    else:
+        dz = tf.expand_dims(stag4(thk), axis=0)
 
-def UV_to_Y(cfg, U, V):
-    UU = tf.experimental.numpy.moveaxis(U, [0], [-1])
-    VV = tf.experimental.numpy.moveaxis(V, [0], [-1])
-    RR = tf.expand_dims(
-        tf.concat(
-            [UU, VV],
-            axis=-1,
-        ),
-        axis=0,
+    COND = (
+        (thk[:, 1:, 1:] > 0)
+        & (thk[:, 1:, :-1] > 0)
+        & (thk[:, :-1, 1:] > 0)
+        & (thk[:, :-1, :-1] > 0)
     )
+    COND = tf.expand_dims(COND, axis=1)
 
-    return RR
+    return dz, COND
 
-def fieldin_to_X(cfg, fieldin):
-    X = []
+def gauss_points_and_weigths(ord_gauss):
 
-    fieldin_dim = [0, 0, 1 * (cfg.processes.iceflow.iceflow.dim_arrhenius == 3), 0, 0]
+    if ord_gauss == 3:
+        n = np.array([0.11270, 0.5,     0.88730], dtype=np.float32)
+        w = np.array([0.27778, 0.44444, 0.27778], dtype=np.float32)
+    elif ord_gauss == 5:
+        n = np.array([0.04691, 0.23077, 0.5,     0.76923, 0.95309], dtype=np.float32)
+        w = np.array([0.11847, 0.23932, 0.28444, 0.23932, 0.11847], dtype=np.float32)
+    elif ord_gauss == 7:
+        n = np.array([0.025446, 0.129234, 0.297078,      0.5, 0.702922, 0.870766, 0.974554], dtype=np.float32)
+        w = np.array([0.064742, 0.139852, 0.190915, 0.208979, 0.190915, 0.139852, 0.064742], dtype=np.float32)
 
-    for f, s in zip(fieldin, fieldin_dim):
-        if s == 0:
-            X.append(tf.expand_dims(f, axis=-1))
-        else:
-            X.append(tf.experimental.numpy.moveaxis(f, [0], [-1]))
-
-    return tf.expand_dims(tf.concat(X, axis=-1), axis=0)
-
-
-def X_to_fieldin(cfg, X):
-    i = 0
-
-    fieldin_dim = [0, 0, 1 * (cfg.processes.iceflow.iceflow.dim_arrhenius == 3), 0, 0]
-
-    fieldin = []
-
-    for f, s in zip(cfg.processes.iceflow.iceflow.fieldin, fieldin_dim):
-        if s == 0:
-            fieldin.append(X[:, :, :, i])
-            i += 1
-        else:
-            fieldin.append(
-                tf.experimental.numpy.moveaxis(
-                    X[:, :, :, i : i + cfg.processes.iceflow.iceflow.Nz], [-1], [1]
-                )
-            )
-            i += cfg.processes.iceflow.iceflow.Nz
-
-    return fieldin
+    return n, w 

@@ -1,0 +1,31 @@
+import tensorflow as tf
+from .utils import stag4b, stag8
+from .utils import compute_gradient_stag
+
+@tf.function()
+def cost_gravity(U, V, usurf, dX, dz, COND, Nz, ice_density, gravity_cst, 
+                   force_negative_gravitational_energy):
+
+    slopsurfx, slopsurfy = compute_gradient_stag(usurf, dX, dX)
+    slopsurfx = tf.expand_dims(slopsurfx, axis=1)
+    slopsurfy = tf.expand_dims(slopsurfy, axis=1)
+ 
+    if Nz > 1:
+        uds = stag8(U) * slopsurfx + stag8(V) * slopsurfy
+    else:
+        uds = stag4b(U) * slopsurfx + stag4b(V) * slopsurfy  
+
+    if force_negative_gravitational_energy:
+        uds = tf.minimum(uds, 0.0) # force non-postiveness
+
+    uds = tf.where(COND, uds, 0.0)
+
+    # C_slid is unit Mpa m^-1 m/y m = Mpa m/y
+    C_grav = (
+        ice_density
+        * gravity_cst
+        * 10 ** (-6)
+        * tf.reduce_sum(dz * uds, axis=1)
+    )
+
+    return C_grav

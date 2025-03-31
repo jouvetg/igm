@@ -4,7 +4,7 @@ import tensorflow as tf
 import os
 
 from ..utils import *
-from ..energy_iceflow.energy_iceflow import *
+from ..energy_iceflow.energy_iceflow import * 
 from .neural_network import *
 
 from igm.processes.iceflow.emulate import emulators

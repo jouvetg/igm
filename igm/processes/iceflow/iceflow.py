@@ -38,17 +38,13 @@ namely directly the velocity field U and V instead of the emulator parameters.
 from .emulate.emulate import *
 from .solve.solve import *
 from .diagnostic.diagnostic import *
-from .utils import *
-from .pretrain import pretraining
+from .utils import * 
 
 def initialize(cfg, state):
 
     # This makes sure this function is only called once
     if hasattr(state, "was_initialize_iceflow_already_called"):
         return
-
-    if cfg.processes.iceflow.iceflow.run_pretraining:
-        pretraining.pretraining(cfg, state)
 
     # deinfe the fields of the ice flow such a U, V, but also sliding coefficient, arrhenius, ectt
     initialize_iceflow_fields(cfg, state)

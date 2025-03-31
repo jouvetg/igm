@@ -20,21 +20,21 @@ def initialize(cfg, state):
     state.direct_name = (
         "pinnbp"
         + "_"
-        + str(cfg.processes.iceflow.iceflow.Nz)
+        + str(cfg.processes.iceflow.Nz)
         + "_"
-        + str(int(cfg.processes.iceflow.iceflow.vert_spacing))
-        + "_"
-    )
-    state.direct_name += (
-        cfg.processes.iceflow.iceflow.network
-        + "_"
-        + str(cfg.processes.iceflow.iceflow.nb_layers)
-        + "_"
-        + str(cfg.processes.iceflow.iceflow.nb_out_filter)
+        + str(int(cfg.processes.iceflow.vert_spacing))
         + "_"
     )
     state.direct_name += (
-        str(cfg.processes.iceflow.iceflow.dim_arrhenius) + "_" + str(int(cfg.processes.iceflow.iceflow.new_friction_param))
+        cfg.processes.iceflow.network
+        + "_"
+        + str(cfg.processes.iceflow.nb_layers)
+        + "_"
+        + str(cfg.processes.iceflow.nb_out_filter)
+        + "_"
+    )
+    state.direct_name += (
+        str(cfg.processes.iceflow.dim_arrhenius) + "_" + str(int(cfg.processes.iceflow.new_friction_param))
     )
 
     os.makedirs( state.direct_name, exist_ok=True)
@@ -89,11 +89,11 @@ def compute_solutions(cfg, state):
 
     if int(tf.__version__.split(".")[1]) <= 10:
         state.optimizer = tf.keras.optimizers.Adam(
-            learning_rate=cfg.processes.iceflow.iceflow.solve_step_size
+            learning_rate=cfg.processes.iceflow.solve_step_size
         )
     else:
         state.optimizer = tf.keras.optimizers.legacy.Adam(
-            learning_rate=cfg.processes.iceflow.iceflow.solve_step_size
+            learning_rate=cfg.processes.iceflow.solve_step_size
         )
 
     for par in state.PAR:
@@ -109,14 +109,14 @@ def compute_solutions(cfg, state):
         resol = float((x[1] - x[0]) * co)
         dX = tf.ones_like(thk) * resol
 
-        if cfg.processes.iceflow.iceflow.dim_arrhenius == 3:
-            arrhenius = tf.ones((cfg.processes.iceflow.iceflow.Nz, thk.shape[0], thk.shape[1])) * val_A
+        if cfg.processes.iceflow.dim_arrhenius == 3:
+            arrhenius = tf.ones((cfg.processes.iceflow.Nz, thk.shape[0], thk.shape[1])) * val_A
         else:
             arrhenius = tf.ones_like(thk) * val_A
 
         slidingco = tf.ones_like(thk) * val_C
 
-        for f in cfg.processes.iceflow.iceflow.fieldin:
+        for f in cfg.processes.iceflow.fieldin:
             vars(state)[f] = vars()[f]
 
         fieldin = [thk, usurf, arrhenius, slidingco, dX]
@@ -124,10 +124,10 @@ def compute_solutions(cfg, state):
         X = fieldin_to_X(cfg, fieldin)
 
         U = tf.Variable(
-            tf.zeros((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
+            tf.zeros((cfg.processes.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
         )
         V = tf.Variable(
-            tf.zeros((cfg.processes.iceflow.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
+            tf.zeros((cfg.processes.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
         )
 
         U, V, MISFIT = solve_iceflow(cfg, state, U, V)
@@ -180,17 +180,17 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
 
     import random
 
-    nb_inputs = len(cfg.processes.iceflow.iceflow.fieldin) + (cfg.processes.iceflow.iceflow.dim_arrhenius == 3) * (
-        cfg.processes.iceflow.iceflow.Nz - 1
+    nb_inputs = len(cfg.processes.iceflow.fieldin) + (cfg.processes.iceflow.dim_arrhenius == 3) * (
+        cfg.processes.iceflow.Nz - 1
     )
-    nb_outputs = 2 * cfg.processes.iceflow.iceflow.Nz
+    nb_outputs = 2 * cfg.processes.iceflow.Nz
 
     if os.path.exists("model0.h5"):
         state.iceflow_model = tf.keras.models.load_model("model0.h5", compile=False)
     else:
-        if cfg.processes.iceflow.iceflow.network=='cnn':
+        if cfg.processes.iceflow.network=='cnn':
             state.iceflow_model = cnn(cfg, nb_inputs, nb_outputs)
-        elif cfg.processes.iceflow.iceflow.network=='unet':
+        elif cfg.processes.iceflow.network=='unet':
             state.iceflow_model = unet(cfg, nb_inputs, nb_outputs)
 
     state.iceflow_model.summary(line_length=130)
@@ -198,11 +198,11 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
     # fix change in TF btw version <=10 and version >=11
     if int(tf.__version__.split(".")[1]) <= 10:
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate=cfg.processes.iceflow.iceflow.retrain_emulator_lr
+            learning_rate=cfg.processes.iceflow.retrain_emulator_lr
         )
     else:
         optimizer = tf.keras.optimizers.legacy.Adam(
-            learning_rate=cfg.processes.iceflow.iceflow.retrain_emulator_lr
+            learning_rate=cfg.processes.iceflow.retrain_emulator_lr
         )
 
     state.MISFIT = []
@@ -278,8 +278,8 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
             
             PAD = compute_PAD(cfg,nx,ny)
 
-            if cfg.processes.iceflow.iceflow.dim_arrhenius == 3:
-                arrhenius = tf.ones((1, cfg.processes.iceflow.iceflow.Nz, ny, nx)) * val_A
+            if cfg.processes.iceflow.dim_arrhenius == 3:
+                arrhenius = tf.ones((1, cfg.processes.iceflow.Nz, ny, nx)) * val_A
             else:
                 arrhenius = tf.ones_like(thk) * val_A
 
@@ -313,11 +313,11 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
             ds.close()
 
         if cfg.processes.pretraining.train_iceflow_emulator_restart_lr > 0:
-            optimizer.lr = cfg.processes.iceflow.iceflow.retrain_emulator_lr * (
+            optimizer.lr = cfg.processes.iceflow.retrain_emulator_lr * (
                 0.9 ** ((epoch % cfg.processes.pretraining.train_iceflow_emulator_restart_lr) / 100)
             )
         else:
-            optimizer.lr = cfg.processes.iceflow.iceflow.retrain_emulator_lr * (0.9 ** (epoch / 100))
+            optimizer.lr = cfg.processes.iceflow.retrain_emulator_lr * (0.9 ** (epoch / 100))
 
         if epoch % (cfg.processes.pretraining.epochs // 5) == 0:
             pp = os.path.join( state.direct_name, "model-" + str(epoch) + ".h5" )
@@ -472,13 +472,13 @@ def _computenormp(dz, u, v, p):
 
 
 def _computemisfitall(cfg, state, X, Y, YP):
-    N = cfg.processes.iceflow.iceflow.Nz
+    N = cfg.processes.iceflow.Nz
     thk = X[0, :, :, 0]
 
     # Vertical discretization
-    zeta = np.arange(cfg.processes.iceflow.iceflow.Nz) / (cfg.processes.iceflow.iceflow.Nz - 1)
-    temp = (zeta / cfg.processes.iceflow.iceflow.vert_spacing) * (
-        1.0 + (cfg.processes.iceflow.iceflow.vert_spacing - 1.0) * zeta
+    zeta = np.arange(cfg.processes.iceflow.Nz) / (cfg.processes.iceflow.Nz - 1)
+    temp = (zeta / cfg.processes.iceflow.vert_spacing) * (
+        1.0 + (cfg.processes.iceflow.vert_spacing - 1.0) * zeta
     )
     temp = temp[1:] - temp[:-1]
     dz = tf.stack([thk * z for z in temp])
@@ -534,7 +534,7 @@ def _plot_one_Glen(cfg, X, Y, path):
 
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-    #    N    = cfg.processes.iceflow.iceflow.Nz
+    #    N    = cfg.processes.iceflow.Nz
     #    ut   = Y[0,:,:,N-1] ; #tf.reduce_mean( Y[0,:,:,:N] , axis=-1)
     #    vt   = Y[0,:,:,2*N-1]  ; #tf.reduce_mean( Y[0,:,:,N:] , axis=-1)
 
@@ -576,7 +576,7 @@ def _plot_iceflow_Glen(cfg, state, X, Y, YP, tit, path):
 
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-    #    N    = cfg.processes.iceflow.iceflow.Nz
+    #    N    = cfg.processes.iceflow.Nz
 
     #    ut   = Y[0,:,:,N-1] ; #tf.reduce_mean( Y[0,:,:,:N] , axis=-1)
     #    vt   = Y[0,:,:,2*N-1]  ; #tf.reduce_mean( Y[0,:,:,N:] , axis=-1)

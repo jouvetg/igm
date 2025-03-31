@@ -88,7 +88,7 @@ class IGM_Model2D(Model2D):
         self.x = x
         self.y = y
 
-        self.cfg.processes.iceflow.iceflow.retrain_iceflow_emulator_freq = 0
+        self.cfg.processes.iceflow.retrain_iceflow_emulator_freq = 0
 
         # intialize
         self.state.thk = tf.Variable(self.ice_thick)

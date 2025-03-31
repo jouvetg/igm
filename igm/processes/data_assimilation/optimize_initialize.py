@@ -7,7 +7,7 @@ import tensorflow as tf
 from .utils import create_density_matrix
 from .cook.infer_params_cook import infer_params_cook
  
-def initialize_optimize(cfg, state):
+def optimize_initialize(cfg, state):
 
     ###### PERFORM CHECKS PRIOR OPTIMIZATIONS
 
@@ -15,16 +15,16 @@ def initialize_optimize(cfg, state):
     # state.usurfobs = tf.Variable(gaussian_filter(state.usurfobs.numpy(), 3, mode="reflect"))
     # state.usurf    = tf.Variable(gaussian_filter(state.usurf.numpy(), 3, mode="reflect"))
 
-    assert ("usurf" in cfg.processes.iceflow.optimize.cost) == ("usurf" in cfg.processes.iceflow.optimize.control)
+    assert ("usurf" in cfg.processes.data_assimilation.cost) == ("usurf" in cfg.processes.data_assimilation.control)
 
     # make sure that there are least some profiles in thkobs
     if tf.reduce_all(tf.math.is_nan(state.thkobs)):
-        if "thk" in cfg.processes.iceflow.optimize.cost:
-            cfg.processes.iceflow.optimize.cost.remove("thk")
+        if "thk" in cfg.processes.data_assimilation.cost:
+            cfg.processes.data_assimilation.cost.remove("thk")
 
     ###### PREPARE DATA PRIOR OPTIMIZATIONS
  
-    if "divfluxobs" in cfg.processes.iceflow.optimize.cost:
+    if "divfluxobs" in cfg.processes.data_assimilation.cost:
         if not hasattr(state, "divfluxobs"):
             state.divfluxobs = state.smb - state.dhdt
 
@@ -33,11 +33,11 @@ def initialize_optimize(cfg, state):
     else:
         state.thk = tf.zeros_like(state.thk)
 
-    if cfg.processes.iceflow.optimize.init_zero_thk:
+    if cfg.processes.data_assimilation.init_zero_thk:
         state.thk = state.thk*0.0
         
     # this is a density matrix that will be used to weight the cost function
-    if cfg.processes.iceflow.optimize.uniformize_thkobs:
+    if cfg.processes.data_assimilation.uniformize_thkobs:
         state.dens_thkobs = create_density_matrix(state.thkobs, kernel_size=5)
         state.dens_thkobs = tf.where(state.dens_thkobs>0, 1.0/state.dens_thkobs, 0.0)
         state.dens_thkobs = tf.where(tf.math.is_nan(state.thkobs),0.0,state.dens_thkobs)
@@ -49,13 +49,13 @@ def initialize_optimize(cfg, state):
     state.slidingco = tf.where( state.icemaskobs == 2, 0.0, state.slidingco)
     
     # this will infer values for slidingco and convexity weight based on the ice velocity and an empirical relationship from test glaciers with thickness profiles
-    if cfg.processes.iceflow.optimize.infer_params:
+    if cfg.processes.data_assimilation.infer_params:
         #Because OGGM will index icemask from 0
         dummy = infer_params_cook(state, cfg)
         if tf.reduce_max(state.icemask).numpy() < 1:
             return
     
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-        state.optimizer = tf.keras.optimizers.Adam(learning_rate=cfg.processes.iceflow.optimize.step_size)
+        state.optimizer = tf.keras.optimizers.Adam(learning_rate=cfg.processes.data_assimilation.step_size)
     else:
-        state.optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=cfg.processes.iceflow.optimize.step_size)
+        state.optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=cfg.processes.data_assimilation.step_size)

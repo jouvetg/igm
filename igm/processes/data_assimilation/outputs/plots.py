@@ -63,7 +63,7 @@ def update_plot_inversion(cfg, state, i):
     #########################################################
 
     if i == 0:
-        if cfg.processes.iceflow.optimize.editor_plot2d == "vs":
+        if cfg.processes.data_assimilation.editor_plot2d == "vs":
             plt.ion()  # enable interactive mode
 
         # state.fig = plt.figure()
@@ -206,8 +206,8 @@ def update_plot_inversion(cfg, state, i):
 
     #########################################################
 
-    if cfg.processes.iceflow.optimize.plot2d_live:
-        if cfg.processes.iceflow.optimize.editor_plot2d == "vs":
+    if cfg.processes.data_assimilation.plot2d_live:
+        if cfg.processes.data_assimilation.editor_plot2d == "vs":
             state.fig.canvas.draw()  # re-drawing the figure
             state.fig.canvas.flush_events()  # to flush the GUI events
         else:
@@ -237,7 +237,7 @@ def update_plot_inversion_simple(cfg, state, i):
     #########################################################
 
     if i == 0:
-        if cfg.processes.iceflow.optimize.editor_plot2d == "vs":
+        if cfg.processes.data_assimilation.editor_plot2d == "vs":
             plt.ion()  # enable interactive mode
 
         # state.fig = plt.figure()
@@ -301,8 +301,8 @@ def update_plot_inversion_simple(cfg, state, i):
 
     #########################################################
 
-    if cfg.processes.iceflow.optimize.plot2d_live:
-        if cfg.processes.iceflow.optimize.editor_plot2d == "vs":
+    if cfg.processes.data_assimilation.plot2d_live:
+        if cfg.processes.data_assimilation.editor_plot2d == "vs":
             state.fig.canvas.draw()  # re-drawing the figure
             state.fig.canvas.flush_events()  # to flush the GUI events
         else:

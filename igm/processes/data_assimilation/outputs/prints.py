@@ -24,7 +24,7 @@ def print_costs(cfg, state, cost, i):
         print("Costs:     " + "   ".join(L))
         print("   ".join([f"{key:>12}" for key in keys]),file=f)
 
-    if i % cfg.processes.iceflow.optimize.output_freq == 0:
+    if i % cfg.processes.data_assimilation.output_freq == 0:
         L = [datetime.datetime.now().strftime("%H:%M:%S"),f"{i:0>{8}}",f"{vol:>8.4f}"] \
           + [f"{bound(cost[key].numpy()):>12.4f}" for key in keys]
         print("   ".join(L))

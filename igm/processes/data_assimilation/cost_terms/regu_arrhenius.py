@@ -12,16 +12,16 @@ def regu_arrhenius(cfg,state):
     dadx = (state.arrhenius[:, 1:] - state.arrhenius[:, :-1])/state.dx
     dady = (state.arrhenius[1:, :] - state.arrhenius[:-1, :])/state.dx
 
-    if cfg.processes.iceflow.optimize.sole_mask:                
+    if cfg.processes.data_assimilation.sole_mask:                
         dadx = tf.where( (state.icemaskobs[:, 1:] == 1) & (state.icemaskobs[:, :-1] == 1) , dadx, 0.0)
         dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
     
-    if cfg.processes.iceflow.optimize.fix_opti_normalization_issue:
-        REGU_S = (cfg.processes.iceflow.optimize.regu_param_arrhenius) * 0.5 * (
+    if cfg.processes.data_assimilation.fix_opti_normalization_issue:
+        REGU_S = (cfg.processes.data_assimilation.regu_param_arrhenius) * 0.5 * (
             tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
         )
     else:
-        REGU_S = (cfg.processes.iceflow.optimize.regu_param_arrhenius) * (
+        REGU_S = (cfg.processes.data_assimilation.regu_param_arrhenius) * (
             tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
         )
 

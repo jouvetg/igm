@@ -39,14 +39,12 @@ from .emulate.emulate import *
 from .solve.solve import *
 from .diagnostic.diagnostic import *
 from .utils import *
-from .optimize import optimize
 from .pretrain import pretraining
 
 def initialize(cfg, state):
 
-    # This makes it so that if the user included the optimize module, this intializer will not be called again.
-    # This is due to the fact that the optimize module calls the initialize (and params) function of the iceflow module.
-    if hasattr(state, "optimize_initializer_called"):
+    # This makes sure this function is only called once
+    if hasattr(state, "was_initialize_iceflow_already_called"):
         return
 
     if cfg.processes.iceflow.iceflow.run_pretraining:
@@ -73,15 +71,12 @@ def initialize(cfg, state):
     
     if not cfg.processes.iceflow.iceflow.type == "solved":
         update_iceflow_emulated(cfg, state)
-        
-        
+         
     # Currently it is not supported to have the two working simulatanoutly
     assert (cfg.processes.iceflow.iceflow.exclude_borders==0) | (cfg.processes.iceflow.iceflow.multiple_window_size==0)
-
-    if cfg.processes.iceflow.iceflow.run_data_assimilation:
-        update_iceflow_emulator(cfg, state, 0)
-        optimize.optimize(cfg, state)
-        
+ 
+    # This makes sure this function is only called once
+    state.was_initialize_iceflow_already_called = True
 
 def update(cfg, state):
 

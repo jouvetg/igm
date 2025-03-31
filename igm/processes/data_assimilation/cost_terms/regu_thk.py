@@ -11,32 +11,32 @@ def regu_thk(cfg,state):
     areaicemask = tf.reduce_sum(tf.where(state.icemask>0.5,1.0,0.0))*state.dx**2
 
     # here we had factor 8*np.pi*0.04, which is equal to 1
-    if cfg.processes.iceflow.optimize.infer_params:
+    if cfg.processes.data_assimilation.infer_params:
         gamma = tf.zeros_like(state.thk)
-        gamma = state.convexity_weights * areaicemask**(cfg.processes.iceflow.optimize.convexity_power-2.0)
+        gamma = state.convexity_weights * areaicemask**(cfg.processes.data_assimilation.convexity_power-2.0)
     else:
-        gamma = cfg.processes.iceflow.optimize.convexity_weight * areaicemask**(cfg.processes.iceflow.optimize.convexity_power-2.0)
+        gamma = cfg.processes.data_assimilation.convexity_weight * areaicemask**(cfg.processes.data_assimilation.convexity_power-2.0)
 
-    if cfg.processes.iceflow.optimize.to_regularize == 'topg':
+    if cfg.processes.data_assimilation.to_regularize == 'topg':
         field = state.usurf - state.thk
-    elif cfg.processes.iceflow.optimize.to_regularize == 'thk':
+    elif cfg.processes.data_assimilation.to_regularize == 'thk':
         field = state.thk
 
-    if cfg.processes.iceflow.optimize.smooth_anisotropy_factor == 1:
+    if cfg.processes.data_assimilation.smooth_anisotropy_factor == 1:
         dbdx = (field[:, 1:] - field[:, :-1])/state.dx
         dbdy = (field[1:, :] - field[:-1, :])/state.dx
 
-        if cfg.processes.iceflow.optimize.sole_mask:
+        if cfg.processes.data_assimilation.sole_mask:
             dbdx = tf.where( (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5) , dbdx, 0.0)
             dbdy = tf.where( (state.icemaskobs[1:, :] > 0.5) & (state.icemaskobs[:-1, :] > 0.5) , dbdy, 0.0)
 
-        if cfg.processes.iceflow.optimize.fix_opti_normalization_issue:
-            REGU_H = (cfg.processes.iceflow.optimize.regu_param_thk) * 0.5 * (
+        if cfg.processes.data_assimilation.fix_opti_normalization_issue:
+            REGU_H = (cfg.processes.data_assimilation.regu_param_thk) * 0.5 * (
                 tf.math.reduce_mean(dbdx**2) + tf.math.reduce_mean(dbdy**2)
                 - gamma * tf.math.reduce_mean(state.thk)
             )
         else:
-            REGU_H = (cfg.processes.iceflow.optimize.regu_param_thk) * (
+            REGU_H = (cfg.processes.data_assimilation.regu_param_thk) * (
                 tf.nn.l2_loss(dbdx) + tf.nn.l2_loss(dbdy)
                 - gamma * tf.math.reduce_sum(state.thk)
             )
@@ -46,24 +46,24 @@ def regu_thk(cfg,state):
         dbdy = (field[1:, :] - field[:-1, :])/state.dx
         dbdy = (dbdy[:, 1:] + dbdy[:, :-1]) / 2.0
 
-        if cfg.processes.iceflow.optimize.sole_mask:
+        if cfg.processes.data_assimilation.sole_mask:
             MASK = (state.icemaskobs[1:, 1:] > 0.5) & (state.icemaskobs[1:, :-1] > 0.5) & (state.icemaskobs[:-1, 1:] > 0.5) & (state.icemaskobs[:-1, :-1] > 0.5)
             dbdx = tf.where( MASK, dbdx, 0.0)
             dbdy = tf.where( MASK, dbdy, 0.0)
  
-        if cfg.processes.iceflow.optimize.fix_opti_normalization_issue:
-            REGU_H = (cfg.processes.iceflow.optimize.regu_param_thk) * 0.5 * (
-                (1.0/np.sqrt(cfg.processes.iceflow.optimize.smooth_anisotropy_factor))
+        if cfg.processes.data_assimilation.fix_opti_normalization_issue:
+            REGU_H = (cfg.processes.data_assimilation.regu_param_thk) * 0.5 * (
+                (1.0/np.sqrt(cfg.processes.data_assimilation.smooth_anisotropy_factor))
                 * tf.math.reduce_mean((dbdx * state.flowdirx + dbdy * state.flowdiry)**2)
-                + np.sqrt(cfg.processes.iceflow.optimize.smooth_anisotropy_factor)
+                + np.sqrt(cfg.processes.data_assimilation.smooth_anisotropy_factor)
                 * tf.math.reduce_mean((dbdx * state.flowdiry - dbdy * state.flowdirx)**2)
                 - tf.math.reduce_mean(gamma*state.thk)
             )
         else:
-            REGU_H = (cfg.processes.iceflow.optimize.regu_param_thk) * (
-                (1.0/np.sqrt(cfg.processes.iceflow.optimize.smooth_anisotropy_factor))
+            REGU_H = (cfg.processes.data_assimilation.regu_param_thk) * (
+                (1.0/np.sqrt(cfg.processes.data_assimilation.smooth_anisotropy_factor))
                 * tf.nn.l2_loss((dbdx * state.flowdirx + dbdy * state.flowdiry))
-                + np.sqrt(cfg.processes.iceflow.optimize.smooth_anisotropy_factor)
+                + np.sqrt(cfg.processes.data_assimilation.smooth_anisotropy_factor)
                 * tf.nn.l2_loss((dbdx * state.flowdiry - dbdy * state.flowdirx))
                 - tf.math.reduce_sum(gamma*state.thk)
             )

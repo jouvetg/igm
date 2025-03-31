@@ -9,21 +9,21 @@ from igm.processes.utils import compute_divflux
 def cost_divfluxobs(cfg,state,i):
 
     divflux = compute_divflux(
-        state.ubar, state.vbar, state.thk, state.dx, state.dx, method=cfg.processes.iceflow.optimize.divflux_method
+        state.ubar, state.vbar, state.thk, state.dx, state.dx, method=cfg.processes.data_assimilation.divflux_method
     )
  
     divfluxtar = state.divfluxobs
     ACT = ~tf.math.is_nan(divfluxtar)
     COST_D = 0.5 * tf.reduce_mean(
-        ((divfluxtar[ACT] - divflux[ACT]) / cfg.processes.iceflow.optimize.divfluxobs_std) ** 2
+        ((divfluxtar[ACT] - divflux[ACT]) / cfg.processes.data_assimilation.divfluxobs_std) ** 2
     )
  
     dddx = (divflux[:, 1:] - divflux[:, :-1])/state.dx
     dddy = (divflux[1:, :] - divflux[:-1, :])/state.dx
-    COST_D += (cfg.processes.iceflow.optimize.regu_param_div) * 0.5 * ( tf.reduce_mean(dddx**2) + tf.reduce_mean(dddy**2) )
+    COST_D += (cfg.processes.data_assimilation.regu_param_div) * 0.5 * ( tf.reduce_mean(dddx**2) + tf.reduce_mean(dddy**2) )
 
-    if cfg.processes.iceflow.optimize.force_zero_sum_divflux:
+    if cfg.processes.data_assimilation.force_zero_sum_divflux:
         ACT = state.icemaskobs > 0.5
-        COST_D += 0.5 * 1000 * tf.reduce_mean(divflux[ACT] / cfg.processes.iceflow.optimize.divfluxobs_std) ** 2
+        COST_D += 0.5 * 1000 * tf.reduce_mean(divflux[ACT] / cfg.processes.data_assimilation.divfluxobs_std) ** 2
 
     return COST_D

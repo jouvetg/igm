@@ -10,6 +10,7 @@ from igm.processes.utils import compute_divflux
 from .cost_terms.misfit_thk import misfit_thk
 from .cost_terms.misfit_usurf import misfit_usurf
 from .cost_terms.misfit_velsurf import misfit_velsurf
+from .cost_terms.misfit_icemask import misfit_icemask
 from .cost_terms.cost_divfluxfcz import cost_divfluxfcz
 from .cost_terms.cost_divfluxobs import cost_divfluxobs
 from .cost_terms.cost_vol import cost_vol
@@ -64,7 +65,7 @@ def optimize_update(cfg, state, cost, i):
 
         # misfit between ice thickness profiles
         if "thk" in cfg.processes.data_assimilation.cost:
-            cost["thk"] = misfit_thk(cfg.processes.data_assimilation.thkobs_std, state)
+            cost["thk"] = misfit_thk(cfg, state)
 
         # misfit between divergence of flux
         if ("divfluxfcz" in cfg.processes.data_assimilation.cost):
@@ -74,15 +75,27 @@ def optimize_update(cfg, state, cost, i):
 
         # misfit between top ice surfaces
         if "usurf" in cfg.processes.data_assimilation.cost:
-            cost["usurf"] = misfit_usurf(cfg.processes.data_assimilation.usurfobs_std, state) 
+            cost["usurf"] = misfit_usurf(cfg, state) 
 
         # force zero thikness outisde the mask
         if "icemask" in cfg.processes.data_assimilation.cost:
-            cost["icemask"] = 10**10 * tf.math.reduce_mean( tf.where(state.icemaskobs > 0.5, 0.0, state.thk**2) )
+            cost["icemask"] = misfit_icemask(cfg, state)
 
-        # Here one enforces non-negative ice thickness, and possibly zero-thickness in user-defined ice-free areas.
+        # Here one enforces non-negative ice thickness
         if "thk" in cfg.processes.data_assimilation.control:
-            cost["thk_positive"] = 10**10 * tf.math.reduce_mean( tf.where(state.thk >= 0, 0.0, state.thk**2) )
+            cost["thk_positive"] = \
+            10**10 * tf.math.reduce_mean( tf.where(state.thk >= 0, 0.0, state.thk**2) )
+
+        # Here one enforces non-negative slidinco
+        if ("slidingco" in cfg.processes.data_assimilation.control) & \
+           (not cfg.processes.data_assimilation.log_slidingco):
+            cost["slidingco_positive"] =  \
+            10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
+
+        # Here one enforces non-negative arrhenius
+        if ("arrhenius" in cfg.processes.data_assimilation.control):
+            cost["arrhenius_positive"] =  \
+            10**10 * tf.math.reduce_mean( tf.where(state.arrhenius >= 0, 0.0, state.arrhenius**2) ) 
             
         if cfg.processes.data_assimilation.infer_params:
             cost["volume"] = cost_vol(cfg, state)
@@ -139,10 +152,12 @@ def optimize_update(cfg, state, cost, i):
         # get back optimized variables in the pool of state.variables
         if "thk" in cfg.processes.data_assimilation.control:
             state.thk = tf.where(state.icemaskobs > 0.5, state.thk, 0)
-#                state.thk = tf.where(state.thk < 0.01, 0, state.thk)
+
         if "slidingco" in cfg.processes.data_assimilation.control:
             state.slidingco = tf.where(state.slidingco < 0, 0, state.slidingco)
 
+        if "arrhenius" in cfg.processes.data_assimilation.control:
+            state.arrhenius = tf.where(state.arrhenius < 0, 0, state.arrhenius)
 
         state.divflux = compute_divflux(
             state.ubar, state.vbar, state.thk, state.dx, state.dx, 

@@ -49,9 +49,5 @@ def regu_slidingco(cfg,state):
                 * tf.nn.l2_loss((dadx * state.flowdirx + dady * state.flowdiry))
                 + np.sqrt(cfg.processes.data_assimilation.smooth_anisotropy_factor_sl)
                 * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx)) )
- 
-    if not cfg.processes.data_assimilation.log_slidingco:
-        REGU_S = REGU_S + 10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
-        # this last line serve to enforce non-negative slidingco
- 
+
     return REGU_S

@@ -5,14 +5,14 @@
 
 import tensorflow as tf
 
-def misfit_usurf(usurf_obs_std,state):
+def misfit_usurf(cfg,state):
 
     ACT = state.icemaskobs > 0.5
 
     return 0.5 * tf.reduce_mean(
         (
             (state.usurf[ACT] - state.usurfobs[ACT])
-            / usurf_obs_std
+            / cfg.processes.data_assimilation.usurfobs_std
         )
         ** 2
     )

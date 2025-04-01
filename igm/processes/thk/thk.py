@@ -2,8 +2,7 @@
 
 # Copyright (C) 2021-2025 IGM authors 
 # Published under the GNU GPL (Version 3), check at the LICENSE file
-
-import datetime, time
+ 
 import tensorflow as tf
 
 from igm.processes.utils import compute_divflux_slope_limiter

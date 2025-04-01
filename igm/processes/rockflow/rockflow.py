@@ -3,18 +3,13 @@
 # Copyright (C) 2021-2025 IGM authors 
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
-import numpy as np
-import os, sys, shutil
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import igm
-import time
 
-from igm.processes.utils import *
+from igm.processes.utils import getmag, compute_gradient_tf
 
 def initialize(cfg, state):
     pass
-
 
 def update(cfg, state):
     slopsurfx, slopsurfy = compute_gradient_tf(state.usurf, state.dx, state.dx)

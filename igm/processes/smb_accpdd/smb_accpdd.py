@@ -3,10 +3,6 @@
 # Copyright (C) 2021-2025 IGM authors
 # Published under the GNU GPL (Version 3), check at the LICENSE file 
 
-import numpy as np
-import matplotlib.pyplot as plt
-import datetime, time
-import math
 import tensorflow as tf
 
 def initialize(cfg, state):

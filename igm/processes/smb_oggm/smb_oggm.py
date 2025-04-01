@@ -3,18 +3,18 @@
 # Copyright (C) 2021-2025 IGM authors 
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
-import numpy as np
-import matplotlib.pyplot as plt
-import datetime, time, os
-import math
+import os
 import tensorflow as tf
 import json
 
 def initialize(cfg, state):
     state.tlast_mb = tf.Variable(-1.0e5000)
 
+    path_data = os.path.join(state.original_cwd,cfg.inputs.oggm_shop.folder)
+    path_RGI = os.path.join(path_data, cfg.inputs.oggm_shop.RGI_ID)
+
     # load the given parameters from the json file
-    with open(os.path.join(cfg.inputs.oggm_shop.RGI_ID, "mb_calib.json"), "r") as json_file:
+    with open(os.path.join(path_RGI, "mb_calib.json"), "r") as json_file:
         jsonString = json_file.read()
 
     oggm_mb_calib = json.loads(jsonString)

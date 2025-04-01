@@ -6,12 +6,9 @@ Published under the GNU GPL (Version 3), check at the LICENSE file
 """
 
 import numpy as np
-import datetime, time
 import tensorflow as tf
-import sys
-from igm.processes.utils import *
+from igm.processes.utils import compute_gradient_tf, compute_divflux
  
-
 def initialize(cfg, state):
     pass
 

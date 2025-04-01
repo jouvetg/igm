@@ -4,8 +4,6 @@
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
-import os, sys, shutil
-import time
 import tensorflow as tf
 from igm.processes.utils import interp1d_tf
 

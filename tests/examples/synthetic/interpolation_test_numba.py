@@ -75,8 +75,8 @@ def main():
     # with nvtx.annotate("increment_a_2D_array", color="red"):
     #     increment_a_2D_array[blockspergrid, threadsperblock](array_input)
     res = 4096
-    # number_of_particles = 32
-    number_of_particles = 10_000_000
+    # number_of_particles = 5_000_000
+    number_of_particles = 20_000_000
     particles = cp.random.uniform(0, res - 1, size=(number_of_particles, 2))
     grid_x = cp.linspace(0, res, num=res)
     grid_y = cp.linspace(0, res, num=res)
@@ -90,8 +90,8 @@ def main():
     interpolated_particle_array = cuda.device_array(shape=particles.shape[0], dtype="float32")
     
     threadsperblock = 32
-    blockspergrid = 32 * 40
-    
+    blockspergrid = math.ceil(number_of_particles / threadsperblock)
+    print("Blocks per grid", blockspergrid)
     # with nvtx.annotate("interpolate_2d", color="blue"): # need to sync GPU first
     rng = srange("interpolate_2d", color="blue")
     interpolate_2d[blockspergrid, threadsperblock](interpolated_particle_array, grid, array_particles)
@@ -107,15 +107,16 @@ def main():
     plt.colorbar()
     plt.scatter(particles_x, particles_y, color="blue", s=0.2)
     
-    skip_n = 100
+    skip_n = 100000
     shortened_particle_list = interpolated_values[::skip_n] # every nth one
     shorted_particles_x = particles_x[::skip_n]
     shorted_particles_y = particles_y[::skip_n]
+    
     for i in range(shortened_particle_list.shape[0]):
-        # print(str(shortened_particle_list[i]))
+        print(str(shortened_particle_list[i]))
         plt.text(int(shorted_particles_x[i]), int(shorted_particles_y[i]), str(shortened_particle_list[i]), color="black", fontsize=8)
     
-    # plt.show()
+    plt.show()
     # print("Particle Locations", particles)
     # print("Grid Values", grid.copy_to_host())
     # print("Interpolated Values", interpolated_particle_array.copy_to_host())

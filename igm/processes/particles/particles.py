@@ -63,7 +63,7 @@ def initialize(cfg, state):
 # tf.compat.v1.ConfigProto.force_gpu_compatible=True
 # tf.function(reduce_retracing=True)
 def interpolate_particles_2d(U, V, thk, topg, smb, indices):
-    print("tracing interpolate_particles_2d")
+    # print("tracing interpolate_particles_2d")
     rng = srange(message="interpolating_u", color="white")
     u = interpolate_bilinear_tf(
         tf.expand_dims(U, axis=-1),
@@ -73,7 +73,7 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     erange(rng)
 
     rng = srange(message="slicing_u", color="pink")
-    print("U shape", U.shape, u.shape)
+    # print("U shape", U.shape, u.shape)
     u = u[:, :, 0]
     erange(rng)
 
@@ -85,7 +85,7 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     )
     erange(rng)
 
-    print("V shape", V.shape, v.shape)
+    # print("V shape", V.shape, v.shape)
     rng = srange(message="slicing_v", color="green")
     v = v[:, :, 0]
     erange(rng)
@@ -98,7 +98,7 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     )
     erange(rng)
 
-    print("thk shape", thk.shape)
+    # print("thk shape", thk.shape)
     rng = srange(message="slicing_thk", color="purple")
     thk = thk[0, :, 0]
     erange(rng)
@@ -111,7 +111,7 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     )
     erange(rng)
 
-    print("topg shape", topg.shape)
+    # print("topg shape", topg.shape)
     rng = srange(message="slicing_topg", color="red")
     topg = topg[0, :, 0]
     erange(rng)
@@ -124,7 +124,7 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     )
     erange(rng)
 
-    print("smb shape", smb.shape)
+    # print("smb shape", smb.shape)
     rng = srange(message="slicing_smb", color="blue")
     smb = smb[0, :, 0]
     erange(rng)
@@ -231,6 +231,8 @@ def update(cfg, state):
         particle_z = state.particle_z
         particle_englt = state.particle_englt
 
+    
+    
     if (particle_x.shape[0] > 0) & (state.it >= 0):
 
         # find the indices of trajectories
@@ -244,6 +246,7 @@ def update(cfg, state):
             ),
             axis=0,
         )
+        # print(f"Number of particles: {indices.shape}")
 
         rng_reading = srange(message="reading_from_state", color="blue")
         U_input, V_input, thk_input, topg_input, smb_input = (

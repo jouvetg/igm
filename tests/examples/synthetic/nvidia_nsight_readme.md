@@ -42,3 +42,5 @@
    `nsys profile --gpu-metrics-device=all --trace nvtx,cuda,cudnn --cudabacktrace=all --cuda-graph-trace=graph --cuda-memory-usage=true igm_run +experiment=params`
 
    nsys profile --gpu-metrics-device=all --trace nvtx,cuda,cudnn --cudabacktrace=all --cuda-graph-trace=graph igm_run +experiment=params
+
+   nsys profile -t cuda,nvtx --cudabacktrace=all --gpu-metrics-device=all python interpolation_test_numba.py

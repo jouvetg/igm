@@ -18,7 +18,8 @@ __all__ = [
     "compute_divflux",
     "interp1d_tf",
     "complete_data",
-    "interpolate_bilinear_tf"
+    "interpolate_bilinear_tf",
+    "interpolate_bilinear_tf_optimized"
 ]
 
 def str2bool(v):
@@ -284,7 +285,7 @@ def complete_data(state):
     if not hasattr(state, "usurf"): 
         state.usurf = tf.Variable(state.topg + state.thk, trainable=False) 
 
-@tf.function
+tf.function
 def interpolate_bilinear_tf(
     grid: tf.Tensor,
     query_points: tf.Tensor,
@@ -401,3 +402,151 @@ def interpolate_bilinear_tf(
             interp = alphas[0] * (interp_bottom - interp_top) + interp_top
 
         return interp
+
+tf.function
+def interpolate_bilinear_tf_optimized(
+    grid: tf.Tensor,
+    query_points: tf.Tensor,
+    indexing: str = "ij",
+) -> tf.Tensor:
+    """
+
+    This function originally comes from tensorflow-addon library
+    (https://www.tensorflow.org/addons/api_docs/python/tfa/image/interpolate_bilinear)
+    but the later was deprecated, therefore we copied the function here to avoid
+    being dependent on a deprecated library.
+
+    Similar to Matlab's interp2 function.
+
+    Finds values for query points on a grid using bilinear interpolation.
+
+    Args:
+      grid: a 4-D float `Tensor` of shape `[batch, height, width, channels]`.
+      query_points: a 3-D float `Tensor` of N points with shape
+        `[batch, N, 2]`.
+      indexing: whether the query points are specified as row and column (ij),
+        or Cartesian coordinates (xy).
+
+    Returns:
+      values: a 3-D `Tensor` with shape `[batch, N, channels]`
+
+    Raises:
+      ValueError: if the indexing mode is invalid, or if the shape of the
+        inputs invalid.
+    """
+
+    grid = tf.convert_to_tensor(grid)
+    query_points = tf.convert_to_tensor(query_points)
+    grid_shape = tf.shape(grid)
+    query_shape = tf.shape(query_points)
+
+    with tf.name_scope("interpolate_bilinear"):
+        grid_shape = tf.shape(grid)
+        query_shape = tf.shape(query_points)
+
+        batch_size, height, width, channels = (
+            grid_shape[0],
+            grid_shape[1],
+            grid_shape[2],
+            grid_shape[3],
+        )
+
+        num_queries = query_shape[1]
+
+        query_type = query_points.dtype
+        grid_type = grid.dtype
+
+        alphas = []
+        floors = []
+        ceils = []
+        index_order = [0, 1] if indexing == "ij" else [1, 0]
+        unstacked_query_points = tf.unstack(query_points, axis=2, num=2)
+
+        for i, dim in enumerate(index_order):
+            with tf.name_scope("dim-" + str(dim)):
+                queries = unstacked_query_points[dim]
+
+                size_in_indexing_dimension = grid_shape[i + 1]
+
+                # max_floor is size_in_indexing_dimension - 2 so that max_floor + 1
+                # is still a valid index into the grid.
+                max_floor = tf.cast(size_in_indexing_dimension - 2, query_type)
+                min_floor = tf.constant(0.0, dtype=query_type)
+                floor = tf.math.minimum(
+                    tf.math.maximum(min_floor, tf.math.floor(queries)), max_floor
+                )
+                int_floor = tf.cast(floor, tf.dtypes.int32)
+                floors.append(int_floor)
+                ceil = int_floor + 1
+                ceils.append(ceil)
+
+                # alpha has the same type as the grid, as we will directly use alpha
+                # when taking linear combinations of pixel values from the image.
+                alpha = tf.cast(queries - floor, grid_type)
+                min_alpha = tf.constant(0.0, dtype=grid_type)
+                max_alpha = tf.constant(1.0, dtype=grid_type)
+                alpha = tf.math.minimum(tf.math.maximum(min_alpha, alpha), max_alpha)
+
+                # Expand alpha to [b, n, 1] so we can use broadcasting
+                # (since the alpha values don't depend on the channel).
+                alpha = tf.expand_dims(alpha, 2)
+                alphas.append(alpha)
+
+            flattened_grid = tf.reshape(grid, [batch_size * height * width, channels])
+            batch_offsets = tf.reshape(
+                tf.range(batch_size) * height * width, [batch_size, 1]
+            )
+
+        # This wraps tf.gather. We reshape the image data such that the
+        # batch, y, and x coordinates are pulled into the first dimension.
+        # Then we gather. Finally, we reshape the output back. It's possible this
+        # code would be made simpler by using tf.gather_nd.
+        def gather(y_coords, x_coords, name):
+            with tf.name_scope("gather-" + name):
+                linear_coordinates = batch_offsets + y_coords * width + x_coords
+                gathered_values = tf.gather_nd(flattened_grid, tf.expand_dims(linear_coordinates, axis=-1))
+                return tf.reshape(gathered_values, [batch_size, num_queries, channels])
+
+        # grab the pixel values in the 4 corners around each query point
+        top_left = gather(floors[0], floors[1], "top_left")
+        top_right = gather(floors[0], ceils[1], "top_right")
+        bottom_left = gather(ceils[0], floors[1], "bottom_left")
+        bottom_right = gather(ceils[0], ceils[1], "bottom_right")
+
+        # now, do the actual interpolation
+        with tf.name_scope("interpolate"):
+            interp_top = alphas[1] * (top_right - top_left) + top_left
+            interp_bottom = alphas[1] * (bottom_right - bottom_left) + bottom_left
+            interp = alphas[0] * (interp_bottom - interp_top) + interp_top
+
+        return interp
+
+@tf.function(reduce_retracing=True)
+def interpolate_bilinear(grid_2d, sampling_points):
+    grid_shape = tf.shape(grid_2d)[-3:-1]
+    batch_dims = tf.shape(sampling_points)[:-2]
+    num_points = tf.shape(sampling_points)[-2]
+
+    bottom_left = tf.floor(sampling_points)
+    top_right = bottom_left + 1
+    bottom_left_index = tf.cast(bottom_left, tf.int32)
+    top_right_index = tf.cast(top_right, tf.int32)
+    x0_index, y0_index = tf.unstack(bottom_left_index, axis=-1)
+    x1_index, y1_index = tf.unstack(top_right_index, axis=-1)
+    index_x = tf.concat([x0_index, x1_index, x0_index, x1_index], axis=-1)
+    index_y = tf.concat([y0_index, y0_index, y1_index, y1_index], axis=-1)
+    indices = tf.stack([index_x, index_y], axis=-1)
+    clip_value = tf.convert_to_tensor([grid_shape - 1], dtype=indices.dtype)
+    indices = tf.clip_by_value(indices, 0, clip_value)
+    content = tf.gather_nd(grid_2d, indices, batch_dims=tf.size(batch_dims))
+    distance_to_bottom_left = sampling_points - bottom_left
+    distance_to_top_right = top_right - sampling_points
+    x_x0, y_y0 = tf.unstack(distance_to_bottom_left, axis=-1)
+    x1_x, y1_y = tf.unstack(distance_to_top_right, axis=-1)
+    weights_x = tf.concat([x1_x, x_x0, x1_x, x_x0], axis=-1)
+    weights_y = tf.concat([y1_y, y1_y, y_y0, y_y0], axis=-1)
+    weights = tf.expand_dims(weights_x * weights_y, axis=-1)
+
+    interpolated_values = weights * content
+
+    return tf.add_n(tf.split(interpolated_values, [num_points] * 4, -2))

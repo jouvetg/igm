@@ -15,5 +15,10 @@ data
 *.dat
 .history/
 output/
+outputs/
 multirun/
 .idea/
+
+# Nvidia Nsight Systems
+*.nsys-rep
+*.sqlite

@@ -7,15 +7,17 @@ import numpy as np
 import os, sys, shutil
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import time
 from netCDF4 import Dataset
 import json
 from igm.processes.utils import interp1d_tf
 
 def initialize(cfg, state):
     # load the given parameters from the json file
+
+    path_data = os.path.join(state.original_cwd,cfg.inputs.oggm_shop.folder)
+    path_RGI = os.path.join(path_data, cfg.inputs.oggm_shop.RGI_ID)
     
-    with open(os.path.join(cfg.inputs.oggm_shop.RGI_ID, "mb_calib.json"), "r") as json_file:
+    with open(os.path.join(path_RGI, "mb_calib.json"), "r") as json_file:
         jsonString = json_file.read()
 
     oggm_mb_calib = json.loads(jsonString)
@@ -31,7 +33,7 @@ def initialize(cfg, state):
 
     # load climate data from netcdf file climate_historical.nc
     nc = Dataset(
-        os.path.join(cfg.inputs.oggm_shop.RGI_ID, "climate_historical.nc")
+        os.path.join(path_RGI, "climate_historical.nc")
     )
 
     time = np.squeeze(nc.variables["time"]).astype("float32")  # unit : year

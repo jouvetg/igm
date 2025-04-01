@@ -8,7 +8,8 @@ oggm_shop:
   vel_source: millan_ice_velocity
   incl_glathida: False
   path_glathida: ""
-  save_in_ncdf: True
+  folder: data
+  filename: input.nc
   remove_RGI_folder: True
   sub_entity_mask: False
   RGI_product: "G"

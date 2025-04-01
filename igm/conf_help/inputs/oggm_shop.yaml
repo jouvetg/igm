@@ -34,10 +34,14 @@ path_glathida:
   Type: str
   Description: "Path where the Glathida Folder is stored, so that you don't need to redownload it at every use of the script, if empty it will be in the home directory (only relevant for RGI6.0)"
   Units: [dimensionless]
-save_in_ncdf:
-  Type: bool
-  Description: "Write prepared data into a input-save.ncdf file"
+folder:
+  Type: str
   Units: [dimensionless]
+  Description: "Folder where the data is stored"
+filename:
+  Type: str
+  Units: [dimensionless]
+  Description: "NetCDF input data file created by OGGM"
 remove_RGI_folder:
   Type: bool
   Description: "Remove RGI folder"

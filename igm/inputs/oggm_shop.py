@@ -7,22 +7,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os, glob, shutil, scipy
 from netCDF4 import Dataset
-import tensorflow as tf
 import pandas as pd
-from igm.processes.utils import str2bool
-
-from igm.processes.utils import complete_data
-
+#from igm.processes.utils import complete_data
+import json
 
 def run(cfg, state):
 
-    import json
+    path_data = os.path.join(state.original_cwd,cfg.inputs.local.folder)
+    path_RGI = os.path.join(path_data, cfg.inputs.oggm_shop.RGI_ID)
+    path_file = os.path.join(path_data,cfg.inputs.oggm_shop.filename)
 
-    # Fetch the data from OGGM
-    if not os.path.exists(cfg.inputs.oggm_shop.RGI_ID):
-        _oggm_util([cfg.inputs.oggm_shop.RGI_ID], cfg)
+    if not os.path.exists(path_data):
+        os.makedirs(path_data)
 
-    ncpath = os.path.join(cfg.inputs.oggm_shop.RGI_ID, "gridded_data.nc")
+    # Fetch the data from OGGM if it does not exist
+    if not os.path.exists(path_RGI):
+        _oggm_util(cfg, path_RGI)
+
+    # transform the data into IGM readable data if it does not exist
+    if not os.path.exists(path_file):
+        transform_OGGM_data_into_IGM_readable_data(cfg, state, path_RGI, path_file)
+
+def transform_OGGM_data_into_IGM_readable_data(cfg, state, path_RGI, path_file):
+    
+    ncpath = os.path.join(path_RGI, "gridded_data.nc")
     if not os.path.exists(ncpath):
         msg = f'OGGM data issue with glacier {cfg.inputs.oggm_shop.RGI_ID}'
         if hasattr(state, "logger"):
@@ -31,8 +39,8 @@ def run(cfg, state):
             print(msg)
         return
 
-    if hasattr(state, "logger"):
-        state.logger.info("Prepare data using oggm and glathida")
+    # if hasattr(state, "logger"):
+    #     state.logger.info("Prepare data using oggm and glathida")
 
     nc = Dataset(ncpath, "r+")
 
@@ -142,7 +150,7 @@ def run(cfg, state):
 
     if cfg.inputs.oggm_shop.incl_glathida:
         if cfg.inputs.oggm_shop.RGI_version==6:
-            with open(os.path.join(cfg.inputs.oggm_shop.RGI_ID, "glacier_grid.json"), "r") as f:
+            with open(os.path.join(path_RGI, "glacier_grid.json"), "r") as f:
                 data = json.load(f)
             proj = data["proj"]
 
@@ -154,7 +162,7 @@ def run(cfg, state):
             except:
                 thkobs = np.zeros_like(thk) * np.nan
         elif cfg.inputs.oggm_shop.RGI_version==7:
-            path_glathida = os.path.join(cfg.inputs.oggm_shop.RGI_ID, "glathida_data.csv")
+            path_glathida = os.path.join(path_RGI, "glathida_data.csv")
 
             try:
                 thkobs = _read_glathida_v7(
@@ -170,73 +178,70 @@ def run(cfg, state):
 
     # transform from numpy to tensorflow
 
-    for var in ["x", "y"]:
-        vars(state)[var] = tf.constant(vars()[var].astype("float32"))
+    # for var in ["x", "y"]:
+    #     vars(state)[var] = tf.constant(vars()[var].astype("float32"))
 
-    if pyproj_srs is not None:
-        vars(state)["pyproj_srs"] = pyproj_srs
+    # if pyproj_srs is not None:
+    #     vars(state)["pyproj_srs"] = pyproj_srs
 
-    for var in vars_to_save:
-        vars(state)[var] = tf.Variable(vars()[var].astype("float32"), trainable=False)
+    # for var in vars_to_save:
+    #     vars(state)[var] = tf.Variable(vars()[var].astype("float32"), trainable=False)
 
-    complete_data(state)
+    # complete_data(state)
 
     ########################################################
 
-    if cfg.inputs.oggm_shop.save_in_ncdf:
-        var_info = {}
-        var_info["thk"] = ["Ice Thickness", "m"]
-        var_info["usurf"] = ["Surface Topography", "m"]
-        var_info["icemaskobs"] = ["Accumulation Mask", "bool"]
-        var_info["usurfobs"] = ["Surface Topography", "m"]
-        var_info["thkobs"] = ["Ice Thickness", "m"]
-        var_info["thkinit"] = ["Ice Thickness", "m"]
-        var_info["uvelsurfobs"] = ["x surface velocity of ice", "m/y"]
-        var_info["vvelsurfobs"] = ["y surface velocity of ice", "m/y"]
-        var_info["icemask"] = ["Ice mask", "no unit"]
-        var_info["dhdt"] = ["Ice thickness change", "m/y"]
-        if cfg.inputs.oggm_shop.sub_entity_mask == True:
-            var_info["tidewatermask"] = ["Tidewater glacier mask", "no unit"]
-            var_info["slopes"] = ["Average glacier surface slope", "deg"]
+    var_info = {}
+    var_info["thk"] = ["Ice Thickness", "m"]
+    var_info["usurf"] = ["Surface Topography", "m"]
+    var_info["icemaskobs"] = ["Accumulation Mask", "bool"]
+    var_info["usurfobs"] = ["Surface Topography", "m"]
+    var_info["thkobs"] = ["Ice Thickness", "m"]
+    var_info["thkinit"] = ["Ice Thickness", "m"]
+    var_info["uvelsurfobs"] = ["x surface velocity of ice", "m/y"]
+    var_info["vvelsurfobs"] = ["y surface velocity of ice", "m/y"]
+    var_info["icemask"] = ["Ice mask", "no unit"]
+    var_info["dhdt"] = ["Ice thickness change", "m/y"]
+    if cfg.inputs.oggm_shop.sub_entity_mask == True:
+        var_info["tidewatermask"] = ["Tidewater glacier mask", "no unit"]
+        var_info["slopes"] = ["Average glacier surface slope", "deg"]
 
-        nc = Dataset(
-            os.path.join("input_saved.nc"), "w", format="NETCDF4"
-        )
+    nc = Dataset(path_file, "w", format="NETCDF4")
 
-        nc.createDimension("y", len(y))
-        yn = nc.createVariable("y", np.dtype("float32").char, ("y",))
-        yn.units = "m"
-        yn.long_name = "y"
-        yn.standard_name = "y"
-        yn.axis = "Y"
-        yn[:] = y
+    nc.createDimension("y", len(y))
+    yn = nc.createVariable("y", np.dtype("float32").char, ("y",))
+    yn.units = "m"
+    yn.long_name = "y"
+    yn.standard_name = "y"
+    yn.axis = "Y"
+    yn[:] = y
 
-        nc.createDimension("x", len(x))
-        xn = nc.createVariable("x", np.dtype("float32").char, ("x",))
-        xn.units = "m"
-        xn.long_name = "x"
-        xn.standard_name = "x"
-        xn.axis = "X"
-        xn[:] = x
+    nc.createDimension("x", len(x))
+    xn = nc.createVariable("x", np.dtype("float32").char, ("x",))
+    xn.units = "m"
+    xn.long_name = "x"
+    xn.standard_name = "x"
+    xn.axis = "X"
+    xn[:] = x
 
-        if pyproj_srs is not None:
-            nc.pyproj_srs = pyproj_srs
+    if pyproj_srs is not None:
+        nc.pyproj_srs = pyproj_srs
 
-        for v in vars_to_save:
-            E = nc.createVariable(v, np.dtype("float32").char, ("y", "x"))
-            E.long_name = var_info[v][0]
-            E.units = var_info[v][1]
-            E.standard_name = v
-            E[:] = vars()[v]
+    for v in vars_to_save:
+        E = nc.createVariable(v, np.dtype("float32").char, ("y", "x"))
+        E.long_name = var_info[v][0]
+        E.units = var_info[v][1]
+        E.standard_name = v
+        E[:] = vars()[v]
 
-        nc.close()
+    nc.close()
 
 
 
 #########################################################################
 
 
-def _oggm_util(RGIs, cfg):
+def _oggm_util(cfg, path_RGI):
     """
     Function written by Fabien Maussion
     """
@@ -244,6 +249,8 @@ def _oggm_util(RGIs, cfg):
     import oggm.cfg as cfg_oggm # changed the name to avoid namespace conflicts with IGM's config
     from oggm import utils, workflow, tasks, graphics
     import xarray as xr
+
+    RGIs = [cfg.inputs.oggm_shop.RGI_ID]
 
     if cfg.inputs.oggm_shop.preprocess:
         # This uses OGGM preprocessed directories
@@ -382,11 +389,10 @@ def _oggm_util(RGIs, cfg):
                                                 gdirs, informed_threestep=True)
 
     source_folder = gdirs[0].get_filepath("gridded_data").split("gridded_data.nc")[0]
-    destination_folder = cfg.inputs.oggm_shop.RGI_ID
 
-    if os.path.exists(destination_folder):
-        shutil.rmtree(destination_folder)
-    shutil.copytree(source_folder, destination_folder)
+    if os.path.exists(path_RGI):
+        shutil.rmtree(path_RGI)
+    shutil.copytree(source_folder, path_RGI)
 
 def _read_glathida(x, y, usurf, proj, path_glathida, state):
     """

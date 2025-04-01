@@ -4,17 +4,12 @@
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
-import os, time
-import matplotlib.pyplot as plt
+import os
 import tensorflow as tf
 from netCDF4 import Dataset
 from scipy.interpolate import RectBivariateSpline, interp1d
 from igm.processes.utils import interp1d_tf
-import igm
-
-from hydra.utils import get_original_cwd
-from pathlib import Path
-
+ 
 def initialize(cfg, state):
     load_climate_data_glacialindex(cfg, state)
 
@@ -133,7 +128,7 @@ def load_signal(cfg, state):
     """
     load signal file to force a transient climate
     """ 
-    filepath = Path(get_original_cwd()).joinpath(cfg.processes.clim_glacialindex.signal_file)
+    filepath =  os.path.join(state.original_cwd,cfg.processes.clim_glacialindex.signal_file)
 
     state.signal = np.loadtxt(filepath, dtype=np.float32)
 
@@ -163,10 +158,10 @@ def load_climate_data_glacialindex(cfg, state):
     """
  
     climate_snapshot_0 = load_climate_data_one_snapshot(
-        cfg, state, Path(get_original_cwd()).joinpath(cfg.processes.clim_glacialindex.climate_0_file)
+        cfg, state, os.path.join(state.original_cwd,cfg.processes.clim_glacialindex.climate_0_file)
     ) + [cfg.processes.clim_glacialindex.vertical_lapse_rate_0]
     climate_snapshot_1 = load_climate_data_one_snapshot(
-        cfg, state, Path(get_original_cwd()).joinpath(cfg.processes.clim_glacialindex.climate_1_file)
+        cfg, state, os.path.join(state.original_cwd,cfg.processes.clim_glacialindex.climate_1_file)
     ) + [cfg.processes.clim_glacialindex.vertical_lapse_rate_1]
     climate_snapshot = [climate_snapshot_0, climate_snapshot_1]
 

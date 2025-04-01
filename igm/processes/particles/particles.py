@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (C) 2021-2025 IGM authors 
+# Copyright (C) 2021-2025 IGM authors
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import numpy as np
@@ -14,13 +14,17 @@ from netCDF4 import Dataset
 from igm.processes.utils import *
 
 import nvtx
+
+
 def srange(message, color):
     tf.test.experimental.sync_devices()
     return nvtx.start_range(message, color)
 
+
 def erange(rng):
     tf.test.experimental.sync_devices()
     nvtx.end_range(rng)
+
 
 def initialize(cfg, state):
 
@@ -29,7 +33,6 @@ def initialize(cfg, state):
             raise ValueError(
                 "The 'vert_flow' module is required to use the 3d tracking method in the 'particles' module."
             )
-
 
     state.tlast_seeding = cfg.processes.particles.tlast_seeding_init
 
@@ -56,10 +59,11 @@ def initialize(cfg, state):
     if cfg.processes.particles.write_trajectories:
         initialize_write_particle(cfg, state)
 
-# tf.function(reduce_retracing=True)
+
 # tf.compat.v1.ConfigProto.force_gpu_compatible=True
+# tf.function(reduce_retracing=True)
 def interpolate_particles_2d(U, V, thk, topg, smb, indices):
-    
+    print("tracing interpolate_particles_2d")
     rng = srange(message="interpolating_u", color="white")
     u = interpolate_bilinear_tf(
         tf.expand_dims(U, axis=-1),
@@ -67,11 +71,12 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
         indexing="ij",
     )
     erange(rng)
-    
+
     rng = srange(message="slicing_u", color="pink")
+    print("U shape", U.shape, u.shape)
     u = u[:, :, 0]
     erange(rng)
-    
+
     rng = srange(message="interpolating_v", color="white")
     v = interpolate_bilinear_tf(
         tf.expand_dims(V, axis=-1),
@@ -79,7 +84,8 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
         indexing="ij",
     )
     erange(rng)
-    
+
+    print("V shape", V.shape, v.shape)
     rng = srange(message="slicing_v", color="green")
     v = v[:, :, 0]
     erange(rng)
@@ -91,11 +97,12 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
         indexing="ij",
     )
     erange(rng)
-    
+
+    print("thk shape", thk.shape)
     rng = srange(message="slicing_thk", color="purple")
     thk = thk[0, :, 0]
     erange(rng)
-    
+
     rng = srange(message="interpolating_topg", color="white")
     topg = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(topg, axis=0), axis=-1),
@@ -103,11 +110,12 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
         indexing="ij",
     )
     erange(rng)
-    
+
+    print("topg shape", topg.shape)
     rng = srange(message="slicing_topg", color="red")
     topg = topg[0, :, 0]
     erange(rng)
-    
+
     rng = srange(message="interpolating_smb", color="white")
     smb = interpolate_bilinear_tf(
         tf.expand_dims(tf.expand_dims(smb, axis=0), axis=-1),
@@ -115,28 +123,28 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
         indexing="ij",
     )
     erange(rng)
-    
+
+    print("smb shape", smb.shape)
     rng = srange(message="slicing_smb", color="blue")
     smb = smb[0, :, 0]
     erange(rng)
-    
+
     return u, v, thk, topg, smb
+
 
 # @tf.function(input_signature=[tf.TensorSpec(shape=None, dtype=tf.float32),
 #                               tf.TensorSpec(shape=None, dtype=tf.float32),
 #                               tf.TensorSpec(shape=[], dtype=tf.float32),
 #                                 tf.TensorSpec(shape=[None, None, None, None], dtype=tf.float32)])
 def get_weights(vertical_spacing, number_z_layers, particle_r, u):
-    " What is this function doing? Name it properly.."
+    "What is this function doing? Name it properly.."
     # print("tracing weights")
     zeta = _rhs_to_zeta(vertical_spacing, particle_r)  # get the position in the column
     I0 = tf.cast(
         tf.math.floor(zeta * (number_z_layers - 1)),
         dtype="int32",
     )
-    I0 = tf.minimum(
-        I0, number_z_layers - 2
-    )  # make sure to not reach the upper-most pt
+    I0 = tf.minimum(I0, number_z_layers - 2)  # make sure to not reach the upper-most pt
     I1 = I0 + 1
     zeta0 = tf.cast(I0 / (number_z_layers - 1), dtype="float32")
     zeta1 = tf.cast(I1 / (number_z_layers - 1), dtype="float32")
@@ -149,8 +157,9 @@ def get_weights(vertical_spacing, number_z_layers, particle_r, u):
     weights = tf.zeros_like(u)
     weights = tf.tensor_scatter_nd_add(weights, indices=ind0, updates=1 - lamb)
     weights = tf.tensor_scatter_nd_add(weights, indices=ind1, updates=lamb)
-    
+
     return weights
+
 
 def update(cfg, state):
 
@@ -167,26 +176,28 @@ def update(cfg, state):
 
         rng = srange(message="seeding_particles", color="black")
         # seed new particles
-        (nparticle_x,
-        nparticle_y,
-        nparticle_z,
-        nparticle_r,
-        nparticle_w,
-        nparticle_t,
-        nparticle_englt,
-        nparticle_topg,
-        nparticle_thk,) = seeding_particles(cfg, state)
+        (
+            nparticle_x,
+            nparticle_y,
+            nparticle_z,
+            nparticle_r,
+            nparticle_w,
+            nparticle_t,
+            nparticle_englt,
+            nparticle_topg,
+            nparticle_thk,
+        ) = seeding_particles(cfg, state)
         erange(rng)
-        
+
         rng = srange(message="concat_new_particles", color="blue")
         # merge the new seeding points with the former ones
-        state.particle_x = tf.Variable(
+        particle_x = tf.Variable(
             tf.concat([state.particle_x, nparticle_x], axis=-1), trainable=False
         )
-        state.particle_y = tf.Variable(
+        particle_y = tf.Variable(
             tf.concat([state.particle_y, nparticle_y], axis=-1), trainable=False
         )
-        state.particle_z = tf.Variable(
+        particle_z = tf.Variable(
             tf.concat([state.particle_z, nparticle_z], axis=-1), trainable=False
         )
         state.particle_r = tf.Variable(
@@ -198,28 +209,34 @@ def update(cfg, state):
         state.particle_t = tf.Variable(
             tf.concat([state.particle_t, nparticle_t], axis=-1), trainable=False
         )
-        state.particle_englt = tf.Variable(
+        particle_englt = tf.Variable(
             tf.concat([state.particle_englt, nparticle_englt], axis=-1),
             trainable=False,
         )
-        state.particle_topg = tf.Variable(
-            tf.concat([state.particle_topg, nparticle_topg], axis=-1),
-            trainable=False,
-        )
-        state.particle_thk = tf.Variable(
-            tf.concat([state.particle_thk, nparticle_thk], axis=-1),
-            trainable=False,
-        )
+        # state.particle_topg = tf.Variable(
+        #     tf.concat([state.particle_topg, nparticle_topg], axis=-1),
+        #     trainable=False,
+        # )
+        # state.particle_thk = tf.Variable(
+        #     tf.concat([state.particle_thk, nparticle_thk], axis=-1),
+        #     trainable=False,
+        # )
         erange(rng)
-        
-        state.tlast_seeding = state.t.numpy()
 
-    if (state.particle_x.shape[0] > 0) & (state.it >= 0):
+        state.tlast_seeding = state.t.numpy()
+    else:
+        # use the old particles
+        particle_x = state.particle_x
+        particle_y = state.particle_y
+        particle_z = state.particle_z
+        particle_englt = state.particle_englt
+
+    if (particle_x.shape[0] > 0) & (state.it >= 0):
 
         # find the indices of trajectories
         # these indicies are real values to permit 2D interpolations (particles are not necessary on points of the grid)
-        i = (state.particle_x) / state.dx
-        j = (state.particle_y) / state.dx
+        i = (particle_x) / state.dx
+        j = (particle_y) / state.dx
 
         indices = tf.expand_dims(
             tf.concat(
@@ -228,7 +245,6 @@ def update(cfg, state):
             axis=0,
         )
 
-        
         rng_reading = srange(message="reading_from_state", color="blue")
         U_input, V_input, thk_input, topg_input, smb_input = (
             state.U,
@@ -239,13 +255,15 @@ def update(cfg, state):
         )
         erange(rng_reading)
         rng = srange(message="interpolate_bilinear_section", color="red")
-        u, v, thk, topg, smb = interpolate_particles_2d(
-            U_input,
-            V_input,
-            thk_input,
-            topg_input,
-            smb_input,
-            indices,
+        u, v, thk, topg, smb = (
+            interpolate_particles_2d(  # only need smb for the simple tracking
+                U_input,
+                V_input,
+                thk_input,
+                topg_input,
+                smb_input,
+                indices,
+            )
         )
         erange(rng)
         state.particle_thk = thk
@@ -254,88 +272,42 @@ def update(cfg, state):
         rng = srange(message="misc_compuations", color="green")
         vertical_spacing = cfg.processes.iceflow.iceflow.vert_spacing
         number_z_layers = cfg.processes.iceflow.iceflow.Nz
-        wei = get_weights(vertical_spacing=vertical_spacing, number_z_layers=number_z_layers, particle_r=state.particle_r, u=u)
-        # zeta = _rhs_to_zeta(vertical_spacing, state.particle_r)  # get the position in the column
-        # I0 = tf.cast(
-        #     tf.math.floor(zeta * (number_z_layers - 1)),
-        #     dtype="int32",
-        # )
-        # I0 = tf.minimum(
-        #     I0, number_z_layers - 2
-        # )  # make sure to not reach the upper-most pt
-        # I1 = I0 + 1
-        # zeta0 = tf.cast(I0 / (number_z_layers - 1), dtype="float32")
-        # zeta1 = tf.cast(I1 / (number_z_layers - 1), dtype="float32")
+        weights = get_weights(
+            vertical_spacing=vertical_spacing,
+            number_z_layers=number_z_layers,
+            particle_r=state.particle_r,
+            u=u,
+        )
 
-        # lamb = (zeta - zeta0) / (zeta1 - zeta0)
-
-        # ind0 = tf.transpose(tf.stack([I0, tf.range(I0.shape[0])]))
-        # ind1 = tf.transpose(tf.stack([I1, tf.range(I1.shape[0])]))
-
-        # wei = tf.zeros_like(u)
-        # wei = tf.tensor_scatter_nd_add(wei, indices=ind0, updates=1 - lamb)
-        # wei = tf.tensor_scatter_nd_add(wei, indices=ind1, updates=lamb)
         erange(rng)
-        
-        if cfg.processes.particles.tracking_method == "simple":
-            # adjust the relative height within the ice column with smb
-            state.particle_r = tf.where(
-                thk > 0.1,
-                tf.clip_by_value(state.particle_r * (thk - smb * state.dt) / thk, 0, 1),
-                1,
-            )
 
-            state.particle_x = state.particle_x + state.dt * tf.reduce_sum(
-                wei * u, axis=0
-            )
-            state.particle_y = state.particle_y + state.dt * tf.reduce_sum(
-                wei * v, axis=0
-            )
-            state.particle_z = topg + thk * state.particle_r
+        # uses the vertical velocity w computed in the vert_flow module
 
-        elif cfg.processes.particles.tracking_method == "3d":
-            # uses the vertical velocity w computed in the vert_flow module
+        rng = srange(message="3d interpolate bilinear", color="black")
+        w = interpolate_bilinear_tf(
+            tf.expand_dims(state.W, axis=-1),
+            indices,
+            indexing="ij",
+        )[:, :, 0]
+        erange(rng)
 
-            rng = srange(message="3d interpolate bilinear", color="black")
-            w = interpolate_bilinear_tf(
-                tf.expand_dims(state.W, axis=-1),
-                indices,
-                indexing="ij",
-            )[:, :, 0]
-            erange(rng)
-            
-            rng = srange(message="compute_new_particle_locations", color="red")
-            state.particle_x = state.particle_x + state.dt * tf.reduce_sum(
-                wei * u, axis=0
-            )
-            state.particle_y = state.particle_y + state.dt * tf.reduce_sum(
-                wei * v, axis=0
-            )
-            state.particle_z = state.particle_z + state.dt * tf.reduce_sum(
-                wei * w, axis=0
-            )
+        rng = srange(message="compute_new_particle_locations", color="red")
+        particle_x = particle_x + state.dt * tf.reduce_sum(weights * u, axis=0)
+        particle_y = particle_y + state.dt * tf.reduce_sum(weights * v, axis=0)
+        particle_z = particle_z + state.dt * tf.reduce_sum(weights * w, axis=0)
 
-            # make sure the particle vertically remain within the ice body
-            state.particle_z = tf.clip_by_value(state.particle_z, topg, topg + thk)
-            # relative height of the particle within the glacier
-            state.particle_r = (state.particle_z - topg) / thk
-            # if thk=0, state.rhpos takes value nan, so we set rhpos value to one in this case :
-            state.particle_r = tf.where(
-                thk == 0, tf.ones_like(state.particle_r), state.particle_r
-            )
-            erange(rng)
-
-        else:
-            print("Error : Name of the particles tracking method not recognised")
+        # make sure the particle vertically remain within the ice body
+        state.particle_z = tf.clip_by_value(particle_z, topg, topg + thk)
+        # relative height of the particle within the glacier
+        particle_r = (state.particle_z - topg) / thk
+        # if thk=0, state.rhpos takes value nan, so we set rhpos value to one in this case :
+        state.particle_r = tf.where(thk == 0, tf.ones_like(particle_r), particle_r)
+        erange(rng)
 
         rng = srange(message="final_computations", color="yellow")
         # make sur the particle remains in the horiz. comp. domain
-        state.particle_x = tf.clip_by_value(
-            state.particle_x, 0, state.x[-1] - state.x[0]
-        )
-        state.particle_y = tf.clip_by_value(
-            state.particle_y, 0, state.y[-1] - state.y[0]
-        )
+        state.particle_x = tf.clip_by_value(particle_x, 0, state.x[-1] - state.x[0])
+        state.particle_y = tf.clip_by_value(particle_y, 0, state.y[-1] - state.y[0])
 
         indices = tf.concat(
             [
@@ -354,20 +326,21 @@ def update(cfg, state):
         )
 
         # compute the englacial time
-        state.particle_englt = state.particle_englt + tf.cast(
+        state.particle_englt = particle_englt + tf.cast(
             tf.where(state.particle_r < 1, state.dt, 0.0), dtype="float32"
         )
 
         #    if int(state.t)%10==0:
         #        print("nb of part : ",state.xpos.shape)
         erange(rng)
-        
+
     if cfg.processes.particles.write_trajectories:
         rng = srange(message="update_write_particle", color="yellow")
         update_write_particle(cfg, state)
         erange(rng)
-        
+
     erange(rng_outer)
+
 
 def finalize(cfg, state):
     pass
@@ -383,13 +356,7 @@ def _rhs_to_zeta(verticle_spacing, rhs):
     if verticle_spacing == 1:
         rhs = zeta
     else:
-        DET = tf.sqrt(
-            1
-            + 4
-            * (verticle_spacing - 1)
-            * verticle_spacing
-            * rhs
-        )
+        DET = tf.sqrt(1 + 4 * (verticle_spacing - 1) * verticle_spacing * rhs)
         zeta = (DET - 1) / (2 * (verticle_spacing - 1))
 
     #           temp = cfg.processes.iceflow.iceflow.Nz*(DET-1)/(2*(cfg.processes.iceflow.iceflow.vert_spacing-1))
@@ -463,7 +430,9 @@ def seeding_particles(cfg, state):
         nparticle_t,
         nparticle_englt,
         nparticle_topg,
-        nparticle_thk,)
+        nparticle_thk,
+    )
+
 
 # def seeding_particles(cfg, state):
 #     """
@@ -520,6 +489,7 @@ def seeding_particles(cfg, state):
 #     )  # time spent by the particle burried in the glacier
 #     state.nparticle_thk = state.thk[I]  # ice thickness at position of the particle
 #     state.nparticle_topg = state.topg[I]  # z position of the bedrock under the particle
+
 
 def initialize_write_particle(cfg, state):
 
@@ -588,5 +558,3 @@ def update_write_particle(cfg, state):
                 )
             )
             np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
-
-

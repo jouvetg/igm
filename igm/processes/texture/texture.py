@@ -19,13 +19,13 @@ from .pix2pixhd import Pix2PixHDPipeline
 from .pix2pixhd_model_assets.generator import LocalEnhancer
 from .pix2pixhd_model_assets.loading import load_model
 
-TEXTURE_DEFAULT_DIR = igm.__path__[0] + "/modules/postproc/texture/"
+TEXTURE_DEFAULT_DIR = igm.__path__[0] + "/processes/texture/"
 TEXTURE_CKPT_DIR = os.path.join(TEXTURE_DEFAULT_DIR, "checkpoints")
 
 def initialize(cfg: Any, state: Any) -> None:
 
     logging.basicConfig(level=cfg.processes.texture.verbosity)
-    if not os.path.exists(cfg.processes.texture.model_path):
+    if not os.path.exists(state.original_cwd):
         model_url = "https://drive.google.com/drive/folders/1Rmw_tCVplnjGfhjnZtVDae7djOmu5ZKP?usp=sharing"
 
         # TODO: Only available to download folder if you use external packages (i do not know, but for now, I will let the user manually download from google drive)

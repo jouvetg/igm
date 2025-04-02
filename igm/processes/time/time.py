@@ -13,8 +13,6 @@ def initialize(cfg, state):
     # Initialize the time with starting time
     state.t = tf.Variable(float(cfg.processes.time.start))
 
-    # the first loop is not advancing
-    state.it = -1
     state.itsave = -1
 
     state.dt = tf.Variable(float(cfg.processes.time.step_max))
@@ -63,8 +61,7 @@ def update(cfg, state):
     if state.it >= 0:
         state.t.assign(state.t + state.dt)
 
-    state.it += 1
-
+    state.continue_run = (state.t < cfg.processes.time.end)
 
 def finalize(cfg, state):
     pass

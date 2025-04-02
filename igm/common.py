@@ -71,23 +71,30 @@ def print_info(state):
                           bar_format="{desc} {postfix}")   
 
     if hasattr(state, "pbar"):
-        state.pbar.set_postfix({ 
+        dic_postfix= { 
             "🕒": datetime.datetime.now().strftime("%H:%M:%S"),
             "🔄": f"{state.it:06.0f}",
             "⏱ Time": f"{state.t.numpy():09.1f} yr",
-            "⏳ Step": f"{state.dt_target:04.2f} yr",
-            "❄️  Volume": f"{np.sum(state.thk) * (state.dx**2) / 10**9:108.2f} km³",
-#            "#  Particles": f"{len(state.particle_x)}",
-#            "💾 GPU Mem (MB)": tf.config.experimental.get_memory_info("GPU:0")['current'] / 1024**2
-        })
+            "⏳ Step": f"{state.dt:04.2f} yr",
+        }
+        if hasattr(state, "dx"):
+            dic_postfix["❄️  Volume"] = f"{np.sum(state.thk) * (state.dx**2) / 10**9:108.2f} km³"
+        if hasattr(state, "particle_x"):
+            dic_postfix["# Particles"] = f"{len(state.particle_x)}"
+
+#        dic_postfix["💾 GPU Mem (MB)"] = tf.config.experimental.get_memory_info("GPU:0")['current'] / 1024**2
+
+        state.pbar.set_postfix(dic_postfix)
         state.pbar.update(1)
 
 
 def update_modules(processes: List, outputs: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
+        state.it = -1
+        state.continue_run = True
         if cfg.core.print_comp:
             state.tcomp = {module.__name__.split('.')[-1]: [] for module in processes+outputs}
-        while state.t < cfg.processes.time.end:
+        while state.continue_run:
             for module in processes:
                 m=module.__name__.split('.')[-1]
                 if cfg.core.print_comp:
@@ -98,6 +105,7 @@ def update_modules(processes: List, outputs: List, cfg: Any, state: State) -> No
             run_outputs(outputs, cfg, state)
             if cfg.core.print_info:
                 print_info(state)
+            state.it += 1
 
 def finalize_modules(processes: List, cfg: Any, state: State) -> None:
     for module in processes:

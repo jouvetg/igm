@@ -59,7 +59,7 @@ def main():
     res = 4096
     depth = 10
     number_of_particles = 50_000
-    # number_of_particles = 2_000_000
+    # number_of_particles = 20_000_000
     # number_of_particles = 200_000_000
     
     rng = srange("building_grid", color="red")
@@ -92,28 +92,35 @@ def main():
     # stream = cuda.stream()
     # stream_compute = cuda.stream()
     rng_outer = srange("tensorflow_cupy_cuda conversion", color="red")
+    # rng = srange("grid to dlpack conversion", color="blue")
     grid = tf.experimental.dlpack.to_dlpack(grid)
+    # erange(rng)
+    
+    # rng = srange("grid from dlpack conversion", color="white")
     grid = cp.from_dlpack(grid)
-    # grid = cp.asarray(grid)
+    # erange(rng)
 
-    rng = srange("particles dlpack conversion", color="blue")
+    # rng = srange("particles to dlpack conversion", color="blue")
     particles = tf.experimental.dlpack.to_dlpack(particles)
-    particles = cp.from_dlpack(particles)
-    # particles = cp.asarray(particles)
-    erange(rng)
+    # erange(rng)
+
+    # rng = srange("particles from dlpack conversion", color="white")
+    array_particles = cp.from_dlpack(particles)
+    # erange(rng)
 
     particles_second = tf.experimental.dlpack.to_dlpack(particles_second)
-    particles_second = cp.from_dlpack(particles_second)
-    particles_second = cp.asarray(particles_second)
-    erange(rng_outer)
+    array_particles_second = cp.from_dlpack(particles_second)
     
-    rng = srange("transfering_grid_via_cuda_protocal", color="red")
-    grid = cuda.to_device(grid)
+    # rng = srange("transfering_grid_via_cuda_protocal", color="red")
+    # grid = cuda.as_cuda_array(grid)
     
     # array_interpolate = cuda.device_array((32, 32), dtype="float32")
-    array_particles = cuda.to_device(particles)
-    array_particles_second = cuda.to_device(particles_second)
-    erange(rng)
+    # array_particles = cuda.as_cuda_array(particles)
+    # array_particles = particles
+    # array_particles_second = particles_second
+    # array_particles_second = cuda.as_cuda_array(particles_second)
+    # erange(rng)
+    erange(rng_outer)
 
     rng = srange("building_output_array", color="green")
     interpolated_particle_array = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
@@ -132,38 +139,41 @@ def main():
     interpolate_2d[blockspergrid, threadsperblock](interpolated_particle_array, grid, array_particles_second, depth)
     erange(rng)
     
-    particles_x = cp.asnumpy(array_particles_second[:, 0])
-    particles_y = cp.asnumpy(array_particles_second[:, 1])
-    interpolated_values = interpolated_particle_array.copy_to_host()
-    
-    # # print(array_interpolate.copy_to_host())
     layer = 0
-    plt.imshow(grid.copy_to_host()[layer, ...], cmap="hot_r", origin="lower")
+    # PLOTTING ======================================================
+    # particles_x = cp.asnumpy(array_particles_second[:, 0])
+    # particles_y = cp.asnumpy(array_particles_second[:, 1])
+    # interpolated_values = interpolated_particle_array.copy_to_host()
     
-    plt.colorbar()
-    plt.scatter(particles_x, particles_y, color="blue", s=0.2)
+    # # # print(array_interpolate.copy_to_host())
+    # plt.imshow(grid.copy_to_host()[layer, ...], cmap="hot_r", origin="lower")
     
-    skip_n = 5000
-    print(interpolated_values)
-    shortened_particle_list = interpolated_values[layer,::skip_n] # every nth one
-    shorted_particles_x = particles_x[::skip_n]
-    shorted_particles_y = particles_y[::skip_n]
+    # plt.colorbar()
+    # plt.scatter(particles_x, particles_y, color="blue", s=0.2)
     
-    for i in range(shortened_particle_list.shape[0]):
-        print(str(shortened_particle_list[i]))
-        plt.text(int(shorted_particles_x[i]), int(shorted_particles_y[i]), str(shortened_particle_list[i]), color="black", fontsize=8)
+    # skip_n = 5000
+    # print(interpolated_values)
+    # shortened_particle_list = interpolated_values[layer,::skip_n] # every nth one
+    # shorted_particles_x = particles_x[::skip_n]
+    # shorted_particles_y = particles_y[::skip_n]
     
-    plt.show()
+    # for i in range(shortened_particle_list.shape[0]):
+    #     print(str(shortened_particle_list[i]))
+    #     plt.text(int(shorted_particles_x[i]), int(shorted_particles_y[i]), str(shortened_particle_list[i]), color="black", fontsize=8)
+    
+    # plt.show()
+    # PLOTTING ======================================================
+    
     # # print("Particle Locations", particles)
     # # print("Grid Values", grid.copy_to_host())
     # print("Interpolated Values Shape", interpolated_values.shape)
     # print("Interpolated Values", interpolated_values)
     
     # layer = 5
-    for i in range(5):
-        print(grid[layer, int(particles_x[i]), int(particles_y[i])])
-        print(interpolated_values[layer, i])
-        print("--------------------")
+    # for i in range(5):
+    #     print(grid[layer, int(particles_x[i]), int(particles_y[i])])
+    #     print(interpolated_values[layer, i])
+    #     print("--------------------")
     
 if __name__ == "__main__":
     main()

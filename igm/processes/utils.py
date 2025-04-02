@@ -285,7 +285,17 @@ def complete_data(state):
     if not hasattr(state, "usurf"): 
         state.usurf = tf.Variable(state.topg + state.thk, trainable=False) 
 
-tf.function
+import nvtx
+def srange(message, color):
+    tf.test.experimental.sync_devices()
+    return nvtx.start_range(message, color)
+
+
+def erange(rng):
+    tf.test.experimental.sync_devices()
+    nvtx.end_range(rng)
+    
+# tf.function
 def interpolate_bilinear_tf(
     grid: tf.Tensor,
     query_points: tf.Tensor,
@@ -338,15 +348,19 @@ def interpolate_bilinear_tf(
         query_type = query_points.dtype
         grid_type = grid.dtype
 
-        alphas = []
-        floors = []
-        ceils = []
+        # alphas = []
+        # floors = []
+        # ceils = []
+        ceils = tf.TensorArray(tf.int32, size=0, dynamic_size=True, clear_after_read=False)
+        floors = tf.TensorArray(tf.int32, size=0, dynamic_size=True, clear_after_read=False)
+        alphas = tf.TensorArray(tf.float32, size=0, dynamic_size=True, clear_after_read=False)
+        
         index_order = [0, 1] if indexing == "ij" else [1, 0]
         unstacked_query_points = tf.unstack(query_points, axis=2, num=2)
 
-        for i, dim in enumerate(index_order):
-            with tf.name_scope("dim-" + str(dim)):
-                queries = unstacked_query_points[dim]
+        for i in tf.range(len(index_order)):
+            with tf.name_scope("dim-" + str(index_order[i])):
+                queries = unstacked_query_points[index_order[i]]
 
                 size_in_indexing_dimension = grid_shape[i + 1]
 
@@ -358,9 +372,12 @@ def interpolate_bilinear_tf(
                     tf.math.maximum(min_floor, tf.math.floor(queries)), max_floor
                 )
                 int_floor = tf.cast(floor, tf.dtypes.int32)
-                floors.append(int_floor)
+                
+                rng = srange("appending things", color="blue")
                 ceil = int_floor + 1
-                ceils.append(ceil)
+                ceils = ceils.write(i, ceil)
+                floors = floors.write(i, int_floor)
+                erange(rng)
 
                 # alpha has the same type as the grid, as we will directly use alpha
                 # when taking linear combinations of pixel values from the image.
@@ -372,7 +389,8 @@ def interpolate_bilinear_tf(
                 # Expand alpha to [b, n, 1] so we can use broadcasting
                 # (since the alpha values don't depend on the channel).
                 alpha = tf.expand_dims(alpha, 2)
-                alphas.append(alpha)
+                alphas = alphas.write(i, alpha)
+                # alphas.append(alpha)
 
             flattened_grid = tf.reshape(grid, [batch_size * height * width, channels])
             batch_offsets = tf.reshape(
@@ -385,16 +403,41 @@ def interpolate_bilinear_tf(
         # code would be made simpler by using tf.gather_nd.
         def gather(y_coords, x_coords, name):
             with tf.name_scope("gather-" + name):
+                rng = srange("gather_func_linear", color="green")
                 linear_coordinates = batch_offsets + y_coords * width + x_coords
+                erange(rng)
+                
+                # print("linear_coordinates", linear_coordinates)
+                # print("batch_offsets", batch_offsets)
+                # print("y_coords", y_coords)
+                # print("x_coords", x_coords)
+                # print("width", width)
+                # print("flattened_grid", flattened_grid)
+                
+                rng = srange("gather call", color="red")
                 gathered_values = tf.gather(flattened_grid, linear_coordinates)
-                return tf.reshape(gathered_values, [batch_size, num_queries, channels])
+                erange(rng)
+                
+                rng = srange("reshaping", color="blue")
+                result = tf.reshape(gathered_values, [batch_size, num_queries, channels])
+                erange(rng)
+                
+                return result
 
+        ceils = ceils.stack()
+        floors = floors.stack()
+        
+        rng_outer = srange("gather_funcs", color="pink")
         # grab the pixel values in the 4 corners around each query point
+                
         top_left = gather(floors[0], floors[1], "top_left")
         top_right = gather(floors[0], ceils[1], "top_right")
         bottom_left = gather(ceils[0], floors[1], "bottom_left")
         bottom_right = gather(ceils[0], ceils[1], "bottom_right")
-
+        erange(rng_outer)
+        
+        alphas = alphas.stack()
+        
         # now, do the actual interpolation
         with tf.name_scope("interpolate"):
             interp_top = alphas[1] * (top_right - top_left) + top_left

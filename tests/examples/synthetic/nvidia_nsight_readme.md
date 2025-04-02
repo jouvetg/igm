@@ -41,6 +41,8 @@
 
    `nsys profile --gpu-metrics-device=all --trace nvtx,cuda,cudnn --cudabacktrace=all --cuda-graph-trace=graph --cuda-memory-usage=true igm_run +experiment=params`
 
-   nsys profile --gpu-metrics-device=all --trace nvtx,cuda,cudnn --cudabacktrace=all --cuda-graph-trace=graph igm_run +experiment=params
+nsys profile --gpu-metrics-device=all --trace nvtx,cuda,cudnn --cudabacktrace=all --cuda-memory-usage=true igm_run +experiment=params
 
    nsys profile -t cuda,nvtx --cudabacktrace=all --gpu-metrics-device=all python interpolation_test_numba.py
+
+   https://github.com/tensorflow/tensorflow/blob/05e6cce54a157f37db93a97beea1aee661617688/tensorflow/core/kernels/gather_functor_gpu.cu.h#L153

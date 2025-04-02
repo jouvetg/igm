@@ -21,7 +21,8 @@ def erange(rng):
 @cuda.jit
 def interpolate_2d(interpolated_grid, grid_values, array_particles):
     particle_id = cuda.threadIdx.x + cuda.blockIdx.x * cuda.blockDim.x
-    depth_layer = cuda.blockIdx.y # put it on blocks to avoid branching
+    depth_layer = cuda.threadIdx.y # put it on blocks to avoid branching
+    
     if particle_id < array_particles.shape[0]:
         x_pos = array_particles[particle_id, 0]
         y_pos = array_particles[particle_id, 1]
@@ -57,26 +58,60 @@ def main():
     res = 4096
     depth = 10
     number_of_particles = 50_000
-    # number_of_particles = 5_000_000
+    # number_of_particles = 2_000_000
     # number_of_particles = 200_000_000
     
     rng = srange("building_grid", color="red")
-    particles = cp.random.uniform(0, res - 1, size=(number_of_particles, 2))
-    grid_x = cp.linspace(0, res, num=res)
-    grid_y = cp.linspace(0, res, num=res)
     
-    grid_values = cp.add(*cp.meshgrid(grid_x, grid_y))
-    grid = cp.zeros((depth, res, res), dtype="float32")
     
-    for i in range(depth):
-        grid[i] = (i + 0.1) * grid_values
+    # particles = cp.random.uniform(0, res - 1, size=(number_of_particles, 2))
+    # particles_second = cp.random.uniform(0, res - 1, size=(number_of_particles, 2))
+    # grid_x = cp.linspace(0, res, num=res)
+    # grid_y = cp.linspace(0, res, num=res)
+    
+    # grid_values = cp.add(*cp.meshgrid(grid_x, grid_y))
+    # grid = cp.zeros((depth, res, res), dtype="float32")
+    
+    particles = tf.random.uniform(shape=(number_of_particles, 2), minval=0, maxval=res - 1)
+    particles_second = tf.random.uniform(shape=(number_of_particles, 2), minval=0, maxval=res - 1)
+    grid_x = tf.linspace(0, res, num=res)
+    grid_y = tf.linspace(0, res, num=res)
+    grid_values = tf.add(*tf.meshgrid(grid_x, grid_y))
+    # grid = tf.zeros((depth, res, res), dtype="float32")
+    
+    grid = 0.1 * grid_values
+    grid = tf.expand_dims(grid, axis=0)
+    for i in range(1, depth):
+        grid_layer = (i + 0.1) * grid_values
+        grid_layer = tf.expand_dims(grid_layer, axis=0)
+        # grid_layer = 
+        grid = tf.concat([grid, grid_layer], axis=0)
     erange(rng)
+    
+    # stream = cuda.stream()
+    # stream_compute = cuda.stream()
+    rng_outer = srange("tensorflow_cupy_cuda conversion", color="red")
+    grid = tf.experimental.dlpack.to_dlpack(grid)
+    grid = cp.from_dlpack(grid)
+    grid = cp.asarray(grid)
+
+    rng = srange("particles dlpack conversion", color="blue")
+    particles = tf.experimental.dlpack.to_dlpack(particles)
+    particles = cp.from_dlpack(particles)
+    particles = cp.asarray(particles)
+    erange(rng)
+
+    particles_second = tf.experimental.dlpack.to_dlpack(particles_second)
+    particles_second = cp.from_dlpack(particles_second)
+    particles_second = cp.asarray(particles_second)
+    erange(rng_outer)
     
     rng = srange("transfering_grid_via_cuda_protocal", color="red")
     grid = cuda.to_device(grid)
     
     # array_interpolate = cuda.device_array((32, 32), dtype="float32")
     array_particles = cuda.to_device(particles)
+    array_particles_second = cuda.to_device(particles_second)
     erange(rng)
 
     rng = srange("building_output_array", color="green")
@@ -84,45 +119,50 @@ def main():
     erange(rng)
     
     
-    threadsperblock = (32)
-    blockspergrid = (math.ceil(number_of_particles / threadsperblock),
-                     10) # number of depth layers to do as a batch
+    threadsperblock = (32, 10)
+    blockspergrid = math.ceil(number_of_particles / threadsperblock[0])
     
     # with nvtx.annotate("interpolate_2d", color="blue"): # need to sync GPU first
     rng = srange("interpolate_2d", color="blue")
     interpolate_2d[blockspergrid, threadsperblock](interpolated_particle_array, grid, array_particles)
     erange(rng)
     
-    # particles_x = cp.asnumpy(particles[:, 0])
-    # particles_y = cp.asnumpy(particles[:, 1])
-    # interpolated_values = interpolated_particle_array.copy_to_host()
+    rng = srange("interpolate_2d_second_call", color="yellow")
+    interpolate_2d[blockspergrid, threadsperblock](interpolated_particle_array, grid, array_particles_second)
+    erange(rng)
     
-    # # # print(array_interpolate.copy_to_host())
-    # # plt.imshow(grid.copy_to_host(), cmap="hot_r", origin="lower")
+    particles_x = cp.asnumpy(array_particles_second[:, 0])
+    particles_y = cp.asnumpy(array_particles_second[:, 1])
+    interpolated_values = interpolated_particle_array.copy_to_host()
     
-    # # plt.colorbar()
-    # # plt.scatter(particles_x, particles_y, color="blue", s=0.2)
+    # # print(array_interpolate.copy_to_host())
+    layer = 0
+    plt.imshow(grid.copy_to_host()[layer, ...], cmap="hot_r", origin="lower")
     
-    # # skip_n = 50_000_000
-    # # shortened_particle_list = interpolated_values[::skip_n] # every nth one
-    # # shorted_particles_x = particles_x[::skip_n]
-    # # shorted_particles_y = particles_y[::skip_n]
+    plt.colorbar()
+    plt.scatter(particles_x, particles_y, color="blue", s=0.2)
     
-    # # for i in range(shortened_particle_list.shape[0]):
-    # #     print(str(shortened_particle_list[i]))
-    # #     plt.text(int(shorted_particles_x[i]), int(shorted_particles_y[i]), str(shortened_particle_list[i]), color="black", fontsize=8)
+    skip_n = 5000
+    print(interpolated_values)
+    shortened_particle_list = interpolated_values[layer,::skip_n] # every nth one
+    shorted_particles_x = particles_x[::skip_n]
+    shorted_particles_y = particles_y[::skip_n]
     
-    # # plt.show()
+    for i in range(shortened_particle_list.shape[0]):
+        print(str(shortened_particle_list[i]))
+        plt.text(int(shorted_particles_x[i]), int(shorted_particles_y[i]), str(shortened_particle_list[i]), color="black", fontsize=8)
+    
+    plt.show()
     # # print("Particle Locations", particles)
     # # print("Grid Values", grid.copy_to_host())
     # print("Interpolated Values Shape", interpolated_values.shape)
     # print("Interpolated Values", interpolated_values)
     
     # layer = 5
-    # for i in range(5):
-    #     print(grid[layer, int(particles_x[i]), int(particles_y[i])])
-    #     print(interpolated_values[layer, i])
-    #     print("--------------------")
+    for i in range(5):
+        print(grid[layer, int(particles_x[i]), int(particles_y[i])])
+        print(interpolated_values[layer, i])
+        print("--------------------")
     
 if __name__ == "__main__":
     main()

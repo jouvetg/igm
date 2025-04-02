@@ -18,40 +18,41 @@ def erange(rng):
     nvtx.end_range(rng)
 
 
-@cuda.jit
-def interpolate_2d(interpolated_grid, grid_values, array_particles):
+@cuda.jit(inline=True) # device function vs ufunc?
+def interpolate_2d(interpolated_grid, grid_values, array_particles, depth):
     particle_id = cuda.threadIdx.x + cuda.blockIdx.x * cuda.blockDim.x
-    depth_layer = cuda.threadIdx.y # put it on blocks to avoid branching
     
     if particle_id < array_particles.shape[0]:
-        x_pos = array_particles[particle_id, 0]
-        y_pos = array_particles[particle_id, 1]
         
-        x_1 = int(x_pos) # left x coordinate
-        y_1 = int(y_pos) # bottom y coordinate
-        x_2 = x_1 + 1 # right x coordinate
-        y_2 = y_1 + 1 # top y coordinate
-        
-        Q_11 = grid_values[depth_layer, y_1, x_1] # bottom left corner
-        Q_12 = grid_values[depth_layer, y_2, x_1] # top left corner
-        Q_21 = grid_values[depth_layer, y_1, x_2] # bottom right corner
-        Q_22 = grid_values[depth_layer, y_2, x_2] # top right corner
-        
-        # Interpolating on x
-        dx = (x_2 - x_1)
-        x_left_weight = (x_pos - x_1) / dx
-        x_right_weight = (x_2 - x_pos) / dx
-        R_1 = x_left_weight * Q_11 + x_right_weight * Q_21 # bottom x interpolation for fixed y_1 (f(x, y_1))
-        R_2 = x_left_weight * Q_12 + x_right_weight * Q_22 # top x interpolation for fixed y_2 (f(x, y_2))
-        
-        # Interpolating on y
-        dy = (y_2 - y_1)
-        y_bottom_weight = (y_pos - y_1) / dy
-        y_top_weight = (y_2 - y_pos) / dy
-        
-        P = y_bottom_weight * R_1 + y_top_weight * R_2 # final interpolation for fixed x (f(x, y))
-        
-        interpolated_grid[depth_layer, particle_id] = P
+        for depth_layer in range(depth):
+            x_pos = array_particles[particle_id, 0]
+            y_pos = array_particles[particle_id, 1]
+            
+            x_1 = int(x_pos) # left x coordinate
+            y_1 = int(y_pos) # bottom y coordinate
+            x_2 = x_1 + 1 # right x coordinate
+            y_2 = y_1 + 1 # top y coordinate
+            
+            Q_11 = grid_values[depth_layer, y_1, x_1] # bottom left corner
+            Q_12 = grid_values[depth_layer, y_2, x_1] # top left corner
+            Q_21 = grid_values[depth_layer, y_1, x_2] # bottom right corner
+            Q_22 = grid_values[depth_layer, y_2, x_2] # top right corner
+            
+            # Interpolating on x
+            dx = (x_2 - x_1)
+            x_left_weight = (x_pos - x_1) / dx
+            x_right_weight = (x_2 - x_pos) / dx
+            R_1 = x_left_weight * Q_11 + x_right_weight * Q_21 # bottom x interpolation for fixed y_1 (f(x, y_1))
+            R_2 = x_left_weight * Q_12 + x_right_weight * Q_22 # top x interpolation for fixed y_2 (f(x, y_2))
+            
+            # Interpolating on y
+            dy = (y_2 - y_1)
+            y_bottom_weight = (y_pos - y_1) / dy
+            y_top_weight = (y_2 - y_pos) / dy
+            
+            P = y_bottom_weight * R_1 + y_top_weight * R_2 # final interpolation for fixed x (f(x, y))
+            
+            interpolated_grid[depth_layer, particle_id] = P
 
 def main():
 
@@ -93,12 +94,12 @@ def main():
     rng_outer = srange("tensorflow_cupy_cuda conversion", color="red")
     grid = tf.experimental.dlpack.to_dlpack(grid)
     grid = cp.from_dlpack(grid)
-    grid = cp.asarray(grid)
+    # grid = cp.asarray(grid)
 
     rng = srange("particles dlpack conversion", color="blue")
     particles = tf.experimental.dlpack.to_dlpack(particles)
     particles = cp.from_dlpack(particles)
-    particles = cp.asarray(particles)
+    # particles = cp.asarray(particles)
     erange(rng)
 
     particles_second = tf.experimental.dlpack.to_dlpack(particles_second)
@@ -119,16 +120,16 @@ def main():
     erange(rng)
     
     
-    threadsperblock = (32, 10)
-    blockspergrid = math.ceil(number_of_particles / threadsperblock[0])
+    threadsperblock = 32
+    blockspergrid = math.ceil(number_of_particles / threadsperblock)
     
     # with nvtx.annotate("interpolate_2d", color="blue"): # need to sync GPU first
     rng = srange("interpolate_2d", color="blue")
-    interpolate_2d[blockspergrid, threadsperblock](interpolated_particle_array, grid, array_particles)
+    interpolate_2d[blockspergrid, threadsperblock](interpolated_particle_array, grid, array_particles, depth)
     erange(rng)
     
     rng = srange("interpolate_2d_second_call", color="yellow")
-    interpolate_2d[blockspergrid, threadsperblock](interpolated_particle_array, grid, array_particles_second)
+    interpolate_2d[blockspergrid, threadsperblock](interpolated_particle_array, grid, array_particles_second, depth)
     erange(rng)
     
     particles_x = cp.asnumpy(array_particles_second[:, 0])

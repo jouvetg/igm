@@ -15,6 +15,9 @@ from igm.processes.utils import *
 
 import nvtx
 
+from numba import cuda
+import cupy as cp
+import math
 
 def srange(message, color):
     tf.test.experimental.sync_devices()
@@ -60,16 +63,72 @@ def initialize(cfg, state):
         initialize_write_particle(cfg, state)
 
 
-# tf.compat.v1.ConfigProto.force_gpu_compatible=True
-# tf.function(reduce_retracing=True)
+@cuda.jit # device function vs ufunc?
+def interpolate_2d(interpolated_grid, grid_values, array_particles, depth):
+    particle_id = cuda.threadIdx.x + cuda.blockIdx.x * cuda.blockDim.x
+    
+    if particle_id < array_particles.shape[0]:
+        
+        for depth_layer in range(depth):
+            x_pos = array_particles[particle_id, 0]
+            y_pos = array_particles[particle_id, 1]
+            
+            x_1 = int(x_pos) # left x coordinate
+            y_1 = int(y_pos) # bottom y coordinate
+            x_2 = x_1 + 1 # right x coordinate
+            y_2 = y_1 + 1 # top y coordinate
+            
+            
+            Q_11 = grid_values[depth_layer, y_1, x_1] # bottom left corner
+            Q_12 = grid_values[depth_layer, y_2, x_1] # top left corner
+            Q_21 = grid_values[depth_layer, y_1, x_2] # bottom right corner
+            Q_22 = grid_values[depth_layer, y_2, x_2] # top right corner
+            
+            # Interpolating on x
+            dx = (x_2 - x_1)
+            x_left_weight = (x_pos - x_1) / dx
+            x_right_weight = (x_2 - x_pos) / dx
+            R_1 = x_left_weight * Q_11 + x_right_weight * Q_21 # bottom x interpolation for fixed y_1 (f(x, y_1))
+            R_2 = x_left_weight * Q_12 + x_right_weight * Q_22 # top x interpolation for fixed y_2 (f(x, y_2))
+            
+            # Interpolating on y
+            dy = (y_2 - y_1)
+            y_bottom_weight = (y_pos - y_1) / dy
+            y_top_weight = (y_2 - y_pos) / dy
+            
+            P = y_bottom_weight * R_1 + y_top_weight * R_2 # final interpolation for fixed x (f(x, y))
+            
+            interpolated_grid[depth_layer, particle_id] = P
+
 def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     # print("tracing interpolate_particles_2d")
-    rng = srange(message="interpolating_u", color="white")
+    
+    rng = srange(message="interpolating_u (numba)", color="black")
+    depth = U.shape[0]
+    number_of_particles = indices.shape[1]
+    
+    grid = tf.experimental.dlpack.to_dlpack(U)
+    grid = cp.from_dlpack(grid)
+    
+    indices_numba = tf.squeeze(indices)
+    particles = tf.experimental.dlpack.to_dlpack(indices_numba) # (N, 2) instead of (1, N, 2)
+    array_particles = cp.from_dlpack(particles)
+        
+    threadsperblock = 32
+    blockspergrid = math.ceil(number_of_particles / threadsperblock)
+    
+    u = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
+    interpolate_2d[blockspergrid, threadsperblock](u, grid, array_particles, depth)
+    u = cp.asarray(u)
+    u_numba = tf.experimental.dlpack.from_dlpack(u.toDlpack())
+    erange(rng)
+
+    rng = srange(message="interpolating_u (tf)", color="white")
     u = interpolate_bilinear_tf(
         tf.expand_dims(U, axis=-1),
         indices,
         indexing="ij",
-    )
+    )   
     erange(rng)
 
     rng = srange(message="slicing_u", color="pink")
@@ -248,15 +307,15 @@ def update(cfg, state):
         )
         # print(f"Number of particles: {indices.shape}")
 
-        rng_reading = srange(message="reading_from_state", color="blue")
-        U_input, V_input, thk_input, topg_input, smb_input = (
-            state.U,
-            state.V,
-            state.thk,
-            state.topg,
-            state.smb,
-        )
-        erange(rng_reading)
+        U_input = state.U
+        V_input = state.V
+        thk_input = state.thk
+        topg_input = state.topg
+        smb_input = state.smb
+        # rng_reading = srange(message="reading_from_state", color="blue")
+        # erange(rng_reading)
+        
+        
         rng = srange(message="interpolate_bilinear_section", color="red")
         u, v, thk, topg, smb = (
             interpolate_particles_2d(  # only need smb for the simple tracking

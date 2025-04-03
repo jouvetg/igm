@@ -92,34 +92,16 @@ def main():
     # stream = cuda.stream()
     # stream_compute = cuda.stream()
     rng_outer = srange("tensorflow_cupy_cuda conversion", color="red")
-    # rng = srange("grid to dlpack conversion", color="blue")
+
     grid = tf.experimental.dlpack.to_dlpack(grid)
-    # erange(rng)
-    
-    # rng = srange("grid from dlpack conversion", color="white")
     grid = cp.from_dlpack(grid)
-    # erange(rng)
-
-    # rng = srange("particles to dlpack conversion", color="blue")
+    
     particles = tf.experimental.dlpack.to_dlpack(particles)
-    # erange(rng)
-
-    # rng = srange("particles from dlpack conversion", color="white")
     array_particles = cp.from_dlpack(particles)
-    # erange(rng)
 
     particles_second = tf.experimental.dlpack.to_dlpack(particles_second)
     array_particles_second = cp.from_dlpack(particles_second)
-    
-    # rng = srange("transfering_grid_via_cuda_protocal", color="red")
-    # grid = cuda.as_cuda_array(grid)
-    
-    # array_interpolate = cuda.device_array((32, 32), dtype="float32")
-    # array_particles = cuda.as_cuda_array(particles)
-    # array_particles = particles
-    # array_particles_second = particles_second
-    # array_particles_second = cuda.as_cuda_array(particles_second)
-    # erange(rng)
+
     erange(rng_outer)
 
     rng = srange("building_output_array", color="green")

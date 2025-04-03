@@ -15,22 +15,22 @@ def cnn(cfg, nb_inputs, nb_outputs):
 
     conv = inputs
 
-    if cfg.processes.iceflow.activation == "LeakyReLU":
+    if cfg.processes.iceflow.emulator.network.activation == "LeakyReLU":
         activation = tf.keras.layers.LeakyReLU(alpha=0.01)
     else:
-        activation = getattr(tf.keras.layers,cfg.processes.iceflow.activation)()      
+        activation = getattr(tf.keras.layers,cfg.processes.iceflow.emulator.network.activation)()      
 
-    for i in range(int(cfg.processes.iceflow.nb_layers)):
+    for i in range(int(cfg.processes.iceflow.emulator.network.nb_layers)):
         conv = tf.keras.layers.Conv2D(
-            filters=cfg.processes.iceflow.nb_out_filter,
-            kernel_size=(cfg.processes.iceflow.conv_ker_size, cfg.processes.iceflow.conv_ker_size),
-            kernel_initializer=cfg.processes.iceflow.weight_initialization,
+            filters=cfg.processes.iceflow.emulator.network.nb_out_filter,
+            kernel_size=(cfg.processes.iceflow.emulator.network.conv_ker_size, cfg.processes.iceflow.emulator.network.conv_ker_size),
+            kernel_initializer=cfg.processes.iceflow.emulator.network.weight_initialization,
             padding="same",
         )(conv)
 
         conv = activation(conv)
 
-        conv = tf.keras.layers.Dropout(cfg.processes.iceflow.dropout_rate)(conv)
+        conv = tf.keras.layers.Dropout(cfg.processes.iceflow.emulator.network.dropout_rate)(conv)
 
     outputs = conv
 
@@ -40,7 +40,7 @@ def cnn(cfg, nb_inputs, nb_outputs):
             1,
             1,
         ),
-        kernel_initializer=cfg.processes.iceflow.weight_initialization,
+        kernel_initializer=cfg.processes.iceflow.emulator.network.weight_initialization,
         activation=None,
     )(outputs)
 
@@ -54,10 +54,10 @@ def unet(cfg, nb_inputs, nb_outputs):
 
     from keras_unet_collection import models
 
-    layers = np.arange(int(cfg.processes.iceflow.nb_blocks))
+    layers = np.arange(int(cfg.processes.iceflow.emulator.network.nb_blocks))
 
     number_of_filters = [
-        cfg.processes.iceflow.nb_out_filter * 2 ** (layers[i]) for i in range(len(layers))
+        cfg.processes.iceflow.emulator.network.nb_out_filter * 2 ** (layers[i]) for i in range(len(layers))
     ]
 
     return models.unet_2d(
@@ -66,7 +66,7 @@ def unet(cfg, nb_inputs, nb_outputs):
         n_labels=nb_outputs,
         stack_num_down=2,
         stack_num_up=2,
-        activation=cfg.processes.iceflow.activation,
+        activation=cfg.processes.iceflow.emulator.network.activation,
         output_activation=None,
         batch_norm=False,
         pool="max",
@@ -99,13 +99,13 @@ def fourier(cfg, nb_inputs, nb_outputs):
     fourier_output = inputs
 
     # Determine the activation function based on user parameters
-    if cfg.processes.iceflow.activation == "LeakyReLU":
+    if cfg.processes.iceflow.emulator.network.activation == "LeakyReLU":
         activation = tf.keras.layers.LeakyReLU(alpha=0.01)
     else:
-        activation = getattr(tf.keras.layers, cfg.processes.iceflow.activation)()
+        activation = getattr(tf.keras.layers, cfg.processes.iceflow.emulator.network.activation)()
 
     # Add Fourier layers, activation, and dropout layers
-    for i in range(int(cfg.processes.iceflow.nb_layers)):
+    for i in range(int(cfg.processes.iceflow.emulator.network.nb_layers)):
         # Apply Fourier Layer
         fourier_output = FourierLayer()(fourier_output)
 
@@ -121,7 +121,7 @@ def fourier(cfg, nb_inputs, nb_outputs):
         fourier_output = tf.cast(real_part, dtype=tf.complex64) + 1j * tf.cast(imag_part, dtype=tf.complex64)
 
         # Dropout Layer
-        fourier_output = tf.keras.layers.Dropout(cfg.processes.iceflow.dropout_rate)(fourier_output)
+        fourier_output = tf.keras.layers.Dropout(cfg.processes.iceflow.emulator.network.dropout_rate)(fourier_output)
 
     # Transform back to spatial domain with Inverse FFT
     spatial_output = tf.signal.ifft2d(fourier_output)
@@ -133,7 +133,7 @@ def fourier(cfg, nb_inputs, nb_outputs):
     outputs = tf.keras.layers.Conv2D(
         filters=nb_outputs,
         kernel_size=(1, 1),
-        kernel_initializer=cfg.processes.iceflow.weight_initialization,
+        kernel_initializer=cfg.processes.iceflow.emulator.network.weight_initialization,
         activation=None,
     )(magnitude_output)
 

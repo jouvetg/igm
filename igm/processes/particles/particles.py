@@ -139,15 +139,15 @@ def update(cfg, state):
 
         zeta = _rhs_to_zeta(cfg, state.particle_r)  # get the position in the column
         I0 = tf.cast(
-            tf.math.floor(zeta * (cfg.processes.iceflow.Nz - 1)),
+            tf.math.floor(zeta * (cfg.processes.iceflow.numerics.Nz - 1)),
             dtype="int32",
         )
         I0 = tf.minimum(
-            I0, cfg.processes.iceflow.Nz - 2
+            I0, cfg.processes.iceflow.numerics.Nz - 2
         )  # make sure to not reach the upper-most pt
         I1 = I0 + 1
-        zeta0 = tf.cast(I0 / (cfg.processes.iceflow.Nz - 1), dtype="float32")
-        zeta1 = tf.cast(I1 / (cfg.processes.iceflow.Nz - 1), dtype="float32")
+        zeta0 = tf.cast(I0 / (cfg.processes.iceflow.numerics.Nz - 1), dtype="float32")
+        zeta1 = tf.cast(I1 / (cfg.processes.iceflow.numerics.Nz - 1), dtype="float32")
 
         lamb = (zeta - zeta0) / (zeta1 - zeta0)
 
@@ -245,26 +245,26 @@ def finalize(cfg, state):
 
 
 def _zeta_to_rhs(cfg, zeta):
-    return (zeta / cfg.processes.iceflow.vert_spacing) * (
-        1.0 + (cfg.processes.iceflow.vert_spacing - 1.0) * zeta
+    return (zeta / cfg.processes.iceflow.numerics.vert_spacing) * (
+        1.0 + (cfg.processes.iceflow.numerics.vert_spacing - 1.0) * zeta
     )
 
 
 def _rhs_to_zeta(cfg, rhs):
-    if cfg.processes.iceflow.vert_spacing == 1:
+    if cfg.processes.iceflow.numerics.vert_spacing == 1:
         rhs = zeta
     else:
         DET = tf.sqrt(
             1
             + 4
-            * (cfg.processes.iceflow.vert_spacing - 1)
-            * cfg.processes.iceflow.vert_spacing
+            * (cfg.processes.iceflow.numerics.vert_spacing - 1)
+            * cfg.processes.iceflow.numerics.vert_spacing
             * rhs
         )
-        zeta = (DET - 1) / (2 * (cfg.processes.iceflow.vert_spacing - 1))
+        zeta = (DET - 1) / (2 * (cfg.processes.iceflow.numerics.vert_spacing - 1))
 
-    #           temp = cfg.processes.iceflow.Nz*(DET-1)/(2*(cfg.processes.iceflow.vert_spacing-1))
-    #           I=tf.cast(tf.minimum(temp-1,cfg.processes.iceflow.Nz-1),dtype='int32')
+    #           temp = cfg.processes.iceflow.numerics.Nz*(DET-1)/(2*(cfg.processes.iceflow.numerics.vert_spacing-1))
+    #           I=tf.cast(tf.minimum(temp-1,cfg.processes.iceflow.numerics.Nz-1),dtype='int32')
 
     return zeta
 

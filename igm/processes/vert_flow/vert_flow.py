@@ -15,7 +15,7 @@ def initialize(cfg, state):
 def update(cfg, state):
     """ """
 
-    if cfg.processes.iceflow.Nz == 2:
+    if cfg.processes.iceflow.numerics.Nz == 2:
         state.W = _compute_vertical_velocity_twolayers(cfg, state)
     else:
 
@@ -51,9 +51,9 @@ def _compute_vertical_velocity_kinematic_v1(cfg, state):
     # use the formula w = u dot \nabla l + \nable \cdot (u l)
  
     # get the vertical thickness layers
-    zeta = np.arange(cfg.processes.iceflow.Nz) / (cfg.processes.iceflow.Nz - 1)
-    temp = (zeta / cfg.processes.iceflow.vert_spacing) * (
-        1.0 + (cfg.processes.iceflow.vert_spacing - 1.0) * zeta
+    zeta = np.arange(cfg.processes.iceflow.numerics.Nz) / (cfg.processes.iceflow.numerics.Nz - 1)
+    temp = (zeta / cfg.processes.iceflow.numerics.vert_spacing) * (
+        1.0 + (cfg.processes.iceflow.numerics.vert_spacing - 1.0) * zeta
     )
     temd = temp[1:] - temp[:-1]
     dz = tf.stack([state.thk * z for z in temd], axis=0)
@@ -92,7 +92,7 @@ def _compute_vertical_velocity_kinematic_v2(cfg, state):
 
     # implementation CMS
 
-    dz = vertical_disc_tf(state.thk, cfg.processes.iceflow.Nz, cfg.processes.iceflow.vert_spacing)
+    dz = vertical_disc_tf(state.thk, cfg.processes.iceflow.numerics.Nz, cfg.processes.iceflow.numerics.vert_spacing)
 
     W = compute_w_kinematic_tf(state.U,state.V,state.topg,state.thk,dz,state.dx,state.vert_weight)
 
@@ -131,9 +131,9 @@ def _compute_vertical_velocity_incompressibility_v1(cfg, state):
     wvelbase = state.U[0] * sloptopgx + state.V[0] * sloptopgy
 
     # get the vertical thickness layers
-    zeta = np.arange(cfg.processes.iceflow.Nz) / (cfg.processes.iceflow.Nz - 1)
-    temp = (zeta / cfg.processes.iceflow.vert_spacing) * (
-        1.0 + (cfg.processes.iceflow.vert_spacing - 1.0) * zeta
+    zeta = np.arange(cfg.processes.iceflow.numerics.Nz) / (cfg.processes.iceflow.numerics.Nz - 1)
+    temp = (zeta / cfg.processes.iceflow.numerics.vert_spacing) * (
+        1.0 + (cfg.processes.iceflow.numerics.vert_spacing - 1.0) * zeta
     )
     temd = temp[1:] - temp[:-1]
     dz = tf.stack([state.thk * z for z in temd], axis=0)
@@ -150,7 +150,7 @@ def _compute_vertical_velocity_incompressibility_v2(cfg, state):
 
     # implementation CMS
 
-    dz = vertical_disc_tf(state.thk, cfg.processes.iceflow.Nz, cfg.processes.iceflow.vert_spacing)
+    dz = vertical_disc_tf(state.thk, cfg.processes.iceflow.numerics.Nz, cfg.processes.iceflow.numerics.vert_spacing)
     dz = tf.concat([tf.expand_dims(tf.zeros_like(state.thk),0),dz],axis=0)
     Z = tf.cumsum(dz) + state.topg
     sloptopgx, sloptopgy = compute_gradient_tf(state.topg,state.dX,state.dX)

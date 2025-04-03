@@ -80,7 +80,7 @@ def print_info(state):
         if hasattr(state, "dx"):
             dic_postfix["❄️  Volume"] = f"{np.sum(state.thk) * (state.dx**2) / 10**9:108.2f} km³"
         if hasattr(state, "particle_x"):
-            dic_postfix["# Particles"] = f"{len(state.particle_x)}"
+            dic_postfix["# Particles"] = f"{state.particle_x.shape[0]}"
 
 #        dic_postfix["💾 GPU Mem (MB)"] = tf.config.experimental.get_memory_info("GPU:0")['current'] / 1024**2
 

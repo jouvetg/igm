@@ -38,10 +38,10 @@ def initialize(cfg, state):
             
         print_costs(cfg, state, cost, i)
 
-        if i % cfg.processes.data_assimilation.output_freq == 0:
-            if cfg.processes.data_assimilation.plot2d:
+        if i % cfg.processes.data_assimilation.output.freq == 0:
+            if cfg.processes.data_assimilation.output.plot2d:
                 update_plot_inversion(cfg, state, i)
-            if cfg.processes.data_assimilation.save_iterat_in_ncdf:
+            if cfg.processes.data_assimilation.output.save_iterat_in_ncdf:
                 update_ncdf_optimize(cfg, state, i)
 
             # stopping criterion: stop if the cost no longer decrease
@@ -53,7 +53,7 @@ def initialize(cfg, state):
     # now that the ice thickness is optimized, we can fix the bed once for all! (ONLY FOR GROUNDED ICE)
     state.topg = state.usurf - state.thk
 
-    if not cfg.processes.data_assimilation.save_result_in_ncdf=="":
+    if not cfg.processes.data_assimilation.output.save_result_in_ncdf=="":
         output_ncdf_optimize_final(cfg, state)
 
     plot_cost_functions() # ! Bug right now with plotting values... (extra headers)

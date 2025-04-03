@@ -16,13 +16,13 @@ def regu_slidingco(cfg,state):
         dadx = tf.where( (state.icemaskobs[:, 1:] == 1) & (state.icemaskobs[:, :-1] == 1) , dadx, 0.0)
         dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
 
-    if cfg.processes.data_assimilation.smooth_anisotropy_factor_sl == 1:
+    if cfg.processes.data_assimilation.regularization.smooth_anisotropy_factor_sl == 1:
         if cfg.processes.data_assimilation.fix_opti_normalization_issue:
-            REGU_S = (cfg.processes.data_assimilation.regu_param_slidingco) * 0.5 * (
+            REGU_S = (cfg.processes.data_assimilation.regularization.slidingco) * 0.5 * (
                 tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
             )
         else:
-            REGU_S = (cfg.processes.data_assimilation.regu_param_slidingco) * (
+            REGU_S = (cfg.processes.data_assimilation.regularization.slidingco) * (
                 tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
             )
     else:
@@ -37,17 +37,17 @@ def regu_slidingco(cfg,state):
             dady = tf.where( MASK, dady, 0.0)
  
         if cfg.processes.data_assimilation.fix_opti_normalization_issue:
-            REGU_S = (cfg.processes.data_assimilation.regu_param_slidingco) * 0.5 * (
-                (1.0/np.sqrt(cfg.processes.data_assimilation.smooth_anisotropy_factor_sl))
+            REGU_S = (cfg.processes.data_assimilation.regularization.slidingco) * 0.5 * (
+                (1.0/np.sqrt(cfg.processes.data_assimilation.regularization.smooth_anisotropy_factor_sl))
                 * tf.math.reduce_mean((dadx * state.flowdirx + dady * state.flowdiry)**2)
-                + np.sqrt(cfg.processes.data_assimilation.smooth_anisotropy_factor_sl)
+                + np.sqrt(cfg.processes.data_assimilation.regularization.smooth_anisotropy_factor_sl)
                 * tf.math.reduce_mean((dadx * state.flowdiry - dady * state.flowdirx)**2)
             )
         else:
-            REGU_S = (cfg.processes.data_assimilation.regu_param_slidingco) * (
-                (1.0/np.sqrt(cfg.processes.data_assimilation.smooth_anisotropy_factor_sl))
+            REGU_S = (cfg.processes.data_assimilation.regularization.slidingco) * (
+                (1.0/np.sqrt(cfg.processes.data_assimilation.regularization.smooth_anisotropy_factor_sl))
                 * tf.nn.l2_loss((dadx * state.flowdirx + dady * state.flowdiry))
-                + np.sqrt(cfg.processes.data_assimilation.smooth_anisotropy_factor_sl)
+                + np.sqrt(cfg.processes.data_assimilation.regularization.smooth_anisotropy_factor_sl)
                 * tf.nn.l2_loss((dadx * state.flowdiry - dady * state.flowdirx)) )
 
     return REGU_S

@@ -11,29 +11,29 @@ def initialize_iceflow_fields(cfg, state):
 
     # here we initialize variable parmaetrizing ice flow
     if not hasattr(state, "arrhenius"):
-        if cfg.processes.iceflow.dim_arrhenius == 3:
+        if cfg.processes.iceflow.physics.dim_arrhenius == 3:
             state.arrhenius = \
-                tf.ones((cfg.processes.iceflow.Nz, state.thk.shape[0], state.thk.shape[1])) \
-                * cfg.processes.iceflow.init_arrhenius * cfg.processes.iceflow.enhancement_factor
+                tf.ones((cfg.processes.iceflow.numerics.Nz, state.thk.shape[0], state.thk.shape[1])) \
+                * cfg.processes.iceflow.physics.init_arrhenius * cfg.processes.iceflow.physics.enhancement_factor
         else:
-            state.arrhenius = tf.ones_like(state.thk) * cfg.processes.iceflow.init_arrhenius * cfg.processes.iceflow.enhancement_factor
+            state.arrhenius = tf.ones_like(state.thk) * cfg.processes.iceflow.physics.init_arrhenius * cfg.processes.iceflow.physics.enhancement_factor
 
     if not hasattr(state, "slidingco"):
-        state.slidingco = tf.ones_like(state.thk) * cfg.processes.iceflow.init_slidingco
+        state.slidingco = tf.ones_like(state.thk) * cfg.processes.iceflow.physics.init_slidingco
 
     # here we create a new velocity field
     if not hasattr(state, "U"):
-        state.U = tf.zeros((cfg.processes.iceflow.Nz, state.thk.shape[0], state.thk.shape[1])) 
-        state.V = tf.zeros((cfg.processes.iceflow.Nz, state.thk.shape[0], state.thk.shape[1])) 
+        state.U = tf.zeros((cfg.processes.iceflow.numerics.Nz, state.thk.shape[0], state.thk.shape[1])) 
+        state.V = tf.zeros((cfg.processes.iceflow.numerics.Nz, state.thk.shape[0], state.thk.shape[1])) 
 
 def define_vertical_weight(cfg, state):
     """
     define_vertical_weight
     """
 
-    zeta = np.arange(cfg.processes.iceflow.Nz + 1) / cfg.processes.iceflow.Nz
-    weight = (zeta / cfg.processes.iceflow.vert_spacing) * (
-        1.0 + (cfg.processes.iceflow.vert_spacing - 1.0) * zeta
+    zeta = np.arange(cfg.processes.iceflow.numerics.Nz + 1) / cfg.processes.iceflow.numerics.Nz
+    weight = (zeta / cfg.processes.iceflow.numerics.vert_spacing) * (
+        1.0 + (cfg.processes.iceflow.numerics.vert_spacing - 1.0) * zeta
     )
     weight = tf.Variable(weight[1:] - weight[:-1], dtype=tf.float32, trainable=False)
     state.vert_weight = tf.expand_dims(tf.expand_dims(weight, axis=-1), axis=-1)
@@ -50,12 +50,12 @@ def update_2d_iceflow_variables(cfg, state):
 def compute_PAD(cfg,Nx,Ny):
 
     # In case of a U-net, must make sure the I/O size is multiple of 2**N
-    if cfg.processes.iceflow.multiple_window_size > 0:
-        NNy = cfg.processes.iceflow.multiple_window_size * math.ceil(
-            Ny / cfg.processes.iceflow.multiple_window_size
+    if cfg.processes.iceflow.emulator.network.multiple_window_size > 0:
+        NNy = cfg.processes.iceflow.emulator.network.multiple_window_size * math.ceil(
+            Ny / cfg.processes.iceflow.emulator.network.multiple_window_size
         )
-        NNx = cfg.processes.iceflow.multiple_window_size * math.ceil(
-            Nx / cfg.processes.iceflow.multiple_window_size
+        NNx = cfg.processes.iceflow.emulator.network.multiple_window_size * math.ceil(
+            Nx / cfg.processes.iceflow.emulator.network.multiple_window_size
         )
         return [[0, 0], [0, NNy - Ny], [0, NNx - Nx], [0, 0]]
     else:
@@ -106,7 +106,7 @@ class EarlyStopping:
                 return True
 
 def Y_to_UV(cfg, Y):
-    N = cfg.processes.iceflow.Nz
+    N = cfg.processes.iceflow.numerics.Nz
 
     U = tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1])
     V = tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1])
@@ -129,7 +129,7 @@ def UV_to_Y(cfg, U, V):
 def fieldin_to_X(cfg, fieldin):
     X = []
 
-    fieldin_dim = [0, 0, 1 * (cfg.processes.iceflow.dim_arrhenius == 3), 0, 0]
+    fieldin_dim = [0, 0, 1 * (cfg.processes.iceflow.physics.dim_arrhenius == 3), 0, 0]
 
     for f, s in zip(fieldin, fieldin_dim):
         if s == 0:
@@ -143,20 +143,20 @@ def fieldin_to_X(cfg, fieldin):
 def X_to_fieldin(cfg, X):
     i = 0
 
-    fieldin_dim = [0, 0, 1 * (cfg.processes.iceflow.dim_arrhenius == 3), 0, 0]
+    fieldin_dim = [0, 0, 1 * (cfg.processes.iceflow.physics.dim_arrhenius == 3), 0, 0]
 
     fieldin = []
 
-    for f, s in zip(cfg.processes.iceflow.fieldin, fieldin_dim):
+    for f, s in zip(cfg.processes.iceflow.emulator.fieldin, fieldin_dim):
         if s == 0:
             fieldin.append(X[:, :, :, i])
             i += 1
         else:
             fieldin.append(
                 tf.experimental.numpy.moveaxis(
-                    X[:, :, :, i : i + cfg.processes.iceflow.Nz], [-1], [1]
+                    X[:, :, :, i : i + cfg.processes.iceflow.numerics.Nz], [-1], [1]
                 )
             )
-            i += cfg.processes.iceflow.Nz
+            i += cfg.processes.iceflow.numerics.Nz
 
     return fieldin

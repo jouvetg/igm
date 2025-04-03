@@ -15,7 +15,7 @@ def misfit_velsurf(cfg,state):
     ACT = ~tf.math.is_nan(velsurfobs) 
 
     cost = 0.5 * tf.reduce_mean(
-           ( (velsurfobs[ACT & REL] - velsurf[ACT & REL]) / cfg.processes.data_assimilation.velsurfobs_std  )** 2
+           ( (velsurfobs[ACT & REL] - velsurf[ACT & REL]) / cfg.processes.data_assimilation.fitting.velsurfobs_std  )** 2
     )
 
     if cfg.processes.data_assimilation.include_low_speed_term:

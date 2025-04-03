@@ -85,7 +85,7 @@ def run(cfg, state):
         }
 
         if "Nz" in cfg.processes.iceflow:
-            coords["z"] = ("z", np.arange(cfg.processes.iceflow.Nz))
+            coords["z"] = ("z", np.arange(cfg.processes.iceflow.numerics.Nz))
 
         ds = xr.Dataset(
             data_vars=create_data_vars(),

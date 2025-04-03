@@ -7,12 +7,12 @@ from ..utils import EarlyStopping
 def initialize_iceflow_solver(cfg,state):
 
     if int(tf.__version__.split(".")[1]) <= 10:
-        state.optimizer = getattr(tf.keras.optimizers,cfg.processes.iceflow.optimizer_solver)(
-            learning_rate=cfg.processes.iceflow.solve_step_size
+        state.optimizer = getattr(tf.keras.optimizers,cfg.processes.iceflow.solver.optimizer)(
+            learning_rate=cfg.processes.iceflow.solver.step_size
         )
     else:
-        state.optimizer = getattr(tf.keras.optimizers.legacy,cfg.processes.iceflow.optimizer_solver)(
-            learning_rate=cfg.processes.iceflow.solve_step_size
+        state.optimizer = getattr(tf.keras.optimizers.legacy,cfg.processes.iceflow.solver.optimizer)(
+            learning_rate=cfg.processes.iceflow.solver.step_size
         )
 
 def solve_iceflow(cfg, state, U, V):
@@ -25,11 +25,11 @@ def solve_iceflow(cfg, state, U, V):
 
     Cost_Glen = []
 
-    fieldin = [tf.expand_dims(vars(state)[f], axis=0) for f in cfg.processes.iceflow.fieldin]
+    fieldin = [tf.expand_dims(vars(state)[f], axis=0) for f in cfg.processes.iceflow.emulator.fieldin]
 
     early_stopping = EarlyStopping(relative_min_delta=0.001, patience=10)
 
-    for i in range(cfg.processes.iceflow.solve_nbitmax):
+    for i in range(cfg.processes.iceflow.solver.nbitmax):
         with tf.GradientTape() as t:
             t.watch(U)
             t.watch(V)
@@ -52,7 +52,7 @@ def solve_iceflow(cfg, state, U, V):
 #            state.C_float = C_float[0] 
 
             # Stop if the cost no longer decreases
-            # if cfg.processes.iceflow.solve_stop_if_no_decrease:
+            # if cfg.processes.iceflow.solver.stop_if_no_decrease:
             #     if i > 1:
             #         if Cost_Glen[-1] >= Cost_Glen[-2]:
             #             break
@@ -91,7 +91,7 @@ def solve_iceflow_lbfgs(cfg, state, U, V):
         V = UV[1]
 
         fieldin = [
-            tf.expand_dims(vars(state)[f], axis=0) for f in cfg.processes.iceflow.fieldin
+            tf.expand_dims(vars(state)[f], axis=0) for f in cfg.processes.iceflow.emulator.fieldin
         ]
 
         C_shear, C_slid, C_grav, C_float = iceflow_energy(
@@ -116,7 +116,7 @@ def solve_iceflow_lbfgs(cfg, state, U, V):
     optimizer = tfp.optimizer.lbfgs_minimize(
             value_and_gradients_function=loss_and_gradients_function,
             initial_position=UV,
-            max_iterations=cfg.processes.iceflow.solve_nbitmax,
+            max_iterations=cfg.processes.iceflow.solver.nbitmax,
             tolerance=1e-8)
     
     UV = optimizer.position
@@ -128,7 +128,7 @@ def solve_iceflow_lbfgs(cfg, state, U, V):
 
 def update_iceflow_solved(cfg, state):
 
-    if cfg.processes.iceflow.optimizer_lbfgs:
+    if cfg.processes.iceflow.solver.lbfgs:
         state.U, state.V, Cost_Glen = solve_iceflow_lbfgs(cfg, state, state.U, state.V)
     else:
         state.U, state.V, Cost_Glen = solve_iceflow(cfg, state, state.U, state.V)
@@ -149,8 +149,8 @@ def update_iceflow_solved(cfg, state):
                 state.V,
             ) 
         
-    if len(cfg.processes.iceflow.save_cost_solver)>0:
-        np.savetxt(cfg.processes.iceflow.output_directory+cfg.processes.iceflow.save_cost_solver+'-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")
+    if len(cfg.processes.iceflow.solver.save_cost)>0:
+        np.savetxt(cfg.processes.iceflow.emulator.output_directory+cfg.processes.iceflow.solver.save_cost+'-'+str(state.it)+'.dat', np.array(Cost_Glen),  fmt="%5.10f")
 
     state.COST_Glen = Cost_Glen[-1].numpy()
 

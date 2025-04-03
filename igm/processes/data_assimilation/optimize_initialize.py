@@ -15,16 +15,16 @@ def optimize_initialize(cfg, state):
     # state.usurfobs = tf.Variable(gaussian_filter(state.usurfobs.numpy(), 3, mode="reflect"))
     # state.usurf    = tf.Variable(gaussian_filter(state.usurf.numpy(), 3, mode="reflect"))
 
-    assert ("usurf" in cfg.processes.data_assimilation.cost) == ("usurf" in cfg.processes.data_assimilation.control)
+    assert ("usurf" in cfg.processes.data_assimilation.cost_list) == ("usurf" in cfg.processes.data_assimilation.control_list)
 
     # make sure that there are least some profiles in thkobs
     if tf.reduce_all(tf.math.is_nan(state.thkobs)):
-        if "thk" in cfg.processes.data_assimilation.cost:
-            cfg.processes.data_assimilation.cost.remove("thk")
+        if "thk" in cfg.processes.data_assimilation.cost_list:
+            cfg.processes.data_assimilation.cost_list.remove("thk")
 
     ###### PREPARE DATA PRIOR OPTIMIZATIONS
  
-    if "divfluxobs" in cfg.processes.data_assimilation.cost:
+    if "divfluxobs" in cfg.processes.data_assimilation.cost_list:
         if not hasattr(state, "divfluxobs"):
             state.divfluxobs = state.smb - state.dhdt
 
@@ -49,7 +49,7 @@ def optimize_initialize(cfg, state):
     state.slidingco = tf.where( state.icemaskobs == 2, 0.0, state.slidingco)
     
     # this will infer values for slidingco and convexity weight based on the ice velocity and an empirical relationship from test glaciers with thickness profiles
-    if cfg.processes.data_assimilation.infer_params:
+    if cfg.processes.data_assimilation.cook.infer_params:
         #Because OGGM will index icemask from 0
         dummy = infer_params_cook(state, cfg)
         if tf.reduce_max(state.icemask).numpy() < 1:

@@ -17,11 +17,11 @@ def regu_arrhenius(cfg,state):
         dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
     
     if cfg.processes.data_assimilation.fix_opti_normalization_issue:
-        REGU_S = (cfg.processes.data_assimilation.regu_param_arrhenius) * 0.5 * (
+        REGU_S = (cfg.processes.data_assimilation.regularization.arrhenius) * 0.5 * (
             tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
         )
     else:
-        REGU_S = (cfg.processes.data_assimilation.regu_param_arrhenius) * (
+        REGU_S = (cfg.processes.data_assimilation.regularization.arrhenius) * (
             tf.nn.l2_loss(dadx) + tf.nn.l2_loss(dady)
         )
 

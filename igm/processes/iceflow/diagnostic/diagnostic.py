@@ -24,10 +24,10 @@ def initialize_iceflow_diagnostic(cfg,state):
     state.velsurf_mag_app = tf.zeros_like(state.thk)
 
     # state.UT = tf.Variable(
-    #     tf.zeros((cfg.processes.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
+    #     tf.zeros((cfg.processes.iceflow.numerics.Nz, state.thk.shape[0], state.thk.shape[1]))
     # )
     # state.VT = tf.Variable(
-    #     tf.zeros((cfg.processes.iceflow.Nz, state.thk.shape[0], state.thk.shape[1]))
+    #     tf.zeros((cfg.processes.iceflow.numerics.Nz, state.thk.shape[0], state.thk.shape[1]))
     # )
 
     print("it,l1,l2,COST_Glen,COST_Emulator,nb_it_solve,nb_it_emula,time_solve,time_retra")
@@ -53,7 +53,7 @@ def update_iceflow_diagnostic(cfg, state):
 
     update_iceflow_emulator(cfg, state, state.it)
 
-    fieldin = [vars(state)[f] for f in cfg.processes.iceflow.fieldin]
+    fieldin = [vars(state)[f] for f in cfg.processes.iceflow.emulator.fieldin]
     X = fieldin_to_X(cfg, fieldin)
     Y = state.iceflow_model(X)
     U, V = Y_to_UV(cfg, Y)

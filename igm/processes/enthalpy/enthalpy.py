@@ -18,7 +18,7 @@ def initialize(cfg, state):
 
     state.basalMeltRate = tf.Variable(tf.zeros_like(state.thk), trainable=False)
     state.T = tf.Variable(
-        tf.ones((cfg.processes.iceflow.Nz, Ny, Nx)) * cfg.processes.enthalpy.melt_temp, trainable=False
+        tf.ones((cfg.processes.iceflow.numerics.Nz, Ny, Nx)) * cfg.processes.enthalpy.melt_temp, trainable=False
     )
     state.omega = tf.Variable(tf.zeros_like(state.T), trainable=False)
     state.E = tf.Variable(
@@ -39,20 +39,20 @@ def initialize(cfg, state):
     state.tauc, state.slidingco = compute_slidingco_tf(
         state.thk,
         state.tillwat,
-        cfg.processes.iceflow.ice_density,
-        cfg.processes.iceflow.gravity_cst,
+        cfg.processes.iceflow.physics.ice_density,
+        cfg.processes.iceflow.physics.gravity_cst,
         cfg.processes.enthalpy.till_wat_max,
         state.phi,
-        cfg.processes.iceflow.exp_weertman,
+        cfg.processes.iceflow.physics.exp_weertman,
         cfg.processes.enthalpy.uthreshold,
-        cfg.processes.iceflow.new_friction_param,
+        cfg.processes.iceflow.physics.new_friction_param,
         cfg.processes.enthalpy.tauc_min,
         cfg.processes.enthalpy.tauc_max,
     )
 
 
     # arrhenius must be 3D for the Enthlapy to work
-    assert cfg.processes.iceflow.dim_arrhenius == 3
+    assert cfg.processes.iceflow.physics.dim_arrhenius == 3
 
 
 def update(cfg, state):
@@ -73,14 +73,14 @@ def update(cfg, state):
 
     # get the vertical discretization
     depth, dz = vertically_discretize_tf(
-        state.thk, cfg.processes.iceflow.Nz, cfg.processes.iceflow.vert_spacing
+        state.thk, cfg.processes.iceflow.numerics.Nz, cfg.processes.iceflow.numerics.vert_spacing
     )
 
     # compute temperature and enthalpy at the pressure melting point
     Tpmp, Epmp = TpmpEpmp_from_depth_tf(
         depth,
-        cfg.processes.iceflow.gravity_cst,
-        cfg.processes.iceflow.ice_density,
+        cfg.processes.iceflow.physics.gravity_cst,
+        cfg.processes.iceflow.physics.ice_density,
         cfg.processes.enthalpy.claus_clape,
         cfg.processes.enthalpy.melt_temp,
         cfg.processes.enthalpy.ci,
@@ -101,8 +101,8 @@ def update(cfg, state):
     state.Tpa = (
         state.T
         + cfg.processes.enthalpy.claus_clape
-        * cfg.processes.iceflow.ice_density
-        * cfg.processes.iceflow.gravity_cst
+        * cfg.processes.iceflow.physics.ice_density
+        * cfg.processes.iceflow.physics.gravity_cst
         * depth
     )
 
@@ -111,7 +111,7 @@ def update(cfg, state):
 
     # get the arrhenius factor from temperature and and enthalpy
     state.arrhenius = (
-        arrhenius_from_temp_tf(state.Tpa, state.omega) * cfg.processes.iceflow.enhancement_factor
+        arrhenius_from_temp_tf(state.Tpa, state.omega) * cfg.processes.iceflow.physics.enhancement_factor
     )
 
     if hasattr(state, "W"):
@@ -128,8 +128,8 @@ def update(cfg, state):
         state.arrhenius,
         state.dx,
         dz,
-        cfg.processes.iceflow.exp_glen,
-        cfg.processes.iceflow.thr_ice_thk,
+        cfg.processes.iceflow.physics.exp_glen,
+        cfg.processes.iceflow.physics.thr_ice_thk,
     )
 
     # compute the frictheat is in [W m-2]
@@ -139,8 +139,8 @@ def update(cfg, state):
         state.slidingco,
         state.topg,
         state.dx,
-        cfg.processes.iceflow.exp_weertman,
-        cfg.processes.iceflow.new_friction_param,
+        cfg.processes.iceflow.physics.exp_weertman,
+        cfg.processes.iceflow.physics.new_friction_param,
     )
 
     # compute the surface enthalpy
@@ -165,9 +165,9 @@ def update(cfg, state):
         state.strainheat,
         state.frictheat,
         state.tillwat,
-        cfg.processes.iceflow.thr_ice_thk,
+        cfg.processes.iceflow.physics.thr_ice_thk,
         cfg.processes.enthalpy.ki,
-        cfg.processes.iceflow.ice_density,
+        cfg.processes.iceflow.physics.ice_density,
         cfg.processes.enthalpy.water_density,
         cfg.processes.enthalpy.ci,
         cfg.processes.enthalpy.ref_temp,
@@ -192,13 +192,13 @@ def update(cfg, state):
     state.tauc, state.slidingco = compute_slidingco_tf(
         state.thk,
         state.tillwat,
-        cfg.processes.iceflow.ice_density,
-        cfg.processes.iceflow.gravity_cst,
+        cfg.processes.iceflow.physics.ice_density,
+        cfg.processes.iceflow.physics.gravity_cst,
         cfg.processes.enthalpy.till_wat_max,
         state.phi,
-        cfg.processes.iceflow.exp_weertman,
+        cfg.processes.iceflow.physics.exp_weertman,
         cfg.processes.enthalpy.uthreshold,
-        cfg.processes.iceflow.new_friction_param,
+        cfg.processes.iceflow.physics.new_friction_param,
         cfg.processes.enthalpy.tauc_min,
         cfg.processes.enthalpy.tauc_max,
     )

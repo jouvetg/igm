@@ -16,6 +16,7 @@ from igm import (
     add_logger,
     download_unzip_and_store,
     print_comp,
+    check_incompatilities_in_parameters_file,
     inputs,
     outputs,
 )
@@ -38,6 +39,11 @@ def main(cfg: DictConfig) -> None:
     print(IGM_DESCRIPTION)
 
     state = State()  # class acting as a dictionary
+
+    state.original_cwd = Path(get_original_cwd())
+
+    if cfg.core.check_compat_params:
+        check_incompatilities_in_parameters_file(cfg,state.original_cwd)
 
     if cfg.core.hardware.gpu_info:
         print_gpu_info()
@@ -72,8 +78,6 @@ def main(cfg: DictConfig) -> None:
 
     if cfg.core.print_params:
         print(OmegaConf.to_yaml(cfg))
-
-    state.original_cwd = Path(get_original_cwd())
 
     # ! Needs to be before the inputs the way it is setup - otherwise, it will throw an error... (at least with local not loadncdf)
     if not cfg.core.url_data == "":

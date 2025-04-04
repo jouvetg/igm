@@ -55,6 +55,10 @@ print_imported_modules:
   Type: bool
   Description: Print imported modules
   Units: [dimensionless]
+check_compat_params:
+  Type: bool
+  Description: Check compatibility btween default pasm name and user-defined one to check for typos, ect.
+  Units: [dimensionless]
 
 structure:
   root_foldername:

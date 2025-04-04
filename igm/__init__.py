@@ -25,5 +25,6 @@ from .common import (
     download_unzip_and_store,
     print_comp,
     EmptyClass,
-    load_yaml_as_cfg
+    load_yaml_as_cfg,
+    check_incompatilities_in_parameters_file
 )

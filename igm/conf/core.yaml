@@ -20,6 +20,7 @@ core:
   print_comp: False
   print_info: True
   print_imported_modules: True
+  check_compat_params: True
   
   # Custom Modules
   structure:

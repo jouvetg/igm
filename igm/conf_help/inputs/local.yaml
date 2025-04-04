@@ -2,10 +2,6 @@ type:
   Type: str
   Units: [dimensionless]
   Description: "Type of file to be loaded, can be netcdf or tif"
-folder:
-  Type: str
-  Units: [dimensionless]
-  Description: "Folder where the data is stored"
 filename:
   Type: str
   Units: [dimensionless]

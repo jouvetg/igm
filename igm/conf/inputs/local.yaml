@@ -1,6 +1,5 @@
 local:
   type: netcdf
-  folder: data
   filename: input.nc
   coarsening:
     boundary: trim

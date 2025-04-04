@@ -13,7 +13,8 @@ def run(cfg, state):
     if hasattr(state, "logger"):
         state.logger.info("LOAD NCDF file")
 
-    filepath = os.path.join(state.original_cwd,cfg.inputs.load_ncdf.input_file)
+    filepath = os.path.join(state.original_cwd,cfg.core.folder_data, \
+                            cfg.inputs.load_ncdf.input_file)
 
     nc = Dataset(filepath, "r")
 

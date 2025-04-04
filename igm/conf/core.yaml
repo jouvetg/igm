@@ -1,6 +1,5 @@
 core:
   # Input / Output
-  saved_params_filename: params_saved
   url_data: ""
   folder_data: data
   logging_file: ""
@@ -16,7 +15,7 @@ core:
     strategy: none
 
   # Misc
-  print_params: True
+  print_params: False
   print_comp: False
   print_info: True
   print_imported_modules: True

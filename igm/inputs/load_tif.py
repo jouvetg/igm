@@ -10,7 +10,7 @@ from .include_icemask import include_icemask
 def run(cfg, state):
     import rasterio
 
-    filepath = state.original_cwd.joinpath(cfg.inputs.load_tif.folder)
+    filepath = state.original_cwd.joinpath(cfg.core.folder_data)
 
     files = glob.glob(os.path.join(filepath, "*.tif"))
     

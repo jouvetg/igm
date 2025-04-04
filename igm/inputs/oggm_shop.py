@@ -13,7 +13,7 @@ import json
 
 def run(cfg, state):
 
-    path_data = os.path.join(state.original_cwd,cfg.inputs.local.folder)
+    path_data = os.path.join(state.original_cwd,cfg.core.folder_data)
     path_RGI = os.path.join(path_data, cfg.inputs.oggm_shop.RGI_ID)
     path_file = os.path.join(path_data,cfg.inputs.oggm_shop.filename)
 

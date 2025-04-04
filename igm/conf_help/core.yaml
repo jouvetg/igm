@@ -1,7 +1,3 @@
-saved_params_filename:
-  Type: str
-  Description: Filename of the saved parameters (will be depreciated with hydra)
-  Units: [dimensionless]
 url_data:
   Type: str
   Description: Url supplied to download .nc data files

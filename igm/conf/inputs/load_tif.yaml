@@ -1,5 +1,4 @@
 load_tif:
-  folder: ""
   coarsen: 1
   crop: False
   xmin: -1.0e+20

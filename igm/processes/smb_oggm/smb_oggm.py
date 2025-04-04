@@ -10,7 +10,7 @@ import json
 def initialize(cfg, state):
     state.tlast_mb = tf.Variable(-1.0e5000)
 
-    path_data = os.path.join(state.original_cwd,cfg.inputs.oggm_shop.folder)
+    path_data = os.path.join(state.original_cwd,cfg.core.folder_data)
     path_RGI = os.path.join(path_data, cfg.inputs.oggm_shop.RGI_ID)
 
     # load the given parameters from the json file

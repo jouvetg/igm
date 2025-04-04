@@ -7,7 +7,7 @@ from .include_icemask import include_icemask
 def run(cfg, state):
 
     if cfg.inputs.local.type == "netcdf":
-        filepath = state.original_cwd.joinpath(cfg.inputs.local.folder, cfg.inputs.local.filename)
+        filepath = state.original_cwd.joinpath(cfg.core.folder_data, cfg.inputs.local.filename)
         with xr.open_dataset(
             filepath
         ) as f:
@@ -24,7 +24,7 @@ def run(cfg, state):
         from pathlib import Path
  
         # Base folder where the .tif files are stored
-        data_folder = Path(state.original_cwd.joinpath(cfg.inputs.local.folder))
+        data_folder = Path(state.original_cwd.joinpath(cfg.core.folder_data))
 
         # Find all .tif files in the folder
         tif_files = list(data_folder.glob("*.tif"))

@@ -14,7 +14,7 @@ from igm.processes.utils import interp1d_tf
 def initialize(cfg, state):
     # load the given parameters from the json file
 
-    path_data = os.path.join(state.original_cwd,cfg.inputs.oggm_shop.folder)
+    path_data = os.path.join(state.original_cwd,cfg.core.folder_data)
     path_RGI = os.path.join(path_data, cfg.inputs.oggm_shop.RGI_ID)
     
     with open(os.path.join(path_RGI, "mb_calib.json"), "r") as json_file:

@@ -7,16 +7,7 @@ import tensorflow as tf
  
 from igm.processes.iceflow.emulate.emulate import update_iceflow_emulated
 from igm.processes.utils import compute_divflux
-from .cost_terms.misfit_thk import misfit_thk
-from .cost_terms.misfit_usurf import misfit_usurf
-from .cost_terms.misfit_velsurf import misfit_velsurf
-from .cost_terms.misfit_icemask import misfit_icemask
-from .cost_terms.cost_divfluxfcz import cost_divfluxfcz
-from .cost_terms.cost_divfluxobs import cost_divfluxobs
-from .cost_terms.cost_vol import cost_vol
-from .cost_terms.regu_thk import regu_thk
-from .cost_terms.regu_slidingco import regu_slidingco
-from .cost_terms.regu_arrhenius import regu_arrhenius
+from .cost_terms.total_cost import total_cost
 
 from .utils import compute_flow_direction_for_anisotropic_smoothing
 
@@ -31,9 +22,7 @@ def optimize_update(cfg, state, cost, i):
     if i==0:
 
         for f in cfg.processes.data_assimilation.control_list:
-            vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f])
             if cfg.processes.data_assimilation.log_slidingco & (f == "slidingco"):
-                # vars(state)[f+'_sc'] = tf.Variable(( tf.math.log(vars(state)[f]) / tf.math.log(10.0) ) / sc[f]) 
                 vars(state)[f+'_sc'] = tf.Variable( tf.sqrt(vars(state)[f] / sc[f]) ) 
             else:
                 vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f]) 
@@ -49,7 +38,6 @@ def optimize_update(cfg, state, cost, i):
 
         for f in cfg.processes.data_assimilation.control_list:
             if cfg.processes.data_assimilation.log_slidingco & (f == "slidingco"):
-#                    vars(state)[f] = (10**(vars(state)[f+'_sc'] * sc[f]))
                 vars(state)[f] =  (vars(state)[f+'_sc']**2) * sc[f]
             else:
                 vars(state)[f] = vars(state)[f+'_sc'] * sc[f]
@@ -59,62 +47,7 @@ def optimize_update(cfg, state, cost, i):
         if not cfg.processes.data_assimilation.regularization.smooth_anisotropy_factor == 1:
             compute_flow_direction_for_anisotropic_smoothing(state)
                 
-        # misfit between surface velocity
-        if "velsurf" in cfg.processes.data_assimilation.cost_list:
-            cost["velsurf"] = misfit_velsurf(cfg,state)
-
-        # misfit between ice thickness profiles
-        if "thk" in cfg.processes.data_assimilation.cost_list:
-            cost["thk"] = misfit_thk(cfg, state)
-
-        # misfit between divergence of flux
-        if ("divfluxfcz" in cfg.processes.data_assimilation.cost_list):
-            cost["divflux"] = cost_divfluxfcz(cfg, state, i)
-        elif ("divfluxobs" in cfg.processes.data_assimilation.cost_list):
-            cost["divflux"] = cost_divfluxobs(cfg, state, i)
-
-        # misfit between top ice surfaces
-        if "usurf" in cfg.processes.data_assimilation.cost_list:
-            cost["usurf"] = misfit_usurf(cfg, state) 
-
-        # force zero thikness outisde the mask
-        if "icemask" in cfg.processes.data_assimilation.cost_list:
-            cost["icemask"] = misfit_icemask(cfg, state)
-
-        # Here one enforces non-negative ice thickness
-        if "thk" in cfg.processes.data_assimilation.control_list:
-            cost["thk_positive"] = \
-            10**10 * tf.math.reduce_mean( tf.where(state.thk >= 0, 0.0, state.thk**2) )
-
-        # Here one enforces non-negative slidinco
-        if ("slidingco" in cfg.processes.data_assimilation.control_list) & \
-           (not cfg.processes.data_assimilation.log_slidingco):
-            cost["slidingco_positive"] =  \
-            10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
-
-        # Here one enforces non-negative arrhenius
-        if ("arrhenius" in cfg.processes.data_assimilation.control_list):
-            cost["arrhenius_positive"] =  \
-            10**10 * tf.math.reduce_mean( tf.where(state.arrhenius >= 0, 0.0, state.arrhenius**2) ) 
-            
-        if cfg.processes.data_assimilation.cook.infer_params:
-            cost["volume"] = cost_vol(cfg, state)
-
-        # Here one adds a regularization terms for the bed toporgraphy to the cost function
-        if "thk" in cfg.processes.data_assimilation.control_list:
-            cost["thk_regu"] = regu_thk(cfg, state)
-
-        # Here one adds a regularization terms for slidingco to the cost function
-        if "slidingco" in cfg.processes.data_assimilation.control_list:
-            cost["slid_regu"] = regu_slidingco(cfg, state)
-
-        # Here one adds a regularization terms for arrhenius to the cost function
-        if "arrhenius" in cfg.processes.data_assimilation.control_list:
-            cost["arrh_regu"] = regu_arrhenius(cfg, state) 
-
-        cost_total = tf.reduce_sum(tf.convert_to_tensor(list(cost.values())))
-
-        #################
+        cost_total = total_cost(cfg, state, cost, i)
 
         var_to_opti = [ ]
         for f in cfg.processes.data_assimilation.control_list:
@@ -144,7 +77,6 @@ def optimize_update(cfg, state, cost, i):
 
         for f in cfg.processes.data_assimilation.control_list:
             if cfg.processes.data_assimilation.log_slidingco & (f == "slidingco"):
-                # vars(state)[f] = (10**(vars(state)[f+'_sc'] * sc[f]))
                 vars(state)[f] =  (vars(state)[f+'_sc']**2) * sc[f]
             else:
                 vars(state)[f] = vars(state)[f+'_sc'] * sc[f]
@@ -166,3 +98,69 @@ def optimize_update(cfg, state, cost, i):
 
         #state.divflux = tf.where(ACT, state.divflux, 0.0)
  
+
+
+
+
+ 
+
+# def optimize_update_lbfgs(cfg, state):
+
+#     import tensorflow_probability as tfp
+
+#     sc = {}
+#     sc["thk"] = cfg.processes.data_assimilation.scaling.thk
+#     sc["usurf"] = cfg.processes.data_assimilation.scaling.usurf
+#     sc["slidingco"] = cfg.processes.data_assimilation.scaling.slidingco
+#     sc["arrhenius"] = cfg.processes.data_assimilation.scaling.arrhenius
+
+#     for f in cfg.processes.data_assimilation.control_list:
+#         vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f])
+#         if cfg.processes.data_assimilation.log_slidingco & (f == "slidingco"): 
+#             vars(state)[f+'_sc'] = tf.Variable( tf.sqrt(vars(state)[f] / sc[f]) ) 
+#         else:
+#             vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f]) 
+
+#     Cost_Glen = []
+ 
+#     def COST(cont):
+
+#         cost = {}
+ 
+#         for f,i in enumerate(cfg.processes.data_assimilation.control_list):
+#             vars(state)[f+'_sc'] = cont[i]
+
+#         for f in cfg.processes.data_assimilation.control_list:
+#             if cfg.processes.data_assimilation.log_slidingco & (f == "slidingco"):
+#                 vars(state)[f] =  (vars(state)[f+'_sc']**2) * sc[f]
+#             else:
+#                 vars(state)[f] = vars(state)[f+'_sc'] * sc[f]
+
+
+#         update_iceflow_emulated(cfg, state)
+
+#         if not cfg.processes.data_assimilation.regularization.smooth_anisotropy_factor == 1:
+#             compute_flow_direction_for_anisotropic_smoothing(state)
+                
+#         return total_cost(cfg, state, cost, i)
+        
+#     def loss_and_gradients_function(cont):
+#         with tf.GradientTape() as tape:
+#             tape.watch(cont)
+#             loss = COST(cont) 
+#             gradients = tape.gradient(loss, cont)
+#         return loss, gradients
+    
+#     cont = tf.stack([vars(state)[f+'_sc'] for f in cfg.processes.data_assimilation.control_list], axis=0) 
+
+#     optimizer = tfp.optimizer.lbfgs_minimize(
+#             value_and_gradients_function=loss_and_gradients_function,
+#             initial_position=cont,
+#             max_iterations=cfg.processes.iceflow.solver.nbitmax,
+#             tolerance=1e-8)
+    
+#     cont = optimizer.position
+
+#     for f,i in enumerate(cfg.processes.data_assimilation.control_list):
+#         vars(state)[f+'_sc'] = cont[i]
+  

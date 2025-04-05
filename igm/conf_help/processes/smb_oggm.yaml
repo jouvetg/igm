@@ -12,5 +12,5 @@ wat_density:
   Description: "Density of water"
 melt_enhancer:
   Type: float
-  Units: -
+  Units: dimless
   Description: "Melt enhancer factor"

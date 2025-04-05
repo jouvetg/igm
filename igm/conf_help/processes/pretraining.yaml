@@ -1,27 +1,27 @@
 data_dir:
   Type: str
   Description: "Directory of the data of the glacier catalog"
-  Units: -
+  Units: dimless
 batch_size:
   Type: integer
   Description: "Batch size"
-  Units: -
+  Units: dimless
 freq_test:
   Type: integer
   Description: "Frequency of the test"
-  Units: -
+  Units: dimless
 train_iceflow_emulator_restart_lr:
   Type: integer
   Description: "Restart frequency for the learning rate"
-  Units: -
+  Units: dimless
 epochs:
   Type: integer
   Description: "Number of epochs"
-  Units: -
+  Units: dimless
 min_arrhenius:
   Type: float
   Description: "Minimum Arrhenius factor"
-  Units: -
+  Units: dimless
 max_arrhenius:
   Type: float
   Description: "Maximum Arrhenius factor"
@@ -33,7 +33,7 @@ min_slidingco:
 max_slidingco:
   Type: float
   Description: "Maximum sliding coefficient"
-  Units: -
+  Units: dimless
 min_coarsen:
   Type: integer
   Description: "Minimum coarsening factor"
@@ -45,4 +45,4 @@ max_coarsen:
 soft_begining:
   Type: integer
   Description: "soft_begining, if 0 explore all parameters between min and max, otherwise, only explore from this iteration while keeping mid-value for the first it."
-  Units: -
+  Units: dimless

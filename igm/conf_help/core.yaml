@@ -1,83 +1,83 @@
 url_data:
   Type: str
   Description: Url supplied to download .nc data files
-  Units: -
+  Units: dimless
 folder_data:
   Type: str
   Description: data
-  Units: -
+  Units: dimless
 logging_file:
   Type: str
   Description: ""
-  Units: -
+  Units: dimless
 
 logging:
   Type: bool
   Description: False
-  Units: -
+  Units: dimless
 logging_level:
   Type: str
   Description: 30
-  Units: -
+  Units: dimless
 
 hardware:
   gpu_info:
     Type: bool
     Description: True
-    Units: -
+    Units: dimless
   visible_gpus:
     Type: list
     Description: "visible gpus"
-    Units: -
+    Units: dimless
   strategy:
     Type: str
     Description: "strategy"
-    Units: -
+    Units: dimless
 
 
 print_params:
   Type: bool
   Description: True
-  Units: -
+  Units: dimless
 print_comp:
   Type: bool
   Description: Print information related to computational performances
-  Units: -
+  Units: dimless
 print_info:
   Type: bool
   Description: Print live information when the model is running
-  Units: -
+  Units: dimless
 print_imported_modules:
   Type: bool
   Description: Print imported modules
-  Units: -
+  Units: dimless
 check_compat_params:
   Type: bool
   Description: Check compatibility btween default pasm name and user-defined one to check for typos, ect.
-  Units: -
+  Units: dimless
 
 structure:
   root_foldername:
     Type: str
     Description: user
-    Units: -
+    Units: dimless
   conf_foldername:
     Type: str
     Description: conf
-    Units: -
+    Units: dimless
   code_foldername:
     Type: str
     Description: code
-    Units: -
+    Units: dimless
   input_modules_foldername:
     Type: str
     Description: inputs
-    Units: -
+    Units: dimless
   process_modules_foldername:
     Type: str
     Description: processes
-    Units: -
+    Units: dimless
   output_modules_foldername:
     Type: str
     Description: outputs
-    Units: -
+    Units: dimless

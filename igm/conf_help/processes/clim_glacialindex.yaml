@@ -4,15 +4,15 @@ update_freq:
   Description: Frequency at which to update the climate module
 climate_0_file:
   Type: str
-  Units: -
+  Units: dimless
   Description: Climate file for glacial index 0
 climate_1_file:
   Type: str
-  Units: -
+  Units: dimless
   Description: Climate file for glacial index 1
 signal_file:
   Type: str
-  Units: -
+  Units: dimless
   Description: Climate signal file for GI
 vertical_lapse_rate_0:
   Type: float

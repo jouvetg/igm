@@ -12,9 +12,9 @@ dx:
   Description: "Default resolution for computing isostasy"
 pad:
   Type: boolean
-  Units: -
+  Units: dimless
   Description: "Default padding option"
 quiet:
   Type: boolean
-  Units: -
+  Units: dimless
   Description: "???"

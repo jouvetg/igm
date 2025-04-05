@@ -12,7 +12,7 @@ save:
   Description: "Frequency of saving the simulation results"
 cfl:
   Type: float
-  Units: -
+  Units: dimless
   Description: "CFL condition for time stepping"
 step_max:
   Type: float

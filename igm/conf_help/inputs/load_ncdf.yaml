@@ -1,18 +1,18 @@
 input_file:
   Type: str
-  Units: -
+  Units: dimless
   Description: NetCDF input data file
 method_coarsen:
   Type: str
-  Units: -
+  Units: dimless
   Description: Method for coarsening the data from NetCDF file (skipping or cubic_spline)
 coarsen:
   Type: int
-  Units: -
+  Units: dimless
   Description: Coarsen the data from NetCDF file by a certain (integer) number (2 would be twice coarser ignore data each 2 grid points)
 crop:
   Type: bool
-  Units: -
+  Units: dimless
   Description: Crop the data from NetCDF file with given top/down/left/right bounds
 xmin:
   Type: float
@@ -32,13 +32,13 @@ ymax:
   Description: Y top coordinate for cropping the NetCDF data
 icemask_include:
   Type: bool
-  Units: -
+  Units: dimless
   Description: Include ice mask in the NetCDF file
 icemask_shapefile:
   Type: str
-  Units: -
+  Units: dimless
   Description: Shapefile for ice mask
 icemask_invert:
   Type: bool
-  Units: -
+  Units: dimless
   Description: Invert the ice mask

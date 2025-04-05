@@ -4,7 +4,7 @@ update_freq:
   Description: "Update the mass balance each X years"
 refreeze_factor:
   Type: float
-  Units: -
+  Units: dimless
   Description: "Refreezing factor"
 thr_temp_snow:
   Type: float
@@ -24,7 +24,7 @@ melt_factor_ice:
   Description: "Degree-day factor for ice (ice eq.)"
 shift_hydro_year:
   Type: float
-  Units: -
+  Units: dimless
   Description: "This serves to start Oct 1. the acc/melt computation"
 ice_density:
   Type: float

@@ -599,9 +599,9 @@ def check_incompatilities_in_parameters_file(cfg,path):
                 if key not in cfgo:
                     # Get possible matches for the missing key
                     posskeys=flatten_dict(OmegaConf.to_container(cfgo, resolve=False)).keys() 
-                    suggestions = get_close_matches(key, posskeys, n=1, cutoff=0.2)
+                    suggestions = get_close_matches(key, posskeys, n=5, cutoff=0.2)
                     suggestions = [path+'.'+s for s in suggestions]
-                    suggestion_msg = f" Did you mean '{suggestions[0]}'?" if suggestions else ""
+                    suggestion_msg = f" Did you mean '{suggestions}'?" if suggestions else ""
                     raise ValueError(f"Parameter '{full_path}' does not exist.\n {suggestion_msg}")
                 if OmegaConf.is_dict(cfg[key]):
                     if not OmegaConf.is_dict(cfgo[key]):

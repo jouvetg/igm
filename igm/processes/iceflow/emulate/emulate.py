@@ -12,7 +12,10 @@ from ..energy_iceflow.energy_iceflow import *
 from .neural_network import *
 from ..emulate import emulators
 import importlib_resources 
-  
+import igm  
+import matplotlib.pyplot as plt
+import matplotlib
+
 def initialize_iceflow_emulator(cfg, state):
 
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
@@ -184,12 +187,21 @@ def update_iceflow_emulator(cfg, state, it):
 
         if warm_up:
             nbit = cfg.processes.iceflow.emulator.nbit_init
-            state.opti_retrain.lr = cfg.processes.iceflow.emulator.lr_init
+            lr = cfg.processes.iceflow.emulator.lr_init
         else:
             nbit = cfg.processes.iceflow.emulator.nbit
-            state.opti_retrain.lr = cfg.processes.iceflow.emulator.lr
+            lr = cfg.processes.iceflow.emulator.lr
+
+        state.opti_retrain.lr = lr
 
         iz = cfg.processes.iceflow.emulator.exclude_borders 
+
+        if cfg.processes.iceflow.emulator.plot_sol:
+            plt.ion()  # enable interactive mode
+            state.fig = plt.figure(dpi=200)
+            state.ax = state.fig.add_subplot(1, 1, 1)
+            state.ax.axis("off")
+            state.ax.set_aspect("equal")
 
         for epoch in range(nbit):
             cost_emulator = tf.Variable(0.0)
@@ -226,6 +238,21 @@ def update_iceflow_emulator(cfg, state, it):
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
                         print("train : ", epoch, COST.numpy(), np.max(velsurf_mag))
 
+                        if cfg.processes.iceflow.emulator.plot_sol:
+                            im = state.ax.imshow(
+                                np.where(state.thk > 0, velsurf_mag, np.nan),
+                                origin="lower",
+                                cmap="turbo",
+                                norm=matplotlib.colors.LogNorm(vmin=1,vmax=300)
+                            )
+                            if not hasattr(state, "already_set_cbar"):
+                                state.cbar = plt.colorbar(im, label='velocity')
+                                state.already_set_cbar = True
+                            state.fig.canvas.draw()  # re-drawing the figure
+                            state.fig.canvas.flush_events()  # to flush the GUI events
+                            state.ax.set_title("epoch : " + str(epoch), size=15)
+
+
                 grads = t.gradient(COST, state.iceflow_model.trainable_variables)
 
                 state.opti_retrain.apply_gradients(
@@ -234,9 +261,7 @@ def update_iceflow_emulator(cfg, state, it):
 
 #                gradient_norm = tf.linalg.global_norm(grads)
 
-                state.opti_retrain.lr = cfg.processes.iceflow.emulator.lr * (
-                    0.95 ** (epoch / 1000)
-                )
+                state.opti_retrain.lr = lr * (0.95 ** (epoch / 1000))
 
             state.COST_EMULATOR.append(cost_emulator)
             

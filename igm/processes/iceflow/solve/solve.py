@@ -3,6 +3,8 @@ import tensorflow as tf
 from igm.processes.utils import getmag3d 
 from ..energy_iceflow.energy_iceflow import iceflow_energy
 from ..utils import EarlyStopping, update_2d_iceflow_variables
+import matplotlib.pyplot as plt
+import matplotlib
 
 def initialize_iceflow_solver(cfg,state):
 
@@ -27,7 +29,14 @@ def solve_iceflow(cfg, state, U, V):
 
     fieldin = [tf.expand_dims(vars(state)[f], axis=0) for f in cfg.processes.iceflow.emulator.fieldin]
 
-    early_stopping = EarlyStopping(relative_min_delta=0.001, patience=10)
+    early_stopping = EarlyStopping(relative_min_delta=0.0002, patience=10)
+
+    if cfg.processes.iceflow.solver.plot_sol:
+        plt.ion()  # enable interactive mode
+        state.fig = plt.figure(dpi=200)
+        state.ax = state.fig.add_subplot(1, 1, 1)
+        state.ax.axis("off")
+        state.ax.set_aspect("equal")
 
     for i in range(cfg.processes.iceflow.solver.nbitmax):
         with tf.GradientTape() as t:
@@ -43,8 +52,8 @@ def solve_iceflow(cfg, state, U, V):
 
             Cost_Glen.append(COST)
 
-            #if (i + 1) % 100 == 0:
-            #    print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
+            if (i + 1) % 100 == 0:
+               print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
 
 #            state.C_shear = tf.pad(C_shear[0],[[0,1],[0,1]],"CONSTANT")
 #            state.C_slid  = tf.pad(C_slid[0],[[0,1],[0,1]],"CONSTANT")
@@ -61,12 +70,23 @@ def solve_iceflow(cfg, state, U, V):
  
         state.optimizer.apply_gradients(zip(grads, [U, V]))
  
-        # if (i + 1) % 100 == 0:
-        #     velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
-        #     print("solve :", i, COST.numpy(), np.max(velsurf_mag)) 
+        if (i + 1) % 100 == 0:
+            velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
+            print("solve :", i, COST.numpy(), np.max(velsurf_mag)) 
 
-#        if i % 20 == 0:
-#            print("Solve : ", i, ": ", COST.numpy())
+            if cfg.processes.iceflow.solver.plot_sol:
+                im = state.ax.imshow(
+                    np.where(state.thk > 0, velsurf_mag, np.nan),
+                    origin="lower",
+                    cmap="turbo",
+                    norm=matplotlib.colors.LogNorm(vmin=1,vmax=300)
+                )
+                if not hasattr(state, "already_set_cbar"):
+                    state.cbar = plt.colorbar(im, label='velocity')
+                    state.already_set_cbar = True
+                state.fig.canvas.draw()  # re-drawing the figure
+                state.fig.canvas.flush_events()  # to flush the GUI events
+                state.ax.set_title("i : " + str(i), size=15)
 
         if early_stopping.should_stop(COST.numpy()): 
             break

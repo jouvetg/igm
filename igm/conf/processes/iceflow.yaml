@@ -30,6 +30,7 @@ iceflow:
     optimizer: Adam
     lbfgs: false
     save_cost: ''
+    plot_sol: False
   emulator:
     fieldin:
     - thk
@@ -53,6 +54,7 @@ iceflow:
     optimizer_epsilon: 1.0e-07
     save_cost: ''
     output_directory: ''
+    plot_sol: False
     network:
       architecture: cnn
       multiple_window_size: 0

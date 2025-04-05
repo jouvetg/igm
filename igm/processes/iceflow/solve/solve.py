@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf 
 from igm.processes.utils import getmag3d 
 from ..energy_iceflow.energy_iceflow import iceflow_energy
-from ..utils import EarlyStopping
+from ..utils import EarlyStopping, update_2d_iceflow_variables
 
 def initialize_iceflow_solver(cfg,state):
 

@@ -21,7 +21,7 @@ Lh:
 KtdivKc:
   Type: float
   Description: "Ratio of temp vs cold ice diffusivity (Aschwanden and al, JOG, 2012)"
-  Units: $\frac{Kt}{Kc}$ [dimensionaless]
+  Units: $\frac{Kt}{Kc}$
 claus_clape:
   Type: float
   Description: "Clausius-Clapeyron constant (Aschwanden and al, JOG, 2012)"

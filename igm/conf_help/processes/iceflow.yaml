@@ -5,24 +5,24 @@ method:
 force_max_velbar:
   Type: float
   Description: "This permits to artificially upper-bound velocities, active if > 0"
-  Units: $m y^{-1}$
+  Units: m y^{-1}
 physics:
   gravity_cst:
     Type: float
     Description: "Gravitational constant"
-    Units: $m^2 s^{-1}$
+    Units: m^2 s^{-1}
   ice_density:
     Type: float
     Description: "Density of ice"
-    Units: $kg m^{-3}$
+    Units: kg m^{-3}
   init_slidingco:
     Type: float
     Description: "Initial sliding coefficient slidingco"
-    Units: $Mpa y^m m^{-m}$
+    Units: Mpa y^m m^{-m}
   init_arrhenius:
     Type: float
     Description: "Initial arrhenius factor arrhenius"
-    Units: $Mpa^{-n} y^{-1}$
+    Units: Mpa^{-n} y^{-1}
   enhancement_factor:
     Type: float
     Description: "Enhancement factor multiplying the arrhenius factor"
@@ -58,15 +58,15 @@ physics:
   thr_ice_thk:
     Type: float
     Description: "Threshold Ice thickness for computing strain rate"
-    Units: $m$
+    Units: m
   min_sr:
     Type: float
     Description: "Minimum strain rate"
-    Units: $y^{-1}$
+    Units: y^{-1}
   max_sr:
     Type: float
     Description: "Maximum strain rate"
-    Units: $y^{-1}$
+    Units: y^{-1}
   force_negative_gravitational_energy:
     Type: boolean
     Description: "Force energy gravitational term to be negative"

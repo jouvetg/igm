@@ -1,14 +1,14 @@
 update_freq:
   Type: float
-  Units: $y$
+  Units: y
   Description: "Update the mass balance each X years"
 ice_density:
   Type: float
-  Units: $kg m^{-3}$
+  Units: kg m^{-3}
   Description: "Density of ice for conversion of SMB into ice equivalent"
 wat_density:
   Type: float
-  Units: $kg m^{-3}$
+  Units: kg m^{-3}
   Description: "Density of water"
 melt_enhancer:
   Type: float

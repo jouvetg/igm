@@ -1,6 +1,6 @@
 update_freq:
   Type: float
-  Units: $y$
+  Units: y
   Description: "Update the mass balance each X years"
 refreeze_factor:
   Type: float
@@ -8,19 +8,19 @@ refreeze_factor:
   Description: "Refreezing factor"
 thr_temp_snow:
   Type: float
-  Units: $^{\circ}C$
+  Units: ^{\circ}C
   Description: "Threshold temperature for solid precipitation"
 thr_temp_rain:
   Type: float
-  Units: $^{\circ}C$
+  Units: ^{\circ}C
   Description: "Threshold temperature for liquid precipitation"
 melt_factor_snow:
   Type: float
-  Units: $m yr^{-1} K^{-1}$
+  Units: m yr^{-1} K^{-1}
   Description: "Degree-day factor for snow (ice eq.)"
 melt_factor_ice:
   Type: float
-  Units: $m yr^{-1} K^{-1}$
+  Units: m yr^{-1} K^{-1}
   Description: "Degree-day factor for ice (ice eq.)"
 shift_hydro_year:
   Type: float
@@ -28,9 +28,9 @@ shift_hydro_year:
   Description: "This serves to start Oct 1. the acc/melt computation"
 ice_density:
   Type: float
-  Units: $kg m^{-3}$
+  Units: kg m^{-3}
   Description: "Density of ice for conversion of SMB into ice equivalent"
 wat_density:
   Type: float
-  Units: $kg m^{-3}$
+  Units: kg m^{-3}
   Description: "Density of water"

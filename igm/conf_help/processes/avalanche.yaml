@@ -1,6 +1,6 @@
 update_freq:
   Type: float
-  Units: $y$
+  Units: y
   Description: Frequency at which to update the avalanche module
 angleOfRepose:
   Type: float

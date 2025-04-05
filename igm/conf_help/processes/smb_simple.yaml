@@ -1,6 +1,6 @@
 update_freq:
   Type: float
-  Units: $y$
+  Units: y
   Description: "Update the mass balance each X years"
 file:
   Type: string

@@ -49,7 +49,7 @@ fix_opti_normalization_issue:
 velsurfobs_thr:
   Type: float
   Description: "Threshold for the surface ice velocities as input data for the optimization, anything below this value will be ignored"
-  Units: $m y^{-1}$
+  Units: m y^{-1}
 log_slidingco:
   Type: boolean
   Description: "Optimize the log of the sliding coefficient instead of the slidingco itself"
@@ -97,15 +97,15 @@ fitting:
   usurfobs_std:
     Type: float
     Description: "Confidence/STD of the top ice surface as input data for the optimization"
-    Units: $m$
+    Units: m
   velsurfobs_std:
     Type: float
     Description: "Confidence/STD of the surface ice velocities as input data for the optimization (if 0, velsurfobs_std field must be given)"
-    Units: $m y^{-1}$
+    Units: m y^{-1}
   thkobs_std:
     Type: float
     Description: "Confidence/STD of the ice thickness profiles (unless given)"
-    Units: $m$
+    Units: m
   divfluxobs_std:
     Type: float
     Description: "Confidence/STD of the flux divergence as input data for the optimization (if 0, divfluxobs_std field must be given)"

@@ -16,7 +16,7 @@ crop:
   Description: Crop the data from NetCDF file with given top/down/left/right bounds
 xmin:
   Type: float
-  Units: $m$
+  Units: m
   Description: X left coordinate for cropping the NetCDF data
 xmax:
   Type: m
@@ -24,11 +24,11 @@ xmax:
   Description: X right coordinate for cropping the NetCDF data
 ymin:
   Type: float
-  Units: $m$
+  Units: m
   Description: Y bottom coordinate for cropping the NetCDF data
 ymax:
   Type: float
-  Units: $m$
+  Units: m
   Description: Y top coordinate for cropping the NetCDF data
 icemask_include:
   Type: bool

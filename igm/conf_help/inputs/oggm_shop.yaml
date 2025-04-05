@@ -13,7 +13,7 @@ RGI_version:
 dx:
   Type: float
   Description: "Spatial resolution (need preprocess false to change it)"
-  Units: $m$
+  Units: m
 border:
   Type: int
   Description: "Safe border margin, number of pixels, (need preprocess false to change it)"

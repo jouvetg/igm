@@ -8,5 +8,5 @@ ratio_density:
   Description: Density of ice divided by density of water
 default_sealevel:
   Type: float
-  Units: $m$
+  Units: m
   Description: Default sea level if not provided by the user

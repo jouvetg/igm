@@ -1,18 +1,18 @@
 editor:
   Type: str
-  Units: [dimensionless]
+  Units: -
   Description: Optimized for VS code (vs) or spyder (sp) for live plot
 live:
   Type: bool
-  Units: [dimensionless]
+  Units: -
   Description: Display plots live the results during computation instead of making png
 particles:
   Type: bool
-  Units: [dimensionless]
+  Units: -
   Description: Display particles is True, does not display if False
 var:
   Type: str
-  Units: [dimensionless]
+  Units: -
   Description: Name of the variable to plot
 var_max:
   Type: float

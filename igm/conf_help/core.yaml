@@ -1,83 +1,83 @@
 url_data:
   Type: str
   Description: Url supplied to download .nc data files
-  Units: [dimensionless]
+  Units: -
 folder_data:
   Type: str
   Description: data
-  Units: [dimensionless]
+  Units: -
 logging_file:
   Type: str
   Description: ""
-  Units: [dimensionless]
+  Units: -
 
 logging:
   Type: bool
   Description: False
-  Units: [dimensionless]
+  Units: -
 logging_level:
   Type: str
   Description: 30
-  Units: [dimensionless]
+  Units: -
 
 hardware:
   gpu_info:
     Type: bool
     Description: True
-    Units: [dimensionless]
+    Units: -
   visible_gpus:
     Type: list
     Description: "visible gpus"
-    Units: [dimensionless]
+    Units: -
   strategy:
     Type: str
     Description: "strategy"
-    Units: [dimensionless]
+    Units: -
 
 
 print_params:
   Type: bool
   Description: True
-  Units: [dimensionless]
+  Units: -
 print_comp:
   Type: bool
   Description: Print information related to computational performances
-  Units: [dimensionless]
+  Units: -
 print_info:
   Type: bool
   Description: Print live information when the model is running
-  Units: [dimensionless]
+  Units: -
 print_imported_modules:
   Type: bool
   Description: Print imported modules
-  Units: [dimensionless]
+  Units: -
 check_compat_params:
   Type: bool
   Description: Check compatibility btween default pasm name and user-defined one to check for typos, ect.
-  Units: [dimensionless]
+  Units: -
 
 structure:
   root_foldername:
     Type: str
     Description: user
-    Units: [dimensionless]
+    Units: -
   conf_foldername:
     Type: str
     Description: conf
-    Units: [dimensionless]
+    Units: -
   code_foldername:
     Type: str
     Description: code
-    Units: [dimensionless]
+    Units: -
   input_modules_foldername:
     Type: str
     Description: inputs
-    Units: [dimensionless]
+    Units: -
   process_modules_foldername:
     Type: str
     Description: processes
-    Units: [dimensionless]
+    Units: -
   output_modules_foldername:
     Type: str
     Description: outputs
-    Units: [dimensionless]
+    Units: -

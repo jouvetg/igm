@@ -1,20 +1,20 @@
 type:
   Type: str
-  Units: [dimensionless]
+  Units: -
   Description: "Type of file to be loaded, can be netcdf or tif"
 filename:
   Type: str
-  Units: [dimensionless]
+  Units: -
   Description: "NetCDF input data file"
   
 coarsening:
   boundary:
     Type: str
-    Units: [dimensionless]
+    Units: -
     Description: "Method for coarsening the data from NetCDF file: skipping or cubic_spline"
   ratio:
     Type: float
-    Units: [dimensionless]
+    Units: -
     Description: "Coarsen ratio"
 
 crop:
@@ -38,13 +38,13 @@ crop:
 icemask:
   include:
     Type: bool
-    Units: [dimensionless]
+    Units: -
     Description: Include ice mask in the NetCDF file
   shapefile:
     Type: str
-    Units: [dimensionless]
+    Units: -
     Description: Shapefile for ice mask
   invert:
     Type: bool
-    Units: [dimensionless]
+    Units: -
     Description: Invert the ice mask

@@ -1,8 +1,8 @@
 output_file:
   Type: str
-  Units: [dimensionless]
+  Units: -
   Description: Output ncdf data file
 vars_to_save:
   Type: list
-  Units: [dimensionless]
+  Units: -
   Description: List of variables to be recorded in the ncdf file

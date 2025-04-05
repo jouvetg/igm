@@ -1,10 +1,10 @@
 input_file:
   Type: str
-  Units: [dimensionless]
+  Units: -
   Description: NetCDF input data file
 crop:
   Type: bool
-  Units: [dimensionless]
+  Units: -
   Description: Crop the data from NetCDF file with given top/down/left/right bounds
 xmin:
   Type: float

@@ -1,10 +1,10 @@
 slope_type:
   Type: str
-  Units: [dimensionless]
+  Units: -
   Description: Type of slope limiter for the ice thickness equation (godunov or superbee)
 ratio_density:
   Type: float
-  Units: [dimensionless]
+  Units: -
   Description: Density of ice divided by density of water
 default_sealevel:
   Type: float

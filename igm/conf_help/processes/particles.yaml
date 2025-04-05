@@ -1,6 +1,6 @@
 tracking_method:
   Type: str
-  Units: [dimensionless]
+  Units: -
   Description: Method for tracking particles (3d or simple)
 frequency_seeding:
   Type: float
@@ -8,7 +8,7 @@ frequency_seeding:
   Description: Frequency of seeding
 density_seeding:
   Type: float
-  Units: [dimensionless]
+  Units: -
   Description: Density of seeding (1 means we seed all pixels, 0.2 means we seed each 5 grid cell, etc.)
 tlast_seeding_init:
   Type: float
@@ -16,9 +16,9 @@ tlast_seeding_init:
   Description: Initialize the date of last seeding. If default value, the seeding will start the first year of the simulation. Changing this value allows to defer it
 write_trajectories:
   Type: bool
-  Units: [dimensionless]
+  Units: -
   Description: Write the trajectories of the particles
 add_topography:
   Type: bool
-  Units: [dimensionless]
+  Units: -
   Description: Add topg when writing particles

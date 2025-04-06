@@ -1,4 +1,5 @@
 local:
+  file_format_list: ['netcdf']
   output_file: output.nc
   vars_to_save:
     - topg
@@ -10,3 +11,5 @@ local:
     - uvelsurf
     - vvelsurf
     - wvelsurf
+  write_ts: True
+  output_ts_file: output_ts.nc

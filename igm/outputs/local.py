@@ -34,7 +34,13 @@ def initialize(cfg, state):
         "weight_particles": ["weight_particles", "no"]
     }
 
+    state.var_info_ncdf_ts = {}
+    state.var_info_ncdf_ts["vol"] = ["Ice volume", "km^3"]
+    state.var_info_ncdf_ts["area"] = ["Glaciated area", "km^2"]
+
+
 def run(cfg, state):
+
     if not state.saveresult:
         return
 
@@ -54,11 +60,47 @@ def run(cfg, state):
     if "meantemp" in cfg.outputs.local.vars_to_save:
         state.meantemp = tf.reduce_mean(state.air_temp, axis=0)
 
-    # Build or update Dataset
+    if 'netcdf' in cfg.outputs.local.file_format_list:
+        update_netcdf_ex(cfg,state)
+    
+    if 'tif' in cfg.outputs.local.file_format_list:
+        write_tif(cfg,state)
+
+    if cfg.outputs.local.write_ts:
+        update_netcdf_ts(cfg,state)
+
+#############################################
+
+def write_tif(cfg,state):
+
+    var_list = cfg.outputs.local.vars_to_save
+
+    for var in var_list:
+        if not hasattr(state, var):
+                continue
+        
+        var_data = vars(state)[var].numpy()
+        file_name = f"{var}-{str(int(state.t)).zfill(6)}.tif"
+
+        data_array = xr.DataArray(
+            var_data,
+            dims=("y", "x"),
+            coords={"y": state.y.numpy(), "x": state.x.numpy()}
+        )
+
+        if "crs" in cfg.outputs.local:
+            data_array.rio.write_crs(cfg.outputs.local.crs, inplace=True)
+
+        data_array.rio.to_raster(file_name)
+
+#####################################
+
+def update_netcdf_ex(cfg,state):
+
     file_path = cfg.outputs.local.output_file
     var_list = cfg.outputs.local.vars_to_save
 
-    def create_data_vars(time_idx=0):
+    def create_data_vars():
         data_vars = {}
         for var in var_list:
             if not hasattr(state, var):
@@ -92,7 +134,7 @@ def run(cfg, state):
             coords=coords,
             attrs={"pyproj_srs": getattr(state, "pyproj_srs", "")},
         )
- 
+
         ds.to_netcdf(file_path, mode="w")
 
         state.already_called_update_local = True
@@ -110,3 +152,56 @@ def run(cfg, state):
         ds_concat = xr.concat([ds_existing, new_data], dim="time")
         os.remove(file_path)
         ds_concat.to_netcdf(file_path, mode="w")  # overwrite safely
+
+#########################################################
+
+def update_netcdf_ts(cfg,state):
+
+    file_path = cfg.outputs.local.output_ts_file
+    
+    vol = np.sum(state.thk) * (state.dx**2) / 10**9
+    area = np.sum(state.thk > 1) * (state.dx**2) / 10**6
+
+    if not hasattr(state, "already_called_update_write_ts"):
+        state.already_called_update_write_ts = True
+
+        if hasattr(state, "logger"):
+            state.logger.info("Initialize NCDF ts output Files")
+
+        # Initialize the xarray Dataset
+        ds = xr.Dataset(
+            {
+                "time": ("time", [state.t.numpy()]),
+                "vol": ("time", [vol]),
+                "area": ("time", [area]),
+            },
+            attrs={
+                "vol_long_name": state.var_info_ncdf_ts["vol"][0],
+                "vol_units": state.var_info_ncdf_ts["vol"][1],
+                "area_long_name": state.var_info_ncdf_ts["area"][0],
+                "area_units": state.var_info_ncdf_ts["area"][1],
+            }
+        )
+        ds.time.attrs["units"] = "yr"
+        ds.time.attrs["long_name"] = "time"
+        ds.to_netcdf(file_path, mode="w", format="NETCDF4")
+
+    else:
+        if hasattr(state, "logger"):
+            state.logger.info(
+                "Write NCDF ts file at time : " + str(state.t.numpy())
+            )
+
+        # Append new data to existing NetCDF file
+        with xr.open_dataset(file_path) as ds:
+            ds_new = xr.Dataset(
+                {
+                    "time": ("time", [state.t.numpy()]),
+                    "vol": ("time", [vol]),
+                    "area": ("time", [area]),
+                }
+            )
+            ds_combined = xr.concat([ds, ds_new], dim="time")
+            os.remove(file_path)
+            ds_combined.to_netcdf(file_path, mode="w", format="NETCDF4") 
+

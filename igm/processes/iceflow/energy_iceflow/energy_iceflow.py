@@ -12,7 +12,6 @@ from ..utils import X_to_fieldin, Y_to_UV
 
 from .cost_gravity_2layers import cost_gravity_2layers
 from .cost_shear_2layers import cost_shear_2layers
-from .cost_sliding_2layers import cost_sliding_2layers
 
 from .cost_shear import cost_shear
 from .cost_sliding import cost_sliding
@@ -22,34 +21,31 @@ from .cost_floating import cost_floating
 def iceflow_energy(cfg, U, V, fieldin):
     thk, usurf, arrhenius, slidingco, dX = fieldin
 
-    if cfg.processes.iceflow.numerics.Nz <= 2:
+    # In that case, we assume the iceflow has a SIA-like profile
+    if cfg.processes.iceflow.numerics.Nz == 2:
 
-        # this was an attempt to allow a variable exponent, but it is not working
-        # if Nz == 2:
-        #     exp = exp_glen
-        # else:
-        #     exp = ( (U[:, -1, :, :] - U[:, 0, :, :]) - 2*(U[:, 1, :, :]  - U[:, 0, :, :]) ) \
-        #         / ( (U[:,  1, :, :] - U[:, 0, :, :]) -   (U[:, -1, :, :] - U[:, 0, :, :]) + 1.0 )
-        #     exp = (exp[:, 1:, 1:] + exp[:, :-1, 1:] + exp[:, 1:, :-1] + exp[:, :-1, :-1]) / 4
-        #     exp = tf.clip_by_value(exp,  1, 5)
- 
         exp_glen = cfg.processes.iceflow.physics.exp_glen
         exp_weertman = cfg.processes.iceflow.physics.exp_weertman
         regu_glen = cfg.processes.iceflow.physics.regu_glen
         regu_weertman = cfg.processes.iceflow.physics.regu_weertman
         ice_density = cfg.processes.iceflow.physics.ice_density
         gravity_cst = cfg.processes.iceflow.physics.gravity_cst
+        new_friction_param = cfg.processes.iceflow.physics.new_friction_param
  
         n, w = gauss_points_and_weigths(ord_gauss=3)
   
-  
         Cshear = cost_shear_2layers(thk, arrhenius, U, V, dX, exp_glen, regu_glen, w, n)
-        Cslid = cost_sliding_2layers(U, V, slidingco, exp_weertman, regu_weertman)
+ 
+        Cslid =  cost_sliding(U, V, thk, usurf, slidingco, dX, 
+                              exp_weertman, regu_weertman, new_friction_param)
+
         Cgrav = cost_gravity_2layers(U, V, thk, usurf, dX, exp_glen, ice_density, gravity_cst, w, n)
+
         Cfloat = tf.zeros_like(Cshear) # not implemented for 2 layers
 
         return Cshear, Cslid, Cgrav, Cfloat
  
+    # In that case, it can be SSA if Nz=1 or Blaater-Pattyn if Nz>2
     else:
 
         Nz = cfg.processes.iceflow.numerics.Nz

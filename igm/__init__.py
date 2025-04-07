@@ -26,5 +26,6 @@ from .common import (
     print_comp,
     EmptyClass,
     load_yaml_as_cfg,
+    load_yaml_recursive,
     check_incompatilities_in_parameters_file
 )

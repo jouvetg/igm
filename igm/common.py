@@ -551,6 +551,30 @@ def load_yaml_as_cfg(yaml_filename):
 
 ##########################################################
 
+def load_yaml_recursive(base_dir):
+    config = {}
+    for root, _, files in os.walk(base_dir):
+        for file in files:
+            if file.endswith('.yaml') or file.endswith('.yml'):
+                full_path = os.path.join(root, file)
+                relative_path = os.path.relpath(full_path, base_dir)
+                keys = relative_path.replace('.yaml', '').replace('.yml', '').split(os.sep)
+
+                # Load the YAML file
+                yaml_conf = OmegaConf.load(full_path)
+
+                # Nest it in the config dictionary
+                sub_conf = config
+                for key in keys[:-1]:
+                    sub_conf = sub_conf.setdefault(key, {})
+                if keys[-1] in yaml_conf:
+                    sub_conf[keys[-1]] = OmegaConf.merge(sub_conf.get(keys[-1], {}), yaml_conf[keys[-1]])
+                else:
+                    sub_conf[keys[-1]] = yaml_conf
+
+    return OmegaConf.create(config)
+
+
 # this function checks if the parameters in the config file are compatible with the ones in the igm repository 
 def check_incompatilities_in_parameters_file(cfg,path):
 
@@ -569,29 +593,6 @@ def check_incompatilities_in_parameters_file(cfg,path):
 
         return dict(recurse(d, parent_key))
         
-    def load_yaml_recursive(base_dir):
-        config = {}
-        for root, _, files in os.walk(base_dir):
-            for file in files:
-                if file.endswith('.yaml') or file.endswith('.yml'):
-                    full_path = os.path.join(root, file)
-                    relative_path = os.path.relpath(full_path, base_dir)
-                    keys = relative_path.replace('.yaml', '').replace('.yml', '').split(os.sep)
-
-                    # Load the YAML file
-                    yaml_conf = OmegaConf.load(full_path)
-
-                    # Nest it in the config dictionary
-                    sub_conf = config
-                    for key in keys[:-1]:
-                        sub_conf = sub_conf.setdefault(key, {})
-                    if keys[-1] in yaml_conf:
-                        sub_conf[keys[-1]] = OmegaConf.merge(sub_conf.get(keys[-1], {}), yaml_conf[keys[-1]])
-                    else:
-                        sub_conf[keys[-1]] = yaml_conf
-
-        return OmegaConf.create(config)
-
     def compare_configs(cfg, cfgo, path="", excluded_keys=["cwd", "config"]):
         for key in cfg:
             full_path = f"{path}.{key}" if path else key

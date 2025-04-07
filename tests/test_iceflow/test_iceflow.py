@@ -5,9 +5,8 @@ import pytest
 def test_iceflow():
     
     state = igm.State()
-    
-    cfg = igm.EmptyClass()  
-    cfg.processes  = igm.load_yaml_as_cfg(os.path.join("conf","processes","iceflow.yaml"))
+
+    cfg = igm.load_yaml_recursive(os.path.join(igm.__path__[0], "conf"))
 
     Ny,Nx = 40,30
 

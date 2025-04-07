@@ -13,8 +13,10 @@ def test_load_ncdf():
 
     state.original_cwd = ""
 
-    cfg = igm.EmptyClass()  
-    cfg.inputs  = igm.load_yaml_as_cfg(os.path.join("conf","inputs","load_ncdf.yaml"))
+    cfg = igm.load_yaml_recursive(os.path.join(igm.__path__[0], "conf"))
+    
+    cfg.core.folder_data = ""
+    cfg.inputs.load_ncdf.input_file = 'input.nc'
  
     igm.inputs.load_ncdf.run(cfg, state)
 

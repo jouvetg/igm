@@ -6,11 +6,8 @@ def test_vert_flow():
     
     state = igm.State()
 
-    cfg = igm.EmptyClass()  
-    cfg.processes = igm.EmptyClass()  
-    cfg.processes.iceflow  = igm.load_yaml_as_cfg(os.path.join("conf","processes","iceflow.yaml")).iceflow
-    cfg.processes.vert_flow = igm.load_yaml_as_cfg(os.path.join("conf","processes","vert_flow.yaml")).vert_flow
- 
+    cfg = igm.load_yaml_recursive(os.path.join(igm.__path__[0], "conf"))
+
     Nz,Ny,Nx = 10,40,30
 
     state.thk   = tf.Variable(tf.ones((Ny,Nx))*200)

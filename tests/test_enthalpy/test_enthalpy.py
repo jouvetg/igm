@@ -19,14 +19,11 @@ def test_enthalpy():
     dt = 200.0
 
     tim = np.arange(0, ttf, dt) + dt  # to put back to 300000
-
-    cfg = igm.EmptyClass()  
-    cfg.processes = igm.EmptyClass()  
-    cfg.processes.iceflow  = igm.load_yaml_as_cfg(os.path.join("conf","processes","iceflow.yaml")).iceflow
-    cfg.processes.enthalpy = igm.load_yaml_as_cfg(os.path.join("conf","processes","enthalpy.yaml")).enthalpy
  
-    cfg.processes.iceflow.iceflow.Nz = 50
-    cfg.processes.iceflow.iceflow.vert_spacing = 1
+    cfg = igm.load_yaml_recursive(os.path.join(igm.__path__[0], "conf"))
+ 
+    cfg.processes.iceflow.numerics.Nz = 50
+    cfg.processes.iceflow.numerics.vert_spacing = 1
 
     cfg.processes.enthalpy.KtdivKc = 10 ** (-5)  # check this value if ok ?
     cfg.processes.enthalpy.till_wat_max = 200
@@ -34,15 +31,15 @@ def test_enthalpy():
 
     thk = tf.Variable(1000 * tf.ones((1, 1)))
 
-    depth, dz = vertically_discretize_tf(thk, cfg.processes.iceflow.iceflow.Nz, cfg.processes.iceflow.iceflow.vert_spacing)
+    depth, dz = vertically_discretize_tf(thk, cfg.processes.iceflow.numerics.Nz, cfg.processes.iceflow.numerics.vert_spacing)
 
-    strainheat = tf.Variable(tf.zeros((cfg.processes.iceflow.iceflow.Nz, 1, 1)))
+    strainheat = tf.Variable(tf.zeros((cfg.processes.iceflow.numerics.Nz, 1, 1)))
     frictheat = tf.Variable(0.0 * tf.ones((1, 1)))
     geoheatflux = tf.Variable(0.042 * tf.ones((1, 1)))  # in W m-2
     tillwat = tf.Variable(0.0 * tf.ones((1, 1)))
 
     # Initial enthalpy field
-    T = tf.Variable((-30.0 + 273.15) * tf.ones((cfg.processes.iceflow.iceflow.Nz, 1, 1)))
+    T = tf.Variable((-30.0 + 273.15) * tf.ones((cfg.processes.iceflow.numerics.Nz, 1, 1)))
     E = tf.Variable(cfg.processes.enthalpy.ci * (T - 223.15))
     omega = tf.Variable(tf.zeros_like(T))
     w = tf.Variable(tf.zeros_like(T))
@@ -61,8 +58,8 @@ def test_enthalpy():
 
         Tpmp, Epmp = TpmpEpmp_from_depth_tf(
             depth,
-            cfg.processes.iceflow.iceflow.gravity_cst,
-            cfg.processes.iceflow.iceflow.ice_density,
+            cfg.processes.iceflow.physics.gravity_cst,
+            cfg.processes.iceflow.physics.ice_density,
             cfg.processes.enthalpy.claus_clape,
             cfg.processes.enthalpy.melt_temp,
             cfg.processes.enthalpy.ci,
@@ -84,9 +81,9 @@ def test_enthalpy():
             strainheat,
             frictheat,
             tillwat,
-            cfg.processes.iceflow.iceflow.thr_ice_thk,
+            cfg.processes.iceflow.physics.thr_ice_thk,
             cfg.processes.enthalpy.ki,
-            cfg.processes.iceflow.iceflow.ice_density,
+            cfg.processes.iceflow.physics.ice_density,
             cfg.processes.enthalpy.water_density,
             cfg.processes.enthalpy.ci,
             cfg.processes.enthalpy.ref_temp,

@@ -5,18 +5,15 @@ data_assimilation:
   - velsurf
   - thk
   - icemask
-  nbitmin: 50
-  nbitmax: 500
-  step_size: 1.0
-  step_size_decay: 0.9
-  init_zero_thk: false
-  uniformize_thkobs: true
-  sole_mask: false
-  retrain_iceflow_model: true
-  include_low_speed_term: false
-  fix_opti_normalization_issue: false
-  velsurfobs_thr: 0.0
-  log_slidingco: false
+  optimization:
+    nbitmin: 50
+    nbitmax: 500
+    step_size: 1.0
+    step_size_decay: 0.9
+    init_zero_thk: false
+    sole_mask: false
+    retrain_iceflow_model: true
+    fix_opti_normalization_issue: false
   regularization:
     thk: 10.0
     slidingco: 1.0
@@ -32,6 +29,10 @@ data_assimilation:
     velsurfobs_std: 1.0
     thkobs_std: 3.0
     divfluxobs_std: 1.0
+    uniformize_thkobs: true
+    include_low_speed_term: false
+    velsurfobs_thr: 0.0
+    log_slidingco: false
   divflux:
     method: upwind
     force_zero_sum: false

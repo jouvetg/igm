@@ -33,11 +33,11 @@ def optimize_initialize(cfg, state):
     else:
         state.thk = tf.zeros_like(state.thk)
 
-    if cfg.processes.data_assimilation.init_zero_thk:
+    if cfg.processes.data_assimilation.optimization.init_zero_thk:
         state.thk = state.thk*0.0
         
     # this is a density matrix that will be used to weight the cost function
-    if cfg.processes.data_assimilation.uniformize_thkobs:
+    if cfg.processes.data_assimilation.fitting.uniformize_thkobs:
         state.dens_thkobs = create_density_matrix(state.thkobs, kernel_size=5)
         state.dens_thkobs = tf.where(state.dens_thkobs>0, 1.0/state.dens_thkobs, 0.0)
         state.dens_thkobs = tf.where(tf.math.is_nan(state.thkobs),0.0,state.dens_thkobs)
@@ -56,6 +56,6 @@ def optimize_initialize(cfg, state):
             return
     
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-        state.optimizer = tf.keras.optimizers.Adam(learning_rate=cfg.processes.data_assimilation.step_size)
+        state.optimizer = tf.keras.optimizers.Adam(learning_rate=cfg.processes.data_assimilation.optimization.step_size)
     else:
-        state.optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=cfg.processes.data_assimilation.step_size)
+        state.optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=cfg.processes.data_assimilation.optimization.step_size)

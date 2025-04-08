@@ -22,7 +22,7 @@ def initialize(cfg, state):
     update_iceflow_emulator(cfg, state, 0) # initialize the emulator
   
     # iterate over the optimization process
-    for i in range(cfg.processes.data_assimilation.nbitmax+1):
+    for i in range(cfg.processes.data_assimilation.optimization.nbitmax+1):
 
         cost = {}
 
@@ -32,7 +32,7 @@ def initialize(cfg, state):
         compute_rms_std_optimization(state, i)
             
         # one step of retraning the iceflow emulator
-        if cfg.processes.data_assimilation.retrain_iceflow_model:
+        if cfg.processes.data_assimilation.optimization.retrain_iceflow_model:
             update_iceflow_emulator(cfg, state, i+1) 
             cost["glen"] = state.COST_EMULATOR[-1]
             
@@ -45,7 +45,7 @@ def initialize(cfg, state):
                 update_ncdf_optimize(cfg, state, i)
 
             # stopping criterion: stop if the cost no longer decrease
-            # if i>cfg.processes.data_assimilation_nbitmin:
+            # if i>cfg.processes.data_assimilation.optimization.nbitmin:
             #     cost = [c[0] for c in costs]
             #     if np.mean(cost[-10:])>np.mean(cost[-20:-10]):
             #         break;  

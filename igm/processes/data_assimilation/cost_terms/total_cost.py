@@ -42,7 +42,7 @@ def total_cost(cfg, state, cost, i):
 
     # Here one enforces non-negative slidinco
     if ("slidingco" in cfg.processes.data_assimilation.control_list) & \
-        (not cfg.processes.data_assimilation.log_slidingco):
+        (not cfg.processes.data_assimilation.fitting.log_slidingco):
         cost["slidingco_positive"] =  \
         10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
 

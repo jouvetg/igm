@@ -12,12 +12,12 @@ def regu_slidingco(cfg,state):
     dadx = (state.slidingco[:, 1:] - state.slidingco[:, :-1])/state.dx
     dady = (state.slidingco[1:, :] - state.slidingco[:-1, :])/state.dx
 
-    if cfg.processes.data_assimilation.sole_mask:                
+    if cfg.processes.data_assimilation.optimization.sole_mask:                
         dadx = tf.where( (state.icemaskobs[:, 1:] == 1) & (state.icemaskobs[:, :-1] == 1) , dadx, 0.0)
         dady = tf.where( (state.icemaskobs[1:, :] == 1) & (state.icemaskobs[:-1, :] == 1) , dady, 0.0)
 
     if cfg.processes.data_assimilation.regularization.smooth_anisotropy_factor_sl == 1:
-        if cfg.processes.data_assimilation.fix_opti_normalization_issue:
+        if cfg.processes.data_assimilation.optimization.fix_opti_normalization_issue:
             REGU_S = (cfg.processes.data_assimilation.regularization.slidingco) * 0.5 * (
                 tf.math.reduce_mean(dadx**2) + tf.math.reduce_mean(dady**2)
             )
@@ -31,12 +31,12 @@ def regu_slidingco(cfg,state):
         dady = (state.slidingco[1:, :] - state.slidingco[:-1, :])/state.dx
         dady = (dady[:, 1:] + dady[:, :-1]) / 2.0
  
-        if cfg.processes.data_assimilation.sole_mask:
+        if cfg.processes.data_assimilation.optimization.sole_mask:
             MASK = (state.icemaskobs[1:, 1:] > 0.5) & (state.icemaskobs[1:, :-1] > 0.5) & (state.icemaskobs[:-1, 1:] > 0.5) & (state.icemaskobs[:-1, :-1] > 0.5)
             dadx = tf.where( MASK, dadx, 0.0)
             dady = tf.where( MASK, dady, 0.0)
  
-        if cfg.processes.data_assimilation.fix_opti_normalization_issue:
+        if cfg.processes.data_assimilation.optimization.fix_opti_normalization_issue:
             REGU_S = (cfg.processes.data_assimilation.regularization.slidingco) * 0.5 * (
                 (1.0/np.sqrt(cfg.processes.data_assimilation.regularization.smooth_anisotropy_factor_sl))
                 * tf.math.reduce_mean((dadx * state.flowdirx + dady * state.flowdiry)**2)

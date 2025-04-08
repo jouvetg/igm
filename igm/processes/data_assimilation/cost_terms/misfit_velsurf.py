@@ -10,7 +10,7 @@ def misfit_velsurf(cfg,state):
     velsurf    = tf.stack([state.uvelsurf,    state.vvelsurf],    axis=-1) 
     velsurfobs = tf.stack([state.uvelsurfobs, state.vvelsurfobs], axis=-1)
 
-    REL = tf.expand_dims( (tf.norm(velsurfobs,axis=-1) >= cfg.processes.data_assimilation.velsurfobs_thr ) , axis=-1)
+    REL = tf.expand_dims( (tf.norm(velsurfobs,axis=-1) >= cfg.processes.data_assimilation.fitting.velsurfobs_thr ) , axis=-1)
 
     ACT = ~tf.math.is_nan(velsurfobs) 
 
@@ -18,7 +18,7 @@ def misfit_velsurf(cfg,state):
            ( (velsurfobs[ACT & REL] - velsurf[ACT & REL]) / cfg.processes.data_assimilation.fitting.velsurfobs_std  )** 2
     )
 
-    if cfg.processes.data_assimilation.include_low_speed_term:
+    if cfg.processes.data_assimilation.fitting.include_low_speed_term:
 
         # This terms penalize the cost function when the velocity is low
         # Reference : Inversion of basal friction in Antarctica using exact and incompleteadjoints of a higher-order model

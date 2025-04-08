@@ -26,11 +26,11 @@ def regu_thk(cfg,state):
         dbdx = (field[:, 1:] - field[:, :-1])/state.dx
         dbdy = (field[1:, :] - field[:-1, :])/state.dx
 
-        if cfg.processes.data_assimilation.sole_mask:
+        if cfg.processes.data_assimilation.optimization.sole_mask:
             dbdx = tf.where( (state.icemaskobs[:, 1:] > 0.5) & (state.icemaskobs[:, :-1] > 0.5) , dbdx, 0.0)
             dbdy = tf.where( (state.icemaskobs[1:, :] > 0.5) & (state.icemaskobs[:-1, :] > 0.5) , dbdy, 0.0)
 
-        if cfg.processes.data_assimilation.fix_opti_normalization_issue:
+        if cfg.processes.data_assimilation.optimization.fix_opti_normalization_issue:
             REGU_H = (cfg.processes.data_assimilation.regularization.thk) * 0.5 * (
                 tf.math.reduce_mean(dbdx**2) + tf.math.reduce_mean(dbdy**2)
                 - gamma * tf.math.reduce_mean(state.thk)
@@ -46,12 +46,12 @@ def regu_thk(cfg,state):
         dbdy = (field[1:, :] - field[:-1, :])/state.dx
         dbdy = (dbdy[:, 1:] + dbdy[:, :-1]) / 2.0
 
-        if cfg.processes.data_assimilation.sole_mask:
+        if cfg.processes.data_assimilation.optimization.sole_mask:
             MASK = (state.icemaskobs[1:, 1:] > 0.5) & (state.icemaskobs[1:, :-1] > 0.5) & (state.icemaskobs[:-1, 1:] > 0.5) & (state.icemaskobs[:-1, :-1] > 0.5)
             dbdx = tf.where( MASK, dbdx, 0.0)
             dbdy = tf.where( MASK, dbdy, 0.0)
  
-        if cfg.processes.data_assimilation.fix_opti_normalization_issue:
+        if cfg.processes.data_assimilation.optimization.fix_opti_normalization_issue:
             REGU_H = (cfg.processes.data_assimilation.regularization.thk) * 0.5 * (
                 (1.0/np.sqrt(cfg.processes.data_assimilation.regularization.smooth_anisotropy_factor))
                 * tf.math.reduce_mean((dbdx * state.flowdirx + dbdy * state.flowdiry)**2)

@@ -22,22 +22,22 @@ def optimize_update(cfg, state, cost, i):
     if i==0:
 
         for f in cfg.processes.data_assimilation.control_list:
-            if cfg.processes.data_assimilation.log_slidingco & (f == "slidingco"):
+            if cfg.processes.data_assimilation.fitting.log_slidingco & (f == "slidingco"):
                 vars(state)[f+'_sc'] = tf.Variable( tf.sqrt(vars(state)[f] / sc[f]) ) 
             else:
                 vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f]) 
 
     with tf.GradientTape() as t:
 
-        if cfg.processes.data_assimilation.step_size_decay < 1:
-            state.optimizer.lr = cfg.processes.data_assimilation.step_size * (cfg.processes.data_assimilation.step_size_decay ** (i / 100))
+        if cfg.processes.data_assimilation.optimization.step_size_decay < 1:
+            state.optimizer.lr = cfg.processes.data_assimilation.optimization.step_size * (cfg.processes.data_assimilation.optimization.step_size_decay ** (i / 100))
 
         # is necessary to remember all operation to derive the gradients w.r.t. control variables
         for f in cfg.processes.data_assimilation.control_list:
             t.watch(vars(state)[f+'_sc'])
 
         for f in cfg.processes.data_assimilation.control_list:
-            if cfg.processes.data_assimilation.log_slidingco & (f == "slidingco"):
+            if cfg.processes.data_assimilation.fitting.log_slidingco & (f == "slidingco"):
                 vars(state)[f] =  (vars(state)[f+'_sc']**2) * sc[f]
             else:
                 vars(state)[f] = vars(state)[f+'_sc'] * sc[f]
@@ -57,7 +57,7 @@ def optimize_update(cfg, state, cost, i):
         grads = tf.Variable(t.gradient(cost_total, var_to_opti))
 
         # this serve to restict the optimization of controls to the mask
-        if cfg.processes.data_assimilation.sole_mask:
+        if cfg.processes.data_assimilation.optimization.sole_mask:
             for ii in range(grads.shape[0]):
                 if not "slidingco" == cfg.processes.data_assimilation.control_list[ii]:
                     grads[ii].assign(tf.where((state.icemaskobs > 0.5), grads[ii], 0))
@@ -76,7 +76,7 @@ def optimize_update(cfg, state, cost, i):
         ###################
 
         for f in cfg.processes.data_assimilation.control_list:
-            if cfg.processes.data_assimilation.log_slidingco & (f == "slidingco"):
+            if cfg.processes.data_assimilation.fitting.log_slidingco & (f == "slidingco"):
                 vars(state)[f] =  (vars(state)[f+'_sc']**2) * sc[f]
             else:
                 vars(state)[f] = vars(state)[f+'_sc'] * sc[f]
@@ -116,7 +116,7 @@ def optimize_update(cfg, state, cost, i):
 
 #     for f in cfg.processes.data_assimilation.control_list:
 #         vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f])
-#         if cfg.processes.data_assimilation.log_slidingco & (f == "slidingco"): 
+#         if cfg.processes.data_assimilation.fitting.log_slidingco & (f == "slidingco"): 
 #             vars(state)[f+'_sc'] = tf.Variable( tf.sqrt(vars(state)[f] / sc[f]) ) 
 #         else:
 #             vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f]) 
@@ -131,7 +131,7 @@ def optimize_update(cfg, state, cost, i):
 #             vars(state)[f+'_sc'] = cont[i]
 
 #         for f in cfg.processes.data_assimilation.control_list:
-#             if cfg.processes.data_assimilation.log_slidingco & (f == "slidingco"):
+#             if cfg.processes.data_assimilation.fitting.log_slidingco & (f == "slidingco"):
 #                 vars(state)[f] =  (vars(state)[f+'_sc']**2) * sc[f]
 #             else:
 #                 vars(state)[f] = vars(state)[f+'_sc'] * sc[f]

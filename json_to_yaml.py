@@ -44,6 +44,10 @@ with open("params.json", "r") as f:
     json_text = remove_comments(f.read())
 params_dict = json.loads(json_text)
 
+if "iflo_run_data_assimilation" in params_dict:
+    del params_dict["iflo_run_data_assimilation"]
+    params_dict["modules_preproc"].append("optimize")
+ 
 # Extract modules
 imodules = params_dict.pop("modules_preproc", [])
 modules = params_dict.pop("modules_process", [])

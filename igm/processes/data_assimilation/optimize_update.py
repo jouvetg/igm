@@ -89,7 +89,7 @@ def optimize_update(cfg, state, cost, i):
             state.slidingco = tf.where(state.slidingco < 0, 0, state.slidingco)
 
         if "arrhenius" in cfg.processes.data_assimilation.control_list:
-            state.arrhenius = tf.where(state.arrhenius < 0, 0, state.arrhenius)
+            state.arrhenius = tf.where(state.arrhenius < 1.0, 1.0, state.arrhenius)
 
         state.divflux = compute_divflux(
             state.ubar, state.vbar, state.thk, state.dx, state.dx, 

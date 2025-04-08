@@ -65,8 +65,8 @@ def initialize_iceflow_emulator(cfg, state):
             else:
                 print("No pretrained emulator found in the igm package")
         else:
-            if os.path.exists(cfg.processes.iceflow.emulator.name):
-                dirpath = cfg.processes.iceflow.emulator.name
+            dirpath = os.path.join(state.original_cwd, cfg.processes.iceflow.emulator.name)
+            if os.path.exists(dirpath):
                 print("----------------------------------> Found pretrained emulator: " + cfg.processes.iceflow.emulator.name)
             else:
                 print("----------------------------------> No pretrained emulator found ")
@@ -255,19 +255,26 @@ def update_iceflow_emulator(cfg, state, it):
 
                 grads = t.gradient(COST, state.iceflow_model.trainable_variables)
 
+                # if (epoch + 1) % 100 == 0:
+                #     values = [tf.norm(g) for g in grads]
+                #     normalized = values / tf.reduce_sum(values) 
+                #     percentages = [100 * v.numpy() for v in normalized] 
+                #     print("Percentages:", " | ".join(f"{p:.1f}%" for p in percentages[::2]))
+
                 state.opti_retrain.apply_gradients(
                     zip(grads, state.iceflow_model.trainable_variables)
                 )
 
-#                gradient_norm = tf.linalg.global_norm(grads)
+#               gradient_norm = tf.linalg.global_norm(grads)
 
                 state.opti_retrain.lr = lr * (0.95 ** (epoch / 1000))
 
             state.COST_EMULATOR.append(cost_emulator)
-            
     
     if len(cfg.processes.iceflow.emulator.save_cost)>0:
-        np.savetxt(cfg.processes.iceflow.emulator.output_directory+cfg.processes.iceflow.emulator.save_cost+'-'+str(it)+'.dat', np.array(state.COST_EMULATOR), fmt="%5.10f")
+        np.savetxt(cfg.processes.iceflow.emulator.output_directory
+                   + cfg.processes.iceflow.emulator.save_cost+'-'+str(it)+'.dat', 
+                   np.array(state.COST_EMULATOR), fmt="%5.10f")
 
 def split_into_patches(X, nbmax):
     XX = []

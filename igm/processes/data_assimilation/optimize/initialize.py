@@ -4,8 +4,8 @@
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 import tensorflow as tf
-from .utils import create_density_matrix
-from .cook.infer_params_cook import infer_params_cook
+from ..utils import create_density_matrix
+from ..cook.infer_params_cook import infer_params_cook
  
 def optimize_initialize(cfg, state):
 

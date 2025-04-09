@@ -40,6 +40,10 @@ optimization:
     Type: boolean
     Description: "Formerly, the oce was mixing reduce_mean and l2_loss leading to dependence to the resolution of the grid"
     Units: dimless
+  method:
+    Type: string
+    Description: "Optimization method to use, either ADAM or L-BFGS"
+    Units: dimless
 
 regularization:
   thk:

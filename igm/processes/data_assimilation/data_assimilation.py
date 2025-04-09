@@ -4,8 +4,9 @@
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
 from .utils import compute_rms_std_optimization
-from .optimize_initialize import optimize_initialize
-from .optimize_update import optimize_update
+from .optimize.initialize import optimize_initialize
+from .optimize.update import optimize_update
+from .optimize.update_lbfgs import optimize_update_lbfgs
 from .outputs.output_ncdf import update_ncdf_optimize, output_ncdf_optimize_final
 from .outputs.prints import print_costs, save_rms_std
 from .outputs.plots import update_plot_inversion, plot_cost_functions
@@ -26,12 +27,16 @@ def initialize(cfg, state):
 
         cost = {}
 
-        # one step of data assimilation
-        optimize_update(cfg, state, cost, i)
+        if cfg.processes.data_assimilation.optimization.method == "ADAM":
+            optimize_update(cfg, state, cost, i)
+        elif cfg.processes.data_assimilation.optimization.method == "L-BFGS":
+            optimize_update_lbfgs(cfg, state, cost, i)
+        else:
+            raise ValueError(f"Unknown optim. method: {cfg.processes.data_assimilation.optimization.method}")
 
         compute_rms_std_optimization(state, i)
             
-        # one step of retraning the iceflow emulator
+        # retraning the iceflow emulator
         if cfg.processes.data_assimilation.optimization.retrain_iceflow_model:
             update_iceflow_emulator(cfg, state, i+1) 
             cost["glen"] = state.COST_EMULATOR[-1]

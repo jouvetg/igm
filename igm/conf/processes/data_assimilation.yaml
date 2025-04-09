@@ -14,6 +14,7 @@ data_assimilation:
     sole_mask: false
     retrain_iceflow_model: true
     fix_opti_normalization_issue: false
+    method: ADAM
   regularization:
     thk: 10.0
     slidingco: 1.0

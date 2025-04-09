@@ -15,6 +15,7 @@ data_assimilation:
     retrain_iceflow_model: true
     fix_opti_normalization_issue: false
     method: ADAM
+    obstacle_constraint: [reproject,penalty]
   regularization:
     thk: 10.0
     slidingco: 1.0

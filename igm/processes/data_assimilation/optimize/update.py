@@ -19,13 +19,11 @@ def optimize_update(cfg, state, cost, i):
     sc["slidingco"] = cfg.processes.data_assimilation.scaling.slidingco
     sc["arrhenius"] = cfg.processes.data_assimilation.scaling.arrhenius
 
-    if i==0:
-
-        for f in cfg.processes.data_assimilation.control_list:
-            if cfg.processes.data_assimilation.fitting.log_slidingco & (f == "slidingco"):
-                vars(state)[f+'_sc'] = tf.Variable( tf.sqrt(vars(state)[f] / sc[f]) ) 
-            else:
-                vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f]) 
+    for f in cfg.processes.data_assimilation.control_list:
+        if cfg.processes.data_assimilation.fitting.log_slidingco & (f == "slidingco"):
+            vars(state)[f+'_sc'] = tf.Variable( tf.sqrt(vars(state)[f] / sc[f]) ) 
+        else:
+            vars(state)[f+'_sc'] = tf.Variable(vars(state)[f] / sc[f]) 
 
     with tf.GradientTape() as t:
 
@@ -75,21 +73,28 @@ def optimize_update(cfg, state, cost, i):
 
         ###################
 
+        # get back optimized variables in the pool of state.variables
         for f in cfg.processes.data_assimilation.control_list:
             if cfg.processes.data_assimilation.fitting.log_slidingco & (f == "slidingco"):
                 vars(state)[f] =  (vars(state)[f+'_sc']**2) * sc[f]
             else:
                 vars(state)[f] = vars(state)[f+'_sc'] * sc[f]
 
-        # get back optimized variables in the pool of state.variables
-        if "thk" in cfg.processes.data_assimilation.control_list:
-            state.thk = tf.where(state.icemaskobs > 0.5, state.thk, 0)
+        # add reprojection step to force obstacle constraints
+        if "reproject" in cfg.processes.data_assimilation.optimization.obstacle_constraint:
 
-        if "slidingco" in cfg.processes.data_assimilation.control_list:
-            state.slidingco = tf.where(state.slidingco < 0, 0, state.slidingco)
+            if "icemask" in cfg.processes.data_assimilation.cost_list:
+                state.thk = tf.where(state.icemaskobs > 0.5, state.thk, 0)
 
-        if "arrhenius" in cfg.processes.data_assimilation.control_list:
-            state.arrhenius = tf.where(state.arrhenius < 1.0, 1.0, state.arrhenius)
+            if "thk" in cfg.processes.data_assimilation.control_list:
+                state.thk = tf.where(state.thk < 0, 0, state.thk)
+
+            if "slidingco" in cfg.processes.data_assimilation.control_list:
+                state.slidingco = tf.where(state.slidingco < 0, 0, state.slidingco)
+
+            if "arrhenius" in cfg.processes.data_assimilation.control_list:
+                # Here we assume a minimum value of 1.0 for the arrhenius factor (should not be hard-coded)
+                state.arrhenius = tf.where(state.arrhenius < 1.0, 1.0, state.arrhenius) 
 
         state.divflux = compute_divflux(
             state.ubar, state.vbar, state.thk, state.dx, state.dx, 

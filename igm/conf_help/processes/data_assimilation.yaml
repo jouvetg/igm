@@ -44,6 +44,10 @@ optimization:
     Type: string
     Description: "Optimization method to use, either ADAM or L-BFGS"
     Units: dimless
+  obstacle_constraint:
+    Type: list
+    Description: "Actions to apply obstacle constraints, either reproject or penalty or both (current default)"
+    Units: dimless
 
 regularization:
   thk:

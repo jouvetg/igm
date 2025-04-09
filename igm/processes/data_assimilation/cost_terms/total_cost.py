@@ -3,7 +3,6 @@ import tensorflow as tf
 from .misfit_thk import misfit_thk
 from .misfit_usurf import misfit_usurf
 from .misfit_velsurf import misfit_velsurf
-from .misfit_icemask import misfit_icemask
 from .cost_divfluxfcz import cost_divfluxfcz
 from .cost_divfluxobs import cost_divfluxobs
 from .cost_vol import cost_vol
@@ -31,25 +30,28 @@ def total_cost(cfg, state, cost, i):
     if "usurf" in cfg.processes.data_assimilation.cost_list:
         cost["usurf"] = misfit_usurf(cfg, state) 
 
-    # force zero thikness outisde the mask
-    if "icemask" in cfg.processes.data_assimilation.cost_list:
-        cost["icemask"] = misfit_icemask(cfg, state)
+    # add penalty terms to force obstacle constraints
+    if "penalty" in cfg.processes.data_assimilation.optimization.obstacle_constraint:
 
-    # Here one enforces non-negative ice thickness
-    if "thk" in cfg.processes.data_assimilation.control_list:
-        cost["thk_positive"] = \
-        10**10 * tf.math.reduce_mean( tf.where(state.thk >= 0, 0.0, state.thk**2) )
+        # force zero thikness outisde the mask
+        if "icemask" in cfg.processes.data_assimilation.cost_list:
+            cost["icemask"] = 10**10 * tf.math.reduce_mean( tf.where(state.icemaskobs > 0.5, 0.0, state.thk**2) )
 
-    # Here one enforces non-negative slidinco
-    if ("slidingco" in cfg.processes.data_assimilation.control_list) & \
-        (not cfg.processes.data_assimilation.fitting.log_slidingco):
-        cost["slidingco_positive"] =  \
-        10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
+        # Here one enforces non-negative ice thickness
+        if "thk" in cfg.processes.data_assimilation.control_list:
+            cost["thk_positive"] = \
+            10**10 * tf.math.reduce_mean( tf.where(state.thk >= 0, 0.0, state.thk**2) )
 
-    # Here one enforces non-negative arrhenius
-    if ("arrhenius" in cfg.processes.data_assimilation.control_list):
-        cost["arrhenius_positive"] =  \
-        10**10 * tf.math.reduce_mean( tf.where(state.arrhenius >= 0, 0.0, state.arrhenius**2) ) 
+        # Here one enforces non-negative slidinco
+        if ("slidingco" in cfg.processes.data_assimilation.control_list) & \
+            (not cfg.processes.data_assimilation.fitting.log_slidingco):
+            cost["slidingco_positive"] =  \
+            10**10 * tf.math.reduce_mean( tf.where(state.slidingco >= 0, 0.0, state.slidingco**2) ) 
+
+        # Here one enforces non-negative arrhenius
+        if ("arrhenius" in cfg.processes.data_assimilation.control_list):
+            cost["arrhenius_positive"] =  \
+            10**10 * tf.math.reduce_mean( tf.where(state.arrhenius >= 1, 0.0, state.arrhenius**2) ) 
         
     if cfg.processes.data_assimilation.cook.infer_params:
         cost["volume"] = cost_vol(cfg, state)

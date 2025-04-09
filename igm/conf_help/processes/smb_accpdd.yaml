@@ -34,3 +34,7 @@ wat_density:
   Type: float
   Units: kg m^{-3}
   Description: "Density of water"
+smb_maximum_accumulation:
+  Type: float
+  Units: m yr^{-1}
+  Description: "Maximum accumulation rate (m yr^{-1})"

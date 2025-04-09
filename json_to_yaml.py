@@ -12,7 +12,7 @@ correspondence_map = {'iflo_run_data_assimilation': 'iceflow.run_data_assimilati
 #translate_df = pd.read_csv("module_prefix_correspondence.csv", header=None)
 #translate_map = dict(zip(translate_df.iloc[:,0], translate_df.iloc[:,1]))
 
-translate_map= {'time': 'time', 'thk': 'thk', 'avalanche': 'aval', 'load_ncdf': 'lncd', 'load_tif': 'ltif', 'plot2d': 'plt2d', 'clim_glacialindex': 'clim', 'clim_oggm': 'clim_oggm', 'smb_accpdd': 'smb_accpdd', 'smb_accmelt': 'smb_accmelt', 'smb_oggm': 'smb_oggm', 'smb_simple': 'smb_simple', 'vert_flow': 'vflo', 'enthalpy': 'enth', 'write_ncdf': 'wncd', 'read_output': 'rncd', 'oggm_shop': 'oggm', 'particles': 'part'}
+translate_map= {'time': 'time', 'thk': 'thk', 'avalanche': 'avalanche', 'load_ncdf': 'lncd', 'load_tif': 'ltif', 'plot2d': 'plt2d', 'clim_glacialindex': 'clim', 'clim_oggm': 'clim_oggm', 'smb_accpdd': 'smb_accpdd', 'smb_accmelt': 'smb_accmelt', 'smb_oggm': 'smb_oggm', 'smb_simple': 'smb_simple', 'vert_flow': 'vflo', 'enthalpy': 'enth', 'write_ncdf': 'wncd', 'read_output': 'rncd', 'oggm_shop': 'oggm', 'particles': 'part', 'gflex': 'gflex'}
 
 def remove_comments(json_str):
     lines = json_str.split("\n")

@@ -133,6 +133,8 @@ def update(cfg, state):
                 (state.smb < 0) | (state.icemask > 0.5), state.smb, -10
             )
 
+        state.smb = tf.clip_by_value(state.smb, -100, cfg.processes.smb_accpdd.smb_maximum_accumulation)
+
         state.tlast_mb.assign(state.t)
 
 

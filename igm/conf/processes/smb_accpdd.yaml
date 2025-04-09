@@ -8,3 +8,4 @@ smb_accpdd:
   shift_hydro_year: 0.75
   ice_density: 910.0
   wat_density: 1000.0
+  smb_maximum_accumulation: 6.0

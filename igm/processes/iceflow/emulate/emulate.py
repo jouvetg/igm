@@ -87,10 +87,12 @@ def initialize_iceflow_emulator(cfg, state):
         nb_inputs = len(cfg.processes.iceflow.emulator.fieldin) + (cfg.processes.iceflow.physics.dim_arrhenius == 3) * (
             cfg.processes.iceflow.numerics.Nz - 1
         )
-        nb_outputs = 2 * cfg.processes.iceflow.numerics.Nz
+        nb_outputs = 2 # * cfg.processes.iceflow.numerics.Nz
         state.iceflow_model = getattr(igm.processes.iceflow.emulate.emulate, cfg.processes.iceflow.emulator.network.architecture)(
             cfg, nb_inputs, nb_outputs
         )
+
+        print(state.iceflow_model.summary())
 
     # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
     # dirpath = importlib_resources.files(emulators).joinpath(direct_name)
@@ -178,8 +180,8 @@ def update_iceflow_emulator(cfg, state, it):
 
         X = split_into_patches(XX, cfg.processes.iceflow.emulator.framesizemax)
         
-        Ny = X.shape[1]
-        Nx = X.shape[2]
+        Ny = X.shape[2]
+        Nx = X.shape[3]
         
         PAD = compute_PAD(cfg,Nx,Ny)
 
@@ -209,12 +211,12 @@ def update_iceflow_emulator(cfg, state, it):
             for i in range(X.shape[0]):
                 with tf.GradientTape() as t:
 
-                    Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
+                    Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :, :], PAD, "CONSTANT"))[:,:,:Ny,:Nx,:]
                     
                     if iz>0:
-                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
+                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, :, iz:-iz, iz:-iz, :], Y[:, :, iz:-iz, iz:-iz, :])
                     else:
-                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, :, :, :], Y[:, :, :, :])
+                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, :, :, :, :], Y[:, :, :, :, :])
  
                     COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
                          + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)

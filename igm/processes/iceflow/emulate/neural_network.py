@@ -6,12 +6,14 @@
 import numpy as np 
 import tensorflow as tf 
 
+
+
 def cnn(cfg, nb_inputs, nb_outputs):
     """
     Routine serve to build a convolutional neural network
     """
 
-    inputs = tf.keras.layers.Input(shape=[None, None, nb_inputs])
+    inputs = tf.keras.layers.Input(shape=[1, None, None, nb_inputs])
 
     conv = inputs
 
@@ -21,9 +23,10 @@ def cnn(cfg, nb_inputs, nb_outputs):
         activation = tf.keras.layers.Activation(cfg.processes.iceflow.emulator.network.activation)
 
     for i in range(int(cfg.processes.iceflow.emulator.network.nb_layers)):
-        conv = tf.keras.layers.Conv2D(
+        conv = tf.keras.layers.Conv3D(
             filters=cfg.processes.iceflow.emulator.network.nb_out_filter,
-            kernel_size=(cfg.processes.iceflow.emulator.network.conv_ker_size, cfg.processes.iceflow.emulator.network.conv_ker_size),
+            kernel_size=(1,cfg.processes.iceflow.emulator.network.conv_ker_size, 
+                           cfg.processes.iceflow.emulator.network.conv_ker_size),
             kernel_initializer=cfg.processes.iceflow.emulator.network.weight_initialization,
             padding="same",
         )(conv)
@@ -32,20 +35,28 @@ def cnn(cfg, nb_inputs, nb_outputs):
 
         conv = tf.keras.layers.Dropout(cfg.processes.iceflow.emulator.network.dropout_rate)(conv)
 
+    for i in range(int(np.log(cfg.processes.iceflow.numerics.Nz)/np.log(2))):
+        
+        conv = tf.keras.layers.UpSampling3D( size=(2, 1, 1) )(conv)    
+            
+        conv = tf.keras.layers.Conv3D(
+            filters=cfg.processes.iceflow.emulator.network.nb_out_filter/(2**(i+1)),
+            kernel_size=(cfg.processes.iceflow.emulator.network.conv_ker_size,
+                         cfg.processes.iceflow.emulator.network.conv_ker_size, 
+                         cfg.processes.iceflow.emulator.network.conv_ker_size),
+            padding="same",
+        )(conv)
+            
     outputs = conv
-
-    outputs = tf.keras.layers.Conv2D(
+ 
+    outputs = tf.keras.layers.Conv3D(
         filters=nb_outputs,
-        kernel_size=(
-            1,
-            1,
-        ),
+        kernel_size=(1,1,1),
         kernel_initializer=cfg.processes.iceflow.emulator.network.weight_initialization,
         activation=None,
     )(outputs)
 
     return tf.keras.models.Model(inputs=inputs, outputs=outputs)
-
 
 def unet(cfg, nb_inputs, nb_outputs):
     """

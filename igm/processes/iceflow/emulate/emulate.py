@@ -92,11 +92,11 @@ def initialize_iceflow_emulator(cfg, state):
             cfg, nb_inputs, nb_outputs
         )
 
-        print(state.iceflow_model.summary())
+    print(state.iceflow_model.summary())
 
-        nblim = int(cfg.processes.iceflow.emulator.network.no_training_from_this_layer) 
-        for layer in state.iceflow_model.layers[nblim:]:
-            layer.trainable=False
+    nblim = int(cfg.processes.iceflow.emulator.network.no_training_from_this_layer) 
+    for layer in state.iceflow_model.layers[nblim:]:
+        layer.trainable=False
 
     # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
     # dirpath = importlib_resources.files(emulators).joinpath(direct_name)

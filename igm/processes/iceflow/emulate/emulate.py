@@ -112,22 +112,22 @@ def update_iceflow_emulated(cfg, state):
 
     fieldin = [vars(state)[f] for f in cfg.processes.iceflow.emulator.fieldin]
 
-    X = fieldin_to_X(cfg, fieldin)
+    X = fieldin_to_X(fieldin)
 
     if cfg.processes.iceflow.emulator.exclude_borders>0:
         iz = cfg.processes.iceflow.emulator.exclude_borders
-        X = tf.pad(X, [[0, 0], [iz, iz], [iz, iz], [0, 0]], "SYMMETRIC")
+        X = tf.pad(X, [[0, 0], [0, 0], [iz, iz], [iz, iz], [0, 0]], "SYMMETRIC")
         
     if cfg.processes.iceflow.emulator.network.multiple_window_size==0:
         Y = state.iceflow_model(X)
     else:
-        Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :Ny, :Nx, :]
+        Y = state.iceflow_model(tf.pad(X, state.PAD, "CONSTANT"))[:, :, :Ny, :Nx, :]
 
     if cfg.processes.iceflow.emulator.exclude_borders>0:
         iz = cfg.processes.iceflow.emulator.exclude_borders
         Y = Y[:, iz:-iz, iz:-iz, :]
 
-    U, V = Y_to_UV(cfg, Y)
+    U, V = Y_to_UV(Y)
     U = U[0]
     V = V[0]
 
@@ -176,7 +176,7 @@ def update_iceflow_emulator(cfg, state, it):
 
 ########################
 
-        XX = fieldin_to_X(cfg, fieldin)
+        XX = fieldin_to_X(fieldin)
 
         X = split_into_patches(XX, cfg.processes.iceflow.emulator.framesizemax)
         
@@ -234,7 +234,7 @@ def update_iceflow_emulator(cfg, state, it):
                     cost_emulator = cost_emulator + COST
 
                     if (epoch + 1) % 100 == 0:
-                        U, V = Y_to_UV(cfg, Y)
+                        U, V = Y_to_UV(Y)
                         U = U[0]
                         V = V[0]
                         velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)

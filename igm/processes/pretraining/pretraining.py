@@ -72,10 +72,10 @@ def initialize(cfg, state):
 
     train_iceflow_emulator(cfg, state, subdatasetpath_train)
 
-    print("pretraining done, the code stop here, as the emulator is trained")
-    print("pretraining can not be followed with a run now.")
+    # print("pretraining done, the code stop here, as the emulator is trained")
+    # print("pretraining can not be followed with a run now.")
 
-    sys.exit()
+    # sys.exit()
 
 def update(cfg, state):
     pass
@@ -103,7 +103,7 @@ def compute_solutions(cfg, state):
         co = int(2**val_R)
 
         ds = xarray.open_dataset(os.path.join(p, "ex.nc"), engine="netcdf4")
-        rec = ds.dims["time"]
+        rec = ds.sizes["time"] 
 
         thk = tf.convert_to_tensor(ds["thk"])[it, ::co, ::co]
         usurf = tf.convert_to_tensor(ds["usurf"])[it, ::co, ::co]
@@ -185,7 +185,7 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
     nb_inputs = len(cfg.processes.iceflow.emulator.fieldin) + (cfg.processes.iceflow.physics.dim_arrhenius == 3) * (
         cfg.processes.iceflow.numerics.Nz - 1
     )
-    nb_outputs = 2 * cfg.processes.iceflow.numerics.Nz
+    nb_outputs = 2 # * cfg.processes.iceflow.numerics.Nz
 
     if os.path.exists("model0.h5"):
         state.iceflow_model = tf.keras.models.load_model("model0.h5", compile=False)
@@ -219,7 +219,7 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
         for p in nsub:
             ds = xarray.open_dataset(os.path.join(p, "ex.nc"), engine="netcdf4")
 
-            rec = ds.dims["time"]
+            rec = ds.sizes["time"] 
 
             bs = cfg.processes.pretraining.batch_size
 
@@ -298,8 +298,8 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
 
                 Y = state.iceflow_model(X)
                 
-                X = X[:,:ny,:nx,:]
-                Y = Y[:,:ny,:nx,:]
+                X = X[:,:,:ny,:nx,:]
+                Y = Y[:,:,:ny,:nx,:]
 
                 C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X, Y)
  
@@ -320,8 +320,9 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
             )
         else:
             optimizer.lr = cfg.processes.iceflow.emulator.lr * (0.9 ** (epoch / 100))
+            
 
-        if epoch % (cfg.processes.pretraining.epochs // 5) == 0:
+        if epoch % 100 == 0:
             pp = os.path.join( state.direct_name, "model-" + str(epoch) + ".h5" )
             state.iceflow_model.save(pp)
 
@@ -352,8 +353,8 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
 
                 path = os.path.join(state.direct_name, code)                
 
-                Ny = X.shape[1]
-                Nx = X.shape[2]
+                Ny = X.shape[2]
+                Nx = X.shape[3]
 
                 PAD = compute_PAD(cfg,Nx,Ny)
                 
@@ -361,8 +362,8 @@ def train_iceflow_emulator(cfg, state, trainingset, augmentation=True):
 
                 YP = state.iceflow_model(X)
                 
-                X  =  X[:,:Ny,:Nx,:]
-                YP = YP[:,:Ny,:Nx,:]
+                X  =  X[:,:,:Ny,:Nx,:]
+                YP = YP[:,:,:Ny,:Nx,:]
 
                 C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X, YP)
  
@@ -475,7 +476,7 @@ def _computenormp(dz, u, v, p):
 
 def _computemisfitall(cfg, state, X, Y, YP):
     N = cfg.processes.iceflow.numerics.Nz
-    thk = X[0, :, :, 0]
+    thk = X[0, :, :, :, 0]
 
     # Vertical discretization
     zeta = np.arange(cfg.processes.iceflow.numerics.Nz) / (cfg.processes.iceflow.numerics.Nz - 1)

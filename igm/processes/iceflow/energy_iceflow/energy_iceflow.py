@@ -85,8 +85,8 @@ def iceflow_energy(cfg, U, V, fieldin):
      
 def iceflow_energy_XY(cfg, X, Y):
     
-    U, V = Y_to_UV(cfg, Y)
+    U, V = Y_to_UV(Y)
 
-    fieldin = X_to_fieldin(cfg, X)
+    fieldin = X_to_fieldin(X)
 
     return iceflow_energy(cfg, U, V, fieldin)

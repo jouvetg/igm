@@ -11,12 +11,7 @@ def initialize_iceflow_fields(cfg, state):
 
     # here we initialize variable parmaetrizing ice flow
     if not hasattr(state, "arrhenius"):
-        if cfg.processes.iceflow.physics.dim_arrhenius == 3:
-            state.arrhenius = \
-                tf.ones((cfg.processes.iceflow.numerics.Nz, state.thk.shape[0], state.thk.shape[1])) \
-                * cfg.processes.iceflow.physics.init_arrhenius * cfg.processes.iceflow.physics.enhancement_factor
-        else:
-            state.arrhenius = tf.ones_like(state.thk) * cfg.processes.iceflow.physics.init_arrhenius * cfg.processes.iceflow.physics.enhancement_factor
+        state.arrhenius = tf.ones_like(state.thk) * cfg.processes.iceflow.physics.init_arrhenius * cfg.processes.iceflow.physics.enhancement_factor
 
     if not hasattr(state, "slidingco"):
         state.slidingco = tf.ones_like(state.thk) * cfg.processes.iceflow.physics.init_slidingco
@@ -105,109 +100,24 @@ class EarlyStopping:
             if self.wait >= self.patience:
                 return True
 
-# def Y_to_UV(cfg, Y):
-#     N = cfg.processes.iceflow.numerics.Nz
-
-#     U = tf.experimental.numpy.moveaxis(Y[:, :, :, :N], [-1], [1])
-#     V = tf.experimental.numpy.moveaxis(Y[:, :, :, N:], [-1], [1])
-
-#     return U, V
-
-# def UV_to_Y(cfg, U, V):
-#     UU = tf.experimental.numpy.moveaxis(U, [0], [-1])
-#     VV = tf.experimental.numpy.moveaxis(V, [0], [-1])
-#     RR = tf.expand_dims(
-#         tf.concat(
-#             [UU, VV],
-#             axis=-1,
-#         ),
-#         axis=0,
-#     )
-
-#     return RR
-
-# def fieldin_to_X(cfg, fieldin):
-#     X = []
-
-#     fieldin_dim = [0, 0, 1 * (cfg.processes.iceflow.physics.dim_arrhenius == 3), 0, 0]
-
-#     for f, s in zip(fieldin, fieldin_dim):
-#         if s == 0:
-#             X.append(tf.expand_dims(f, axis=-1))
-#         else:
-#             X.append(tf.experimental.numpy.moveaxis(f, [0], [-1]))
-
-#     return tf.expand_dims(tf.concat(X, axis=-1), axis=0)
-
-
-# def X_to_fieldin(cfg, X):
-#     i = 0
-
-#     fieldin_dim = [0, 0, 1 * (cfg.processes.iceflow.physics.dim_arrhenius == 3), 0, 0]
-
-#     fieldin = []
-
-#     for f, s in zip(cfg.processes.iceflow.emulator.fieldin, fieldin_dim):
-#         if s == 0:
-#             fieldin.append(X[:, :, :, i])
-#             i += 1
-#         else:
-#             fieldin.append(
-#                 tf.experimental.numpy.moveaxis(
-#                     X[:, :, :, i : i + cfg.processes.iceflow.numerics.Nz], [-1], [1]
-#                 )
-#             )
-#             i += cfg.processes.iceflow.numerics.Nz
-
-#     return fieldin
-
-########################################################
-
-
-def Y_to_UV(cfg, Y):
+def Y_to_UV( Y):
 
     return Y[:, :, :, :, 0], Y[:, :, :, :, 1]
 
+def UV_to_Y( U, V):
+     
+    return tf.expand_dims(
+                  tf.concat([tf.expand_dims(U, axis=-1),tf.expand_dims(V, axis=-1)], axis=-1),
+                          axis=0)
 
-def UV_to_Y(cfg, U, V):
-    
-    UU = tf.expand_dims(U, axis=-1)
-    VV = tf.expand_dims(V, axis=-1)
- 
-    return tf.expand_dims(tf.concat([UU,VV],axis=-1),axis=0)
+def fieldin_to_X(fieldin):
 
+    return tf.expand_dims(
+              tf.expand_dims(
+                      tf.concat([tf.expand_dims(f, axis=-1) for f in fieldin], axis=-1),
+                             axis=0),
+                         axis=0)
 
-def fieldin_to_X(cfg, fieldin):
-    X = []
+def X_to_fieldin(X):
 
-    fieldin_dim = [0, 0, 1 * (cfg.processes.iceflow.physics.dim_arrhenius == 3), 0, 0]
-
-    for f, s in zip(fieldin, fieldin_dim):
-        if s == 0:
-            X.append(tf.expand_dims(f, axis=-1))
-        else:
-            X.append(tf.experimental.numpy.moveaxis(f, [0], [-1]))
-
-    return tf.expand_dims(tf.expand_dims(tf.concat(X, axis=-1), axis=0), axis=0)
-
-
-def X_to_fieldin(cfg, X):
-    i = 0
-
-    fieldin_dim = [0, 0, 1 * (cfg.processes.iceflow.physics.dim_arrhenius == 3), 0, 0]
-
-    fieldin = []
-
-    for f, s in zip(cfg.processes.iceflow.emulator.fieldin, fieldin_dim):
-        if s == 0:
-            fieldin.append(X[:, 0, :, :, i])
-            i += 1
-        else:
-            fieldin.append(
-                tf.experimental.numpy.moveaxis(
-                    X[:, 0, :, :, i : i + cfg.processes.iceflow.numerics.Nz], [-1], [1]
-                )
-            )
-            i += cfg.processes.iceflow.numerics.Nz
-
-    return fieldin
+    return [X[:, 0, :, :, i] for i in range(X.shape[-1])]

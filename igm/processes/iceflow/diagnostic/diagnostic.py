@@ -54,9 +54,9 @@ def update_iceflow_diagnostic(cfg, state):
     update_iceflow_emulator(cfg, state, state.it)
 
     fieldin = [vars(state)[f] for f in cfg.processes.iceflow.emulator.fieldin]
-    X = fieldin_to_X(cfg, fieldin)
+    X = fieldin_to_X( fieldin)
     Y = state.iceflow_model(X)
-    U, V = Y_to_UV(cfg, Y)
+    U, V = Y_to_UV( Y)
 
     if len(state.COST_EMULATOR) > 0:
         COST_Emulator = state.COST_EMULATOR[-1].numpy()

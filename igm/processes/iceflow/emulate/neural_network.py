@@ -35,8 +35,6 @@ def cnn(cfg, nb_inputs, nb_outputs):
             conv = tf.keras.layers.Dropout(cfg.processes.iceflow.emulator.network.dropout_rate)(conv)
 
     for i in range(int(np.log(cfg.processes.iceflow.numerics.Nz)/np.log(2))):
-        
-        conv = tf.keras.layers.UpSampling3D( size=(2, 1, 1) )(conv)    
             
         conv = tf.keras.layers.Conv3D(
             filters=cfg.processes.iceflow.emulator.network.nb_out_filter/(2**(i+1)),
@@ -45,6 +43,8 @@ def cnn(cfg, nb_inputs, nb_outputs):
                          cfg.processes.iceflow.emulator.network.conv_ker_size),
             padding="same",
         )(conv)
+
+        conv = tf.keras.layers.UpSampling3D( size=(2, 1, 1) )(conv)    
             
     outputs = conv
  

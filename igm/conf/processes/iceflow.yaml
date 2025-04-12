@@ -65,3 +65,4 @@ iceflow:
       conv_ker_size: 3
       dropout_rate: 0
       weight_initialization: glorot_uniform
+      no_training_from_this_layer: 10**10

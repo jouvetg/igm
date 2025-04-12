@@ -15,6 +15,7 @@ import importlib_resources
 import igm  
 import matplotlib.pyplot as plt
 import matplotlib
+import pandas as pd
 
 def initialize_iceflow_emulator(cfg, state):
 
@@ -97,6 +98,9 @@ def initialize_iceflow_emulator(cfg, state):
     nblim = int(cfg.processes.iceflow.emulator.network.no_training_from_this_layer) 
     for layer in state.iceflow_model.layers[nblim:]:
         layer.trainable=False
+
+    state.stat_emulator = pd.DataFrame(columns=["iteration", "energy"] 
+                        + [f"grad_{j}" for j in range(cfg.processes.iceflow.emulator.network.nb_layers)])
 
     # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
     # dirpath = importlib_resources.files(emulators).joinpath(direct_name)
@@ -272,8 +276,11 @@ def update_iceflow_emulator(cfg, state, it):
                 )
 
 #               gradient_norm = tf.linalg.global_norm(grads)
-
-                state.opti_retrain.lr = lr * (0.95 ** (epoch / 1000))
+ 
+                # state.stat_emulator.loc[epoch] = [epoch,COST.numpy()] \
+                #     + [tf.norm(g).numpy() for g in grads if (len(g.shape)==5) & (g.shape[-1]==32)]
+               
+                state.opti_retrain.lr = lr * (0.8 ** (epoch / 400))
 
             state.COST_EMULATOR.append(cost_emulator)
     
@@ -281,6 +288,42 @@ def update_iceflow_emulator(cfg, state, it):
         np.savetxt(cfg.processes.iceflow.emulator.output_directory
                    + cfg.processes.iceflow.emulator.save_cost+'-'+str(it)+'.dat', 
                    np.array(state.COST_EMULATOR), fmt="%5.10f")
+
+    # state.stat_emulator.to_csv("gradients_energy_plot_"+str(it)+".csv", index=False)
+    
+    # plot_stat_emulator(cfg, state, it)
+
+def plot_stat_emulator(cfg, state, it):
+
+    # Start plotting
+    fig, ax1 = plt.subplots(figsize=(10, 6))
+
+    grad_dim = cfg.processes.iceflow.emulator.network.nb_layers
+
+    # Plot all gradient components
+    for j in range(grad_dim):
+        ax1.plot(state.stat_emulator["iteration"], state.stat_emulator[f"grad_{j}"], label=f"grad_{j}", alpha=0.6)
+
+    ax1.set_xlabel("Iteration")
+    ax1.set_ylabel("Gradient components")
+    ax1.set_title("Gradient components and energy over iterations")
+    ax1.set_ylim([0, 30]) 
+
+    # Second y-axis for energy
+    ax2 = ax1.twinx()
+    ax2.plot(state.stat_emulator["iteration"], state.stat_emulator["energy"], color="black", linewidth=2.0, label="Energy")
+    ax2.set_ylabel("Energy", color="black")
+    ax2.set_ylim([-1, 0]) 
+
+    # Legend
+    lines_1, labels_1 = ax1.get_legend_handles_labels()
+    lines_2, labels_2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc="upper right", fontsize="small")
+
+    # Save plot
+    plt.tight_layout()
+    plt.savefig("gradients_energy_plot_"+str(it)+".png", dpi=300)
+    plt.close()
 
 def split_into_patches(X, nbmax):
     XX = []

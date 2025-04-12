@@ -13,7 +13,7 @@ def cnn(cfg, nb_inputs, nb_outputs):
 
     inputs = tf.keras.layers.Input(shape=[1, None, None, nb_inputs])
 
-    conv = inputs
+    conv = inputs[:, 0, :, :, :]
 
     if cfg.processes.iceflow.emulator.network.activation == "LeakyReLU":
         activation = tf.keras.layers.LeakyReLU(alpha=0.01)
@@ -21,9 +21,9 @@ def cnn(cfg, nb_inputs, nb_outputs):
         activation = tf.keras.layers.Activation(cfg.processes.iceflow.emulator.network.activation)
 
     for i in range(int(cfg.processes.iceflow.emulator.network.nb_layers)):
-        conv = tf.keras.layers.Conv3D(
+        conv = tf.keras.layers.Conv2D(
             filters=cfg.processes.iceflow.emulator.network.nb_out_filter,
-            kernel_size=(1,cfg.processes.iceflow.emulator.network.conv_ker_size, 
+            kernel_size=(cfg.processes.iceflow.emulator.network.conv_ker_size, 
                            cfg.processes.iceflow.emulator.network.conv_ker_size),
             kernel_initializer=cfg.processes.iceflow.emulator.network.weight_initialization,
             padding="same",
@@ -33,6 +33,8 @@ def cnn(cfg, nb_inputs, nb_outputs):
 
         if cfg.processes.iceflow.emulator.network.dropout_rate>0:
             conv = tf.keras.layers.Dropout(cfg.processes.iceflow.emulator.network.dropout_rate)(conv)
+
+    conv = tf.expand_dims(conv, axis=1)
 
     for i in range(int(np.log(cfg.processes.iceflow.numerics.Nz)/np.log(2))):
             

@@ -40,7 +40,9 @@ def cnn(cfg, nb_inputs, nb_outputs):
             
         conv = tf.keras.layers.Conv3D(
             filters=cfg.processes.iceflow.emulator.network.nb_out_filter/(2**(i+1)),
-            kernel_size=(cfg.processes.iceflow.emulator.network.conv_ker_size,1,1),
+            kernel_size=(cfg.processes.iceflow.emulator.network.conv_ker_size,
+                         cfg.processes.iceflow.emulator.network.conv_ker_size,
+                         cfg.processes.iceflow.emulator.network.conv_ker_size),
             padding="same",
         )(conv)
 

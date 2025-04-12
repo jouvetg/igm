@@ -93,8 +93,8 @@ def initialize_iceflow_emulator(cfg, state):
         )
 
         print(state.iceflow_model.summary())
-        
-        nblim = cfg.processes.iceflow.emulator.network.no_training_from_this_layer 
+
+        nblim = int(cfg.processes.iceflow.emulator.network.no_training_from_this_layer) 
         for layer in state.iceflow_model.layers[nblim:]:
             layer.trainable=False
 

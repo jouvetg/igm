@@ -16,6 +16,7 @@ import igm
 import matplotlib.pyplot as plt
 import matplotlib
 import pandas as pd
+import datetime
 
 def initialize_iceflow_emulator(cfg, state):
 
@@ -99,8 +100,8 @@ def initialize_iceflow_emulator(cfg, state):
     for layer in state.iceflow_model.layers[nblim:]:
         layer.trainable=False
 
-    state.stat_emulator = pd.DataFrame(columns=["iteration", "energy"] 
-                        + [f"grad_{j}" for j in range(cfg.processes.iceflow.emulator.network.nb_layers)])
+    #state.stat_emulator = pd.DataFrame(columns=["iteration", "energy"] 
+    #                    + [f"grad_{j}" for j in range(cfg.processes.iceflow.emulator.network.nb_layers)])
 
     # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
     # dirpath = importlib_resources.files(emulators).joinpath(direct_name)
@@ -230,7 +231,9 @@ def update_iceflow_emulator(cfg, state, it):
                          + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
                     
                     if (epoch + 1) % 100 == 0:
-                        print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
+                        print(datetime.datetime.now().strftime("%H:%M:%S"), " GPU: ",
+                              int(tf.config.experimental.get_memory_info("GPU:0")['current'] / 1024**2)
+                              ,"---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
 
 #                    state.C_shear = tf.pad(C_shear[0],[[0,1],[0,1]],"CONSTANT")
 #                    state.C_slid  = tf.pad(C_slid[0],[[0,1],[0,1]],"CONSTANT")
@@ -277,8 +280,8 @@ def update_iceflow_emulator(cfg, state, it):
 
 #               gradient_norm = tf.linalg.global_norm(grads)
  
-                # state.stat_emulator.loc[epoch] = [epoch,COST.numpy()] \
-                #     + [tf.norm(g).numpy() for g in grads if (len(g.shape)==5) & (g.shape[-1]==32)]
+                #state.stat_emulator.loc[epoch] = [epoch,COST.numpy()] \
+                #    + [tf.norm(g).numpy() for g in grads if (len(g.shape)==4) & (g.shape[-1]==32)]
                
                 state.opti_retrain.lr = lr * (0.8 ** (epoch / 400))
 

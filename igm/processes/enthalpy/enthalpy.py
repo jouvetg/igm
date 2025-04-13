@@ -52,7 +52,7 @@ def initialize(cfg, state):
 
 
     # arrhenius must be 3D for the Enthlapy to work
-    assert cfg.processes.iceflow.physics.dim_arrhenius == 3
+#    assert cfg.processes.iceflow.physics.dim_arrhenius == 3
 
 
 def update(cfg, state):
@@ -110,9 +110,15 @@ def update(cfg, state):
     state.temppasurf = state.Tpa[-1]
 
     # get the arrhenius factor from temperature and and enthalpy
-    state.arrhenius = (
-        arrhenius_from_temp_tf(state.Tpa, state.omega) * cfg.processes.iceflow.physics.enhancement_factor
-    )
+    if cfg.processes.iceflow.physics.dim_arrhenius == 2:
+      state.arrhenius = tf.reduce_sum( arrhenius_from_temp_tf(state.Tpa, state.omega) 
+                                   * cfg.processes.iceflow.physics.enhancement_factor
+                                   * state.vert_weight, 
+                                   axis=0)
+    else:
+      state.arrhenius = (
+          arrhenius_from_temp_tf(state.Tpa, state.omega) * cfg.processes.iceflow.physics.enhancement_factor
+      )
 
     if hasattr(state, "W"):
         # correct vertical velocity corrected (therefore Wc) from melting rate
@@ -130,6 +136,7 @@ def update(cfg, state):
         dz,
         cfg.processes.iceflow.physics.exp_glen,
         cfg.processes.iceflow.physics.thr_ice_thk,
+        cfg.processes.iceflow.physics.dim_arrhenius
     )
 
     # compute the frictheat is in [W m-2]
@@ -203,13 +210,16 @@ def update(cfg, state):
         cfg.processes.enthalpy.tauc_max,
     )
 
-    state.hardav = (
-        tf.reduce_sum(state.arrhenius ** (-1 / 3) * state.vert_weight, axis=0)
-        * 1e6
-        * (365.25 * 24 * 3600) ** (1 / 3)
-    )  # unit is Pa s**(1/3)
 
-    state.arrheniusav = tf.reduce_sum(state.arrhenius * state.vert_weight, axis=0)
+    if cfg.processes.iceflow.physics.dim_arrhenius == 2:
+        state.hardav = ( state.arrhenius ** (-1 / 3) * 1e6 * (365.25 * 24 * 3600) ** (1 / 3) )  # unit is Pa s**(1/3)
+    else:
+        state.hardav = (
+          tf.reduce_sum(state.arrhenius ** (-1 / 3) * state.vert_weight, axis=0)
+          * 1e6
+          * (365.25 * 24 * 3600) ** (1 / 3)
+        )  # unit is Pa s**(1/3)
+        state.arrheniusav = tf.reduce_sum(state.arrhenius * state.vert_weight, axis=0)
 
 
 def finalize(cfg, state):
@@ -345,7 +355,7 @@ def compute_phi(cfg, state):
 
 
 @tf.function()
-def compute_strainheat_tf(U, V, arrhenius, dx, dz, exp_glen, thr):
+def compute_strainheat_tf(U, V, arrhenius, dx, dz, exp_glen, thr, dim_arrhenius):
     # input U [m s^{-1} ]
     # input arrhenius [MPa^{-3} y^{-1} ]
     # return strainheat in [W m^{-3}]
@@ -389,9 +399,14 @@ def compute_strainheat_tf(U, V, arrhenius, dx, dz, exp_glen, thr):
 
     # here one put back arrhenius in unit  Pa^{-3} s^{-1}
     # [Pa y^1/3 y^(-4/3)] = [Pa s^{-1}] = [W m^{-3}]
-    return (arrhenius / ((10**18) * 31556926)) ** (-1.0 / exp_glen) * (
-        strainrate ** (1.0 + 1.0 / exp_glen)
-    )
+
+    if dim_arrhenius == 2:
+       return (tf.expand_dims(arrhenius, axis=0) / ((10**18) * 31556926)) ** (-1.0 / exp_glen) \
+           * strainrate ** (1.0 + 1.0 / exp_glen)
+    else:
+       return (arrhenius / ((10**18) * 31556926)) ** (-1.0 / exp_glen) * (
+          strainrate ** (1.0 + 1.0 / exp_glen)
+       )
 
 
 @tf.function()

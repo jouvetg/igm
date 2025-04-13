@@ -50,7 +50,7 @@ iceflow:
     save_model: false
     exclude_borders: 0
     optimizer: Adam
-    optimizer_clipnorm: 10000000000.0
+    optimizer_clipnorm: 1.0
     optimizer_epsilon: 1.0e-07
     save_cost: ''
     output_directory: ''
@@ -65,3 +65,4 @@ iceflow:
       conv_ker_size: 3
       dropout_rate: 0
       weight_initialization: glorot_uniform
+      cnn3d_for_vertical: false

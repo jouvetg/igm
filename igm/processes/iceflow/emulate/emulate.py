@@ -92,6 +92,8 @@ def initialize_iceflow_emulator(cfg, state):
             cfg, nb_inputs, nb_outputs
         )
 
+    print(state.iceflow_model.summary())
+
     # direct_name = 'pinnbp_10_4_cnn_16_32_2_1'        
     # dirpath = importlib_resources.files(emulators).joinpath(direct_name)
     # iceflow_model_pretrained = tf.keras.models.load_model(

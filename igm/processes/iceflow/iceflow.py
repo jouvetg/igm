@@ -67,6 +67,7 @@ def initialize(cfg, state):
     state.PAD = compute_PAD(cfg, state.thk.shape[1],state.thk.shape[0])
     
     if not cfg.processes.iceflow.method == "solved":
+        update_iceflow_emulator(cfg, state, 0)
         update_iceflow_emulated(cfg, state)
          
     # Currently it is not supported to have the two working simulatanoutly
@@ -81,7 +82,7 @@ def update(cfg, state):
         state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
 
     if cfg.processes.iceflow.method == "emulated":
-        if cfg.processes.iceflow.emulator.retrain_freq > 0:
+        if (cfg.processes.iceflow.emulator.retrain_freq > 0) & (state.it > 0):
             update_iceflow_emulator(cfg, state, state.it)
 
         update_iceflow_emulated(cfg, state)

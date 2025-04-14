@@ -48,6 +48,14 @@ optimization:
     Type: list
     Description: "Actions to apply obstacle constraints, either reproject or penalty or both (current default)"
     Units: dimless
+  optimizer_clipnorm:
+    Type: float
+    Description: "If set, the gradient of each weight is individually clipped so that its norm is no higher than this value."
+    Units: dimless
+  optimizer_epsilon:
+    Type: float
+    Description: "A small constant for numerical stability for the Adam optimizer"
+    Units: dimless
 
 regularization:
   thk:

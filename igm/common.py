@@ -90,7 +90,7 @@ def print_info(state):
 
 def update_modules(processes: List, outputs: List, cfg: Any, state: State) -> None:
     if hasattr(state, "t"):
-        state.it = -1
+        state.it = 0
         state.continue_run = True
         if cfg.core.print_comp:
             state.tcomp = {module.__name__.split('.')[-1]: [] for module in processes+outputs}

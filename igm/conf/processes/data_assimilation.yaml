@@ -16,6 +16,8 @@ data_assimilation:
     fix_opti_normalization_issue: false
     method: ADAM
     obstacle_constraint: [reproject,penalty]
+    optimizer_clipnorm: 10000000.0
+    optimizer_epsilon: 1.0e-07
   regularization:
     thk: 10.0
     slidingco: 1.0

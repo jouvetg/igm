@@ -56,6 +56,14 @@ def optimize_initialize(cfg, state):
             return
     
     if (int(tf.__version__.split(".")[1]) <= 10) | (int(tf.__version__.split(".")[1]) >= 16) :
-        state.optimizer = tf.keras.optimizers.Adam(learning_rate=cfg.processes.data_assimilation.optimization.step_size)
+        state.optimizer = tf.keras.optimizers.Adam(
+            learning_rate=cfg.processes.data_assimilation.optimization.step_size,
+            epsilon=cfg.processes.data_assimilation.optimization.optimizer_epsilon,
+            clipnorm=cfg.processes.data_assimilation.optimization.optimizer_clipnorm
+            )
     else:
-        state.optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=cfg.processes.data_assimilation.optimization.step_size)
+        state.optimizer = tf.keras.optimizers.legacy.Adam(
+            learning_rate=cfg.processes.data_assimilation.optimization.step_size,
+            epsilon=cfg.processes.data_assimilation.optimization.optimizer_epsilon,
+            clipnorm=cfg.processes.data_assimilation.optimization.optimizer_clipnorm
+        )

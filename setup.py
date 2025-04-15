@@ -44,6 +44,8 @@ setup(
         "salem",
         "pyyaml",
         "importlib_resources",
-        "tqdm"
+        "tqdm",
+        "hydra-core",
+        "omegaconf"
     ],
 )

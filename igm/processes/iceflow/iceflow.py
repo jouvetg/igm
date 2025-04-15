@@ -79,7 +79,7 @@ def initialize(cfg, state):
 def update(cfg, state):
 
     if hasattr(state, "logger"):
-        state.logger.info("Update ICEFLOW at time : " + str(state.t.numpy()))
+        state.logger.info("Update ICEFLOW at iteration : " + str(state.it))
 
     if cfg.processes.iceflow.method == "emulated":
         if (cfg.processes.iceflow.emulator.retrain_freq > 0) & (state.it > 0):

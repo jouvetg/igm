@@ -42,6 +42,8 @@ def main(cfg: DictConfig) -> None:
 
     state.original_cwd = Path(get_original_cwd())
 
+    state.saveresult = True
+
     if cfg.core.check_compat_params:
         check_incompatilities_in_parameters_file(cfg,state.original_cwd)
 

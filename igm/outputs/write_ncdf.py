@@ -85,7 +85,7 @@ def run(cfg, state):
             E.units = "yr"
             E.long_name = "time"
             E.axis = "T"
-            E[0] = state.t.numpy()
+            E[0] = str(getattr(state, 't', tf.constant(0)).numpy())
 
             nc.createDimension("y", len(state.y))
             E = nc.createVariable("y", np.dtype("float32").char, ("y",))

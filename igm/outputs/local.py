@@ -80,7 +80,7 @@ def write_tif(cfg,state):
                 continue
         
         var_data = vars(state)[var].numpy()
-        file_name = f"{var}-{str(int(state.t)).zfill(6)}.tif"
+        file_name = f"{var}-{str(getattr(state, 't', tf.constant(0)).numpy()).zfill(6)}.tif"
 
         data_array = xr.DataArray(
             var_data,
@@ -108,7 +108,7 @@ def update_netcdf_ex(cfg,state):
             arr = vars(state)[var].numpy()
             dims = ("y", "x") if arr.ndim == 2 else ("z", "y", "x")
             data = xr.DataArray(arr, dims=dims)
-            data = data.expand_dims(time=[state.t.numpy()])
+            data = data.expand_dims(time=[getattr(state, 't', tf.constant(0)).numpy()])
             attrs = {}
             if var in state.var_info_ncdf_ex:
                 attrs["long_name"], attrs["units"] = state.var_info_ncdf_ex[var]
@@ -123,7 +123,7 @@ def update_netcdf_ex(cfg,state):
         coords = {
             "x": ("x", state.x.numpy()),
             "y": ("y", state.y.numpy()),
-            "time": ("time", [state.t.numpy()])
+            "time": ("time", [getattr(state, 't', tf.constant(0)).numpy()])
         }
 
         if "Nz" in cfg.processes.iceflow:
@@ -140,12 +140,12 @@ def update_netcdf_ex(cfg,state):
         state.already_called_update_local = True
     else:
         if hasattr(state, "logger"):
-            state.logger.info(f"Appending to NetCDF file at time {state.t.numpy()}")
+            state.logger.info(f"Appending to NetCDF file at iteration {state.it}")
 
         ds_existing = xr.open_dataset(file_path)
         new_data = xr.Dataset(
             data_vars=create_data_vars(),
-            coords={"time": [state.t.numpy()]},
+            coords={"time": [getattr(state, 't', tf.constant(0)).numpy()]},
         )
 
         # concat and write again
@@ -171,7 +171,7 @@ def update_netcdf_ts(cfg,state):
         # Initialize the xarray Dataset
         ds = xr.Dataset(
             {
-                "time": ("time", [state.t.numpy()]),
+                "time": ("time", [getattr(state, 't', tf.constant(0)).numpy()]),
                 "vol": ("time", [vol]),
                 "area": ("time", [area]),
             },
@@ -189,14 +189,14 @@ def update_netcdf_ts(cfg,state):
     else:
         if hasattr(state, "logger"):
             state.logger.info(
-                "Write NCDF ts file at time : " + str(state.t.numpy())
+                "Write NCDF ts file at itaration : " + str(state.it)
             )
 
         # Append new data to existing NetCDF file
         with xr.open_dataset(file_path) as ds:
             ds_new = xr.Dataset(
                 {
-                    "time": ("time", [state.t.numpy()]),
+                    "time": ("time", [getattr(state, 't', tf.constant(0)).numpy()]),
                     "vol": ("time", [vol]),
                     "area": ("time", [area]),
                 }

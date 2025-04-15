@@ -25,8 +25,6 @@ def initialize(cfg, state):
 
     state.time_save = tf.constant(state.time_save, dtype="float32")
 
-    state.saveresult = True
-
 
 def update(cfg, state):
     if hasattr(state, "logger"):
@@ -55,7 +53,7 @@ def update(cfg, state):
         state.saveresult = True
         state.itsave += 1
     else:
-        state.saveresult = False
+        state.saveresult = False 
 
     # the first loop is not advancing
     if state.it >= 0:

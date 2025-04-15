@@ -68,7 +68,7 @@ def run(cfg, state):
                     s=0.5,
                     cmap="RdBu",
                 )
-        state.ax.set_title("YEAR : " + str(state.t.numpy()), size=15)
+        state.ax.set_title("YEAR : " + str(getattr(state, 't', tf.constant(0)).numpy()), size=15)
 
         if not hasattr(state, "already_set_cbar"):
             state.cbar = plt.colorbar(im, label=cfg.outputs.plot2d.var)
@@ -85,7 +85,7 @@ def run(cfg, state):
                 display(state.fig)
         else:
             plt.savefig(
-                cfg.outputs.plot2d.var + "-" + str(state.t.numpy()).zfill(4) + ".png",
+                cfg.outputs.plot2d.var + "-" + str(getattr(state, 't', tf.constant(0)).numpy()).zfill(4) + ".png",
                 bbox_inches="tight",
                 pad_inches=0.2,
             )

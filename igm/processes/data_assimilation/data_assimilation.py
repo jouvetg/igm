@@ -8,7 +8,7 @@ from .optimize.initialize import optimize_initialize
 from .optimize.update import optimize_update
 from .optimize.update_lbfgs import optimize_update_lbfgs
 from .outputs.output_ncdf import update_ncdf_optimize, output_ncdf_optimize_final
-from .outputs.prints import print_costs, save_rms_std
+from .outputs.prints import print_costs, save_rms_std, print_info_data_assimilation
 from .outputs.plots import update_plot_inversion, plot_cost_functions
 
 from igm.processes.iceflow.emulate.emulate import update_iceflow_emulator
@@ -20,7 +20,7 @@ def initialize(cfg, state):
 
     optimize_initialize(cfg, state)
 
-    update_iceflow_emulator(cfg, state, 0) # initialize the emulator
+    # update_iceflow_emulator(cfg, state, 0) # initialize the emulator
   
     # iterate over the optimization process
     for i in range(cfg.processes.data_assimilation.optimization.nbitmax+1):
@@ -42,6 +42,7 @@ def initialize(cfg, state):
             cost["glen"] = state.COST_EMULATOR[-1]
             
         print_costs(cfg, state, cost, i)
+        print_info_data_assimilation(cfg, state,  cost, i)
 
         if i % cfg.processes.data_assimilation.output.freq == 0:
             if cfg.processes.data_assimilation.output.plot2d:

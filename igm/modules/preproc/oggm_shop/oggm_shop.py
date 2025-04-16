@@ -113,6 +113,7 @@ def params(parser):
 def initialize(params, state):
 
     import json
+    import rasterio
 
     # Fetch the data from OGGM
     if not os.path.exists(params.oggm_RGI_ID):
@@ -295,6 +296,16 @@ def initialize(params, state):
             var_info["tidewatermask"] = ["Tidewater glacier mask", "no unit"]
             var_info["slopes"] = ["Average glacier surface slope", "deg"]
 
+        # Extract standardized OGGM projection information
+        with open(os.path.join(params.oggm_RGI_ID, "glacier_grid.json"), "r") as f:
+                proj = json.load(f)
+
+        # Access central dem.tif to extract actual EPSG number
+        # (failsafe to always check dem.tif)
+        # (can optionally also be inferred from 'proj' assuming always northern hemisphere UTM coordinates; not sure)
+        with rasterio.open(os.path.join(params.oggm_RGI_ID,'dem.tif')) as dem_ds:
+            dst_crs = dem_ds.crs
+
         nc = Dataset(
             os.path.join("input_saved.nc"), "w", format="NETCDF4"
         )
@@ -316,7 +327,16 @@ def initialize(params, state):
         xn[:] = x
 
         if pyproj_srs is not None:
+            # Write globale attribute in netCDF output file
             nc.pyproj_srs = pyproj_srs
+            nc.setncattr('pyproj_crs',str(proj))
+            nc.setncattr('epsg',str(dst_crs))
+            nc.pyproj_crs = str(proj)
+            nc.epsg = str(dst_crs)
+        else:
+            # Write globale attribute in netCDF output file
+            nc.pyproj_crs = str(proj)
+            nc.epsg = str(dst_crs)
 
         for v in vars_to_save:
             E = nc.createVariable(v, np.dtype("float32").char, ("y", "x"))

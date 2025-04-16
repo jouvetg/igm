@@ -15,8 +15,6 @@ import importlib_resources
 import igm  
 import matplotlib.pyplot as plt
 import matplotlib
-from tqdm import tqdm
-import datetime
 
 def initialize_iceflow_emulator(cfg, state):
 
@@ -239,10 +237,10 @@ def update_iceflow_emulator(cfg, state, it):
 
                     cost_emulator = cost_emulator + COST
 
-                    U, V = Y_to_UV(cfg, Y) ; velsurf_mag = tf.reduce_max(tf.sqrt(U[0][-1] ** 2 + V[0][-1] ** 2))
+                    U, V = Y_to_UV(cfg, Y) ; velsurf_mag = tf.sqrt(U[0][-1] ** 2 + V[0][-1] ** 2)
 
                     if warm_up:
-                        print_info_retrain(state, epoch, C_shear_cost.numpy(), C_slid_cost.numpy(), \
+                        print_info(state, epoch, C_shear_cost.numpy(), C_slid_cost.numpy(), \
                                            C_grav_cost.numpy(), COST.numpy(), tf.reduce_max(velsurf_mag).numpy())
 
                     if (epoch + 1) % 100 == 0:
@@ -332,24 +330,3 @@ def save_iceflow_model(cfg, state):
     fid.close()
 
  
-def print_info_retrain(state, it, C_shear, C_slid, C_grav, COST, velsurf_mag):
- 
-    if it % 100 == 1:
-        if hasattr(state, "pbar_train"):
-            state.pbar_train.close()
-        state.pbar_train = tqdm(desc=f" Phys assim.", ascii=False, dynamic_ncols=True, bar_format="{desc} {postfix}")
-
-    if hasattr(state, "pbar_train"):
-        dic_postfix= { 
-            "🕒": datetime.datetime.now().strftime("%H:%M:%S"),
-            "🔄": f"{it:04.0f}",
-            "C_shear": f"{C_shear:06.3f}",
-            "C_slid": f"{C_slid:06.3f}",
-            "C_grav": f"{C_grav:06.3f}",
-            "glen": f"{COST:06.3f}",
-            " Max vel": f"{velsurf_mag:06.1f}"
-        }
-#        dic_postfix["💾 GPU Mem (MB)"] = tf.config.experimental.get_memory_info("GPU:0")['current'] / 1024**2
-
-        state.pbar_train.set_postfix(dic_postfix)
-        state.pbar_train.update(1)

@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf 
 from igm.processes.utils import getmag3d 
 from ..energy_iceflow.energy_iceflow import iceflow_energy
-from ..utils import EarlyStopping, update_2d_iceflow_variables
+from ..utils import EarlyStopping, update_2d_iceflow_variables, print_info
 import matplotlib.pyplot as plt
 import matplotlib
 
@@ -47,13 +47,17 @@ def solve_iceflow(cfg, state, U, V):
                 cfg, tf.expand_dims(U, axis=0), tf.expand_dims(V, axis=0), fieldin
             )
 
-            COST = tf.reduce_mean(C_shear) + tf.reduce_mean(C_slid) \
-                 + tf.reduce_mean(C_grav)  + tf.reduce_mean(C_float)
+            C_shear_cost = tf.reduce_mean(C_shear)
+            C_slid_cost  = tf.reduce_mean(C_slid)
+            C_grav_cost  = tf.reduce_mean(C_grav)
+            C_float_cost = tf.reduce_mean(C_float)
+
+            COST = C_shear_cost + C_slid_cost + C_grav_cost  + C_float_cost
 
             Cost_Glen.append(COST)
 
-            if (i + 1) % 100 == 0:
-               print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
+            # if (i + 1) % 100 == 0:
+            #    print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
 
 #            state.C_shear = tf.pad(C_shear[0],[[0,1],[0,1]],"CONSTANT")
 #            state.C_slid  = tf.pad(C_slid[0],[[0,1],[0,1]],"CONSTANT")
@@ -69,10 +73,16 @@ def solve_iceflow(cfg, state, U, V):
         grads = t.gradient(COST, [U, V])
  
         state.optimizer.apply_gradients(zip(grads, [U, V]))
+
+        if state.it == 0:
+            velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
+            print_info(state, i, C_shear_cost.numpy(), C_slid_cost.numpy(), \
+                                 C_grav_cost.numpy(), COST.numpy(), 
+                                 tf.reduce_max(velsurf_mag).numpy())
  
         if (i + 1) % 100 == 0:
-            velsurf_mag = tf.sqrt(U[-1] ** 2 + V[-1] ** 2)
-            print("solve :", i, COST.numpy(), np.max(velsurf_mag)) 
+
+            # print("solve :", i, COST.numpy(), np.max(velsurf_mag)) 
 
             if cfg.processes.iceflow.solver.plot_sol:
                 im = state.ax.imshow(
@@ -89,6 +99,7 @@ def solve_iceflow(cfg, state, U, V):
                 state.ax.set_title("i : " + str(i), size=15)
 
         if early_stopping.should_stop(COST.numpy()): 
+#            print("Early stopping at iteration", i)
             break
 
     U = tf.where(state.thk > 0, U, 0)

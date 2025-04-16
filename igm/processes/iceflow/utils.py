@@ -6,6 +6,9 @@
 import numpy as np 
 import tensorflow as tf 
 import math
+from tqdm import tqdm
+import datetime
+
 
 def initialize_iceflow_fields(cfg, state):
 
@@ -104,6 +107,29 @@ class EarlyStopping:
             self.wait += 1
             if self.wait >= self.patience:
                 return True
+            
+
+def print_info(state, it, C_shear, C_slid, C_grav, COST, velsurf_mag):
+ 
+    if it % 100 == 1:
+        if hasattr(state, "pbar_train"):
+            state.pbar_train.close()
+        state.pbar_train = tqdm(desc=f" Phys assim.", ascii=False, dynamic_ncols=True, bar_format="{desc} {postfix}")
+
+    if hasattr(state, "pbar_train"):
+        dic_postfix= { 
+            "🕒": datetime.datetime.now().strftime("%H:%M:%S"),
+            "🔄": f"{it:04.0f}",
+            "C_shear": f"{C_shear:06.3f}",
+            "C_slid": f"{C_slid:06.3f}",
+            "C_grav": f"{C_grav:06.3f}",
+            "glen": f"{COST:06.3f}",
+            " Max vel": f"{velsurf_mag:06.1f}"
+        }
+#        dic_postfix["💾 GPU Mem (MB)"] = tf.config.experimental.get_memory_info("GPU:0")['current'] / 1024**2
+
+        state.pbar_train.set_postfix(dic_postfix)
+        state.pbar_train.update(1)
 
 def Y_to_UV(cfg, Y):
     N = cfg.processes.iceflow.numerics.Nz

@@ -14,9 +14,10 @@ def run(cfg, state):
             ds = f.load()
 
         if "time" in ds.dims:
-            state.logger.info(
-                f"Time dimension found. Selecting the first time step at {cfg.processes.time.start}"
-            )
+            if hasattr(state,'logger'):
+                state.logger.info(
+                    f"Time dimension found. Selecting the first time step at {cfg.processes.time.start}"
+                )
             ds = ds.sel(time=ds.time[ds.time==cfg.processes.time.start])
 
     elif cfg.inputs.local.type == "tif":
@@ -44,14 +45,16 @@ def run(cfg, state):
 
     crop = np.any(list(dict(cfg.inputs.local.crop).values()))
     if crop:
-        state.logger.info("Cropping dataset")
+        if hasattr(state,'logger'):
+            state.logger.info("Cropping dataset")
         ds = ds.sel(
             x=slice(cfg.inputs.local.crop.xmin, cfg.inputs.local.crop.xmax),
             y=slice(cfg.inputs.local.crop.ymin, cfg.inputs.local.crop.ymax),
         )
 
     if cfg.inputs.local.coarsening.ratio > 1:
-        state.logger.info("Coarsening dataset")
+        if hasattr(state,'logger'):
+            state.logger.info("Coarsening dataset")
         ds = ds.coarsen(
             x=cfg.inputs.local.coarsening.ratio,
             y=cfg.inputs.local.coarsening.ratio,
@@ -67,7 +70,7 @@ def run(cfg, state):
     ds = complete_data(ds)
 
     for variable, array in ds.data_vars.items():
-        setattr(state, variable, tf.Variable(array.astype("float32")))
+        setattr(state, variable, tf.Variable(np.squeeze(array).astype("float32")))
 
     for coord, array in ds.coords.items():
         setattr(

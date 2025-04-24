@@ -100,7 +100,7 @@ def interpolate_2d(interpolated_grid, grid_values, array_particles, depth):
             interpolated_grid[depth_layer, particle_id] = P
 
 
-def interpolate_particles_2d(U, V, thk, topg, smb, indices):
+def interpolate_particles_2d(U, V, W, thk, topg, smb, indices):
     
     # True for all variables (maybe make it not dependent on U...)
     depth = U.shape[0]
@@ -124,6 +124,9 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     V_numba = tf.experimental.dlpack.to_dlpack(V)
     V_numba = cp.from_dlpack(V_numba)
     
+    W_numba = tf.experimental.dlpack.to_dlpack(W)
+    W_numba = cp.from_dlpack(W_numba)
+    
     thk_numba = tf.experimental.dlpack.to_dlpack(tf.expand_dims(tf.constant(thk), axis=0))
     thk_numba = cp.from_dlpack(thk_numba)
     
@@ -137,12 +140,14 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     rng = srange(message="numba create_arrays_and_interpolate", color="white")
     u_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
     v_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
+    w_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
     thk_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32")
     topg_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32")
     smb_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32")
 
     interpolate_2d[blockspergrid, threadsperblock](u_device, U_numba, array_particles, depth)
     interpolate_2d[blockspergrid, threadsperblock](v_device, V_numba, array_particles, depth)
+    interpolate_2d[blockspergrid, threadsperblock](w_device, W_numba, array_particles, depth)
     interpolate_2d[blockspergrid, threadsperblock](thk_device, thk_numba, array_particles, 1)
     interpolate_2d[blockspergrid, threadsperblock](topg_device, topg_numba, array_particles, 1)
     interpolate_2d[blockspergrid, threadsperblock](smb_device, smb_numba, array_particles, 1)
@@ -166,6 +171,14 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     #     indexing="ij",
     # )
     # v_tf = v_tf[:, :, 0]
+    # erange(rng)
+    
+    # rng = srange(message="interpolating_w", color="black")
+    # w_tf = interpolate_bilinear_tf(
+    #     tf.expand_dims(W, axis=-1),
+    #     indices,
+    #     indexing="ij",
+    # )[:, :, 0]
     # erange(rng)
     
     # rng = srange(message="interpolating_thk", color="white")
@@ -194,6 +207,7 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     
     # erange(rng_outer)
     
+    
     rng_outer = srange(message="numba_cupy_to_tf", color="white")
     
     u = cp.asarray(u_device)
@@ -201,6 +215,9 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
 
     v = cp.asarray(v_device)
     v = tf.experimental.dlpack.from_dlpack(v.toDlpack())
+    
+    w = cp.asarray(w_device)
+    w = tf.experimental.dlpack.from_dlpack(w.toDlpack())
     
     thk = cp.asarray(thk_device)
     thk = tf.experimental.dlpack.from_dlpack(thk.toDlpack())
@@ -218,6 +235,7 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     
     # print('u error', tf.reduce_mean(abs((u_tf - u)))) # absolute error since nans
     # print('v error', tf.reduce_mean(abs((v_tf - v)))) # absolute error since nans
+    # print('w error', tf.reduce_mean(abs((w_tf - w)))) # absolute error since nans
     # print('thk error', tf.reduce_mean(abs((thk_tf - thk)))) # absolute error since nans
     # print('topg error', tf.reduce_mean(abs((topg_tf - topg)/topg_tf)))
     # print('smb error', tf.reduce_mean(abs((smb_tf - smb)/smb_tf))) 
@@ -231,7 +249,7 @@ def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     # exit()
 
 
-    return u, v, thk, topg, smb
+    return u, v, w, thk, topg, smb
 
 
 # @tf.function(input_signature=[tf.TensorSpec(shape=None, dtype=tf.float32),
@@ -352,6 +370,7 @@ def update(cfg, state):
 
         U_input = state.U
         V_input = state.V
+        W_input = state.W
         thk_input = state.thk
         topg_input = state.topg
         smb_input = state.smb
@@ -360,10 +379,11 @@ def update(cfg, state):
         
         
         rng = srange(message="interpolate_bilinear_section", color="red")
-        u, v, thk, topg, smb = (
+        u, v, w, thk, topg, smb = (
             interpolate_particles_2d(  # only need smb for the simple tracking
                 U_input,
                 V_input,
+                W_input,
                 thk_input,
                 topg_input,
                 smb_input,
@@ -384,16 +404,6 @@ def update(cfg, state):
             u=u,
         )
 
-        erange(rng)
-
-        # uses the vertical velocity w computed in the vert_flow module
-
-        rng = srange(message="3d interpolate bilinear", color="black")
-        w = interpolate_bilinear_tf(
-            tf.expand_dims(state.W, axis=-1),
-            indices,
-            indexing="ij",
-        )[:, :, 0]
         erange(rng)
 
         rng = srange(message="compute_new_particle_locations", color="red")

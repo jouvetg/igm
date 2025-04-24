@@ -62,48 +62,6 @@ def initialize(cfg, state):
     if cfg.processes.particles.write_trajectories:
         initialize_write_particle(cfg, state)
 
-def interpolate_bilinear_custom(grid_2d, sampling_points):
-    """Bilinear interpolation on a 2D regular grid.
-
-    Args:
-        grid_2d: A tensor with shape `[A1, ..., An, H, W, C]` where H and W are
-        height and width of the grid and C is the number of channels.
-        sampling_points: A tensor with shape `[A1, ..., An, M, 2]` where M is the
-        number of sampling points. Sampling points outside the grid are projected
-        in the grid borders.
-        name:  A name for this op that defaults to "bilinear_interpolate".
-
-    Returns:
-        A tensor of shape `[A1, ..., An, M, C]`
-    """
-    grid_shape = tf.shape(grid_2d)[-3:-1]
-    batch_dims = tf.shape(sampling_points)[:-2]
-    num_points = tf.shape(sampling_points)[-2]
-
-    bottom_left = tf.floor(sampling_points)
-    top_right = bottom_left + 1
-    bottom_left_index = tf.cast(bottom_left, tf.int32)
-    top_right_index = tf.cast(top_right, tf.int32)
-    x0_index, y0_index = tf.unstack(bottom_left_index, axis=-1)
-    x1_index, y1_index = tf.unstack(top_right_index, axis=-1)
-    index_x = tf.concat([x0_index, x1_index, x0_index, x1_index], axis=-1)
-    index_y = tf.concat([y0_index, y0_index, y1_index, y1_index], axis=-1)
-    indices = tf.stack([index_x, index_y], axis=-1)
-    clip_value = tf.convert_to_tensor([grid_shape - 1], dtype=indices.dtype)
-    indices = tf.clip_by_value(indices, 0, clip_value)
-    content = tf.gather_nd(grid_2d, indices, batch_dims=tf.size(batch_dims))
-    distance_to_bottom_left = sampling_points - bottom_left
-    distance_to_top_right = top_right - sampling_points
-    x_x0, y_y0 = tf.unstack(distance_to_bottom_left, axis=-1)
-    x1_x, y1_y = tf.unstack(distance_to_top_right, axis=-1)
-    weights_x = tf.concat([x1_x, x_x0, x1_x, x_x0], axis=-1)
-    weights_y = tf.concat([y1_y, y1_y, y_y0, y_y0], axis=-1)
-    weights = tf.expand_dims(weights_x * weights_y, axis=-1)
-
-    interpolated_values = weights * content
-
-    return tf.add_n(tf.split(interpolated_values, [num_points] * 4, -2))
-
 
 @cuda.jit # device function vs ufunc?
 def interpolate_2d(interpolated_grid, grid_values, array_particles, depth):
@@ -121,19 +79,10 @@ def interpolate_2d(interpolated_grid, grid_values, array_particles, depth):
             x_2 = x_1 + 1 # right x coordinate
             y_2 = y_1 + 1 # top y coordinate
             
-            # print("depth_layer", depth_layer)
-            # print("y_1", y_1)
-            # print("x_1", x_1)
-            
             Q_11 = grid_values[depth_layer, y_1, x_1] # bottom left corner
             Q_12 = grid_values[depth_layer, y_2, x_1] # top left corner
             Q_21 = grid_values[depth_layer, y_1, x_2] # bottom right corner
             Q_22 = grid_values[depth_layer, y_2, x_2] # top right corner
-            
-            # print("Q_11", Q_11)
-            # print("Q_12", Q_12)
-            # print("Q_21", Q_21)
-            # print("Q_22", Q_22)
             
             # Interpolating on x
             dx = (x_2 - x_1)
@@ -150,159 +99,137 @@ def interpolate_2d(interpolated_grid, grid_values, array_particles, depth):
             P = y_bottom_weight * R_2 + y_top_weight * R_1 # final interpolation for fixed x (f(x, y))
             interpolated_grid[depth_layer, particle_id] = P
 
-# @cuda.jit # device function vs ufunc?
-# def interpolate_2d(interpolated_grid, grid_values, array_particles, depth):
-#     particle_id = cuda.threadIdx.x + cuda.blockIdx.x * cuda.blockDim.x
-    
-#     if particle_id < array_particles.shape[0]:
-        
-#         for depth_layer in range(depth):
-#             x_pos = array_particles[particle_id, 0]
-#             y_pos = array_particles[particle_id, 1]
-            
-#             x_1 = int(x_pos) # left x coordinate
-#             y_1 = int(y_pos) # bottom y coordinate
-#             x_2 = x_1 + 1 # right x coordinate
-#             y_2 = y_1 + 1 # top y coordinate
-            
-            
-#             Q_11 = grid_values[depth_layer, y_1, x_1] # bottom left corner
-#             Q_12 = grid_values[depth_layer, y_2, x_1] # top left corner
-#             Q_21 = grid_values[depth_layer, y_1, x_2] # bottom right corner
-#             Q_22 = grid_values[depth_layer, y_2, x_2] # top right corner
-            
-#             # Interpolating on x
-#             dx = (x_2 - x_1)
-#             x_left_weight = (x_pos - x_1) / dx
-#             x_right_weight = (x_2 - x_pos) / dx
-#             R_1 = x_left_weight * Q_11 + x_right_weight * Q_21 # bottom x interpolation for fixed y_1 (f(x, y_1))
-#             R_2 = x_left_weight * Q_12 + x_right_weight * Q_22 # top x interpolation for fixed y_2 (f(x, y_2))
-            
-#             # Interpolating on y
-#             dy = (y_2 - y_1)
-#             y_bottom_weight = (y_pos - y_1) / dy
-#             y_top_weight = (y_2 - y_pos) / dy
-            
-#             P = y_bottom_weight * R_1 + y_top_weight * R_2 # final interpolation for fixed x (f(x, y))
-#             print("P", P)
-#             interpolated_grid[depth_layer, particle_id] = P
 
 def interpolate_particles_2d(U, V, thk, topg, smb, indices):
-    # print("tracing interpolate_particles_2d")
     
+    # True for all variables (maybe make it not dependent on U...)
     depth = U.shape[0]
     number_of_particles = indices.shape[1]
     
-    # rng = srange(message="interpolating_u (numba)", color="black")
-    print("UUUUU", U)
-    
-    U_numba = tf.experimental.dlpack.to_dlpack(U)
-    U_numba = cp.from_dlpack(U_numba)
-    # U = cuda.as_cuda_array(U_numba)
-    
-    indices_numba = tf.squeeze(indices) # (N, 2) instead of (1, N, 2)
+    # Convert TF -> CuPy / Numba
+    indices_numba = tf.squeeze(indices) # (N, 2) instead of (1, N, 2) - we can remove this before the function to simply the code and make it faster
     particles = tf.experimental.dlpack.to_dlpack(indices_numba)
     array_particles = cp.from_dlpack(particles)
-    # array_particles = cuda.as_cuda_array(array_particles)
-        
+    
+    # Setup cuda block - maybe we can play around with different axes or grid-stipe loops
     threadsperblock = 32
     blockspergrid = math.ceil(number_of_particles / threadsperblock)
     
+    # rng = srange(message="interpolating_u (numba)", color="black")
+    
+    rng = srange(message="numba_tf_to_cupy", color="white")
+    U_numba = tf.experimental.dlpack.to_dlpack(U)
+    U_numba = cp.from_dlpack(U_numba)
+    
+    V_numba = tf.experimental.dlpack.to_dlpack(V)
+    V_numba = cp.from_dlpack(V_numba)
+    
+    thk_numba = tf.experimental.dlpack.to_dlpack(tf.expand_dims(tf.constant(thk), axis=0))
+    thk_numba = cp.from_dlpack(thk_numba)
+    
+    topg_numba = tf.experimental.dlpack.to_dlpack(tf.expand_dims(tf.constant(topg), axis=0)) # had to use tf.constant since topg is a tf variable and not tensor
+    topg_numba = cp.from_dlpack(topg_numba)
+    
+    smb_numba = tf.experimental.dlpack.to_dlpack(tf.expand_dims(tf.constant(smb), axis=0))
+    smb_numba = cp.from_dlpack(smb_numba)
+    erange(rng)
+
+    rng = srange(message="numba create_arrays_and_interpolate", color="white")
     u_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
-    # print(array_particles.shape)
-    # print('number of particles', number_of_particles)
-    # exit()
-    # print(array_particles)
+    v_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
+    thk_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32")
+    topg_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32")
+    smb_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32")
+
     interpolate_2d[blockspergrid, threadsperblock](u_device, U_numba, array_particles, depth)
-    print(U_numba.shape)
-    # u = cp.array(u_device)
-    u = cp.asarray(u_device)
-    u = tf.experimental.dlpack.from_dlpack(u.toDlpack())
-    # erange(rng)
+    interpolate_2d[blockspergrid, threadsperblock](v_device, V_numba, array_particles, depth)
+    interpolate_2d[blockspergrid, threadsperblock](thk_device, thk_numba, array_particles, 1)
+    interpolate_2d[blockspergrid, threadsperblock](topg_device, topg_numba, array_particles, 1)
+    interpolate_2d[blockspergrid, threadsperblock](smb_device, smb_numba, array_particles, 1)
+    erange(rng)
     
-    # rng = srange(message="interpolating_u (tf)", color="white")
-    u_tf = interpolate_bilinear_tf(
-        tf.expand_dims(U, axis=-1),
-        indices,
-        indexing="ij",
-    )
+    # rng_outer = srange(message="interpolating tf", color="white")
     
-    # u_custom = interpolate_bilinear_custom(
+    # rng = srange(message="interpolating_u", color="green")
+    # u_tf = interpolate_bilinear_tf(
     #     tf.expand_dims(U, axis=-1),
     #     indices,
+    #     indexing="ij",
     # )
-    u = u_tf[:, :, 0]
     # u_tf = u_tf[:, :, 0]
+    # erange(rng)
     
+    # rng = srange(message="interpolating_v", color="white")
+    # v_tf = interpolate_bilinear_tf(
+    #     tf.expand_dims(V, axis=-1),
+    #     indices,
+    #     indexing="ij",
+    # )
+    # v_tf = v_tf[:, :, 0]
     # erange(rng)
+    
+    # rng = srange(message="interpolating_thk", color="white")
+    # thk_tf = interpolate_bilinear_tf(
+    #     tf.expand_dims(tf.expand_dims(thk, axis=0), axis=-1),
+    #     indices,
+    #     indexing="ij",
+    # )[0, :, 0]
+    # erange(rng)
+    
+    # rng = srange(message="interpolating_topg", color="white")
+    # topg_tf = interpolate_bilinear_tf(
+    #     tf.expand_dims(tf.expand_dims(topg, axis=0), axis=-1),
+    #     indices,
+    #     indexing="ij",
+    # )[0, :, 0]
+    # erange(rng)
+    
+    # rng = srange(message="interpolating_smb", color="white")
+    # smb_tf = interpolate_bilinear_tf(
+    #     tf.expand_dims(tf.expand_dims(smb, axis=0), axis=-1),
+    #     indices,
+    #     indexing="ij",
+    # )[0, :, 0]
+    # erange(rng)
+    
+    # erange(rng_outer)
+    
+    rng_outer = srange(message="numba_cupy_to_tf", color="white")
+    
+    u = cp.asarray(u_device)
+    u = tf.experimental.dlpack.from_dlpack(u.toDlpack())
 
-    # rng = srange(message="slicing_u", color="pink")
-    # print("U shape", U.shape, u.shape, u_tf.shape)
-    # erange(rng)
-    # print("UUUUU_numba", U_numba)
-    # print(tf.reduce_max(u))
-    # print(tf.reduce_max(u_device))
-    # print(tf.reduce_mean(abs(u - u_tf)))
-    # print(tf.reduce_max(abs(u - u_tf)))
-    # plt.figure()
-    # plt.imshow(u)
-    # plt.imshow(u_tf)
-    # plt.show()
+    v = cp.asarray(v_device)
+    v = tf.experimental.dlpack.from_dlpack(v.toDlpack())
+    
+    thk = cp.asarray(thk_device)
+    thk = tf.experimental.dlpack.from_dlpack(thk.toDlpack())
+    thk = tf.squeeze(thk, axis=0)
+    
+    topg = cp.asarray(topg_device)
+    topg = tf.experimental.dlpack.from_dlpack(topg.toDlpack())
+    topg = tf.squeeze(topg, axis=0)
+    
+    smb = cp.asarray(smb_device)
+    smb = tf.experimental.dlpack.from_dlpack(smb.toDlpack())
+    smb = tf.squeeze(smb, axis=0)
+    
+    erange(rng_outer)
+    
+    # print('u error', tf.reduce_mean(abs((u_tf - u)))) # absolute error since nans
+    # print('v error', tf.reduce_mean(abs((v_tf - v)))) # absolute error since nans
+    # print('thk error', tf.reduce_mean(abs((thk_tf - thk)))) # absolute error since nans
+    # print('topg error', tf.reduce_mean(abs((topg_tf - topg)/topg_tf)))
+    # print('smb error', tf.reduce_mean(abs((smb_tf - smb)/smb_tf))) 
+    print("NUMBER OF PARTICLES", number_of_particles)
+    
+    # print(u.shape, u_tf.shape)
+    # print(v.shape, v_tf.shape)
+    # print(thk.shape, thk_tf.shape)
+    # print(topg.shape, topg_tf.shape)
+    # print(smb.shape, smb_tf.shape)
     # exit()
-    # print(tf.reduce_mean(abs(u - u_tf)))
-    # print(tf.reduce_max(abs(u - u_tf)))
-    
-    rng = srange(message="interpolating_v", color="white")
-    v = interpolate_bilinear_tf(
-        tf.expand_dims(V, axis=-1),
-        indices,
-        indexing="ij",
-    )
-    erange(rng)
 
-    # print("V shape", V.shape, v.shape)
-    rng = srange(message="slicing_v", color="green")
-    v = v[:, :, 0]
-    erange(rng)
-
-    rng = srange(message="interpolating_thk", color="white")
-    thk = interpolate_bilinear_tf(
-        tf.expand_dims(tf.expand_dims(thk, axis=0), axis=-1),
-        indices,
-        indexing="ij",
-    )
-    erange(rng)
-
-    # print("thk shape", thk.shape)
-    rng = srange(message="slicing_thk", color="purple")
-    thk = thk[0, :, 0]
-    erange(rng)
-
-    rng = srange(message="interpolating_topg", color="white")
-    topg = interpolate_bilinear_tf(
-        tf.expand_dims(tf.expand_dims(topg, axis=0), axis=-1),
-        indices,
-        indexing="ij",
-    )
-    erange(rng)
-
-    # print("topg shape", topg.shape)
-    rng = srange(message="slicing_topg", color="red")
-    topg = topg[0, :, 0]
-    erange(rng)
-
-    rng = srange(message="interpolating_smb", color="white")
-    smb = interpolate_bilinear_tf(
-        tf.expand_dims(tf.expand_dims(smb, axis=0), axis=-1),
-        indices,
-        indexing="ij",
-    )
-    erange(rng)
-
-    # print("smb shape", smb.shape)
-    rng = srange(message="slicing_smb", color="blue")
-    smb = smb[0, :, 0]
-    erange(rng)
 
     return u, v, thk, topg, smb
 
@@ -448,8 +375,8 @@ def update(cfg, state):
         state.particle_topg = topg
 
         rng = srange(message="misc_compuations", color="green")
-        vertical_spacing = cfg.processes.iceflow.numerics.vert_spacing
-        number_z_layers = cfg.processes.iceflow.numerics.Nz
+        vertical_spacing = cfg.processes.iceflow.iceflow.vert_spacing
+        number_z_layers = cfg.processes.iceflow.iceflow.Nz
         weights = get_weights(
             vertical_spacing=vertical_spacing,
             number_z_layers=number_z_layers,
@@ -565,23 +492,6 @@ def seeding_particles(cfg, state):
             "A smb module is required to use the particles module. Please use the built-in smb module or create a custom one that overwrites the 'state.smb' value."
         )
 
-    #        This will serve to remove imobile particles, but it is not active yet.
-
-    #        indices = tf.expand_dims( tf.concat(
-    #                       [tf.expand_dims((state.ypos - state.y[0]) / state.dx, axis=-1),
-    #                        tf.expand_dims((state.xpos - state.x[0]) / state.dx, axis=-1)],
-    #                       axis=-1 ), axis=0)
-
-    #        thk = interpolate_bilinear_tf(
-    #                    tf.expand_dims(tf.expand_dims(state.thk, axis=0), axis=-1),
-    #                    indices,indexing="ij",      )[0, :, 0]
-
-    #        J = (thk>1)
-
-    # here we seed where i) thickness is higher than 1 m
-    #                    ii) the seeding field of geology.nc is active
-    #                    iii) on the gridseed (which permit to control the seeding density)
-    #                    iv) on the accumulation area
     I = (
         (state.thk > 1) & state.gridseed & (state.smb > 0)
     )  # here you may redefine how you want to seed particles
@@ -610,63 +520,6 @@ def seeding_particles(cfg, state):
         nparticle_topg,
         nparticle_thk,
     )
-
-
-# def seeding_particles(cfg, state):
-#     """
-#     here we define (xpos,ypos) the horiz coordinate of tracked particles
-#     and rhpos is the relative position in the ice column (scaled bwt 0 and 1)
-
-#     here we seed only the accum. area (a bit more), where there is
-#     significant ice, and in some points of a regular grid state.gridseed
-#     (density defined by density_seeding)
-
-#     """
-
-#     # ! THK and SMB modules are required. Insert in the init function of the particles module (actually, don't because the modules can be
-#     # ! initialized in any order, and the particles module is not guaranteed to be initialized after the thk and smb modules)
-#     # ! Instead, insert it HERE when needed (although it might call it multiple times and be less efficient...)
-
-#     if not hasattr(state, "thk"):
-#         raise ValueError("The thk module is required to use the particles module")
-#     if not hasattr(state, "smb"):
-#         raise ValueError(
-#             "A smb module is required to use the particles module. Please use the built-in smb module or create a custom one that overwrites the 'state.smb' value."
-#         )
-
-#     #        This will serve to remove imobile particles, but it is not active yet.
-
-#     #        indices = tf.expand_dims( tf.concat(
-#     #                       [tf.expand_dims((state.ypos - state.y[0]) / state.dx, axis=-1),
-#     #                        tf.expand_dims((state.xpos - state.x[0]) / state.dx, axis=-1)],
-#     #                       axis=-1 ), axis=0)
-
-#     #        thk = interpolate_bilinear_tf(
-#     #                    tf.expand_dims(tf.expand_dims(state.thk, axis=0), axis=-1),
-#     #                    indices,indexing="ij",      )[0, :, 0]
-
-#     #        J = (thk>1)
-
-#     # here we seed where i) thickness is higher than 1 m
-#     #                    ii) the seeding field of geology.nc is active
-#     #                    iii) on the gridseed (which permit to control the seeding density)
-#     #                    iv) on the accumulation area
-#     I = (
-#         (state.thk > 1) & state.gridseed & (state.smb > 0)
-#     )  # here you may redefine how you want to seed particles
-#     state.nparticle_x = state.X[I] - state.x[0]  # x position of the particle
-#     state.nparticle_y = state.Y[I] - state.y[0]  # y position of the particle
-#     state.nparticle_z = state.usurf[I]  # z position of the particle
-#     state.nparticle_r = tf.ones_like(state.X[I])  # relative position in the ice column
-#     state.nparticle_w = tf.ones_like(state.X[I])  # weight of the particle
-#     state.nparticle_t = (
-#         tf.ones_like(state.X[I]) * state.t
-#     )  # "date of birth" of the particle (useful to compute its age)
-#     state.nparticle_englt = tf.zeros_like(
-#         state.X[I]
-#     )  # time spent by the particle burried in the glacier
-#     state.nparticle_thk = state.thk[I]  # ice thickness at position of the particle
-#     state.nparticle_topg = state.topg[I]  # z position of the bedrock under the particle
 
 
 def initialize_write_particle(cfg, state):

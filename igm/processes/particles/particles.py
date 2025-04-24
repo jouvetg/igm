@@ -10,24 +10,19 @@ import datetime, time
 import tensorflow as tf
 import igm
 from netCDF4 import Dataset
+import math
 
 from igm.processes.utils import *
 
-import nvtx
-
-from numba import cuda
-import cupy as cp
-import math
-
-
-def srange(message, color):
-    tf.test.experimental.sync_devices()
-    return nvtx.start_range(message, color)
-
-
-def erange(rng):
-    tf.test.experimental.sync_devices()
-    nvtx.end_range(rng)
+# ! Needed for optmized particles!
+try:
+    import cupy as cp
+    from numba import cuda
+    import cudf
+except ImportError:
+    raise ImportError(
+        "The 'particles' module requires the 'cupy', 'numba', and 'cudf' packages. Please install them."
+    )
 
 
 def initialize(cfg, state):
@@ -124,9 +119,6 @@ def interpolate_particles_2d(U, V, W, thk, topg, smb, indices):
     threadsperblock = 32
     blockspergrid = math.ceil(number_of_particles / threadsperblock)
 
-    # rng = srange(message="interpolating_u (numba)", color="black")
-
-    # rng = srange(message="numba_tf_to_cupy", color="white")
     U_numba = tf.experimental.dlpack.to_dlpack(U)
     U_numba = cp.from_dlpack(U_numba)
 
@@ -150,11 +142,9 @@ def interpolate_particles_2d(U, V, W, thk, topg, smb, indices):
         tf.expand_dims(tf.constant(smb), axis=0)
     )
     smb_numba = cp.from_dlpack(smb_numba)
-    # erange(rng)
 
-    # rng = srange(message="numba create_arrays_and_interpolate", color="white")
-
-    # Creating different streams as computations are independent and will help with latency hiding / avoiding default stream and cuda memfree
+    # Creating different streams as computations are independent and
+    # will help with latency hiding / avoiding default stream and cuda memfree
     stream_u = cuda.stream()
     stream_v = cuda.stream()
     stream_w = cuda.stream()
@@ -199,9 +189,6 @@ def interpolate_particles_2d(U, V, W, thk, topg, smb, indices):
     interpolate_2d[blockspergrid, threadsperblock, stream_smb](
         smb_device, smb_numba, array_particles, 1
     )
-    # erange(rng)
-
-    # rng_outer = srange(message="numba_cupy_to_tf", color="white")
 
     u = cp.asarray(u_device)
     u = tf.experimental.dlpack.from_dlpack(u.toDlpack())
@@ -226,31 +213,22 @@ def interpolate_particles_2d(U, V, W, thk, topg, smb, indices):
 
     return u, v, w, thk, topg, smb
 
+
 def get_weights(vertical_spacing, number_z_layers, particle_r, u):
     "What is this function doing? Name it properly.."
 
     zeta = _rhs_to_zeta(vertical_spacing, particle_r)  # get the position in the column
-
-    # rng = srange(message="casting zeta", color="black")
     I0 = tf.math.floor(zeta * (number_z_layers - 1))
-    # erange(rng)
+
     I0 = tf.minimum(I0, number_z_layers - 2)  # make sure to not reach the upper-most pt
     I1 = I0 + 1
 
-    # rng = srange(message="casting I0 and I1", color="black")
     zeta0 = I0 / (number_z_layers - 1)
     zeta1 = I1 / (number_z_layers - 1)
-    # erange(rng)
-
     lamb = (zeta - zeta0) / (zeta1 - zeta0)
 
-    # print(I0.dtype, I1.dtype)
-    # rng = srange(message="transposes", color="black")
-    # ind0 = tf.transpose(tf.stack([I0, tf.range(I0.shape[0], dtype=tf.float32)]))
-    # ind1 = tf.transpose(tf.stack([I1, tf.range(I1.shape[0], dtype=tf.float32)]))
     ind0 = tf.stack([I0, tf.range(I0.shape[0], dtype=tf.float32)], axis=1)
     ind1 = tf.stack([I1, tf.range(I1.shape[0], dtype=tf.float32)], axis=1)
-    # erange(rng)
 
     weights = tf.zeros_like(u)
     weights = tf.tensor_scatter_nd_add(
@@ -265,7 +243,6 @@ def get_weights(vertical_spacing, number_z_layers, particle_r, u):
 
 def update(cfg, state):
 
-    rng_outer = srange(message="particle_update", color="white")
     if "iceflow" not in cfg.processes:
         raise ValueError("The 'iceflow' module is required to use the particles module")
 
@@ -276,7 +253,6 @@ def update(cfg, state):
         state.t.numpy() - state.tlast_seeding
     ) >= cfg.processes.particles.frequency_seeding:
 
-        # rng = srange(message="seeding_particles", color="black")
         # seed new particles
         (
             nparticle_x,
@@ -289,9 +265,7 @@ def update(cfg, state):
             nparticle_topg,
             nparticle_thk,
         ) = seeding_particles(cfg, state)
-        # erange(rng)
 
-        # rng = srange(message="concat_new_particles", color="blue")
         # merge the new seeding points with the former ones
         particle_x = tf.Variable(
             tf.concat([state.particle_x, nparticle_x], axis=-1), trainable=False
@@ -315,15 +289,6 @@ def update(cfg, state):
             tf.concat([state.particle_englt, nparticle_englt], axis=-1),
             trainable=False,
         )
-        # state.particle_topg = tf.Variable(
-        #     tf.concat([state.particle_topg, nparticle_topg], axis=-1),
-        #     trainable=False,
-        # )
-        # state.particle_thk = tf.Variable(
-        #     tf.concat([state.particle_thk, nparticle_thk], axis=-1),
-        #     trainable=False,
-        # )
-        # erange(rng)
 
         state.tlast_seeding = state.t.numpy()
     else:
@@ -346,7 +311,6 @@ def update(cfg, state):
             ),
             axis=0,
         )
-        # print(f"Number of particles: {indices.shape}")
 
         U_input = state.U
         V_input = state.V
@@ -354,10 +318,7 @@ def update(cfg, state):
         thk_input = state.thk
         topg_input = state.topg
         smb_input = state.smb
-        # rng_reading = srange(message="reading_from_state", color="blue")
-        # erange(rng_reading)
 
-        # rng = srange(message="interpolate_bilinear_section", color="red")
         u, v, w, thk, topg, smb = (
             interpolate_particles_2d(  # only need smb for the simple tracking
                 U_input,
@@ -369,11 +330,10 @@ def update(cfg, state):
                 indices,
             )
         )
-        # erange(rng)
+
         state.particle_thk = thk
         state.particle_topg = topg
 
-        # rng = srange(message="misc_compuations", color="green")
         vertical_spacing = cfg.processes.iceflow.iceflow.vert_spacing
         number_z_layers = cfg.processes.iceflow.iceflow.Nz
         weights = get_weights(
@@ -383,9 +343,6 @@ def update(cfg, state):
             u=u,
         )
 
-        # erange(rng)
-
-        # rng = srange(message="compute_new_particle_locations", color="red")
         particle_x = particle_x + state.dt * tf.reduce_sum(weights * u, axis=0)
         particle_y = particle_y + state.dt * tf.reduce_sum(weights * v, axis=0)
         particle_z = particle_z + state.dt * tf.reduce_sum(weights * w, axis=0)
@@ -396,20 +353,11 @@ def update(cfg, state):
         particle_r = (state.particle_z - topg) / thk
         # if thk=0, state.rhpos takes value nan, so we set rhpos value to one in this case :
         state.particle_r = tf.where(thk == 0, tf.ones_like(particle_r), particle_r)
-        # erange(rng)
 
-        # rng = srange(message="final_computations", color="yellow")
         # make sur the particle remains in the horiz. comp. domain
         state.particle_x = tf.clip_by_value(particle_x, 0, state.x[-1] - state.x[0])
         state.particle_y = tf.clip_by_value(particle_y, 0, state.y[-1] - state.y[0])
 
-        # indices = tf.concat(
-        #     [
-        #         tf.expand_dims(tf.cast(j, dtype="int32"), axis=-1),
-        #         tf.expand_dims(tf.cast(i, dtype="int32"), axis=-1),
-        #     ],
-        #     axis=-1,
-        # )
         indices = tf.concat(
             [
                 tf.expand_dims(j, axis=-1),
@@ -429,16 +377,8 @@ def update(cfg, state):
             tf.where(state.particle_r < 1, state.dt, 0.0), dtype="float32"
         )
 
-        #    if int(state.t)%10==0:
-        #        print("nb of part : ",state.xpos.shape)
-        # erange(rng)
-
     if cfg.processes.particles.write_trajectories:
-        rng = srange(message="update_write_particle", color="yellow")
         update_write_particle(cfg, state)
-        erange(rng)
-
-    erange(rng_outer)
 
 
 def finalize(cfg, state):
@@ -533,14 +473,10 @@ def initialize_write_particle(cfg, state):
         np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
 
 
-import cudf
-
-
 def update_write_particle(cfg, state):
 
     if state.saveresult:
 
-        # rng = srange(message="write_particle_compute", color="white")
         f = os.path.join(
             "trajectories",
             "traj-" + "{:06d}".format(int(state.t.numpy())) + ".csv",
@@ -565,28 +501,27 @@ def update_write_particle(cfg, state):
                 axis=0,
             )
         )
-        # erange(rng)
-
-        # np.savetxt(
-        #     f, array, delimiter=",", fmt="%.2f", header="Id,x,y,z,rh,t,englt,topg,thk"
-        # )
-
-        # rng = srange(message="write_particle_save", color="white")
         array = tf.experimental.dlpack.to_dlpack(array)
         array = cp.from_dlpack(array)
         df = cudf.DataFrame(array)
-        df.columns = ["Id", "x", "y", "z", "rh", "t", "englt", "topg", "thk"] # for some reason, my header shows '# Id' for the numpy version but 'Id' for GPU... fyi
+        df.columns = [
+            "Id",
+            "x",
+            "y",
+            "z",
+            "rh",
+            "t",
+            "englt",
+            "topg",
+            "thk",
+        ]  # for some reason, my header shows '# Id' for the numpy version but 'Id' for GPU... fyi
         df.to_csv(f"{f[:-4]}_cudf.csv", index=False)
-        # erange(rng)
-        # df.to_parquet(path=f"{f}.parquet")
+        # df.to_parquet(path=f"{f}.parquet") # parquet if you want instead of csv - should be faster
 
-        # rng = srange(message="write_particle_time", color="white")
         ft = os.path.join("trajectories", "time.dat")
         with open(ft, "a") as f:
             print(state.t.numpy(), file=f)
-        # erange(rng)
 
-        # rng = srange(message="write_particle_topography", color="white")
         if cfg.processes.particles.add_topography:
             ftt = os.path.join(
                 "trajectories",
@@ -602,4 +537,3 @@ def update_write_particle(cfg, state):
                 )
             )
             np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
-        # erange(rng)

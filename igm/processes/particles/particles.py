@@ -138,75 +138,29 @@ def interpolate_particles_2d(U, V, W, thk, topg, smb, indices):
     erange(rng)
 
     rng = srange(message="numba create_arrays_and_interpolate", color="white")
-    u_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
-    v_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
-    w_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
-    thk_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32")
-    topg_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32")
-    smb_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32")
+    
+    # Creating different streams as computations are independent and will help with latency hiding / avoiding default stream and cuda memfree
+    stream_u = cuda.stream()
+    stream_v = cuda.stream()
+    stream_w = cuda.stream()
+    stream_thk = cuda.stream()
+    stream_topg = cuda.stream()
+    stream_smb = cuda.stream()
+    
+    u_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32", stream=stream_u)
+    v_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32", stream=stream_v)
+    w_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32", stream=stream_w)
+    thk_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32", stream=stream_thk)
+    topg_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32", stream=stream_topg)
+    smb_device = cuda.device_array(shape=(1, number_of_particles), dtype="float32", stream=stream_smb)
 
-    interpolate_2d[blockspergrid, threadsperblock](u_device, U_numba, array_particles, depth)
-    interpolate_2d[blockspergrid, threadsperblock](v_device, V_numba, array_particles, depth)
-    interpolate_2d[blockspergrid, threadsperblock](w_device, W_numba, array_particles, depth)
-    interpolate_2d[blockspergrid, threadsperblock](thk_device, thk_numba, array_particles, 1)
-    interpolate_2d[blockspergrid, threadsperblock](topg_device, topg_numba, array_particles, 1)
-    interpolate_2d[blockspergrid, threadsperblock](smb_device, smb_numba, array_particles, 1)
+    interpolate_2d[blockspergrid, threadsperblock, stream_u](u_device, U_numba, array_particles, depth)
+    interpolate_2d[blockspergrid, threadsperblock, stream_v](v_device, V_numba, array_particles, depth)
+    interpolate_2d[blockspergrid, threadsperblock, stream_w](w_device, W_numba, array_particles, depth)
+    interpolate_2d[blockspergrid, threadsperblock, stream_thk](thk_device, thk_numba, array_particles, 1)
+    interpolate_2d[blockspergrid, threadsperblock, stream_topg](topg_device, topg_numba, array_particles, 1)
+    interpolate_2d[blockspergrid, threadsperblock, stream_smb](smb_device, smb_numba, array_particles, 1)
     erange(rng)
-    
-    # rng_outer = srange(message="interpolating tf", color="white")
-    
-    # rng = srange(message="interpolating_u", color="green")
-    # u_tf = interpolate_bilinear_tf(
-    #     tf.expand_dims(U, axis=-1),
-    #     indices,
-    #     indexing="ij",
-    # )
-    # u_tf = u_tf[:, :, 0]
-    # erange(rng)
-    
-    # rng = srange(message="interpolating_v", color="white")
-    # v_tf = interpolate_bilinear_tf(
-    #     tf.expand_dims(V, axis=-1),
-    #     indices,
-    #     indexing="ij",
-    # )
-    # v_tf = v_tf[:, :, 0]
-    # erange(rng)
-    
-    # rng = srange(message="interpolating_w", color="black")
-    # w_tf = interpolate_bilinear_tf(
-    #     tf.expand_dims(W, axis=-1),
-    #     indices,
-    #     indexing="ij",
-    # )[:, :, 0]
-    # erange(rng)
-    
-    # rng = srange(message="interpolating_thk", color="white")
-    # thk_tf = interpolate_bilinear_tf(
-    #     tf.expand_dims(tf.expand_dims(thk, axis=0), axis=-1),
-    #     indices,
-    #     indexing="ij",
-    # )[0, :, 0]
-    # erange(rng)
-    
-    # rng = srange(message="interpolating_topg", color="white")
-    # topg_tf = interpolate_bilinear_tf(
-    #     tf.expand_dims(tf.expand_dims(topg, axis=0), axis=-1),
-    #     indices,
-    #     indexing="ij",
-    # )[0, :, 0]
-    # erange(rng)
-    
-    # rng = srange(message="interpolating_smb", color="white")
-    # smb_tf = interpolate_bilinear_tf(
-    #     tf.expand_dims(tf.expand_dims(smb, axis=0), axis=-1),
-    #     indices,
-    #     indexing="ij",
-    # )[0, :, 0]
-    # erange(rng)
-    
-    # erange(rng_outer)
-    
     
     rng_outer = srange(message="numba_cupy_to_tf", color="white")
     
@@ -260,23 +214,36 @@ def get_weights(vertical_spacing, number_z_layers, particle_r, u):
     "What is this function doing? Name it properly.."
     # print("tracing weights")
     zeta = _rhs_to_zeta(vertical_spacing, particle_r)  # get the position in the column
-    I0 = tf.cast(
-        tf.math.floor(zeta * (number_z_layers - 1)),
-        dtype="int32",
-    )
+    # I0 = tf.cast(
+    #     tf.math.floor(zeta * (number_z_layers - 1)),
+    #     dtype="int32",
+    # )
+    rng = srange(message="casting zeta", color="black")
+    I0 = tf.math.floor(zeta * (number_z_layers - 1))
+    erange(rng)
     I0 = tf.minimum(I0, number_z_layers - 2)  # make sure to not reach the upper-most pt
     I1 = I0 + 1
-    zeta0 = tf.cast(I0 / (number_z_layers - 1), dtype="float32")
-    zeta1 = tf.cast(I1 / (number_z_layers - 1), dtype="float32")
-
+    
+    rng = srange(message="casting I0 and I1", color="black")
+    # zeta0 = tf.cast(I0 / (number_z_layers - 1), dtype="float32")
+    # zeta1 = tf.cast(I1 / (number_z_layers - 1), dtype="float32")
+    zeta0 = I0 / (number_z_layers - 1)
+    zeta1 = I1 / (number_z_layers - 1)
+    erange(rng)
+    
     lamb = (zeta - zeta0) / (zeta1 - zeta0)
 
-    ind0 = tf.transpose(tf.stack([I0, tf.range(I0.shape[0])]))
-    ind1 = tf.transpose(tf.stack([I1, tf.range(I1.shape[0])]))
+    # print(I0.dtype, I1.dtype)
+    rng = srange(message="transposes", color="black")
+    # ind0 = tf.transpose(tf.stack([I0, tf.range(I0.shape[0], dtype=tf.float32)]))
+    # ind1 = tf.transpose(tf.stack([I1, tf.range(I1.shape[0], dtype=tf.float32)]))
+    ind0 = tf.stack([I0, tf.range(I0.shape[0], dtype=tf.float32)], axis=1)
+    ind1 = tf.stack([I1, tf.range(I1.shape[0], dtype=tf.float32)], axis=1)
+    erange(rng)
 
     weights = tf.zeros_like(u)
-    weights = tf.tensor_scatter_nd_add(weights, indices=ind0, updates=1 - lamb)
-    weights = tf.tensor_scatter_nd_add(weights, indices=ind1, updates=lamb)
+    weights = tf.tensor_scatter_nd_add(weights, indices=tf.cast(ind0, tf.int32), updates=1 - lamb)
+    weights = tf.tensor_scatter_nd_add(weights, indices=tf.cast(ind1, tf.int32), updates=lamb)
 
     return weights
 

@@ -672,7 +672,9 @@ def update_write_particle(cfg, state):
         # )
 
         rng = srange(message="write_particle_save", color="white")
-        df = cudf.DataFrame(np.array(array))
+        array = tf.experimental.dlpack.to_dlpack(array)
+        array = cp.from_dlpack(array)
+        df = cudf.DataFrame(array)
         df.columns = ["Id", "x", "y", "z", "rh", "t", "englt", "topg", "thk"] # for some reason, my header shows '# Id' for the numpy version but 'Id' for GPU... fyi
         df.to_csv(f"{f[:-4]}_cudf.csv", index=False)
         erange(rng)

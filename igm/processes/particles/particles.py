@@ -126,7 +126,7 @@ def interpolate_particles_2d(U, V, W, thk, topg, smb, indices):
 
     # rng = srange(message="interpolating_u (numba)", color="black")
 
-    rng = srange(message="numba_tf_to_cupy", color="white")
+    # rng = srange(message="numba_tf_to_cupy", color="white")
     U_numba = tf.experimental.dlpack.to_dlpack(U)
     U_numba = cp.from_dlpack(U_numba)
 
@@ -150,9 +150,9 @@ def interpolate_particles_2d(U, V, W, thk, topg, smb, indices):
         tf.expand_dims(tf.constant(smb), axis=0)
     )
     smb_numba = cp.from_dlpack(smb_numba)
-    erange(rng)
+    # erange(rng)
 
-    rng = srange(message="numba create_arrays_and_interpolate", color="white")
+    # rng = srange(message="numba create_arrays_and_interpolate", color="white")
 
     # Creating different streams as computations are independent and will help with latency hiding / avoiding default stream and cuda memfree
     stream_u = cuda.stream()
@@ -199,9 +199,9 @@ def interpolate_particles_2d(U, V, W, thk, topg, smb, indices):
     interpolate_2d[blockspergrid, threadsperblock, stream_smb](
         smb_device, smb_numba, array_particles, 1
     )
-    erange(rng)
+    # erange(rng)
 
-    rng_outer = srange(message="numba_cupy_to_tf", color="white")
+    # rng_outer = srange(message="numba_cupy_to_tf", color="white")
 
     u = cp.asarray(u_device)
     u = tf.experimental.dlpack.from_dlpack(u.toDlpack())
@@ -224,60 +224,33 @@ def interpolate_particles_2d(U, V, W, thk, topg, smb, indices):
     smb = tf.experimental.dlpack.from_dlpack(smb.toDlpack())
     smb = tf.squeeze(smb, axis=0)
 
-    erange(rng_outer)
-
-    # print('u error', tf.reduce_mean(abs((u_tf - u)))) # absolute error since nans
-    # print('v error', tf.reduce_mean(abs((v_tf - v)))) # absolute error since nans
-    # print('w error', tf.reduce_mean(abs((w_tf - w)))) # absolute error since nans
-    # print('thk error', tf.reduce_mean(abs((thk_tf - thk)))) # absolute error since nans
-    # print('topg error', tf.reduce_mean(abs((topg_tf - topg)/topg_tf)))
-    # print('smb error', tf.reduce_mean(abs((smb_tf - smb)/smb_tf)))
-    print("NUMBER OF PARTICLES", number_of_particles)
-
-    # print(u.shape, u_tf.shape)
-    # print(v.shape, v_tf.shape)
-    # print(thk.shape, thk_tf.shape)
-    # print(topg.shape, topg_tf.shape)
-    # print(smb.shape, smb_tf.shape)
-    # exit()
-
     return u, v, w, thk, topg, smb
 
-
-# @tf.function(input_signature=[tf.TensorSpec(shape=None, dtype=tf.float32),
-#                               tf.TensorSpec(shape=None, dtype=tf.float32),
-#                               tf.TensorSpec(shape=[], dtype=tf.float32),
-#                                 tf.TensorSpec(shape=[None, None, None, None], dtype=tf.float32)])
 def get_weights(vertical_spacing, number_z_layers, particle_r, u):
     "What is this function doing? Name it properly.."
-    # print("tracing weights")
+
     zeta = _rhs_to_zeta(vertical_spacing, particle_r)  # get the position in the column
-    # I0 = tf.cast(
-    #     tf.math.floor(zeta * (number_z_layers - 1)),
-    #     dtype="int32",
-    # )
-    rng = srange(message="casting zeta", color="black")
+
+    # rng = srange(message="casting zeta", color="black")
     I0 = tf.math.floor(zeta * (number_z_layers - 1))
-    erange(rng)
+    # erange(rng)
     I0 = tf.minimum(I0, number_z_layers - 2)  # make sure to not reach the upper-most pt
     I1 = I0 + 1
 
-    rng = srange(message="casting I0 and I1", color="black")
-    # zeta0 = tf.cast(I0 / (number_z_layers - 1), dtype="float32")
-    # zeta1 = tf.cast(I1 / (number_z_layers - 1), dtype="float32")
+    # rng = srange(message="casting I0 and I1", color="black")
     zeta0 = I0 / (number_z_layers - 1)
     zeta1 = I1 / (number_z_layers - 1)
-    erange(rng)
+    # erange(rng)
 
     lamb = (zeta - zeta0) / (zeta1 - zeta0)
 
     # print(I0.dtype, I1.dtype)
-    rng = srange(message="transposes", color="black")
+    # rng = srange(message="transposes", color="black")
     # ind0 = tf.transpose(tf.stack([I0, tf.range(I0.shape[0], dtype=tf.float32)]))
     # ind1 = tf.transpose(tf.stack([I1, tf.range(I1.shape[0], dtype=tf.float32)]))
     ind0 = tf.stack([I0, tf.range(I0.shape[0], dtype=tf.float32)], axis=1)
     ind1 = tf.stack([I1, tf.range(I1.shape[0], dtype=tf.float32)], axis=1)
-    erange(rng)
+    # erange(rng)
 
     weights = tf.zeros_like(u)
     weights = tf.tensor_scatter_nd_add(
@@ -303,7 +276,7 @@ def update(cfg, state):
         state.t.numpy() - state.tlast_seeding
     ) >= cfg.processes.particles.frequency_seeding:
 
-        rng = srange(message="seeding_particles", color="black")
+        # rng = srange(message="seeding_particles", color="black")
         # seed new particles
         (
             nparticle_x,
@@ -316,9 +289,9 @@ def update(cfg, state):
             nparticle_topg,
             nparticle_thk,
         ) = seeding_particles(cfg, state)
-        erange(rng)
+        # erange(rng)
 
-        rng = srange(message="concat_new_particles", color="blue")
+        # rng = srange(message="concat_new_particles", color="blue")
         # merge the new seeding points with the former ones
         particle_x = tf.Variable(
             tf.concat([state.particle_x, nparticle_x], axis=-1), trainable=False
@@ -350,7 +323,7 @@ def update(cfg, state):
         #     tf.concat([state.particle_thk, nparticle_thk], axis=-1),
         #     trainable=False,
         # )
-        erange(rng)
+        # erange(rng)
 
         state.tlast_seeding = state.t.numpy()
     else:
@@ -384,7 +357,7 @@ def update(cfg, state):
         # rng_reading = srange(message="reading_from_state", color="blue")
         # erange(rng_reading)
 
-        rng = srange(message="interpolate_bilinear_section", color="red")
+        # rng = srange(message="interpolate_bilinear_section", color="red")
         u, v, w, thk, topg, smb = (
             interpolate_particles_2d(  # only need smb for the simple tracking
                 U_input,
@@ -396,11 +369,11 @@ def update(cfg, state):
                 indices,
             )
         )
-        erange(rng)
+        # erange(rng)
         state.particle_thk = thk
         state.particle_topg = topg
 
-        rng = srange(message="misc_compuations", color="green")
+        # rng = srange(message="misc_compuations", color="green")
         vertical_spacing = cfg.processes.iceflow.iceflow.vert_spacing
         number_z_layers = cfg.processes.iceflow.iceflow.Nz
         weights = get_weights(
@@ -410,9 +383,9 @@ def update(cfg, state):
             u=u,
         )
 
-        erange(rng)
+        # erange(rng)
 
-        rng = srange(message="compute_new_particle_locations", color="red")
+        # rng = srange(message="compute_new_particle_locations", color="red")
         particle_x = particle_x + state.dt * tf.reduce_sum(weights * u, axis=0)
         particle_y = particle_y + state.dt * tf.reduce_sum(weights * v, axis=0)
         particle_z = particle_z + state.dt * tf.reduce_sum(weights * w, axis=0)
@@ -423,9 +396,9 @@ def update(cfg, state):
         particle_r = (state.particle_z - topg) / thk
         # if thk=0, state.rhpos takes value nan, so we set rhpos value to one in this case :
         state.particle_r = tf.where(thk == 0, tf.ones_like(particle_r), particle_r)
-        erange(rng)
+        # erange(rng)
 
-        rng = srange(message="final_computations", color="yellow")
+        # rng = srange(message="final_computations", color="yellow")
         # make sur the particle remains in the horiz. comp. domain
         state.particle_x = tf.clip_by_value(particle_x, 0, state.x[-1] - state.x[0])
         state.particle_y = tf.clip_by_value(particle_y, 0, state.y[-1] - state.y[0])
@@ -458,7 +431,7 @@ def update(cfg, state):
 
         #    if int(state.t)%10==0:
         #        print("nb of part : ",state.xpos.shape)
-        erange(rng)
+        # erange(rng)
 
     if cfg.processes.particles.write_trajectories:
         rng = srange(message="update_write_particle", color="yellow")
@@ -543,79 +516,6 @@ def seeding_particles(cfg, state):
     )
 
 
-# def seeding_particles(cfg, state):
-#     """
-#     here we define (xpos,ypos) the horiz coordinate of tracked particles
-#     and rhpos is the relative position in the ice column (scaled bwt 0 and 1)
-
-#     here we seed only the accum. area (a bit more), where there is
-#     significant ice, and in some points of a regular grid state.gridseed
-#     (density defined by density_seeding)
-
-#     """
-
-#     # ! THK and SMB modules are required. Insert in the init function of the particles module (actually, don't because the modules can be
-#     # ! initialized in any order, and the particles module is not guaranteed to be initialized after the thk and smb modules)
-#     # ! Instead, insert it HERE when needed (although it might call it multiple times and be less efficient...)
-
-#     if not hasattr(state, "thk"):
-#         raise ValueError("The thk module is required to use the particles module")
-#     if not hasattr(state, "smb"):
-#         raise ValueError(
-#             "A smb module is required to use the particles module. Please use the built-in smb module or create a custom one that overwrites the 'state.smb' value."
-#         )
-
-
-#     I = (
-#         (state.thk > 1) & state.gridseed & (state.smb > 0)
-#     )  # here you may redefine how you want to seed particles
-#     rng = srange(message="creating seeding field", color="black")
-#     seeding_condition = (state.thk > 1) & state.gridseed & (state.smb > 0)
-#     seeding_indices = tf.where(seeding_condition, 1.0, 0.0)
-#     erange(rng)
-
-#     # print(state.X, state.x, state.Y, state.y, state.usurf[I])
-#     # exit()
-#     rng = srange(message="finding positions and weights", color="black")
-#     print(I)
-#     print(state.X)
-#     print(state.X[I])
-#     print(state.x)
-#     nparticle_x = state.X[I] - state.x[0]  # x position of the particle
-#     # nparticle_x = tf.where(I, ) - state.x[0]  # x position of the particle
-#     print(nparticle_x)
-#     # exit()
-#     nparticle_y = state.Y[I] - state.y[0]  # y position of the particle
-#     nparticle_z = state.usurf[I]  # z position of the particle
-#     nparticle_r = tf.ones_like(state.X[I])  # relative position in the ice column
-#     nparticle_w = tf.ones_like(state.X[I])  # weight of the particle
-#     erange(rng)
-
-
-#     rng = srange(message="other useful info", color="black")
-#     nparticle_t = (
-#         tf.ones_like(state.X[I]) * state.t
-#     )  # "date of birth" of the particle (useful to compute its age)
-#     nparticle_englt = tf.zeros_like(
-#         state.X[I]
-#     )  # time spent by the particle burried in the glacier
-#     nparticle_thk = state.thk[I]  # ice thickness at position of the particle
-#     nparticle_topg = state.topg[I]  # z position of the bedrock under the particle
-#     erange(rng)
-
-#     return (
-#         nparticle_x,
-#         nparticle_y,
-#         nparticle_z,
-#         nparticle_r,
-#         nparticle_w,
-#         nparticle_t,
-#         nparticle_englt,
-#         nparticle_topg,
-#         nparticle_thk,
-#     )
-
-
 def initialize_write_particle(cfg, state):
 
     directory = "trajectories"
@@ -640,7 +540,7 @@ def update_write_particle(cfg, state):
 
     if state.saveresult:
 
-        rng = srange(message="write_particle_compute", color="white")
+        # rng = srange(message="write_particle_compute", color="white")
         f = os.path.join(
             "trajectories",
             "traj-" + "{:06d}".format(int(state.t.numpy())) + ".csv",
@@ -665,28 +565,28 @@ def update_write_particle(cfg, state):
                 axis=0,
             )
         )
-        erange(rng)
+        # erange(rng)
 
         # np.savetxt(
         #     f, array, delimiter=",", fmt="%.2f", header="Id,x,y,z,rh,t,englt,topg,thk"
         # )
 
-        rng = srange(message="write_particle_save", color="white")
+        # rng = srange(message="write_particle_save", color="white")
         array = tf.experimental.dlpack.to_dlpack(array)
         array = cp.from_dlpack(array)
         df = cudf.DataFrame(array)
         df.columns = ["Id", "x", "y", "z", "rh", "t", "englt", "topg", "thk"] # for some reason, my header shows '# Id' for the numpy version but 'Id' for GPU... fyi
         df.to_csv(f"{f[:-4]}_cudf.csv", index=False)
-        erange(rng)
+        # erange(rng)
         # df.to_parquet(path=f"{f}.parquet")
 
-        rng = srange(message="write_particle_time", color="white")
+        # rng = srange(message="write_particle_time", color="white")
         ft = os.path.join("trajectories", "time.dat")
         with open(ft, "a") as f:
             print(state.t.numpy(), file=f)
-        erange(rng)
+        # erange(rng)
 
-        rng = srange(message="write_particle_topography", color="white")
+        # rng = srange(message="write_particle_topography", color="white")
         if cfg.processes.particles.add_topography:
             ftt = os.path.join(
                 "trajectories",
@@ -702,56 +602,4 @@ def update_write_particle(cfg, state):
                 )
             )
             np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
-        erange(rng)
-
-
-# def update_write_particle(cfg, state):
-#     if state.saveresult:
-
-#         f = os.path.join(
-#             "trajectories",
-#             "traj-" + "{:06d}".format(int(state.t.numpy())) + ".csv",
-#         )
-
-#         ID = tf.cast(tf.range(state.particle_x.shape[0]), dtype="float32")
-#         array = tf.transpose(
-#             tf.stack(
-#                 [
-#                     ID,
-#                     state.particle_x.numpy().astype(np.float64)
-#                     + state.x[0].numpy().astype(np.float64),
-#                     state.particle_y.numpy().astype(np.float64)
-#                     + state.y[0].numpy().astype(np.float64),
-#                     state.particle_z,
-#                     state.particle_r,
-#                     state.particle_t,
-#                     state.particle_englt,
-#                     state.particle_topg,
-#                     state.particle_thk,
-#                 ],
-#                 axis=0,
-#             )
-#         )
-#         np.savetxt(
-#             f, array, delimiter=",", fmt="%.2f", header="Id,x,y,z,rh,t,englt,topg,thk"
-#         )
-
-#         ft = os.path.join("trajectories", "time.dat")
-#         with open(ft, "a") as f:
-#             print(state.t.numpy(), file=f)
-
-#         if cfg.processes.particles.add_topography:
-#             ftt = os.path.join(
-#                 "trajectories",
-#                 "usurf-" + "{:06d}".format(int(state.t.numpy())) + ".csv",
-#             )
-#             array = tf.transpose(
-#                 tf.stack(
-#                     [
-#                         state.X[state.X > 1],
-#                         state.Y[state.X > 1],
-#                         state.usurf[state.X > 1],
-#                     ]
-#                 )
-#             )
-#             np.savetxt(ftt, array, delimiter=",", fmt="%.2f", header="x,y,z")
+        # erange(rng)

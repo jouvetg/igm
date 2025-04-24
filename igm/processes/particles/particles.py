@@ -62,6 +62,48 @@ def initialize(cfg, state):
     if cfg.processes.particles.write_trajectories:
         initialize_write_particle(cfg, state)
 
+def interpolate_bilinear_custom(grid_2d, sampling_points):
+    """Bilinear interpolation on a 2D regular grid.
+
+    Args:
+        grid_2d: A tensor with shape `[A1, ..., An, H, W, C]` where H and W are
+        height and width of the grid and C is the number of channels.
+        sampling_points: A tensor with shape `[A1, ..., An, M, 2]` where M is the
+        number of sampling points. Sampling points outside the grid are projected
+        in the grid borders.
+        name:  A name for this op that defaults to "bilinear_interpolate".
+
+    Returns:
+        A tensor of shape `[A1, ..., An, M, C]`
+    """
+    grid_shape = tf.shape(grid_2d)[-3:-1]
+    batch_dims = tf.shape(sampling_points)[:-2]
+    num_points = tf.shape(sampling_points)[-2]
+
+    bottom_left = tf.floor(sampling_points)
+    top_right = bottom_left + 1
+    bottom_left_index = tf.cast(bottom_left, tf.int32)
+    top_right_index = tf.cast(top_right, tf.int32)
+    x0_index, y0_index = tf.unstack(bottom_left_index, axis=-1)
+    x1_index, y1_index = tf.unstack(top_right_index, axis=-1)
+    index_x = tf.concat([x0_index, x1_index, x0_index, x1_index], axis=-1)
+    index_y = tf.concat([y0_index, y0_index, y1_index, y1_index], axis=-1)
+    indices = tf.stack([index_x, index_y], axis=-1)
+    clip_value = tf.convert_to_tensor([grid_shape - 1], dtype=indices.dtype)
+    indices = tf.clip_by_value(indices, 0, clip_value)
+    content = tf.gather_nd(grid_2d, indices, batch_dims=tf.size(batch_dims))
+    distance_to_bottom_left = sampling_points - bottom_left
+    distance_to_top_right = top_right - sampling_points
+    x_x0, y_y0 = tf.unstack(distance_to_bottom_left, axis=-1)
+    x1_x, y1_y = tf.unstack(distance_to_top_right, axis=-1)
+    weights_x = tf.concat([x1_x, x_x0, x1_x, x_x0], axis=-1)
+    weights_y = tf.concat([y1_y, y1_y, y_y0, y_y0], axis=-1)
+    weights = tf.expand_dims(weights_x * weights_y, axis=-1)
+
+    interpolated_values = weights * content
+
+    return tf.add_n(tf.split(interpolated_values, [num_points] * 4, -2))
+
 
 @cuda.jit # device function vs ufunc?
 def interpolate_2d(interpolated_grid, grid_values, array_particles, depth):
@@ -70,72 +112,146 @@ def interpolate_2d(interpolated_grid, grid_values, array_particles, depth):
     if particle_id < array_particles.shape[0]:
         
         for depth_layer in range(depth):
-            x_pos = array_particles[particle_id, 0]
-            y_pos = array_particles[particle_id, 1]
+
+            y_pos = array_particles[particle_id, 0]
+            x_pos = array_particles[particle_id, 1]
             
             x_1 = int(x_pos) # left x coordinate
             y_1 = int(y_pos) # bottom y coordinate
             x_2 = x_1 + 1 # right x coordinate
             y_2 = y_1 + 1 # top y coordinate
             
+            # print("depth_layer", depth_layer)
+            # print("y_1", y_1)
+            # print("x_1", x_1)
             
             Q_11 = grid_values[depth_layer, y_1, x_1] # bottom left corner
             Q_12 = grid_values[depth_layer, y_2, x_1] # top left corner
             Q_21 = grid_values[depth_layer, y_1, x_2] # bottom right corner
             Q_22 = grid_values[depth_layer, y_2, x_2] # top right corner
             
+            # print("Q_11", Q_11)
+            # print("Q_12", Q_12)
+            # print("Q_21", Q_21)
+            # print("Q_22", Q_22)
+            
             # Interpolating on x
             dx = (x_2 - x_1)
             x_left_weight = (x_pos - x_1) / dx
             x_right_weight = (x_2 - x_pos) / dx
-            R_1 = x_left_weight * Q_11 + x_right_weight * Q_21 # bottom x interpolation for fixed y_1 (f(x, y_1))
-            R_2 = x_left_weight * Q_12 + x_right_weight * Q_22 # top x interpolation for fixed y_2 (f(x, y_2))
-            
+            R_1 = x_left_weight * Q_21 + x_right_weight * Q_11 # bottom x interpolation for fixed y_1 (f(x, y_1))
+            R_2 = x_left_weight * Q_22 + x_right_weight * Q_12 # top x interpolation for fixed y_2 (f(x, y_2))
+                        
             # Interpolating on y
             dy = (y_2 - y_1)
             y_bottom_weight = (y_pos - y_1) / dy
             y_top_weight = (y_2 - y_pos) / dy
             
-            P = y_bottom_weight * R_1 + y_top_weight * R_2 # final interpolation for fixed x (f(x, y))
-            
+            P = y_bottom_weight * R_2 + y_top_weight * R_1 # final interpolation for fixed x (f(x, y))
             interpolated_grid[depth_layer, particle_id] = P
+
+# @cuda.jit # device function vs ufunc?
+# def interpolate_2d(interpolated_grid, grid_values, array_particles, depth):
+#     particle_id = cuda.threadIdx.x + cuda.blockIdx.x * cuda.blockDim.x
+    
+#     if particle_id < array_particles.shape[0]:
+        
+#         for depth_layer in range(depth):
+#             x_pos = array_particles[particle_id, 0]
+#             y_pos = array_particles[particle_id, 1]
+            
+#             x_1 = int(x_pos) # left x coordinate
+#             y_1 = int(y_pos) # bottom y coordinate
+#             x_2 = x_1 + 1 # right x coordinate
+#             y_2 = y_1 + 1 # top y coordinate
+            
+            
+#             Q_11 = grid_values[depth_layer, y_1, x_1] # bottom left corner
+#             Q_12 = grid_values[depth_layer, y_2, x_1] # top left corner
+#             Q_21 = grid_values[depth_layer, y_1, x_2] # bottom right corner
+#             Q_22 = grid_values[depth_layer, y_2, x_2] # top right corner
+            
+#             # Interpolating on x
+#             dx = (x_2 - x_1)
+#             x_left_weight = (x_pos - x_1) / dx
+#             x_right_weight = (x_2 - x_pos) / dx
+#             R_1 = x_left_weight * Q_11 + x_right_weight * Q_21 # bottom x interpolation for fixed y_1 (f(x, y_1))
+#             R_2 = x_left_weight * Q_12 + x_right_weight * Q_22 # top x interpolation for fixed y_2 (f(x, y_2))
+            
+#             # Interpolating on y
+#             dy = (y_2 - y_1)
+#             y_bottom_weight = (y_pos - y_1) / dy
+#             y_top_weight = (y_2 - y_pos) / dy
+            
+#             P = y_bottom_weight * R_1 + y_top_weight * R_2 # final interpolation for fixed x (f(x, y))
+#             print("P", P)
+#             interpolated_grid[depth_layer, particle_id] = P
 
 def interpolate_particles_2d(U, V, thk, topg, smb, indices):
     # print("tracing interpolate_particles_2d")
     
-    rng = srange(message="interpolating_u (numba)", color="black")
     depth = U.shape[0]
     number_of_particles = indices.shape[1]
     
-    grid = tf.experimental.dlpack.to_dlpack(U)
-    grid = cp.from_dlpack(grid)
+    # rng = srange(message="interpolating_u (numba)", color="black")
+    print("UUUUU", U)
     
-    indices_numba = tf.squeeze(indices)
-    particles = tf.experimental.dlpack.to_dlpack(indices_numba) # (N, 2) instead of (1, N, 2)
+    U_numba = tf.experimental.dlpack.to_dlpack(U)
+    U_numba = cp.from_dlpack(U_numba)
+    # U = cuda.as_cuda_array(U_numba)
+    
+    indices_numba = tf.squeeze(indices) # (N, 2) instead of (1, N, 2)
+    particles = tf.experimental.dlpack.to_dlpack(indices_numba)
     array_particles = cp.from_dlpack(particles)
+    # array_particles = cuda.as_cuda_array(array_particles)
         
     threadsperblock = 32
     blockspergrid = math.ceil(number_of_particles / threadsperblock)
     
-    u = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
-    interpolate_2d[blockspergrid, threadsperblock](u, grid, array_particles, depth)
-    u = cp.asarray(u)
-    u_numba = tf.experimental.dlpack.from_dlpack(u.toDlpack())
-    erange(rng)
-
-    rng = srange(message="interpolating_u (tf)", color="white")
-    u = interpolate_bilinear_tf(
+    u_device = cuda.device_array(shape=(depth, number_of_particles), dtype="float32")
+    # print(array_particles.shape)
+    # print('number of particles', number_of_particles)
+    # exit()
+    # print(array_particles)
+    interpolate_2d[blockspergrid, threadsperblock](u_device, U_numba, array_particles, depth)
+    print(U_numba.shape)
+    # u = cp.array(u_device)
+    u = cp.asarray(u_device)
+    u = tf.experimental.dlpack.from_dlpack(u.toDlpack())
+    # erange(rng)
+    
+    # rng = srange(message="interpolating_u (tf)", color="white")
+    u_tf = interpolate_bilinear_tf(
         tf.expand_dims(U, axis=-1),
         indices,
         indexing="ij",
-    )   
-    erange(rng)
+    )
+    
+    # u_custom = interpolate_bilinear_custom(
+    #     tf.expand_dims(U, axis=-1),
+    #     indices,
+    # )
+    u = u_tf[:, :, 0]
+    # u_tf = u_tf[:, :, 0]
+    
+    # erange(rng)
 
-    rng = srange(message="slicing_u", color="pink")
-    # print("U shape", U.shape, u.shape)
-    u = u[:, :, 0]
-    erange(rng)
-
+    # rng = srange(message="slicing_u", color="pink")
+    # print("U shape", U.shape, u.shape, u_tf.shape)
+    # erange(rng)
+    # print("UUUUU_numba", U_numba)
+    # print(tf.reduce_max(u))
+    # print(tf.reduce_max(u_device))
+    # print(tf.reduce_mean(abs(u - u_tf)))
+    # print(tf.reduce_max(abs(u - u_tf)))
+    # plt.figure()
+    # plt.imshow(u)
+    # plt.imshow(u_tf)
+    # plt.show()
+    # exit()
+    # print(tf.reduce_mean(abs(u - u_tf)))
+    # print(tf.reduce_max(abs(u - u_tf)))
+    
     rng = srange(message="interpolating_v", color="white")
     v = interpolate_bilinear_tf(
         tf.expand_dims(V, axis=-1),
@@ -332,8 +448,8 @@ def update(cfg, state):
         state.particle_topg = topg
 
         rng = srange(message="misc_compuations", color="green")
-        vertical_spacing = cfg.processes.iceflow.iceflow.vert_spacing
-        number_z_layers = cfg.processes.iceflow.iceflow.Nz
+        vertical_spacing = cfg.processes.iceflow.numerics.vert_spacing
+        number_z_layers = cfg.processes.iceflow.numerics.Nz
         weights = get_weights(
             vertical_spacing=vertical_spacing,
             number_z_layers=number_z_layers,

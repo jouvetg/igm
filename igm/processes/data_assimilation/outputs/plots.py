@@ -104,21 +104,37 @@ def update_plot_inversion(cfg, state, i):
 
     from matplotlib import colors
 
-    im1 = ax2.imshow(
-        state.slidingco,
-        origin="lower",
-#        norm=colors.LogNorm(),
-        vmin=0.01,
-        vmax=0.06,
-        cmap=cmap,
-#        tf.sqrt(state.slidingco/1.0e-6),
-#        vmin=100,
-#        vmax=500,
-    )
-    if i == 0:
-        plt.colorbar(im1, format="%.2f", ax=ax2)
-    ax2.set_title("Iteration " + str(i) + " \n Sliding coefficient", size=12)
-    ax2.axis("off")
+    if "arrhenius" in cfg.processes.data_assimilation.control_list:
+
+        im1 = ax2.imshow(
+            state.arrhenius,
+            origin="lower", 
+            vmin=1,
+            vmax=100,
+            cmap=cmap, 
+        )
+        if i == 0:
+            plt.colorbar(im1, format="%.2f", ax=ax2)
+        ax2.set_title("Iteration " + str(i) + " \n Arrhenius coefficient", size=12)
+        ax2.axis("off")
+
+    else:
+
+        im1 = ax2.imshow(
+            state.slidingco,
+            origin="lower",
+    #        norm=colors.LogNorm(),
+            vmin=0.01,
+            vmax=0.10,
+            cmap=cmap,
+    #        tf.sqrt(state.slidingco/1.0e-6),
+    #        vmin=100,
+    #        vmax=500,
+        )
+        if i == 0:
+            plt.colorbar(im1, format="%.2f", ax=ax2)
+        ax2.set_title("Iteration " + str(i) + " \n Sliding coefficient", size=12)
+        ax2.axis("off")
 
     ########################################################
 

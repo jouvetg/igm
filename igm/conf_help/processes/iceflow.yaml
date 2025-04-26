@@ -132,6 +132,10 @@ emulator:
     Type: None
     Description: "Initial Learning rate for the retraining of the emulator"
     Units: dimless
+  lr_decay:
+    Type: float
+    Description: "Decay learning rate parameter for the training"
+    Units: dimless
   warm_up_it:
     Type: year
     Description: "Warm-up nb of iteration allowing intense initial training"

@@ -153,7 +153,7 @@ def update_iceflow_emulated(cfg, state):
     update_2d_iceflow_variables(cfg, state)
 
 
-def update_iceflow_emulator(cfg, state, it):
+def update_iceflow_emulator(cfg, state, it, pertubate=False):
  
     run_it = False
     if cfg.processes.iceflow.emulator.retrain_freq > 0:
@@ -165,23 +165,15 @@ def update_iceflow_emulator(cfg, state, it):
         
         fieldin = [vars(state)[f] for f in cfg.processes.iceflow.emulator.fieldin]
 
-########################
+        XX = fieldin_to_X(cfg, fieldin) 
 
-        # thkext = tf.pad(state.thk,[[1,1],[1,1]],"CONSTANT",constant_values=1)
-        # # this permits to locate the calving front in a cell in the 4 directions
-        # state.CF_W = tf.where((state.thk>0)&(thkext[1:-1,:-2]==0),1.0,0.0)
-        # state.CF_E = tf.where((state.thk>0)&(thkext[1:-1,2:]==0),1.0,0.0) 
-        # state.CF_S = tf.where((state.thk>0)&(thkext[:-2,1:-1]==0),1.0,0.0)
-        # state.CF_N = tf.where((state.thk>0)&(thkext[2:,1:-1]==0),1.0,0.0)
-
-########################
-
-        XX = fieldin_to_X(cfg, fieldin)
+        if pertubate:
+            XX = pertubate_X(cfg, XX)  
 
         X = split_into_patches(XX, cfg.processes.iceflow.emulator.framesizemax)
-        
-        Ny = X.shape[1]
-        Nx = X.shape[2]
+ 
+        Ny = X.shape[-3]
+        Nx = X.shape[-2]
         
         PAD = compute_PAD(cfg,Nx,Ny)
 
@@ -193,8 +185,6 @@ def update_iceflow_emulator(cfg, state, it):
         else:
             nbit = cfg.processes.iceflow.emulator.nbit
             lr = cfg.processes.iceflow.emulator.lr
-
-        state.opti_retrain.lr = lr
 
         iz = cfg.processes.iceflow.emulator.exclude_borders 
 
@@ -211,12 +201,15 @@ def update_iceflow_emulator(cfg, state, it):
             for i in range(X.shape[0]):
                 with tf.GradientTape() as t:
 
-                    Y = state.iceflow_model(tf.pad(X[i:i+1, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
+                    if cfg.processes.iceflow.emulator.lr_decay < 1:
+                        state.opti_retrain.lr = lr * (cfg.processes.iceflow.emulator.lr_decay ** (i / 1000))
+
+                    Y = state.iceflow_model(tf.pad(X[i, :, :, :, :], PAD, "CONSTANT"))[:,:Ny,:Nx,:]
                     
                     if iz>0:
-                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
+                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[i, :, iz:-iz, iz:-iz, :], Y[:, iz:-iz, iz:-iz, :])
                     else:
-                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[i : i + 1, :, :, :], Y[:, :, :, :])
+                        C_shear, C_slid, C_grav, C_float = iceflow_energy_XY(cfg, X[i, :, :, :, :], Y[:, :, :, :])
  
                     C_shear_cost = tf.reduce_mean(C_shear)
                     C_slid_cost  = tf.reduce_mean(C_slid)
@@ -224,16 +217,6 @@ def update_iceflow_emulator(cfg, state, it):
                     C_float_cost = tf.reduce_mean(C_float)
 
                     COST = C_shear_cost + C_slid_cost + C_grav_cost + C_float_cost
-                    
-                    # if (epoch + 1) % 100 == 0:
-                    #     print("---------- > ", tf.reduce_mean(C_shear).numpy(), tf.reduce_mean(C_slid).numpy(), tf.reduce_mean(C_grav).numpy(), tf.reduce_mean(C_float).numpy())
-
-#                    state.C_shear = tf.pad(C_shear[0],[[0,1],[0,1]],"CONSTANT")
-#                    state.C_slid  = tf.pad(C_slid[0],[[0,1],[0,1]],"CONSTANT")
-#                    state.C_grav  = tf.pad(C_grav[0],[[0,1],[0,1]],"CONSTANT")
-#                    state.C_float = C_float[0] 
-
-                    # print(state.C_shear.shape, state.C_slid.shape, state.C_grav.shape, state.C_float.shape,state.thk.shape )
 
                     cost_emulator = cost_emulator + COST
 
@@ -241,7 +224,7 @@ def update_iceflow_emulator(cfg, state, it):
 
                     if warm_up:
                         print_info(state, epoch, C_shear_cost.numpy(), C_slid_cost.numpy(), \
-                                           C_grav_cost.numpy(), COST.numpy(), tf.reduce_max(velsurf_mag).numpy())
+                                          C_grav_cost.numpy(), COST.numpy(), tf.reduce_max(velsurf_mag).numpy())
 
                     if (epoch + 1) % 100 == 0:
                          
@@ -273,9 +256,7 @@ def update_iceflow_emulator(cfg, state, it):
                 )
 
 #               gradient_norm = tf.linalg.global_norm(grads)
-
-                state.opti_retrain.lr = lr * (0.95 ** (epoch / 1000))
-
+ 
             state.COST_EMULATOR.append(cost_emulator)
     
     if len(cfg.processes.iceflow.emulator.save_cost)>0:
@@ -294,9 +275,24 @@ def split_into_patches(X, nbmax):
 
     for i in range(sx):
         for j in range(sy):
-            XX.append(X[0, j * ly : (j + 1) * ly, i * lx : (i + 1) * lx, :])
+            XX.append(X[:, j * ly : (j + 1) * ly, i * lx : (i + 1) * lx, :])
 
     return tf.stack(XX, axis=0)
+
+def pertubate_X(cfg, X):
+
+    XX = [X]
+
+    for i,f in enumerate(cfg.processes.iceflow.emulator.fieldin):
+
+        vec = [tf.ones_like(X[:,:,:,i])*(i==j) for j in range(X.shape[3])]
+        vec = tf.stack(vec, axis=-1)
+ 
+        if f in cfg.processes.data_assimilation.control_list:
+            XX.append(X + X*vec*0.2)
+            XX.append(X - X*vec*0.2)
+ 
+    return tf.concat(XX, axis=0)
 
 
 def save_iceflow_model(cfg, state):

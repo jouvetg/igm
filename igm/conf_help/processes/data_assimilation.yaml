@@ -56,6 +56,10 @@ optimization:
     Type: float
     Description: "A small constant for numerical stability for the Adam optimizer"
     Units: dimless
+  pertubate:
+    Type: boolean
+    Description: "Perturbate the emulator for training to get better gradients estimates along controls to be optimized"
+    Units: dimless
 
 regularization:
   thk:

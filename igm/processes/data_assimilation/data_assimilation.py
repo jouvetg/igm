@@ -38,7 +38,8 @@ def initialize(cfg, state):
             
         # retraning the iceflow emulator
         if cfg.processes.data_assimilation.optimization.retrain_iceflow_model:
-            update_iceflow_emulator(cfg, state, i+1) 
+            update_iceflow_emulator(cfg, state, i+1, 
+                                    pertubate=cfg.processes.data_assimilation.optimization.pertubate) 
             cost["glen"] = state.COST_EMULATOR[-1]
             
         print_costs(cfg, state, cost, i)

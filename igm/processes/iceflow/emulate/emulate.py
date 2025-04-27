@@ -186,6 +186,8 @@ def update_iceflow_emulator(cfg, state, it, pertubate=False):
             nbit = cfg.processes.iceflow.emulator.nbit
             lr = cfg.processes.iceflow.emulator.lr
 
+        state.opti_retrain.lr = lr 
+
         iz = cfg.processes.iceflow.emulator.exclude_borders 
 
         if cfg.processes.iceflow.emulator.plot_sol:

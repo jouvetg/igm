@@ -83,7 +83,7 @@ def update_plot_inversion(cfg, state, i):
         origin="lower",
         extent=state.extent,
         vmin=0,
-        vmax=np.quantile(state.thk, 0.98),
+        vmax=np.quantile(state.thk, 0.999),
         cmap=cmap,
     )
     if i == 0:
@@ -107,10 +107,10 @@ def update_plot_inversion(cfg, state, i):
     if "arrhenius" in cfg.processes.data_assimilation.control_list:
 
         im1 = ax2.imshow(
-            state.arrhenius,
+            np.ma.masked_where(state.thk == 0, state.arrhenius),
             origin="lower", 
-            vmin=1,
-            vmax=100,
+            vmin=0,
+            vmax=300,
             cmap=cmap, 
         )
         if i == 0:
@@ -121,7 +121,7 @@ def update_plot_inversion(cfg, state, i):
     else:
 
         im1 = ax2.imshow(
-            state.slidingco,
+            np.ma.masked_where(state.thk == 0, state.slidingco),
             origin="lower",
     #        norm=colors.LogNorm(),
             vmin=0.01,
@@ -166,7 +166,7 @@ def update_plot_inversion(cfg, state, i):
     ax4 = state.axes[1, 0]
 
     im1 = ax4.imshow(
-        velsurf_mag, # np.ma.masked_where(state.thk == 0, velsurf_mag),
+        np.ma.masked_where(state.thk == 0, velsurf_mag),
         origin="lower",
         extent=state.extent,
         norm=matplotlib.colors.LogNorm(vmin=1, vmax=5000),

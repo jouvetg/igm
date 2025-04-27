@@ -70,7 +70,7 @@ def run(cfg, state):
     ds = complete_data(ds)
 
     for variable, array in ds.data_vars.items():
-        if array.ndim>0:
+        if (array.ndim>0)|(variable in ["dx", "dy"]):
             setattr(state, variable, tf.Variable(np.squeeze(array).astype("float32")))
 
     for coord, array in ds.coords.items():

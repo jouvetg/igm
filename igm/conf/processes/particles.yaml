@@ -5,3 +5,4 @@ particles:
   tlast_seeding_init: -1.0e+5000
   write_trajectories: True
   add_topography: True
+  output_format: csv

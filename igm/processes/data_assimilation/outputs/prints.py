@@ -76,5 +76,6 @@ def save_rms_std(cfg, state):
             axis=-1,
         ),
         fmt="%.10f",
+        comments='',
         header="        rmsthk      stdthk       rmsvel       stdvel       rmsdiv       stddiv       rmsusurf       stdusurf",
     )

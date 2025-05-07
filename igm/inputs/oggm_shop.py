@@ -94,6 +94,10 @@ def transform_OGGM_data_into_IGM_readable_data(cfg, state, path_RGI, path_file):
         icemaskobs = np.flipud(np.squeeze(nc.variables["glacier_mask"]).astype("float32"))
         vars_to_save = ["usurf", "thk", "icemask", "usurfobs", "thkobs", "icemaskobs"]
 
+    usurf    -= np.where(icemaskobs, 0, thk) # remove thk from usurf outside glacier mask
+    usurfobs -= np.where(icemaskobs, 0, thk) # remove thk from usurf outside glacier mask
+    thk       = np.where(icemaskobs, thk, 0) # remove thk from usurf outside glacier mask
+
     if cfg.inputs.oggm_shop.vel_source == "millan_ice_velocity":
         if "millan_vx" in nc.variables:
             uvelsurfobs = np.flipud(

@@ -1,6 +1,6 @@
 texture:
   format: png
-  model_path: ${hydra.runtime.cwd}
+  model_path: ""
   verbosity: 30
   divide_by_density: 1
   resolution: -1

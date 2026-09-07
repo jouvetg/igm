@@ -2,6 +2,7 @@ from .interface import InterfaceOptimizer, Status
 from .adam import InterfaceAdam
 from .cg import InterfaceCG
 from .cg_newton import InterfaceCGNewton
+from .gauss_newton import InterfaceGaussNewton
 from .lbfgs import InterfaceLBFGS
 from .muon import InterfaceMuon
 from .newton import InterfaceNewton
@@ -16,6 +17,7 @@ InterfaceOptimizers = {
     "adam_da": InterfaceAdam,
     "cg": InterfaceCG,
     "cg_newton": InterfaceCGNewton,
+    "gauss_newton": InterfaceGaussNewton,
     "lbfgs": InterfaceLBFGS,
     "lbfgs_bounds": InterfaceLBFGS,
     "lbfgs_da": InterfaceLBFGS,

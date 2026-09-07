@@ -139,6 +139,36 @@ iceflow:
         smoother_weight: 0.6666666666666666
         smoother_steps: 1
         coarse_size: 8
+    gauss_newton:
+      cg_max_iter: 50
+      forcing_eta_min: 1.0e-2
+      forcing_eta_max: 0.5
+      forcing_gamma: 0.9
+      forcing_power: 1.5
+      damping_rel_init: 1.0e-2
+      damping_rel_min: 1.0e-8
+      damping_rel_max: 1.0e2
+      lm_ratio_low: 0.25
+      lm_ratio_high: 0.75
+      damping_down: 0.25
+      damping_up: 4.0
+      solve_retries: 3
+      power_iterations: 6
+      armijo_c1: 1.0e-4
+      armijo_contraction: 0.5
+      line_search_max_iter: 12
+      hu_mode: banded
+      probe_mode: autodiff
+      hvp_verify: false
+      preconditioner: auto
+      precond_update_freq: 3
+      print_timing: false
+      nystrom:
+        rank: 32
+        seed: 0
+        sketch_memory_gb: 2.0
+        minimum_rank: 8
+        print_timing: false
     tridiag_newton:
       assembly: probe
       scalar_flowline: false

@@ -501,6 +501,120 @@ unified:
         Type: integer
         Description: "Maximum horizontal size of the bottom multigrid level solved by dense Cholesky."
         Units: dimless
+  gauss_newton:
+    cg_max_iter:
+      Type: integer
+      Description: "Maximum PCG iterations for the damped network-weight Gauss-Newton system."
+      Units: dimless
+    forcing_eta_min:
+      Type: float
+      Description: "Minimum Eisenstat-Walker relative residual tolerance."
+      Units: dimless
+    forcing_eta_max:
+      Type: float
+      Description: "Maximum Eisenstat-Walker relative residual tolerance."
+      Units: dimless
+    forcing_gamma:
+      Type: float
+      Description: "Eisenstat-Walker forcing multiplier."
+      Units: dimless
+    forcing_power:
+      Type: float
+      Description: "Exponent applied to consecutive gradient-norm ratios."
+      Units: dimless
+    damping_rel_init:
+      Type: float
+      Description: "Initial LM damping relative to the estimated largest Gauss-Newton eigenvalue."
+      Units: dimless
+    damping_rel_min:
+      Type: float
+      Description: "Minimum relative LM damping."
+      Units: dimless
+    damping_rel_max:
+      Type: float
+      Description: "Maximum relative LM damping."
+      Units: dimless
+    lm_ratio_low:
+      Type: float
+      Description: "Actual/predicted reduction threshold below which damping increases."
+      Units: dimless
+    lm_ratio_high:
+      Type: float
+      Description: "Actual/predicted reduction threshold above which damping decreases."
+      Units: dimless
+    damping_down:
+      Type: float
+      Description: "Factor used to reduce Gauss-Newton damping after an accurate model step."
+      Units: dimless
+    damping_up:
+      Type: float
+      Description: "Factor used to increase Gauss-Newton damping after a rejected or inaccurate step."
+      Units: dimless
+    solve_retries:
+      Type: integer
+      Description: "Maximum damped-solve retries after negative curvature or line-search rejection."
+      Units: dimless
+    power_iterations:
+      Type: integer
+      Description: "Power iterations used to estimate spectral scale with identity preconditioning."
+      Units: dimless
+    armijo_c1:
+      Type: float
+      Description: "Sufficient-decrease constant for stateless Gauss-Newton trial steps."
+      Units: dimless
+    armijo_contraction:
+      Type: float
+      Description: "Step contraction factor for the Gauss-Newton Armijo search."
+      Units: dimless
+    line_search_max_iter:
+      Type: integer
+      Description: "Maximum stateless cost evaluations in one Gauss-Newton line search."
+      Units: dimless
+    hu_mode:
+      Type: string
+      Description: "Velocity-space Hessian mode: banded or autodiff."
+      Units: dimless
+    probe_mode:
+      Type: string
+      Description: "Probe method used to assemble the banded velocity Hessian."
+      Units: dimless
+    hvp_verify:
+      Type: boolean
+      Description: "Compare the banded velocity Hessian with exact autodiff for debugging."
+      Units: dimless
+    preconditioner:
+      Type: string
+      Description: "Weight-space PCG preconditioner: auto selects Nyström for DahuNet and identity for FNO; explicit choices are identity and nystrom."
+      Units: dimless
+    precond_update_freq:
+      Type: integer
+      Description: "Accepted outer iterations between Nyström sketch refreshes."
+      Units: dimless
+    print_timing:
+      Type: boolean
+      Description: "Print parseable Gauss-Newton preparation, sketch, PCG, and line-search timings."
+      Units: dimless
+    nystrom:
+      rank:
+        Type: integer
+        Description: "Requested randomized Nyström rank."
+        Units: dimless
+      seed:
+        Type: integer
+        Description: "Stateless random seed for Nyström sketches."
+        Units: dimless
+      sketch_memory_gb:
+        Type: float
+        Description: "Memory cap for the three large parameter-by-rank sketch tensors."
+        Units: GiB
+      minimum_rank:
+        Type: integer
+        Description: "Fall back to identity below this effective Nyström rank."
+        Units: dimless
+      print_timing:
+        Type: boolean
+        Description: "Synchronize and print detailed Nyström sketch/eigensolve timings for profiling."
+        Units: dimless
     tridiag_newton:
       assembly:
         Type: string

@@ -69,6 +69,11 @@ class InterfaceNetwork(InterfaceMapping):
                 dir_path = get_pretrained_emulator_path(cfg, state)
                 iceflow_model = load_model_from_path(dir_path, cfg_unified.inputs)
         else:
+            # Apply the requested precision before constructing a new model.
+            dtype = normalize_precision(cfg_numerics.precision)
+            tf.keras.mixed_precision.set_global_policy(
+                "float64" if tf.as_dtype(dtype) == tf.float64 else "float32"
+            )
             # should this still be a warning? Maybe we just need to make the themed
             # message very clear... it's perfectly valid after all.
             warnings.warn("No pretrained emulator selected. Starting from scratch.")

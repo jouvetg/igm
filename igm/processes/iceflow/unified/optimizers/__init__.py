@@ -3,6 +3,7 @@ from .adam import OptimizerAdam
 from .adam_DA import OptimizerAdamDataAssimilation
 from .cg import OptimizerCG
 from .cg_newton import OptimizerCGNewton
+from .gauss_newton import OptimizerGaussNewton
 from .lbfgs import OptimizerLBFGS
 from .lbfgs_bounds import OptimizerLBFGSBounds
 from .lbfgs_DA import OptimizerLBFGSBoundsDA
@@ -19,6 +20,7 @@ Optimizers = {
     "adam_da": OptimizerAdamDataAssimilation,
     "cg": OptimizerCG,
     "cg_newton": OptimizerCGNewton,
+    "gauss_newton": OptimizerGaussNewton,
     "lbfgs": OptimizerLBFGS,
     "lbfgs_bounds": OptimizerLBFGSBounds,
     "lbfgs_da": OptimizerLBFGSBoundsDA,

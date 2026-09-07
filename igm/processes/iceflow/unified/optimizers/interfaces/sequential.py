@@ -80,4 +80,6 @@ class InterfaceSequential(InterfaceOptimizer):
                 cfg_merged, status, optimizer_stage
             )
 
-        return True
+        # Refresh the outer budget after stage-specific updates.
+        optimizer.iter_max.assign(optimizer._compute_iter_max())
+        return int(optimizer.iter_max) > 0

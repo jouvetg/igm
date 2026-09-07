@@ -8,8 +8,10 @@ from .barotropic_multigrid import (
 from .preconditioner import (
     BarotropicMultigridPreconditioner,
     ComponentBlockJacobiPreconditioner,
+    IdentityPreconditioner,
     Preconditioner,
     SSABlockJacobiPreconditioner,
     build_preconditioner,
     invert_spd_4x4,
 )
+from .nystrom import NystromPreconditioner

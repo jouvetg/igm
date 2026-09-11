@@ -4,18 +4,17 @@ IGM glacier visualizer — interactive Plotly/Dash 3-D animation.
 
 Usage:
     igm_viz
-    igm_viz --output_file path/to/output.nc
-    igm_viz --experiment params.yaml
+    igm_viz --output_folder path/to/outputs
 
-With no arguments, igm_viz looks for "output.nc" under "outputs/*/*/" in the
-current directory (the default igm_run layout). The --experiment form looks
-for "experiment/<name>.yaml" under the current directory (matching the
-layout igm_run uses) to find the output filename instead. Either way, every
-past run found under "outputs/*/*/" is listed in a dropdown in the app.
+With no arguments, igm_viz looks for "outputs/*/*/" in the current directory
+(the default igm_run layout). --output_folder points it at a different
+top-level "outputs" folder instead. Either way, every run found under it is
+listed in a dropdown in the app, and the exact netCDF file to view is always
+chosen there.
 """
 
 import argparse, copy, glob, os, threading, webbrowser
-import numpy as np, xarray as xr, yaml
+import numpy as np, xarray as xr
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, no_update, Input, Output, State
 
@@ -132,14 +131,16 @@ def build_property_catalog(ds: xr.Dataset) -> dict:
             next_cycled += 1
         catalog[label] = (var, label, colorscale)
 
-    return catalog
+    # Prefix every dropdown entry with a map emoji; the axis/colorbar label
+    # stored alongside it (the tuple's second element) is left unprefixed.
+    return {f"\U0001F5FA️ {label}": value for label, value in catalog.items()}
 
 # ── data helpers ──────────────────────────────────────────────────────────────
 
 
-def discover_output_tree(base_dir: str) -> dict:
-    """Find every netCDF file under <base_dir>/outputs/<date>/<time>/,
-    grouped date -> time -> [{"label": filename, "value": path}, ...].
+def discover_output_tree(outputs_dir: str) -> dict:
+    """Find every netCDF file under <outputs_dir>/<date>/<time>/, grouped
+    date -> time -> [{"label": filename, "value": path}, ...].
 
     Matches the run-directory layout Hydra creates for igm_run (see
     igm/conf/config.yaml, which leaves hydra.run.dir at its default
@@ -149,7 +150,7 @@ def discover_output_tree(base_dir: str) -> dict:
     Skips "*_ts.nc" companions: scalar time series only, not the gridded
     fields this viewer plots.
     """
-    pattern = os.path.join(base_dir, "outputs", "*", "*", "*.nc")
+    pattern = os.path.join(outputs_dir, "*", "*", "*.nc")
     paths = sorted(p for p in glob.glob(pattern) if not p.endswith("_ts.nc"))
     tree = {}
     for path in paths:
@@ -486,7 +487,6 @@ def build_3d_figure(
     opacity,
     show_ocean,
     show_calving,
-    title,
     vmin_clamp,
     vmax_clamp,
     camera=None,
@@ -548,8 +548,7 @@ def build_3d_figure(
 
     layout = go.Layout(
         height=760,
-        margin=dict(l=0, r=0, t=38, b=0),
-        title=dict(text=title, font=dict(size=14, family=FONT_FAMILY)),
+        margin=dict(l=0, r=0, t=10, b=0),
         paper_bgcolor="rgba(0,0,0,0)",
         font=dict(family=FONT_FAMILY, size=12),
         uirevision="static",
@@ -663,12 +662,7 @@ def build_stats_figure(ds) -> go.Figure:
     )
     fig.update_layout(
         height=210,
-        margin=dict(l=60, r=70, t=30, b=90),
-        title=dict(
-            text=f"glacier statistics over {frame_label}s" if frame_label == "iteration"
-            else "glacier statistics over time",
-            font=dict(size=13, family=FONT_FAMILY),
-        ),
+        margin=dict(l=60, r=70, t=15, b=90),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(220,232,248,0.4)",
         font=dict(family=FONT_FAMILY, size=11),
@@ -707,11 +701,6 @@ def build_stats_figure(ds) -> go.Figure:
 def finalize(tree: dict, default_run: str, title_base: str):
     ds = load_ds(default_run)
 
-    def make_title(run_path):
-        time_label = os.path.basename(os.path.dirname(run_path))
-        file_label = os.path.basename(run_path)
-        return f"{title_base} — {time_label} ({file_label})"
-
     # tree is date -> time -> [{"label": filename, "value": path}, ...],
     # mirroring outputs/<date>/<time>/<file>.nc so the "model run" picker
     # behaves like a small file browser: folder, then folder, then file.
@@ -731,6 +720,7 @@ def finalize(tree: dict, default_run: str, title_base: str):
     }
 
     app = Dash(__name__, external_stylesheets=[GOOGLE_FONT])
+    app.title = title_base
 
     # dash-core-components sliders are the rc-slider library under the hood;
     # style its highlighted track/handle directly since dcc.Slider has no
@@ -789,62 +779,57 @@ def finalize(tree: dict, default_run: str, title_base: str):
         [
             html.Div(
                 [
-                    html.Label("model run", style=LABEL),
                     html.Div(
                         [
-                            dcc.Dropdown(
-                                date_options,
-                                default_date,
-                                id="date_selector",
-                                clearable=False,
-                                searchable=False,
-                                style={"minWidth": "160px"},
-                            ),
-                            html.Span(
-                                "/",
-                                style={
-                                    "margin": "0 8px",
-                                    "color": "#888",
-                                    "fontWeight": "600",
-                                },
-                            ),
-                            dcc.Dropdown(
-                                time_options,
-                                default_time,
-                                id="time_selector",
-                                clearable=False,
-                                searchable=False,
-                                style={"minWidth": "140px"},
-                            ),
-                            html.Span(
-                                "/",
-                                style={
-                                    "margin": "0 8px",
-                                    "color": "#888",
-                                    "fontWeight": "600",
-                                },
-                            ),
-                            dcc.Dropdown(
-                                file_options,
-                                default_run,
-                                id="file_selector",
-                                clearable=False,
-                                searchable=False,
-                                style={"minWidth": "160px", "flex": "1"},
+                            html.Label("model run", style=LABEL),
+                            html.Div(
+                                [
+                                    dcc.Dropdown(
+                                        date_options,
+                                        default_date,
+                                        id="date_selector",
+                                        clearable=False,
+                                        searchable=False,
+                                        style={"minWidth": "160px"},
+                                    ),
+                                    html.Span(
+                                        "/",
+                                        style={
+                                            "margin": "0 8px",
+                                            "color": "#888",
+                                            "fontWeight": "600",
+                                        },
+                                    ),
+                                    dcc.Dropdown(
+                                        time_options,
+                                        default_time,
+                                        id="time_selector",
+                                        clearable=False,
+                                        searchable=False,
+                                        style={"minWidth": "140px"},
+                                    ),
+                                    html.Span(
+                                        "/",
+                                        style={
+                                            "margin": "0 8px",
+                                            "color": "#888",
+                                            "fontWeight": "600",
+                                        },
+                                    ),
+                                    dcc.Dropdown(
+                                        file_options,
+                                        default_run,
+                                        id="file_selector",
+                                        clearable=False,
+                                        searchable=False,
+                                        style={"minWidth": "160px", "flex": "1"},
+                                    ),
+                                ],
+                                style={"display": "flex", "alignItems": "center"},
                             ),
                         ],
-                        style={"display": "flex", "alignItems": "center"},
+                        style={"flex": "1 1 auto"},
                     ),
-                ],
-                style={
-                    "padding": "10px 24px 4px",
-                    "background": "#eef2f7",
-                    "borderBottom": "1px solid #c4cdd8",
-                    "fontFamily": FONT_FAMILY,
-                },
-            ),
-            html.Div(
-                [
                     html.Div(
                         [
                             html.Label("property", style=LABEL),
@@ -854,97 +839,128 @@ def finalize(tree: dict, default_run: str, title_base: str):
                                 id="property",
                                 clearable=False,
                                 searchable=False,
+                                style={"minWidth": "220px"},
                             ),
                         ],
-                        style={**CTRL, "flex": "0 1 230px"},
-                    ),
-                    html.Div(
-                        [
-                            html.Label("vertical exaggeration", style=LABEL),
-                            dcc.Slider(
-                                1,
-                                20,
-                                0.5,
-                                value=2,
-                                id="z_exag",
-                                marks={i: str(i) for i in range(1, 21, 4)},
-                                tooltip={"placement": "bottom", "always_visible": True},
-                            ),
-                        ],
-                        style={**CTRL, "flex": "2 1 260px"},
-                    ),
-                    html.Div(
-                        [
-                            html.Label("glacier opacity", style=LABEL),
-                            dcc.Slider(
-                                0.1,
-                                1.0,
-                                0.05,
-                                value=0.9,
-                                id="opacity",
-                                marks={
-                                    v: f"{int(v*100)}%" for v in (0.25, 0.5, 0.75, 1.0)
-                                },
-                                tooltip={"placement": "bottom", "always_visible": True},
-                            ),
-                        ],
-                        style={**CTRL, "flex": "2 1 260px"},
-                    ),
-                    html.Div(
-                        [
-                            dcc.Checklist(
-                                id="show_ocean",
-                                options=[
-                                    {"label": "  ocean (z = 0)", "value": "ocean"}
-                                ],
-                                value=[],
-                                style={"marginBottom": "8px"},
-                            ),
-                            dcc.Checklist(
-                                id="show_calving",
-                                options=[
-                                    {"label": "  calving front", "value": "calving"}
-                                ],
-                                value=[],
-                            ),
-                        ],
-                        style={"flex": "0 0 170px", "paddingTop": "22px"},
-                    ),
-                ],
-                style=BAR,
-            ),
-            html.Div(
-                [
-                    html.Label(
-                        "colorbar range",
-                        style={
-                            **LABEL,
-                            "whiteSpace": "nowrap",
-                            "marginRight": "16px",
-                            "marginBottom": 0,
-                        },
-                    ),
-                    html.Div(
-                        dcc.RangeSlider(
-                            id="clamp_range",
-                            min=lo0,
-                            max=hi0,
-                            step=(hi0 - lo0) / 200,
-                            value=[lo0, hi0],
-                            allowCross=False,
-                            tooltip={"placement": "bottom", "always_visible": True},
-                        ),
-                        style={"flex": "1"},
+                        style={"flex": "0 0 240px", "marginLeft": "24px"},
                     ),
                 ],
                 style={
                     "display": "flex",
-                    "alignItems": "center",
+                    "alignItems": "flex-end",
                     "padding": "10px 24px 4px",
-                    "background": "#f5f7fb",
+                    "background": "#eef2f7",
                     "borderBottom": "1px solid #c4cdd8",
                     "fontFamily": FONT_FAMILY,
                 },
+            ),
+            html.Details(
+                [
+                    html.Summary(
+                        "display settings",
+                        style={
+                            "cursor": "pointer",
+                            "fontWeight": "600",
+                            "fontSize": "12px",
+                            "color": "#444",
+                            "padding": "10px 24px",
+                            "background": "#eef2f7",
+                            "userSelect": "none",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.Div(
+                                [
+                                    html.Label("vertical exaggeration", style=LABEL),
+                                    dcc.Slider(
+                                        1,
+                                        20,
+                                        0.5,
+                                        value=2,
+                                        id="z_exag",
+                                        marks={i: str(i) for i in range(1, 21, 4)},
+                                        tooltip={"placement": "bottom", "always_visible": False},
+                                    ),
+                                ],
+                                style={**CTRL, "flex": "2 1 260px"},
+                            ),
+                            html.Div(
+                                [
+                                    html.Label("glacier opacity", style=LABEL),
+                                    dcc.Slider(
+                                        0.1,
+                                        1.0,
+                                        0.05,
+                                        value=1.0,
+                                        id="opacity",
+                                        marks={
+                                            v: f"{int(v*100)}%" for v in (0.25, 0.5, 0.75, 1.0)
+                                        },
+                                        tooltip={"placement": "bottom", "always_visible": False},
+                                    ),
+                                ],
+                                style={**CTRL, "flex": "2 1 260px"},
+                            ),
+                            html.Div(
+                                [
+                                    dcc.Checklist(
+                                        id="show_ocean",
+                                        options=[
+                                            {"label": "  ocean (z = 0)", "value": "ocean"}
+                                        ],
+                                        value=[],
+                                        style={"marginBottom": "8px"},
+                                    ),
+                                    dcc.Checklist(
+                                        id="show_calving",
+                                        options=[
+                                            {"label": "  calving front", "value": "calving"}
+                                        ],
+                                        value=[],
+                                    ),
+                                ],
+                                style={"flex": "0 0 170px", "paddingTop": "22px"},
+                            ),
+                        ],
+                        style=BAR,
+                    ),
+                    html.Div(
+                        [
+                            html.Label(
+                                "colorbar range",
+                                style={
+                                    **LABEL,
+                                    "whiteSpace": "nowrap",
+                                    "marginRight": "16px",
+                                    "marginBottom": 0,
+                                },
+                            ),
+                            html.Div(
+                                dcc.RangeSlider(
+                                    id="clamp_range",
+                                    min=lo0,
+                                    max=hi0,
+                                    step=(hi0 - lo0) / 200,
+                                    value=[lo0, hi0],
+                                    allowCross=False,
+                                    tooltip={"placement": "bottom", "always_visible": False},
+                                ),
+                                style={"flex": "1"},
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "alignItems": "center",
+                            "padding": "10px 24px 4px",
+                            "background": "#f5f7fb",
+                            "borderBottom": "1px solid #c4cdd8",
+                            "fontFamily": FONT_FAMILY,
+                        },
+                    ),
+                ],
+                open=False,
+                style={"borderBottom": "1px solid #c4cdd8"},
             ),
             dcc.Store(id="camera_store"),
             dcc.Graph(id="surface_3d", config={"scrollZoom": True}),
@@ -1068,7 +1084,6 @@ def finalize(tree: dict, default_run: str, title_base: str):
             opacity,
             ocean,
             calving,
-            make_title(run_path),
             vmin,
             vmax,
             camera,
@@ -1090,61 +1105,22 @@ def finalize(tree: dict, default_run: str, title_base: str):
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 
-def _resolve_from_output_file(output_file: str):
-    output_path = os.path.abspath(output_file)
-
-    # If it sits in the usual "<base>/outputs/<date>/<time>/<filename>" layout
-    # igm_run produces, browse every file (output.nc, optimize.nc, ...) next
-    # to it too, not just files sharing its exact name.
-    time_dir = os.path.dirname(output_path)
-    date_dir = os.path.dirname(time_dir)
-    outputs_dir = os.path.dirname(date_dir)
-    base_dir = os.path.dirname(outputs_dir)
-
-    tree = discover_output_tree(base_dir)
-    date_label, time_label = os.path.basename(date_dir), os.path.basename(time_dir)
-    files = tree.setdefault(date_label, {}).setdefault(time_label, [])
-    if not any(f["value"] == output_path for f in files):
-        files.insert(0, {"label": os.path.basename(output_path), "value": output_path})
-
-    title_base = os.path.splitext(os.path.basename(output_path))[0]
-    return tree, output_path, title_base
-
-
-def _resolve_from_experiment(experiment: str):
-    experiment_dir = os.path.join(os.getcwd(), "experiment")
-    name = experiment if experiment.endswith((".yaml", ".yml")) else f"{experiment}.yaml"
-    param_file = os.path.join(experiment_dir, name)
-    if not os.path.exists(param_file):
-        raise FileNotFoundError(f"No such experiment file: {param_file}")
-
-    with open(param_file) as f:
-        cfg = yaml.safe_load(f) or {}
-    preferred_filename = cfg.get("outputs", {}).get("local", {}).get("output_file", "output.nc")
-
-    base_dir = os.path.dirname(experiment_dir)  # "outputs/" sits next to "experiment/"
-    tree = discover_output_tree(base_dir)
+def _resolve(output_folder: str | None):
+    """Find the run tree under the top-level "outputs" folder and pick a
+    default run to open. output_folder defaults to "outputs" in the current
+    directory (the layout igm_run produces); the exact netCDF file to view
+    is always chosen afterward in the dashboard's "model run" picker."""
+    outputs_dir = (
+        os.path.abspath(output_folder) if output_folder else os.path.join(os.getcwd(), "outputs")
+    )
+    tree = discover_output_tree(outputs_dir)
     if not tree:
         raise FileNotFoundError(
-            f"No netCDF output found under {os.path.join(base_dir, 'outputs')}/*/*/. "
-            "Run igm_run with this experiment first."
-        )
-    default_run = _pick_default_file(tree, preferred_filename)
-    return tree, default_run, experiment
-
-
-def _resolve_default():
-    """No --output_file / --experiment given: assume igm_viz runs next to the
-    "outputs/" folder produced by "igm_run" in the current directory."""
-    base_dir = os.getcwd()
-    tree = discover_output_tree(base_dir)
-    if not tree:
-        raise FileNotFoundError(
-            f"No netCDF output found under {os.path.join(base_dir, 'outputs')}/*/*/. "
-            "Run igm_run first, or pass --output_file / --experiment."
+            f"No netCDF output found under {outputs_dir}/*/*/. "
+            "Run igm_run first, or pass --output_folder."
         )
     default_run = _pick_default_file(tree, "output.nc")
-    title_base = os.path.basename(os.path.normpath(base_dir))
+    title_base = os.path.basename(os.path.normpath(os.path.dirname(outputs_dir)))
     return tree, default_run, title_base
 
 
@@ -1152,20 +1128,13 @@ def main():
     parser = argparse.ArgumentParser(
         description="Visualize IGM glacier output — Plotly/Dash 3-D animation."
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--output_file", help="Path to a specific output.nc")
-    group.add_argument(
-        "--experiment", help="Name of the experiment/<name>.yaml used for igm_run"
+    parser.add_argument(
+        "--output_folder",
+        help='Path to the top-level "outputs" folder (default: "outputs" in the current directory)',
     )
     args = parser.parse_args()
 
-    if args.output_file:
-        tree, default_run, title_base = _resolve_from_output_file(args.output_file)
-    elif args.experiment:
-        tree, default_run, title_base = _resolve_from_experiment(args.experiment)
-    else:
-        tree, default_run, title_base = _resolve_default()
-
+    tree, default_run, title_base = _resolve(args.output_folder)
     finalize(tree, default_run, title_base)
 
 

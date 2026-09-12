@@ -56,7 +56,10 @@ def check_incompatilities_in_parameters_file(cfg, path):
         cfgo,
         path="",
         excluded_keys=("cwd", "config"),
-        open_dict_paths=("processes.iceflow.emulator.network.params",),
+        open_dict_paths=(
+            "processes.iceflow.emulator.network.params",
+            "processes.iceflow.unified.network.params",
+        ),
     ):
         for key in cfg:
             full_path = f"{path}.{key}" if path else key

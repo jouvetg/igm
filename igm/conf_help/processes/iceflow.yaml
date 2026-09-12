@@ -501,6 +501,108 @@ unified:
         Type: integer
         Description: "Maximum horizontal size of the bottom multigrid level solved by dense Cholesky."
         Units: dimless
+  error_estimator:
+    enabled:
+      Type: boolean
+      Description: "Enable the diagnostic a-posteriori velocity-error estimator. At the current (network) velocity it evaluates the energy gradient g and the frozen banded Hessian H of cg_newton on a shadow identity mapping, runs k preconditioned CG iterations on (H + damping I) delta = -g (plus newton_steps-1 chord steps), and reports -delta as the estimated error in the units used to score network solves (median relative surface-velocity error over grounded and floating ice, RMSE). Validated against Newton-CG references on AIS 32-4 km, ASE 5-1 km and Aletsch (igm-ais/error_estimator_study.md). Diagnostic only: logs a JSONL line per estimate and publishes state.err_est_* scalars; it never changes the optimization, and when disabled it adds no operation to the optimizer graph."
+      Units: dimless
+    freq:
+      Type: integer
+      Description: "Period, in parameter updates, of the in-loop estimates made by Optimizer._estimate_error when an optimizer loop calls it (0 disables them; the start estimate is controlled by estimate_at_start). Each refresh of the frozen Hessian costs roughly one Newton step without line search, so keep freq large compared with that cost in optimizer iterations."
+      Units: dimless
+    estimate_at_start:
+      Type: boolean
+      Description: "Also estimate the error of the initial iterate before the loop starts (reported as iteration -1). Useful to decide whether an optimization is needed at all."
+      Units: dimless
+    cg_iters:
+      Type: list
+      Description: "Sorted list of PCG iteration counts k at which the first Newton step is read off and converted to metrics (one CG run, several checkpoints, keys k<k>_*). With the barotropic multigrid preconditioner k=5 is already converged on every validated case; use several values only for diagnostics. The largest k feeds the chord steps and, with newton_steps=1, is the estimate reported as est_*."
+      Units: dimless
+    cg_tol:
+      Type: float
+      Description: "Relative tolerance on the preconditioned residual of the PCG solve; iterations stop early when <r, P^-1 r> falls below cg_tol squared times its initial value."
+      Units: dimless
+    hvp_mode:
+      Type: string
+      Description: "Hessian-vector product mode for the shadow identity mapping: autodiff (exact, general) or banded (frozen 9-point stencil; compact MOLHO storage for Nz=2, compact SSA for Nz=1)."
+      Units: dimless
+    probe_mode:
+      Type: string
+      Description: "How banded stencils are probed: fd (central finite differences of the gradient; default, halves the first-call trace, exact enough in double precision and automatically replaced by autodiff when the estimator runs in single precision), autodiff (reverse-over-reverse), or forward (forward-over-reverse; traces very slowly on large grids)."
+      Units: dimless
+    hvp_verify:
+      Type: boolean
+      Description: "At the first estimate, compare the frozen banded Hessian with one exact autodiff Hessian-vector product and warn if they differ by more than 1e-6 relative (diagnoses energies that couple beyond the 9-point stencil)."
+      Units: dimless
+    preconditioner:
+      Type: string
+      Description: "Preconditioner for the estimator's PCG solve: none, block_jacobi, or barotropic_multigrid (MOLHO Nz=2 with hvp_mode banded)."
+      Units: dimless
+    multigrid:
+      smoother_weight:
+        Type: float
+        Description: "Relaxation weight of the barotropic_multigrid point-block smoother used by the estimator."
+        Units: dimless
+      smoother_steps:
+        Type: integer
+        Description: "Smoothing steps before and after each coarse-grid correction in the estimator's multigrid preconditioner."
+        Units: dimless
+      coarse_size:
+        Type: integer
+        Description: "Maximum horizontal size of the bottom multigrid level solved by dense Cholesky in the estimator's preconditioner."
+        Units: dimless
+    damping:
+      Type: float
+      Description: "Levenberg-Marquardt damping added to the Hessian diagonal in the estimator's linear solve; keeps ice-free degrees of freedom nonsingular."
+      Units: dimless
+    operator_update_freq:
+      Type: integer
+      Description: "Upper bound on the number of estimates between refreshes of the frozen banded Hessian and preconditioner (1 = refresh at every estimate). Between refreshes the stencil is reused at the new gradient, which removes ~85 % of the per-estimate cost; the refresh is also triggered early by operator_refresh_rel_change."
+      Units: dimless
+    operator_refresh_rel_change:
+      Type: float
+      Description: "Refresh the frozen Hessian as soon as the RMS relative change of the velocity since the last refresh exceeds this value (only matters when operator_update_freq > 1). A Hessian frozen at an early, near-zero iterate is useless a few hundred iterations later, so a count alone is unsafe."
+      Units: dimless
+    newton_steps:
+      Type: integer
+      Description: "Number of Newton-type steps accumulated into the estimate. 1 is the linearised correction, which under-estimates floating-ice error by 10-35 % on AIS 16-4 km; each further step is a chord step (gradient re-evaluated at u + delta, same frozen Hessian and preconditioner) costing one gradient and one PCG solve. Validation: 2 steps remove the bias (ratio 0.98-1.04 on AIS, 1.14 on ASE 1 km), 3 steps give 0.94-0.97 everywhere. Default 2 (within the 20 % accuracy target); use 3 for tighter estimates. The k-sweep (k*_ keys) always refers to the first step; step<n>_* keys hold the accumulated correction, which becomes est_*."
+      Units: dimless
+    disable_xla:
+      Type: boolean
+      Description: "Switch off XLA auto-clustering (enabled globally by the Adam optimizer module) while the estimator's own graphs are built and run. Auto-clustering the large double-precision Hessian graphs costs minutes of compile time and tens of GB of host memory at AIS 4-8 km; the optimizer's graphs keep their XLA setting."
+      Units: dimless
+    precision:
+      Type: string
+      Description: "Floating-point precision of the estimator (single or double); null uses numerics.precision. Double is the default because the banded Hessian probing and the multigrid coarsening lose positive definiteness in single precision once velocities are realistic (the preconditioner then returns NaN). When it differs from numerics.precision the estimator builds its own discretization constants and cost function in that precision."
+      Units: dimless
+    use_basin_mask:
+      Type: boolean
+      Description: "Restrict the error statistics to state.basinmask > 0.5 when that field exists (matches the ASE scoring convention)."
+      Units: dimless
+    water_level:
+      Type: float
+      Description: "Water level used in the flotation criterion for the grounded/floating split when water_level is not among unified.inputs."
+      Units: m
+    record_path:
+      Type: string
+      Description: "Path (relative to the run directory) of the JSONL file receiving one line per estimate."
+      Units: dimless
+    save_fields_dir:
+      Type: string
+      Description: "If set, write the surface velocity of the iterate and the estimated surface error components to <dir>/fields_<n>.npz at every estimate (offline baselines such as iterate-difference extrapolation). null disables."
+      Units: dimless
+    publish_field:
+      Type: boolean
+      Description: "Publish the estimated surface-velocity error magnitude as the 2-D field state.err_est_surf so it can be listed in outputs vars_to_save."
+      Units: dimless
+    reference_file:
+      Type: string
+      Description: "Optional NetCDF with uvelsurf and vvelsurf of a reference solution on the same grid. When given, the true error of the current velocity (true_*) and of the corrected velocity u + delta (corr_*) are logged next to the estimate for validation."
+      Units: dimless
+    verbose:
+      Type: boolean
+      Description: "Print one summary line per estimate."
+      Units: dimless
   gauss_newton:
     cg_max_iter:
       Type: integer

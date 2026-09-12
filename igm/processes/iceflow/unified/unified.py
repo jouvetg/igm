@@ -9,6 +9,7 @@ from igm.common import State, print_model_with_inputs_detailed
 from .mappings import Mappings, InterfaceMappings
 from .optimizers import Optimizers, InterfaceOptimizers, SyntheticCosts
 from .evaluator import EvaluatorParams, get_evaluator_params_args, evaluate_iceflow
+from .error_estimator import ErrorEstimator, InterfaceErrorEstimator
 from .solver import solve_iceflow
 from .utils import get_cost_fn
 from ..utils.data_preprocessing import fieldin_state_to_X, X_to_fieldin
@@ -26,11 +27,12 @@ def initialize_iceflow_unified(cfg: DictConfig, state: State) -> None:
     state.iceflow.mapping = mapping
 
     # Initialize optimizer
+    cost_fn = get_cost_fn(cfg, state)
     optimizer_name = cfg_unified.optimizer
     optimizer_args = InterfaceOptimizers[optimizer_name].get_optimizer_args(
         # cfg=cfg, cost_fn=SyntheticCosts['quadratic_moderate'], map=mapping
         cfg=cfg,
-        cost_fn=get_cost_fn(cfg, state),
+        cost_fn=cost_fn,
         map=mapping,
     )
     if "batch_size" in optimizer_args:
@@ -47,6 +49,17 @@ def initialize_iceflow_unified(cfg: DictConfig, state: State) -> None:
         optimizer_args["batch_size"] = min(optimizer_args["batch_size"], num_patches)
     optimizer = Optimizers[optimizer_name](**optimizer_args)
     state.iceflow.optimizer = optimizer
+
+    # Error estimator (optional)
+    if InterfaceErrorEstimator.enabled(cfg):
+        error_estimator_args = InterfaceErrorEstimator.get_error_estimator_args(
+            cfg, state, cost_fn, mapping
+        )
+        error_estimator = ErrorEstimator(**error_estimator_args)
+        state.iceflow.error_estimator = error_estimator
+        # Sequential schedules: attach to the stages, not to the wrapper.
+        for stage in getattr(optimizer, "optimizers", None) or [optimizer]:
+            stage.attach_error_estimator(error_estimator)
 
     # Evaluator params
     evaluator_params_args = get_evaluator_params_args(cfg)

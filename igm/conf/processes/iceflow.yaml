@@ -139,6 +139,33 @@ iceflow:
         smoother_weight: 0.6666666666666666
         smoother_steps: 1
         coarse_size: 8
+    error_estimator:
+      enabled: false
+      freq: 250
+      estimate_at_start: true
+      cg_iters: [10]
+      cg_tol: 1.0e-6
+      hvp_mode: banded
+      probe_mode: fd
+      hvp_verify: false
+      preconditioner: barotropic_multigrid
+      multigrid:
+        smoother_weight: 0.6666666666666666
+        smoother_steps: 1
+        coarse_size: 8
+      damping: 1.0e-16
+      operator_update_freq: 4
+      operator_refresh_rel_change: 0.05
+      newton_steps: 2
+      disable_xla: true
+      precision: double
+      use_basin_mask: true
+      water_level: 0.0
+      record_path: error_estimate.jsonl
+      save_fields_dir: null
+      publish_field: true
+      reference_file: null
+      verbose: true
     gauss_newton:
       cg_max_iter: 50
       forcing_eta_min: 1.0e-2

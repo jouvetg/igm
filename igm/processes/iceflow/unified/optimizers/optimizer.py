@@ -47,8 +47,53 @@ class Optimizer(ABC):
         self.ord_grad_theta = ord_grad_theta
         self.debug_mode = debug_mode
         self.debug_freq = debug_freq
+        self.error_estimator = None
         if self.debug_mode:
             self._init_debug_display()
+
+    def attach_error_estimator(self, estimator) -> None:
+        """Attach a diagnostic ``ErrorEstimator`` (see ``unified/error_estimator``)."""
+        self.error_estimator = estimator
+
+    def _estimate_error_at_start(self, inputs: tf.Tensor) -> None:
+        """Eager estimate of the initial iterate, reported as iteration -1."""
+        estimator = self.error_estimator
+        if estimator is None or not estimator.estimate_at_start:
+            return
+        batch = inputs[0:1]
+        U, V = self.map.get_UV(batch)
+        estimator.estimate_and_record(U, V, batch, iteration=-1)
+
+    def _estimate_error(
+        self, iter: tf.Tensor, U: tf.Tensor, V: tf.Tensor, inputs: tf.Tensor
+    ) -> None:
+        """Graph-safe error estimate every ``freq`` parameter updates.
+
+        Meant to be called from an optimizer loop next to ``_update_display``.
+        The estimator executes eagerly inside a ``tf.py_function`` so the
+        optimizer graph stays unchanged; the ``tf.cond`` skips the call on all
+        other iterations, and nothing is traced when no estimator is attached.
+        ``iter + 1`` counts the updates applied so far.
+        """
+        estimator = self.error_estimator
+        if estimator is None or estimator.freq <= 0:
+            return
+
+        iter_i = tf.cast(iter, tf.int32)
+        freq = tf.constant(int(estimator.freq), tf.int32)
+
+        def run() -> tf.Tensor:
+            return tf.py_function(
+                estimator.estimate_and_record_py,
+                [U, V, inputs[0:1], iter_i],
+                tf.int32,
+            )
+
+        tf.cond(
+            tf.equal(tf.math.mod(iter_i + 1, freq), 0),
+            run,
+            lambda: tf.constant(0, tf.int32),
+        )
 
     @abstractmethod
     def update_parameters(self) -> None:
@@ -67,6 +112,7 @@ class Optimizer(ABC):
         criterion_names = self.halt.criterion_names if self.halt else []
         self.display.start(int(self.iter_max), criterion_names)
         self.map.on_minimize_start(int(self.iter_max))
+        self._estimate_error_at_start(inputs)
         costs = self.minimize_impl(inputs)
         return costs
 

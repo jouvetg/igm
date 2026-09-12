@@ -11,14 +11,7 @@ from ..optimizer import Optimizer
 from .interface import InterfaceOptimizer, Status
 from ...mappings import Mapping
 from ...halt import Halt, InterfaceHalt
-from ...operators import (
-    Operator,
-    ADOperator,
-    BandedADOperator,
-    MOLHOBandedADOperator,
-    SSABandedADOperator,
-)
-from ...operators import supports_compact_molho, supports_compact_ssa
+from ...operators import Operator, build_energy_operator
 
 
 class InterfaceCGNewton(InterfaceOptimizer):
@@ -29,44 +22,19 @@ class InterfaceCGNewton(InterfaceOptimizer):
         cost_fn: Callable[[tf.Tensor, tf.Tensor, tf.Tensor], tf.Tensor],
         map: Mapping,
     ) -> Operator:
-        """Build the Hessian operator selected by ``hvp_mode``.
-
-        Autodiff is exact and general. Banded mode freezes a graph-coloured
-        9-point stencil for cheap CG applications; nonperiodic SSA and Nz=2
-        MOLHO use specialized compact storage.
-        """
+        """Build the Hessian operator selected by ``cg_newton.hvp_mode``."""
         cfg_unified = cfg.processes.iceflow.unified
         cfg_numerics = cfg.processes.iceflow.numerics
-        precision = cfg_numerics.precision
-        hvp_mode = cfg_unified.cg_newton.hvp_mode
 
-        if hvp_mode == "autodiff":
-            return ADOperator(cost_fn, map, precision)
-
-        if hvp_mode == "banded":
-            basis_vertical = str(cfg_numerics.get("basis_vertical", "")).lower()
-            if supports_compact_ssa(map):
-                operator_cls = SSABandedADOperator
-            elif supports_compact_molho(map, basis_vertical):
-                operator_cls = MOLHOBandedADOperator
-            else:
-                operator_cls = BandedADOperator
-
-            return operator_cls(
-                cost_fn,
-                map,
-                precision,
-                verify_stencil=bool(
-                    getattr(cfg_unified.cg_newton, "hvp_verify", False)
-                ),
-                probe_mode=str(
-                    getattr(cfg_unified.cg_newton, "probe_mode", "fd")
-                ),
-            )
-
-        raise ValueError(
-            f"❌ Unknown cg_newton.hvp_mode: <{hvp_mode}>. "
-            "Use 'autodiff' or 'banded'."
+        return build_energy_operator(
+            hvp_mode=cfg_unified.cg_newton.hvp_mode,
+            probe_mode=str(getattr(cfg_unified.cg_newton, "probe_mode", "fd")),
+            basis_vertical=str(cfg_numerics.get("basis_vertical", "")),
+            precision=cfg_numerics.precision,
+            cost_fn=cost_fn,
+            mapping=map,
+            verify_stencil=bool(getattr(cfg_unified.cg_newton, "hvp_verify", False)),
+            owner="cg_newton",
         )
 
     @staticmethod

@@ -719,6 +719,75 @@ unified:
       Type: float
       Description: "Regularization added to the Kronecker preconditioner factors before eigendecomposition in the SOAP optimizer."
       Units: dimless
+  ss_esoap:
+    lr:
+      Type: float
+      Description: "Base learning rate of the SS-eSOAP optimizer, used at DEFAULT status."
+      Units: dimless
+    lr_init:
+      Type: float
+      Description: "Learning rate of the SS-eSOAP optimizer during INIT and WARM_UP."
+      Units: dimless
+    beta1:
+      Type: float
+      Description: "Momentum decay coefficient for SS-eSOAP."
+      Units: dimless
+    beta2:
+      Type: float
+      Description: "Second-moment and Kronecker-factor decay coefficient for SS-eSOAP."
+      Units: dimless
+    eps:
+      Type: float
+      Description: "Epsilon for numerical stability in the SS-eSOAP update."
+      Units: dimless
+    tau_trigger:
+      Type: float
+      Description: "Relative off-diagonal mass of a Kronecker factor above which SS-eSOAP recomputes its eigenbasis. Replaces SOAP's fixed preconditioner schedule: the cubic eigendecomposition fires only when the current basis has drifted."
+      Units: dimless
+    check_freq:
+      Type: integer
+      Description: "Iterations between two trigger checks. The check is O(m^3) on a layer of width m, so raising this to 5-10 amortises it on wide layers; the default of 1 is tuned for PINN-sized layers."
+      Units: dimless
+    warmup:
+      Type: integer
+      Description: "Iterations before the adaptive basis trigger is armed."
+      Units: dimless
+    tau_min:
+      Type: float
+      Description: "Lower clip on the SS-eSOAP self-scaling factor tau, which matches the Kronecker metric to the curvature observed along the last parameter displacement."
+      Units: dimless
+    self_scaling:
+      Type: bool
+      Description: "Enable the self-scaling (secant-energy) correction. False gives the adaptive-basis-SOAP ablation."
+      Units: dimless
+    damping:
+      Type: float
+      Description: "Regularization added to the SS-eSOAP Kronecker factors."
+      Units: dimless
+    weight_decay:
+      Type: float
+      Description: "Decoupled weight decay applied by SS-eSOAP."
+      Units: dimless
+    lr_drop_iter:
+      Type: integer
+      Description: "Zero-based iteration at which to apply one learning-rate drop; a negative value disables the schedule. Optimizer state is retained across the drop."
+      Units: dimless
+    lr_drop_factor:
+      Type: float
+      Description: "Multiplier applied to the SS-eSOAP learning rate at and after lr_drop_iter."
+      Units: dimless
+    lr_auto_drop_patience:
+      Type: integer
+      Description: "Length of each cost-comparison window for an automatic one-time learning-rate drop. A non-positive value disables the controller. This selects the drop time, not the initial learning rate, and is mutually exclusive with lr_drop_iter."
+      Units: iteration
+    lr_auto_drop_warmup:
+      Type: integer
+      Description: "Iteration at which the automatic-drop controller records its first reference cost."
+      Units: iteration
+    lr_auto_drop_rel_improvement:
+      Type: float
+      Description: "Minimum relative cost decrease required over an automatic-drop comparison window. If the decrease is smaller, the learning rate is multiplied once by lr_drop_factor."
+      Units: dimless
   sequential:
     stages:
       Type: list

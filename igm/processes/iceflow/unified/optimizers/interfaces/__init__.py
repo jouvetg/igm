@@ -8,6 +8,7 @@ from .muon import InterfaceMuon
 from .newton import InterfaceNewton
 from .sequential import InterfaceSequential
 from .soap import InterfaceSOAP
+from .ss_esoap import InterfaceSSESOAP
 from .trust_region import InterfaceTrustRegion
 from .spg import InterfaceSPG
 from .tridiag_newton import InterfaceTridiagNewton
@@ -25,6 +26,7 @@ InterfaceOptimizers = {
     "newton": InterfaceNewton,
     "sequential": InterfaceSequential,
     "soap": InterfaceSOAP,
+    "ss_esoap": InterfaceSSESOAP,
     "trust_region": InterfaceTrustRegion,
     "spg": InterfaceSPG,
     "tridiag_newton": InterfaceTridiagNewton,

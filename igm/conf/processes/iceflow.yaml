@@ -198,6 +198,24 @@ iceflow:
       eps: 1.0e-08
       precond_freq: 10
       damping: 1.0e-08
+    ss_esoap:
+      lr: 3.0e-04
+      lr_init: 1.0e-03
+      beta1: 0.9
+      beta2: 0.95
+      eps: 1.0e-08
+      tau_trigger: 0.2
+      check_freq: 1
+      warmup: 0
+      tau_min: 0.1
+      self_scaling: true
+      damping: 1.0e-08
+      weight_decay: 0.0
+      lr_drop_iter: -1
+      lr_drop_factor: 1.0
+      lr_auto_drop_patience: 0
+      lr_auto_drop_warmup: 500
+      lr_auto_drop_rel_improvement: 0.01
     sequential:
       stages: []
     line_search: hager-zhang

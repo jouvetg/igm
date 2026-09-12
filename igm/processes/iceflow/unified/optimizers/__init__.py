@@ -11,6 +11,7 @@ from .muon import OptimizerMuon
 from .newton import OptimizerNewton
 from .sequential import OptimizerSequential
 from .soap import OptimizerSOAP
+from .ss_esoap import OptimizerSSESOAP
 from .trust_region import OptimizerTrustRegion
 from .spectral_projected_gradient import OptimizerSpectralProjectedGradient
 from .tridiag_newton import OptimizerTridiagNewton
@@ -28,6 +29,7 @@ Optimizers = {
     "newton": OptimizerNewton,
     "sequential": OptimizerSequential,
     "soap": OptimizerSOAP,
+    "ss_esoap": OptimizerSSESOAP,
     "trust_region": OptimizerTrustRegion,
     "spg": OptimizerSpectralProjectedGradient,
     "tridiag_newton": OptimizerTridiagNewton,

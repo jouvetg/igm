@@ -5,6 +5,19 @@ from typing import Any, Dict
 import tensorflow as tf
 
 
+@tf.function(reduce_retracing=True, autograph=False)
+def _factorized_complex_multiply(
+    x_ft: tf.Tensor,
+    input_factor: tf.Tensor,
+    output_factor: tf.Tensor,
+    mode_factor: tf.Tensor,
+) -> tf.Tensor:
+    """Shared pure kernel used by every factorized Fourier layer."""
+    latent = tf.einsum("bixy,ir->brxy", x_ft, input_factor)
+    latent = latent * mode_factor[tf.newaxis, ...]
+    return tf.einsum("brxy,ro->boxy", latent, output_factor)
+
+
 # --------------------------------------------------------------------
 # SpectralConv2D: 2D Fourier layer
 # --------------------------------------------------------------------
@@ -196,6 +209,143 @@ class SpectralConv2D(tf.keras.layers.Layer):
         return config
 
 
+class FactorizedSpectralConv2D(tf.keras.layers.Layer):
+    """Tensor-factorized 2-D Fourier layer.
+
+    Each complex Fourier kernel is represented as
+
+        W[i, o, x, y] = sum_r A[i, r] B[r, o] C[r, x, y]
+
+    for the positive and negative first-axis modes independently.  This keeps
+    the requested Fourier modes and channel width while replacing the dense
+    ``O(C_in C_out M1 M2)`` kernel by
+    ``O(rank * (C_in + C_out + M1 M2))`` trainable coefficients.
+
+    The contractions are evaluated in factorized form, so no dense Fourier
+    weight tensor is materialized during the forward or backward pass.
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        modes1: int,
+        modes2: int,
+        rank: int,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.in_channels = int(in_channels)
+        self.out_channels = int(out_channels)
+        self.modes1 = int(modes1)
+        self.modes2 = int(modes2)
+        self.rank = int(rank)
+        for name in ("in_channels", "out_channels", "modes1", "modes2", "rank"):
+            if getattr(self, name) <= 0:
+                raise ValueError(f"{name} must be > 0, got {getattr(self, name)}")
+
+        self._factors = {}
+
+    def build(self, input_shape) -> None:
+        input_shape = tf.TensorShape(input_shape)
+        if input_shape.rank != 4:
+            raise ValueError(
+                "FactorizedSpectralConv2D expects rank-4 input "
+                f"[B, C, H, W], got {input_shape}"
+            )
+        if input_shape[1] is not None and int(input_shape[1]) != self.in_channels:
+            raise ValueError(
+                f"Expected {self.in_channels} input channels, got {input_shape[1]}"
+            )
+        if input_shape[2] is not None and self.modes1 > int(input_shape[2]):
+            raise ValueError(
+                f"modes1={self.modes1} exceeds input height H={input_shape[2]}"
+            )
+        if input_shape[3] is not None:
+            width_rfft = int(input_shape[3]) // 2 + 1
+            if self.modes2 > width_rfft:
+                raise ValueError(
+                    f"modes2={self.modes2} exceeds rFFT width {width_rfft}"
+                )
+
+        # Match the order of magnitude of the dense layer's Fourier weights.
+        # For three independent complex factors, the real-part variance of one
+        # product is approximately 4*sigma**6; summing ``rank`` terms gives the
+        # dense initializer variance when sigma=(scale/(12*rank))**(1/6).
+        scale = 1.0 / (self.in_channels * self.out_channels)
+        stddev = (scale / (12.0 * self.rank)) ** (1.0 / 6.0)
+        initializer = tf.keras.initializers.RandomNormal(stddev=stddev)
+
+        shapes = {
+            "input": (self.in_channels, self.rank),
+            "output": (self.rank, self.out_channels),
+            "modes": (self.rank, self.modes1, self.modes2),
+        }
+        for side in ("top", "bottom"):
+            for factor, shape in shapes.items():
+                # Store real and imaginary components together.  Besides
+                # reducing resource-variable and graph-node counts, the packed
+                # rank-4 mode tensor receives a better-balanced SS-eSOAP view.
+                key = f"{side}_{factor}"
+                self._factors[key] = self.add_weight(
+                    name=key,
+                    shape=(2, *shape),
+                    initializer=initializer,
+                    trainable=True,
+                    dtype=self.compute_dtype,
+                )
+        super().build(input_shape)
+
+    def _complex_factor(self, side: str, factor: str) -> tf.Tensor:
+        packed = self._factors[f"{side}_{factor}"]
+        return tf.complex(packed[0], packed[1])
+
+    def _compl_mul2d(self, x_ft: tf.Tensor, side: str) -> tf.Tensor:
+        input_factor = self._complex_factor(side, "input")
+        output_factor = self._complex_factor(side, "output")
+        mode_factor = self._complex_factor(side, "modes")
+        return _factorized_complex_multiply(
+            x_ft, input_factor, output_factor, mode_factor
+        )
+
+    def call(self, x: tf.Tensor) -> tf.Tensor:
+        x = tf.cast(x, self.compute_dtype)
+        height = tf.shape(x)[2]
+        width = tf.shape(x)[3]
+        x_ft = tf.signal.rfft2d(x)
+        h_ft = tf.shape(x_ft)[2]
+        w_r = tf.shape(x_ft)[3]
+
+        top = self._compl_mul2d(
+            x_ft[:, :, : self.modes1, : self.modes2], "top"
+        )
+        bottom = self._compl_mul2d(
+            x_ft[:, :, -self.modes1 :, : self.modes2], "bottom"
+        )
+        top = tf.pad(
+            top,
+            [[0, 0], [0, 0], [0, h_ft - self.modes1], [0, w_r - self.modes2]],
+        )
+        bottom = tf.pad(
+            bottom,
+            [[0, 0], [0, 0], [h_ft - self.modes1, 0], [0, w_r - self.modes2]],
+        )
+        return tf.signal.irfft2d(top + bottom, fft_length=[height, width])
+
+    def get_config(self) -> Dict[str, Any]:
+        config = super().get_config()
+        config.update(
+            {
+                "in_channels": self.in_channels,
+                "out_channels": self.out_channels,
+                "modes1": self.modes1,
+                "modes2": self.modes2,
+                "rank": self.rank,
+            }
+        )
+        return config
+
+
 # --------------------------------------------------------------------
 # FNO: 2D Fourier Neural Operator (renamed from FNO2)
 # --------------------------------------------------------------------
@@ -221,6 +371,8 @@ class FNO(tf.keras.Model):
         "padding":          (9,    int),
         "use_grid":         (True, bool),
         "projection_width": (128,  int),
+        "n_layers":         (4,    int),
+        "factorization_rank": (0,  int),
     }
 
     def __init__(
@@ -262,16 +414,42 @@ class FNO(tf.keras.Model):
             raise ValueError(f"padding must be >= 0, got {self.padding}")
         if self.projection_width <= 0:
             raise ValueError(f"projection_width must be > 0, got {self.projection_width}")
+        if self.n_layers <= 0:
+            raise ValueError(f"n_layers must be > 0, got {self.n_layers}")
+        if self.factorization_rank < 0:
+            raise ValueError(
+                "factorization_rank must be >= 0 (zero selects dense kernels), "
+                f"got {self.factorization_rank}"
+            )
 
         self.lift_input_channels = self.nb_inputs + (2 if self.use_grid else 0)
         self._dummy_H = max(16, self.modes1 + 1)
         self._dummy_W = max(16, 2 * self.modes2 + 2)
 
         self.fc0 = tf.keras.layers.Dense(self.width, dtype=self.compute_dtype, name="fc0")
-        self.convs = [
-            SpectralConv2D(self.width, self.width, self.modes1, self.modes2, name=f"spectral_conv_{i}")
-            for i in range(4)
-        ]
+        if self.factorization_rank:
+            self.convs = [
+                FactorizedSpectralConv2D(
+                    self.width,
+                    self.width,
+                    self.modes1,
+                    self.modes2,
+                    self.factorization_rank,
+                    name=f"spectral_conv_{i}",
+                )
+                for i in range(self.n_layers)
+            ]
+        else:
+            self.convs = [
+                SpectralConv2D(
+                    self.width,
+                    self.width,
+                    self.modes1,
+                    self.modes2,
+                    name=f"spectral_conv_{i}",
+                )
+                for i in range(self.n_layers)
+            ]
         self.ws = [
             tf.keras.layers.Conv2D(
                 self.width,
@@ -281,7 +459,7 @@ class FNO(tf.keras.Model):
                 dtype=self.compute_dtype,
                 name=f"pointwise_skip_{i}",
             )
-            for i in range(4)
+            for i in range(self.n_layers)
         ]
         self.fc1 = tf.keras.layers.Dense(self.projection_width, dtype=self.compute_dtype, name="fc1")
         self.fc2 = tf.keras.layers.Dense(self.nb_outputs, dtype=self.compute_dtype, name="fc2")

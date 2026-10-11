@@ -69,8 +69,8 @@ def compute_vertical_velocity_kinematic_v1(cfg, state):
         cumdz = tf.reduce_sum(dz[:l], axis=0)
 
         sx, sy = grad_xy(
-            ice_base(state) + cumdz, state.dx, state.dx, False, "extrapolate"
-        )
+            ice_base(state) + cumdz, state.dX, state.dX, False, "extrapolate"
+        )  # state.dX (2-D): grad_xy pads its dx argument, a scalar state.dx crashes
 
         sloplayx.append(sx)
         sloplayy.append(sy)

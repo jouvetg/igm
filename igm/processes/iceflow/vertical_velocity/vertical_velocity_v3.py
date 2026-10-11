@@ -105,10 +105,16 @@ from igm.utils.grad.compute_divflux_slope_limiter import compute_divflux_slope_l
 
 
 def compute_vertical_velocity_v3(cfg: DictConfig, state: State) -> tf.Tensor:
-    method = str(cfg.processes.iceflow.vertical_velocity.get("method", "incompressibility")).lower()
-    if method == "fluxform":
+    method = str(cfg.processes.iceflow.vertical_velocity.get("method", "fluxform")).lower()
+    # "kinematic" is the layer-tangency formula w = u.grad(z) - div(Q), i.e. the flux form
+    if method in ("fluxform", "kinematic"):
         return compute_vertical_velocity_fluxform_v3(cfg, state)
-    return compute_vertical_velocity_incompressibility_v3(cfg, state)
+    if method == "incompressibility":
+        return compute_vertical_velocity_incompressibility_v3(cfg, state)
+    raise ValueError(
+        f"❌ Unknown vertical_velocity method for version 3: <{method}> "
+        "(use fluxform, kinematic or incompressibility)."
+    )
 
 
 def _fluxform_nodes(discr_v):
@@ -151,7 +157,6 @@ def compute_vertical_velocity_fluxform_v3(cfg: DictConfig, state: State) -> tf.T
 
     Nodal bases (Lagrange, MOLHO) are evaluated at their own nodes; spectral bases (Legendre) at
     Chebyshev-Lobatto nodes, then projected back to coefficients (see `_fluxform_nodes`).
-    Aletsch, 2026-10-01: grid-scale noise ratio of wvelsurf 0.46 (matrix form) → 0.21.
     """
     discr_v = state.iceflow.discr_v
     nodes, E, I, E_inv = _fluxform_nodes(discr_v)

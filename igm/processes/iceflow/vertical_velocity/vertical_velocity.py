@@ -3,6 +3,8 @@
 # Copyright (C) 2021-2025 IGM authors
 # Published under the GNU GPL (Version 3), check at the LICENSE file
 
+import warnings
+
 import tensorflow as tf
 from omegaconf import DictConfig
 
@@ -40,6 +42,13 @@ def smooth_vertical_velocity(W: tf.Tensor, thk: tf.Tensor, sigma: float) -> tf.T
 
 def update(cfg: DictConfig, state: State) -> None:
     version = cfg.processes.iceflow.vertical_velocity.version
+
+    if version in (1, 2):
+        warnings.warn(
+            f"vertical_velocity version {version} is deprecated and will be removed; "
+            "use version 3 (the default).",
+            FutureWarning,
+        )
 
     if version == 1:
         compute_vertical_velocity = compute_vertical_velocity_v1

@@ -178,7 +178,8 @@ def box_numbers(
     n_d = tf.clip_by_value(n_d, 1.0, float(n_boxes))
     d = tf.cast(d_gl, tf.float64)
     f = tf.cast(d_cf, tf.float64)
-    k = 1.0 + tf.floor(n_d * d * (d + 2.0 * f) / tf.maximum(d + f, 1.0) ** 2)
+    s = tf.maximum(d + f, 1.0)  # s * s is exact, ** 2 is not on GPUs
+    k = 1.0 + tf.floor(n_d * d * (d + 2.0 * f) / (s * s))
     k = tf.minimum(tf.minimum(k, n_d), d)
     return tf.where((d_gl > 0) & (d_cf > 0), tf.cast(k, tf.int32), 0)
 

@@ -32,6 +32,7 @@ METHODS = ("sub_grid", "level_set")
 RATIO = 0.9  # ice / water density
 DX = 1000.0
 DT = 0.2
+NO_CALVING = 1e-3  # m, float32 rounding on GPUs
 
 # Albrecht et al. (2011) shelf: Weertman's steady spreading profile.
 RHO, RHO_W = 910.0, 1028.0
@@ -146,7 +147,7 @@ def test_front_advances_at_the_ice_speed_as_a_sharp_cliff(method):
     assert _front_1d(state) == pytest.approx(10 * DX + u * 100 * DT, abs=0.01 * DX)
     ice = state.thk.numpy()[1]
     np.testing.assert_allclose(ice[ice > 0.0], 500.0, rtol=1e-5)
-    assert float(tf.reduce_sum(state.calved_thk)) == 0.0
+    assert float(tf.reduce_sum(state.calved_thk)) < NO_CALVING
 
 
 @pytest.mark.parametrize("method", METHODS)
@@ -574,7 +575,7 @@ def test_free_slab_trailing_edge_moves_with_the_ice_without_calving(method):
         _ice_velocity(state, u)
         state.calving_rate = tf.zeros_like(state.thk)
         thk_module.update(cfg, state)
-        assert float(tf.reduce_sum(state.calved_thk)) == 0.0
+        assert float(tf.reduce_sum(state.calved_thk)) < NO_CALVING
     assert _volume(state) == pytest.approx(v0, rel=1e-6)
     assert centroid() - c0 == pytest.approx(u * steps * DT, abs=0.1 * DX)
     assert _front_1d(state) == pytest.approx(20 * DX + u * steps * DT, abs=0.1 * DX)

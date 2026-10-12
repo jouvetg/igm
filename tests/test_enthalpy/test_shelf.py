@@ -68,7 +68,9 @@ def _run(setup, steps=20):
 def test_floating_ice_takes_the_ice_melting_point_at_its_base():
     cfg, state = _run(_setup())
     E_pmp, _ = enthalpy.temperature.compute_pmp(cfg, state)
-    np.testing.assert_allclose(state.E.numpy()[0, :, 3:], E_pmp.numpy()[0, :, 3:])
+    np.testing.assert_allclose(
+        state.E.numpy()[0, :, 3:], E_pmp.numpy()[0, :, 3:], rtol=1e-6
+    )
     np.testing.assert_array_equal(state.basal_melt_rate.numpy()[:, 3:], 0.0)
 
     # The grounded columns are those of a domain without ocean.

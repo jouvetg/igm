@@ -20,6 +20,10 @@ physics:
       Type: boolean
       Description: "If True, zero out basal shear stress in floating areas."
       Units: dimless
+    use_subgrid_gl:
+      Type: boolean
+      Description: "Sub-grid friction near the grounding line, with use_mask_gr: true. false: the friction is zeroed at floating nodes (nodal mask). true: the nodal mask is replaced by the grounded fraction of the area around each node (the four quarter cells touching it), computed from the bilinear flotation function with state.topg (grounding-line parameterization of CISM, Leguy et al., 2021, The Cryosphere 15, 3229-3253). This weight multiplies the input the mask acts on (tau_ref; effective_pressure for mohr_coulomb, which then needs tauc_min: 0) when the unified inputs are read from the state, and the energy applies no mask; with weights of 0 or 1 it reproduces the nodal mask. The weight varies continuously as the grounding line moves, and the friction is located to within half a cell. The inputs keep their names and number, so topg need not be a network input. Requires iceflow.method: unified; field_inversion controls are not weighted. The frictional heating uses the same weight."
+      Units: dimless
     slidingco:
       Type: float
       Description: "Initial value for the reference basal shear stress (legacy stack: emulated/solved/diagnostic + data_assimilation; the field is named state.slidingco). Numerically equal to sliding.tau_ref."

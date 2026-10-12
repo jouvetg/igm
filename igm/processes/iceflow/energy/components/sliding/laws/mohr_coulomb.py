@@ -64,6 +64,10 @@ class MohrCoulombParams(tf.experimental.ExtensionType):
 class MohrCoulomb(SlidingComponent):
     """Sliding component implementing the Mohr-Coulomb friction-angle law."""
 
+    #: The yield stress N * tan(phi) is masked; with use_subgrid_gl the weight
+    #: acts on N, before the tauc_min floor (which must then be 0)
+    friction_inputs = ("effective_pressure",)
+
     def __init__(self, params: MohrCoulombParams) -> None:
         self.name = "mohr_coulomb"
         self.params = params

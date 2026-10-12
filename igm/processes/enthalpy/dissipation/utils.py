@@ -10,6 +10,7 @@ from igm.common import State
 from igm.common.fields import get_tau_ref
 from igm.utils.grad.grad import grad_xy, pad_x, pad_y, pad_z
 from igm.utils.grad.strain_rate import compute_eps_dot2, correct_grad_zeta_to_z
+from igm.processes.thk.masks import weights_gr
 
 
 def compute_strain_heat(cfg: DictConfig, state: State) -> tf.Tensor:
@@ -220,6 +221,16 @@ def compute_friction_heat(cfg: DictConfig, state: State) -> tf.Tensor:
         raise ValueError(
             f"compute_friction_heat: unsupported sliding law '{law}' "
             "(supported: 'weertman', 'mohr_coulomb')"
+        )
+
+    # use_subgrid_gl: the friction is weighted by the grounded fraction
+    # around each node, as the ice-flow inputs (get_inputs_from_state)
+    if cfg_sl.use_mask_gr and cfg_sl.use_subgrid_gl:
+        C = C * weights_gr(
+            state.thk,
+            state.topg,
+            state.water_level,
+            cfg_physics.water_density / cfg_physics.ice_density,
         )
 
     V_b = state.iceflow.discr_v.V_b

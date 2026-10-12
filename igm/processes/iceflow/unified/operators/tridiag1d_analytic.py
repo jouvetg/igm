@@ -627,8 +627,13 @@ class Tridiag1DAnalyticOperator(Tridiag1DADOperator):
             base_coefficient = friction / tf.pow(
                 tf.cast(params.u_ref, dtype), 1.0 / tf.cast(params.exponent, dtype)
             )
+            # No friction where the coefficient vanishes, as in the energy
+            frictionless = base_coefficient <= 0.0
+            safe_coefficient = tf.where(
+                frictionless, tf.ones_like(base_coefficient), base_coefficient
+            )
             critical_speed = tf.pow(
-                tau_c / base_coefficient, tf.cast(params.exponent, dtype)
+                tau_c / safe_coefficient, tf.cast(params.exponent, dtype)
             )
             transition = tf.pow(speed2, p / 2.0) + tf.pow(critical_speed, p)
             f_prime = (
@@ -650,8 +655,12 @@ class Tridiag1DAnalyticOperator(Tridiag1DADOperator):
                     * tf.pow(speed2, p / 2.0 - 2.0)
                 )
             )
-            radial_first_twice = 2.0 * f_prime
-            radial_second_four = 4.0 * f_second
+            radial_first_twice = tf.where(
+                frictionless, tf.zeros_like(f_prime), 2.0 * f_prime
+            )
+            radial_second_four = tf.where(
+                frictionless, tf.zeros_like(f_second), 4.0 * f_second
+            )
 
         h_uu = radial_first_twice * metric_uu + radial_second_four * metric_u * metric_u
         h_uv = radial_first_twice * metric_uv + radial_second_four * metric_u * metric_v

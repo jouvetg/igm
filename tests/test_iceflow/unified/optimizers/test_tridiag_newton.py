@@ -16,7 +16,9 @@ from igm.processes.iceflow.unified.operators.tridiag1d_analytic import (
     Tridiag1DAnalyticOperator,
 )
 from igm.processes.iceflow.unified import utils as unified_utils
+from igm.processes.iceflow.energy.components.sliding import SlidingComponents
 from igm.processes.iceflow.energy.utils import get_energy_components
+from igm.processes.thk.masks import weights_gr
 from igm.processes.iceflow.horizontal import Q1Discr
 from igm.processes.iceflow.vertical import SSADiscr
 from igm.processes.iceflow.unified.optimizers.tridiag_newton import (
@@ -141,6 +143,7 @@ def test_tridiag1d_analytic_q1_ssa_hessian_matches_exact_autodiff():
                             "u_ref": 1.0,
                             "rho_ratio": 1028.0 / 910.0,
                             "use_mask_gr": True,
+                            "use_subgrid_gl": False,
                         },
                     },
                     "numerics": {
@@ -239,6 +242,7 @@ def test_scalar_q1_ssa_system_matches_full_igm_energy_and_bands():
                             "exponent": 3.0,
                             "u_ref": 1.0,
                             "use_mask_gr": True,
+                            "use_subgrid_gl": False,
                         },
                     },
                     "numerics": {
@@ -426,3 +430,135 @@ def test_tridiag_newton_operator_dispatch_rejects_2d_mapping():
 
     with pytest.raises(ValueError, match="tridiag_newton"):
         InterfaceTridiagNewton._build_operator(cfg, cost, mapping)
+
+
+def _marine_flowline(law, grounding_line):
+    """Flowline whose grounding line crosses cell 4 between its Gauss points.
+
+    With use_subgrid_gl the inputs are weighted as
+    get_inputs_from_state does (weights_gr on the bed).
+    """
+    dtype = tf.float64
+    nx = 10
+    rho_ice, rho_water = 910.0, 1028.0
+    inputs_names = ["thk", "usurf", "arrhenius", "tau_ref", "dX", "water_level"]
+    inputs_names += ["effective_pressure"]
+    cfg = OmegaConf.create(
+        {
+            "processes": {
+                "iceflow": {
+                    "method": "unified",
+                    "physics": {
+                        "energy_components": ["viscosity", "gravity", "sliding"],
+                        "ice_density": rho_ice,
+                        "water_density": rho_water,
+                        "gravity_cst": 9.81,
+                        "thr_ice_thk": 0.1,
+                        "max_sr": 1.0e20,
+                        "force_negative_gravitational_energy": False,
+                        "viscosity": {"exponent": 3.0, "regularization": 1.0e-5},
+                        "sliding": {
+                            "law": law,
+                            "regularization": 1.0,
+                            "exponent": 3.0,
+                            "u_ref": 1.0,
+                            "N_ref": 1.0,
+                            "q_exponent": 0.5,
+                            "mu": 0.4,
+                            "use_mask_gr": True,
+                            "use_subgrid_gl": grounding_line == "subgrid",
+                        },
+                    },
+                    "numerics": {
+                        "precision": "double",
+                        "basis_horizontal": "q1",
+                        "basis_vertical": "ssa",
+                        "Nz": 1,
+                    },
+                    "unified": {"inputs": inputs_names},
+                }
+            }
+        }
+    )
+    thickness_1d = np.array([600, 580, 560, 540, 520, 450, 440, 420, 400, 380.0])
+    bed_1d = 50.0 - 100.0 * np.arange(nx)
+    lower_1d = np.maximum(bed_1d, -thickness_1d * rho_ice / rho_water)
+    rng = np.random.default_rng(41)
+
+    def duplicate(values):
+        return np.broadcast_to(values[None, None, :], (1, 2, nx)).copy()
+
+    fields = {
+        "thk": thickness_1d,
+        "usurf": lower_1d + thickness_1d,
+        "arrhenius": np.linspace(65.0, 75.0, nx),
+        "tau_ref": 0.02 + 0.02 * rng.random(nx),
+        "dX": np.full(nx, 1800.0),
+        "water_level": np.zeros(nx),
+        "effective_pressure": 0.3 + 0.4 * rng.random(nx),
+    }
+    if grounding_line == "subgrid":
+        weight = weights_gr(
+            tf.constant(duplicate(thickness_1d)[0]),
+            tf.constant(duplicate(bed_1d)[0]),
+            tf.zeros((2, nx), dtype),
+            rho_water / rho_ice,
+        ).numpy()[0]
+        assert np.any((weight > 0.0) & (weight < 1.0))
+        for name in SlidingComponents[law].friction_inputs:
+            if name in fields:
+                fields[name] = fields[name] * weight
+    inputs = tf.constant(
+        np.stack([duplicate(fields[name]) for name in inputs_names], axis=-1),
+        dtype,
+    )
+    u_values = tf.constant(
+        np.linspace(0.0, 450.0, nx)[None, :] + 20.0 * rng.random((1, nx)), dtype
+    )
+    v_values = tf.constant(-10.0 + 20.0 * rng.random((1, nx)), dtype)
+    U0 = tf.concat([u_values[:, None, None, :]] * 2, axis=2)
+    V0 = tf.concat([v_values[:, None, None, :]] * 2, axis=2)
+    mapping = MappingIdentity(
+        [DirichletBoundary(left=0.0), PeriodicNS()], U0, V0, precision="double"
+    )
+    state = type("State", (), {})()
+    state.iceflow = type("Iceflow", (), {})()
+    state.iceflow.discr_h = Q1Discr(cfg)
+    state.iceflow.discr_v = SSADiscr(cfg)
+    cost_fn = unified_utils.get_cost_fn(cfg, state)
+    analytic = Tridiag1DAnalyticOperator(
+        cost_fn, mapping, cfg, get_energy_components(cfg), precision="double"
+    )
+    return cfg, inputs, mapping, cost_fn, analytic, u_values
+
+
+@pytest.mark.parametrize("grounding_line", ["nodal", "subgrid"])
+@pytest.mark.parametrize("law", ["weertman", "budd", "regu_coulomb"])
+def test_analytic_hessian_matches_autodiff_across_the_grounding_line(
+    law, grounding_line
+):
+    """Including regu_coulomb on floating cells, where the friction vanishes."""
+    _, inputs, mapping, cost_fn, analytic, _ = _marine_flowline(law, grounding_line)
+    exact = ADOperator(cost_fn, mapping, precision="double")
+    damping = tf.constant(0.0, tf.float64)
+    analytic.prepare(inputs, damping)
+    rng = np.random.default_rng(5)
+    vector = tf.constant(rng.normal(size=2 * 2 * 10), tf.float64)
+    exact_hvp = exact.hvp(inputs, vector, damping)
+    analytic_hvp = analytic.hvp(inputs, vector, damping)
+    assert np.all(np.isfinite(analytic_hvp.numpy()))
+    relative_error = tf.norm(exact_hvp - analytic_hvp) / tf.norm(exact_hvp)
+    assert float(relative_error.numpy()) < 1.0e-7
+
+
+@pytest.mark.parametrize("grounding_line", ["nodal", "subgrid"])
+def test_scalar_system_matches_full_energy_across_the_grounding_line(grounding_line):
+    _, inputs, _, _, analytic, u_values = _marine_flowline("weertman", grounding_line)
+    exact_cost, exact_gradient = analytic.cost_grad_u_at(inputs, u_values)
+    cost, gradient, _, _, _ = analytic.scalar_system_at(
+        inputs, u_values, tf.constant(0.0, tf.float64)
+    )
+    np.testing.assert_allclose(cost.numpy(), exact_cost.numpy(), rtol=1e-8, atol=1e-10)
+    np.testing.assert_allclose(
+        gradient.numpy(), exact_gradient.numpy(), rtol=1e-8, atol=1e-10
+    )

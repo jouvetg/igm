@@ -120,8 +120,8 @@ def _ct_full_field(cfg, state) -> tf.Tensor:
     No GPU→CPU transfer here — everything downstream stays on GPU until the
     final small-scalar log step.
     """
-    from igm.processes.iceflow.utils.data_preprocessing import fieldin_state_to_X
-    X = fieldin_state_to_X(state, cfg.processes.iceflow.unified.inputs)
+    from igm.processes.iceflow.unified.utils import get_inputs_from_state
+    X = get_inputs_from_state(cfg, state)
     if not isinstance(X, tf.Tensor):
         X = tf.convert_to_tensor(X)
     return tf.cast(X, tf.float32)

@@ -15,7 +15,9 @@ from ..energy import EnergyComponent
 class SlidingComponent(EnergyComponent):
     """Energy component representing frictional energy."""
 
-    pass
+    #: Input the grounded mask acts on: the nodal mask (use_mask_gr) zeroes the
+    #: friction from it at floating nodes, use_subgrid_gl weights it (weights_gr)
+    friction_inputs = ("tau_ref",)
 
 
 def get_water_level(fieldin: Dict[str, tf.Tensor]) -> tf.Tensor:
@@ -83,6 +85,9 @@ def get_sliding_params_args(cfg: DictConfig) -> Dict[str, Any]:
 
     args = {k: cfg_physics.sliding[k] for k in _LAW_KEYS[law]}
     args["rho_ratio"] = cfg_physics.water_density / cfg_physics.ice_density
-    args["use_mask_gr"] = cfg_physics.sliding.use_mask_gr
+    # use_subgrid_gl weights the friction inputs instead (get_inputs_from_state)
+    args["use_mask_gr"] = (
+        cfg_physics.sliding.use_mask_gr and not cfg_physics.sliding.use_subgrid_gl
+    )
 
     return args

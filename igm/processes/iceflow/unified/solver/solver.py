@@ -8,13 +8,11 @@ import tensorflow as tf
 
 from igm.common import State
 from ..optimizers import InterfaceOptimizers, Status
-from igm.processes.iceflow.utils.data_preprocessing import (
-    fieldin_state_to_X,
-    split_field_into_patches,
-)
+from igm.processes.iceflow.utils.data_preprocessing import split_field_into_patches
 from igm.utils.math.precision import normalize_precision
 
 from ..mappings.normalizer import is_distribution_shifted
+from ..utils import get_inputs_from_state
 from .patch_selection import select_patches
 from .credit_tracker import (
     update_credit_observer,
@@ -68,7 +66,7 @@ def get_status(
 
 def get_solver_inputs_from_state(cfg: DictConfig, state: State) -> tf.Tensor:
     """Returns [N, ly, lx, C] non-overlapping patches, same strategy as emulated approach."""
-    X = fieldin_state_to_X(state, cfg.processes.iceflow.unified.inputs)
+    X = get_inputs_from_state(cfg, state)
     framesizemax = cfg.processes.iceflow.unified.data_preparation.framesizemax
     dtype = normalize_precision(cfg.processes.iceflow.numerics.precision)
     return tf.cast(split_field_into_patches(X, framesizemax), dtype)

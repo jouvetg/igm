@@ -122,9 +122,9 @@ def _get_dhdt(state: State) -> np.ndarray:
 
 def _cache_full_field(state: State, cfg: DictConfig) -> tf.Tensor:
     """Build and cache the full [H, W, C] input field on state."""
-    from igm.processes.iceflow.utils.data_preprocessing import fieldin_state_to_X
+    from igm.processes.iceflow.unified.utils import get_inputs_from_state
     from igm.utils.math.precision import normalize_precision
-    X = fieldin_state_to_X(state, cfg.processes.iceflow.unified.inputs)
+    X = get_inputs_from_state(cfg, state)
     dtype = normalize_precision(cfg.processes.iceflow.numerics.precision)
     state._adaptive_patching_X = tf.cast(X, dtype)
     return state._adaptive_patching_X

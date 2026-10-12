@@ -185,12 +185,18 @@ def _cost(
 
     C_h = tau_ref_h / tf.pow(u_ref, 1.0 / m)
 
+    # No friction where the coefficient vanishes (floating ice): u_c would be
+    # infinite (or 0/0), while the cost tends to C_h * |u_b|^p / p -> 0
+    frictionless = C_h <= 0.0
+    safe_C_h = tf.where(frictionless, tf.ones_like(C_h), C_h)
+
     # Compute smooth transition between Weertman and regularized Coulomb (Shapero et al. 2021)
     τ_c = μ * N_h
-    u_c = tf.pow(τ_c / C_h, m)
+    u_c = tf.pow(τ_c / safe_C_h, m)
 
     # τ_c * [ (|u_b|^p + |u_c|^p)^(1/p) - u_c ]
     cost_h = τ_c * (tf.pow(tf.pow(u_b, p) + tf.pow(u_c, p), 1.0 / p) - u_c)
+    cost_h = tf.where(frictionless, tf.zeros_like(cost_h), cost_h)
 
     # Integrate over horizontal quad points
     w_h = discr_h.w_h[tf.newaxis, :, tf.newaxis, tf.newaxis]

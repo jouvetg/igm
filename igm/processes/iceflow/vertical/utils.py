@@ -200,17 +200,15 @@ def compute_basis_corr_b(
 
     Derived via integration by parts.
     """
-    x_0 = tf.constant(0.0)
 
-    def make_psi_b(phi_n, Phi_n, phi_n_0):
+    def make_psi_b(phi_n, Phi_n):
         def psi_b_n(zeta):
-            return (1.0 - zeta) * phi_n(zeta) - phi_n_0 + Phi_n(zeta)
+            return (1.0 - zeta) * phi_n(zeta) - phi_n(tf.zeros_like(zeta)) + Phi_n(zeta)
 
         return psi_b_n
 
     return tuple(
-        make_psi_b(basis_fct[n], basis_fct_int[n], basis_fct[n](x_0))
-        for n in range(len(basis_fct))
+        make_psi_b(basis_fct[n], basis_fct_int[n]) for n in range(len(basis_fct))
     )
 
 

@@ -13,10 +13,11 @@ from omegaconf import DictConfig, OmegaConf
 
 from igm.common import State
 from igm.processes.iceflow.utils.velocities import get_velsurf
+from igm.utils.math.precision import normalize_precision
+from ..error_estimator.interface import build_cost_fn_in_precision
 from ..halt import HaltStatus
 from ..mappings import InterfaceMappings, Mappings
 from ..optimizers import InterfaceOptimizers, Optimizers, Status
-from ..utils import get_cost_fn
 
 
 @dataclass
@@ -35,11 +36,19 @@ def surface_speed(U: tf.Tensor, V: tf.Tensor, V_s: tf.Tensor) -> tf.Tensor:
     return tf.sqrt(tf.square(uvelsurf) + tf.square(vvelsurf))
 
 
+def get_reference_precision(cfg: DictConfig) -> str:
+    """Precision of the direct solve: ``init_stop.reference.precision``, or the run's."""
+    precision = cfg.processes.iceflow.unified.init_stop.reference.get("precision")
+    if precision is None:
+        return str(cfg.processes.iceflow.numerics.precision)
+    return str(precision)
+
+
 def get_reference_cfg(cfg: DictConfig) -> DictConfig:
     """The run's configuration with the ice flow solved directly (identity + cg_newton).
 
     The solver settings are those of ``unified.cg_newton``, which the network does not use,
-    with the CG tolerance of ``init_stop.reference``.
+    with the CG tolerance and the precision of ``init_stop.reference``.
     """
     cfg_reference = cfg.processes.iceflow.unified.init_stop.reference
 
@@ -75,12 +84,26 @@ def get_reference_cfg(cfg: DictConfig) -> DictConfig:
     cfg_reference_run.processes.iceflow.unified = OmegaConf.merge(
         cfg_reference_run.processes.iceflow.unified, overrides
     )
+    cfg_reference_run.processes.iceflow.numerics.precision = get_reference_precision(
+        cfg
+    )
     return cfg_reference_run
 
 
 def solve_reference(cfg: DictConfig, state: State, inputs: tf.Tensor) -> ReferenceSolve:
-    """Solve the ice flow of the current state directly, from a zero velocity."""
+    """Solve the ice flow of the current state directly, from a zero velocity.
+
+    The surface speed is returned in the precision of the run, whatever the precision of
+    the solve.
+    """
     cfg_reference_run = get_reference_cfg(cfg)
+    precision_run = normalize_precision(cfg.processes.iceflow.numerics.precision)
+    precision = normalize_precision(
+        cfg_reference_run.processes.iceflow.numerics.precision
+    )
+
+    cost_fn, discr_v = build_cost_fn_in_precision(cfg_reference_run, precision)
+    inputs = tf.cast(inputs, precision)
 
     mapping_args = InterfaceMappings["identity"].get_mapping_args(
         cfg_reference_run, state
@@ -90,7 +113,7 @@ def solve_reference(cfg: DictConfig, state: State, inputs: tf.Tensor) -> Referen
     interface = InterfaceOptimizers["cg_newton"]
     optimizer_args = interface.get_optimizer_args(
         cfg=cfg_reference_run,
-        cost_fn=get_cost_fn(cfg_reference_run, state),
+        cost_fn=cost_fn,
         map=mapping,
     )
     optimizer = Optimizers["cg_newton"](**optimizer_args)
@@ -99,7 +122,8 @@ def solve_reference(cfg: DictConfig, state: State, inputs: tf.Tensor) -> Referen
     start = time.perf_counter()
     costs = optimizer.minimize(inputs)
     U, V = mapping.get_UV(inputs)
-    speed = surface_speed(U[0], V[0], state.iceflow.discr_v.V_s)
+    speed = surface_speed(U[0], V[0], discr_v.V_s)
+    speed = tf.cast(speed, precision_run)
     speed.numpy()
     seconds = time.perf_counter() - start
 

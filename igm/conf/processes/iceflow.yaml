@@ -118,6 +118,7 @@ iceflow:
         tol: 1.0
         cg_tol: 1.0e-2
         line_search: armijo
+        precision: null
       log: init_stop.csv
       display: true
     nbit_warmup: -1

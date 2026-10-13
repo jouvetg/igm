@@ -431,6 +431,10 @@ unified:
         Type: string
         Description: "Line search of the direct solve."
         Units: dimless
+      precision:
+        Type: string
+        Description: "Floating-point precision of the direct solve (single or double); null uses numerics.precision. Use double when the network trains in single precision on large domains (about a million cells, e.g. a whole ice sheet): there, cg_newton in single precision makes no progress (CG stops at once, and the multigrid coarse operators lose positive definiteness). When it differs from numerics.precision the direct solve builds its own discretization constants and cost function in that precision; its surface speed is then compared in numerics.precision."
+        Units: dimless
     log:
       Type: string
       Description: "CSV file of the checks (iterations, error_grounded, error_floating, in percent), in the run folder; an empty string writes none."

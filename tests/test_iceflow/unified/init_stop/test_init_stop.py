@@ -17,6 +17,10 @@ from igm.processes.iceflow.unified.init_stop import (
     StopReason,
 )
 import igm.processes.iceflow.unified.init_stop.init_stop as init_stop_module
+import igm.processes.iceflow.unified.init_stop.reference as reference_module
+from igm.processes.iceflow.unified.evaluator.evaluator import (
+    get_evaluator_inputs_from_state,
+)
 
 FREQ = 10
 SHAPE = (12, 9)
@@ -319,6 +323,55 @@ def test_real_direct_solve(tmp_path, monkeypatch):
     assert len(_log_rows()) == 2
 
 
+def _reference_of(cfg, state, monkeypatch):
+    """Initialise the ice flow and return its reference solve and init_stop criterion."""
+    captured = {}
+    solve = init_stop_module.solve_reference
+
+    def spy(cfg, state, inputs):
+        captured["reference"] = solve(cfg, state, inputs)
+        return captured["reference"]
+
+    monkeypatch.setattr(init_stop_module, "solve_reference", spy)
+    igm.processes.iceflow.initialize(cfg, state)
+    criterion = state.iceflow.optimizer.halt.crit_success[-1]
+    return captured["reference"], criterion
+
+
+def test_double_direct_solve_in_a_single_precision_run(tmp_path, monkeypatch):
+    """reference.precision=double: the direct solve of a double run, compared in single."""
+    monkeypatch.chdir(tmp_path)
+
+    cfg, state = _slab(nbit_init=10, display=False)
+    cfg.processes.iceflow.unified.init_stop.reference.nbit = 2
+    cfg.processes.iceflow.unified.init_stop.reference.precision = "double"
+    reference, criterion = _reference_of(cfg, state, monkeypatch)
+
+    # the same direct solve in a double run (identity mapping: no network needed)
+    cfg_double, state_double = _slab(nbit_init=1, display=False)
+    cfg_double.processes.iceflow.numerics.precision = "double"
+    cfg_double.processes.iceflow.unified.mapping = "identity"
+    cfg_double.processes.iceflow.unified.init_stop.enabled = False
+    cfg_double.processes.iceflow.unified.init_stop.reference.nbit = 2
+    igm.processes.iceflow.initialize(cfg_double, state_double)
+    reference_double = reference_module.solve_reference(
+        cfg_double,
+        state_double,
+        get_evaluator_inputs_from_state(cfg_double, state_double),
+    )
+
+    assert reference.iterations == reference_double.iterations == 2
+    assert reference.speed.dtype == tf.float32
+    assert criterion.speed_ref.dtype == tf.float32
+    assert reference_double.speed.dtype == tf.float64
+    np.testing.assert_allclose(
+        reference.speed.numpy(),
+        reference_double.speed.numpy().astype(np.float32),
+        rtol=1e-6,
+        atol=1e-6,
+    )
+
+
 def _check_cfg_args(**overrides):
     """A config that passes InitStop.check_cfg, with ``overrides`` merged over it."""
     from omegaconf import OmegaConf
@@ -354,6 +407,7 @@ def _check_cfg_args(**overrides):
         {"init_stop": {"speed_floor": 0.0}},
         {"init_stop": {"consecutive": 0}},
         {"init_stop": {"reference": {"nbit": 0}}},
+        {"init_stop": {"reference": {"precision": "half"}}},
     ],
 )
 def test_unsupported_settings_are_rejected(overrides):
@@ -362,8 +416,9 @@ def test_unsupported_settings_are_rejected(overrides):
         init_stop_module.InitStop.check_cfg(cfg, state)
 
 
-def test_supported_settings_pass_the_check():
-    cfg, state = _check_cfg_args()
+@pytest.mark.parametrize("precision", [None, "single", "double"])
+def test_supported_settings_pass_the_check(precision):
+    cfg, state = _check_cfg_args(init_stop={"reference": {"precision": precision}})
     init_stop_module.InitStop.check_cfg(cfg, state)
 
 

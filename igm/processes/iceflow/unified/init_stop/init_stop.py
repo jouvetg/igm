@@ -245,6 +245,12 @@ class InitStop:
             raise ValueError("❌ init_stop.consecutive must be at least 1.")
         if int(cfg_init_stop.reference.nbit) < 1:
             raise ValueError("❌ init_stop.reference.nbit must be at least 1.")
+        precision = cfg_init_stop.reference.get("precision")
+        if precision is not None and str(precision) not in ("single", "double"):
+            raise ValueError(
+                f"❌ init_stop.reference.precision ({precision!r}) must be null, "
+                "single or double."
+            )
 
     @classmethod
     def from_cfg(cls, cfg: DictConfig, state: State) -> "InitStop":

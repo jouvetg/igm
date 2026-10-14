@@ -89,51 +89,27 @@ def update(cfg, state):
         # unit to [ °C ]  -> [ °C y ]
         pos_temp_year /= pos_temp_year.shape[0]
 
-        ablation = []  # [ unit : water-eq m ]
+        # snowpack / ablation recursion over the (hydrological) year, compiled with
+        # tf.function: the former Python loop of eager ops over the time steps was
+        # CPU-bound (x4 slower with daily, 365-step climate). Same recursion; the yearly
+        # sum differs from the loop by float round-off only.
+        ablation = _annual_ablation(
+            accumulation,
+            pos_temp_year,
+            tf.constant(
+                int(state.air_temp.shape[0] * cfg.processes.smb.accpdd.shift_hydro_year)
+            ),
+            tf.constant(cfg.processes.smb.accpdd.melt_factor_ice, dtype=tf.float32),
+            tf.constant(cfg.processes.smb.accpdd.melt_factor_snow, dtype=tf.float32),
+        )  # [ unit : water-eq m ], one slice per time step
 
-        snow_depth = tf.zeros((state.air_temp.shape[1], state.air_temp.shape[2]))
-
-        for kk in range(state.air_temp.shape[0]):
-            # shift to hydro year, i.e. start Oct. 1
-            k = (
-                kk
-                + int(
-                    state.air_temp.shape[0] * cfg.processes.smb.accpdd.shift_hydro_year
-                )
-            ) % (state.air_temp.shape[0])
-
-            # add accumulation to the snow depth
-            snow_depth += accumulation[k]
-
-            # the ablation (unit is m water eq.) is the product of positive temp  with melt
-            # factors for ice, or snow, or a fraction of the two if all snow has melted
-            ablation.append(
-                tf.where(
-                    snow_depth == 0,
-                    pos_temp_year[k] * cfg.processes.smb.accpdd.melt_factor_ice,
-                    tf.where(
-                        pos_temp_year[k] * cfg.processes.smb.accpdd.melt_factor_snow
-                        < snow_depth,
-                        pos_temp_year[k] * cfg.processes.smb.accpdd.melt_factor_snow,
-                        snow_depth
-                        + (
-                            pos_temp_year[k]
-                            - snow_depth / cfg.processes.smb.accpdd.melt_factor_snow
-                        )
-                        * cfg.processes.smb.accpdd.melt_factor_ice,
-                    ),
-                )
-            )
-
-            # remove snow melt to snow depth, and cap it as snow_depth can not be negative
-            snow_depth = tf.clip_by_value(snow_depth - ablation[-1], 0.0, 1.0e10)
-
-        ablation = (1 - cfg.processes.smb.accpdd.refreeze_factor) * tf.stack(
-            ablation, axis=0
-        )
+        ablation = (1 - cfg.processes.smb.accpdd.refreeze_factor) * ablation
 
         # sum accumulation and ablation over the year, and conversion to ice equivalent
-        state.smb = tf.math.reduce_sum(accumulation - ablation, axis=0) * (
+        state.smb = (
+            tf.math.reduce_sum(accumulation, axis=0)
+            - tf.math.reduce_sum(ablation, axis=0)
+        ) * (
             cfg.processes.smb.accpdd.wat_density / cfg.processes.smb.accpdd.ice_density
         )
 
@@ -149,6 +125,39 @@ def update(cfg, state):
         )
 
         state.tlast_mb.assign(state.t)
+
+
+@tf.function
+def _annual_ablation(accumulation, pos_temp_year, shift, melt_factor_ice, melt_factor_snow):
+    """Ablation at each time step of the year [m water eq.], steps visited from `shift`
+    (hydrological year): the snow depth is carried from step to step; ice melt factor once
+    the snow is gone, snow melt factor while it lasts, a mix of both in the step it vanishes."""
+    n = tf.shape(accumulation)[0]
+    idx = (tf.range(n) + shift) % n
+    acc = tf.gather(accumulation, idx)
+    pos = tf.gather(pos_temp_year, idx)
+
+    def step(carry, x):
+        snow_depth, _ = carry
+        a, p = x
+        # add accumulation to the snow depth
+        snow_depth = snow_depth + a
+        ablation = tf.where(
+            snow_depth == 0,
+            p * melt_factor_ice,
+            tf.where(
+                p * melt_factor_snow < snow_depth,
+                p * melt_factor_snow,
+                snow_depth + (p - snow_depth / melt_factor_snow) * melt_factor_ice,
+            ),
+        )
+        # remove snow melt to snow depth, and cap it as snow_depth can not be negative
+        snow_depth = tf.clip_by_value(snow_depth - ablation, 0.0, 1.0e10)
+        return snow_depth, ablation
+
+    zero = tf.zeros_like(acc[0])
+    _, ablation = tf.scan(step, (acc, pos), initializer=(zero, zero))
+    return ablation
 
 
 def finalize(cfg, state):

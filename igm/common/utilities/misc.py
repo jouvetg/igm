@@ -98,27 +98,36 @@ def add_logger(cfg, state) -> None:
 
 
 def get_igm_version() -> Tuple[str, str]:
-    try:
-        version = importlib.metadata.version("igm")
-        source = "PyPi"
-        return (source, version)
-    except importlib.metadata.PackageNotFoundError:
-        pass
+    """Return (source, version) identifying the running IGM code.
+
+    A git checkout (``pip install -e .`` from a clone) is reported as
+    ``("git", <short hash>)``; a regular install of the ``igm-model``
+    distribution (PyPI) as ``("pypi", <version>)``. The git check comes first
+    because an editable install also registers the distribution metadata, and
+    the commit hash is the more precise identifier in that case.
+    """
+    # This file lives at <repo>/igm/common/utilities/misc.py.
+    igm_root = Path(__file__).resolve().parents[3]
+    if (igm_root / ".git").exists():
+        try:
+            hash = (
+                subprocess.check_output(
+                    ["git", "rev-parse", "--short", "HEAD"],
+                    cwd=igm_root,
+                    stderr=subprocess.DEVNULL,
+                )
+                .decode()
+                .strip()
+            )
+            return ("git", hash)
+        except Exception:
+            pass
 
     try:
-        igm_root = Path(__file__).resolve().parent
-        hash = (
-            subprocess.check_output(
-                ["git", "rev-parse", "--short", "HEAD"],
-                cwd=igm_root,
-                stderr=subprocess.DEVNULL,
-            )
-            .decode()
-            .strip()
-        )
-        source = "git"
-        return (source, hash)
-    except Exception:
+        # "igm-model" is the PyPI distribution name (setup.py), not "igm".
+        version = importlib.metadata.version("igm-model")
+        return ("pypi", version)
+    except importlib.metadata.PackageNotFoundError:
         pass
 
     return ("unknown", "unknown")

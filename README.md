@@ -13,7 +13,7 @@
 
 </div>
 
-IGM is an accessible, differentiable, modular, and GPU-accelerated ice flow model.
+IGM is an accessible, modular, differentiable, and GPU-accelerated high-order ice flow model.
 
 **Full documentation → [igm-model.org](https://igm-model.org)**
 
